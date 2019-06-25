@@ -1,0 +1,70 @@
+OBJECT Page 9023 Accounting Services RC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Rollecenter;
+               ENU=Role Center];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 7       ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 6       ;1   ;ActionGroup;
+                      CaptionML=[DAN=Ny;
+                                 ENU=New] }
+      { 5       ;2   ;Action    ;
+                      CaptionML=[DAN=Salgstilbud;
+                                 ENU=Sales Quote];
+                      RunObject=Page 1324;
+                      Image=Quote;
+                      RunPageMode=Create }
+      { 4       ;2   ;Action    ;
+                      CaptionML=[DAN=Salgsfaktura;
+                                 ENU=Sales Invoice];
+                      RunObject=Page 1304;
+                      Image=NewInvoice;
+                      RunPageMode=Create }
+      { 14      ;0   ;ActionContainer;
+                      ActionContainerType=HomeItems }
+      { 15      ;1   ;Action    ;
+                      CaptionML=[DAN=Debitorer;
+                                 ENU=Customers];
+                      RunObject=Page 1301 }
+      { 10      ;1   ;Action    ;
+                      CaptionML=[DAN=Varer;
+                                 ENU=Items];
+                      RunObject=Page 1303 }
+      { 9       ;1   ;Action    ;
+                      CaptionML=[DAN=Bogf. salgsfakturaer;
+                                 ENU=Posted Sales Invoices];
+                      RunObject=Page 1309 }
+    }
+  }
+  CONTROLS
+  {
+    { 13  ;0   ;Container ;
+                ContainerType=RoleCenterArea }
+
+    { 1   ;1   ;Part      ;
+                PagePartID=Page9070;
+                PartType=Page }
+
+    { 2   ;1   ;Part      ;
+                PagePartID=Page9150;
+                PartType=Page }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

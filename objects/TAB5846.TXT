@@ -1,0 +1,127 @@
+OBJECT Table 5846 Inventory Report Entry
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Lagerrapportpost;
+               ENU=Inventory Report Entry];
+    LookupPageID=Page5846;
+    DrillDownPageID=Page5846;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 3   ;   ;No.                 ;Code20        ;CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 5   ;   ;Location Filter     ;Code10        ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Lokationsfilter;
+                                                              ENU=Location Filter] }
+    { 6   ;   ;Posting Date Filter ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Bogføringsdatofilter;
+                                                              ENU=Posting Date Filter] }
+    { 8   ;   ;Inventory           ;Decimal       ;CaptionML=[DAN=Lager;
+                                                              ENU=Inventory] }
+    { 9   ;   ;Inventory (Interim) ;Decimal       ;CaptionML=[DAN=Lager (mellemkto.);
+                                                              ENU=Inventory (Interim)] }
+    { 10  ;   ;WIP Inventory       ;Decimal       ;CaptionML=[DAN=VIA-værdi;
+                                                              ENU=WIP Inventory] }
+    { 11  ;   ;Direct Cost Applied Actual;Decimal ;CaptionML=[DAN=Faktiske tillagte direkte omk.;
+                                                              ENU=Direct Cost Applied Actual] }
+    { 12  ;   ;Overhead Applied Actual;Decimal    ;CaptionML=[DAN=Faktiske tillagte indir. prod.omkostninger;
+                                                              ENU=Overhead Applied Actual] }
+    { 13  ;   ;Purchase Variance   ;Decimal       ;CaptionML=[DAN=Købsafvigelse;
+                                                              ENU=Purchase Variance] }
+    { 14  ;   ;Inventory Adjmt.    ;Decimal       ;CaptionML=[DAN=Lagerregulering;
+                                                              ENU=Inventory Adjmt.] }
+    { 16  ;   ;Invt. Accrual (Interim);Decimal    ;CaptionML=[DAN=Lagerperiod.konto (mellemkto.);
+                                                              ENU=Invt. Accrual (Interim)] }
+    { 17  ;   ;COGS                ;Decimal       ;CaptionML=[DAN=Vareforbrug;
+                                                              ENU=COGS] }
+    { 18  ;   ;COGS (Interim)      ;Decimal       ;CaptionML=[DAN=Vareforbrug (mellemkto.);
+                                                              ENU=COGS (Interim)] }
+    { 19  ;   ;Material Variance   ;Decimal       ;CaptionML=[DAN=Materialeomkostningsafvigelse;
+                                                              ENU=Material Variance] }
+    { 20  ;   ;Capacity Variance   ;Decimal       ;CaptionML=[DAN=Kapacitetsomkostningsafvigelse;
+                                                              ENU=Capacity Variance] }
+    { 21  ;   ;Subcontracted Variance;Decimal     ;AccessByPermission=TableData 99000758=R;
+                                                   CaptionML=[DAN=Kostprisafv. for underlev.;
+                                                              ENU=Subcontracted Variance] }
+    { 22  ;   ;Capacity Overhead Variance;Decimal ;CaptionML=[DAN=Indir. kap. omk. afv.;
+                                                              ENU=Capacity Overhead Variance] }
+    { 23  ;   ;Mfg. Overhead Variance;Decimal     ;AccessByPermission=TableData 99000758=R;
+                                                   CaptionML=[DAN=Indir. prod. omkostningsafv.;
+                                                              ENU=Mfg. Overhead Variance] }
+    { 28  ;   ;Total               ;Decimal       ;CaptionML=[DAN=Totalbeløb;
+                                                              ENU=Total] }
+    { 29  ;   ;G/L Total           ;Decimal       ;CaptionML=[DAN=Finanstotal;
+                                                              ENU=G/L Total] }
+    { 30  ;   ;Difference          ;Decimal       ;CaptionML=[DAN=Difference;
+                                                              ENU=Difference] }
+    { 31  ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=" ,Finanskonto,Vare";
+                                                                    ENU=" ,G/L Account,Item"];
+                                                   OptionString=[ ,G/L Account,Item] }
+    { 32  ;   ;Direct Cost Applied WIP;Decimal    ;CaptionML=[DAN=Tillagte direkte omkost. - VIA;
+                                                              ENU=Direct Cost Applied WIP] }
+    { 33  ;   ;Overhead Applied WIP;Decimal       ;AccessByPermission=TableData 99000758=R;
+                                                   CaptionML=[DAN=Fordelte ind. prod.omk. - VIA;
+                                                              ENU=Overhead Applied WIP] }
+    { 35  ;   ;Inventory To WIP    ;Decimal       ;AccessByPermission=TableData 5405=R;
+                                                   CaptionML=[DAN=Lagerbeholdning til VIA;
+                                                              ENU=Inventory To WIP] }
+    { 36  ;   ;WIP To Interim      ;Decimal       ;AccessByPermission=TableData 5405=R;
+                                                   CaptionML=[DAN=VIA til mellemkonto;
+                                                              ENU=WIP To Interim] }
+    { 37  ;   ;Direct Cost Applied ;Decimal       ;CaptionML=[DAN=Tillagte direkte omkostninger;
+                                                              ENU=Direct Cost Applied] }
+    { 38  ;   ;Overhead Applied    ;Decimal       ;CaptionML=[DAN=Tillagte indir. prod.omkostn.;
+                                                              ENU=Overhead Applied] }
+    { 39  ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 40  ;   ;Warning             ;Text50        ;CaptionML=[DAN=Advarsel;
+                                                              ENU=Warning] }
+    { 61  ;   ;Cost is Posted to G/L Warning;Boolean;
+                                                   CaptionML=[DAN=Advarsel - kostpris bogføres;
+                                                              ENU=Cost is Posted to G/L Warning] }
+    { 62  ;   ;Expected Cost Posting Warning;Boolean;
+                                                   CaptionML=[DAN=Advarsel - forventet kostpris bogføres;
+                                                              ENU=Expected Cost Posting Warning] }
+    { 63  ;   ;Compression Warning ;Boolean       ;CaptionML=[DAN=Komprimeringsadvarsel;
+                                                              ENU=Compression Warning] }
+    { 64  ;   ;Posting Group Warning;Boolean      ;CaptionML=[DAN=Advarsel - bogføringsgruppe;
+                                                              ENU=Posting Group Warning] }
+    { 65  ;   ;Direct Postings Warning;Boolean    ;CaptionML=[DAN=Advarsel - direkte bogføring;
+                                                              ENU=Direct Postings Warning] }
+    { 66  ;   ;Posting Date Warning;Boolean       ;CaptionML=[DAN=Advarsel - bogføringsdato;
+                                                              ENU=Posting Date Warning] }
+    { 67  ;   ;Closing Period Overlap Warning;Boolean;
+                                                   CaptionML=[DAN=Advarsel - sammenfald mellem lukkeperioder;
+                                                              ENU=Closing Period Overlap Warning] }
+    { 68  ;   ;Similar Accounts Warning;Boolean   ;CaptionML=[DAN=Advarsel - lignende konti;
+                                                              ENU=Similar Accounts Warning] }
+    { 69  ;   ;Deleted G/L Accounts Warning;Boolean;
+                                                   CaptionML=[DAN=Advarsel - slettede finanskonti;
+                                                              ENU=Deleted G/L Accounts Warning] }
+  }
+  KEYS
+  {
+    {    ;Type,Entry No.                          ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,44 @@
+OBJECT Table 5917 Fault Reason Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    CaptionML=[DAN=Fejlårsagskode;
+               ENU=Fault Reason Code];
+    LookupPageID=Page5929;
+    DrillDownPageID=Page5929;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Exclude Warranty Discount;Boolean  ;CaptionML=[DAN=Udeluk garantirabat;
+                                                              ENU=Exclude Warranty Discount] }
+    { 4   ;   ;Exclude Contract Discount;Boolean  ;CaptionML=[DAN=Udeluk kontraktrabat;
+                                                              ENU=Exclude Contract Discount] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Description,Exclude Warranty Discount,Exclude Contract Discount }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

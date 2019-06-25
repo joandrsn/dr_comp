@@ -1,0 +1,105 @@
+OBJECT Table 7700 Miniform Header
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.44974;
+  }
+  PROPERTIES
+  {
+    OnDelete=VAR
+               MiniFormLine@1000 : Record 7701;
+               MiniFormFunc@1001 : Record 7703;
+             BEGIN
+               MiniFormLine.RESET;
+               MiniFormLine.SETRANGE("Miniform Code",Code);
+               MiniFormLine.DELETEALL;
+
+               MiniFormFunc.RESET;
+               MiniFormFunc.SETRANGE("Miniform Code",Code);
+               MiniFormFunc.DELETEALL;
+             END;
+
+    CaptionML=[DAN=Miniformularhoved;
+               ENU=Miniform Header];
+    LookupPageID=Page7703;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 11  ;   ;Description         ;Text30        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 12  ;   ;No. of Records in List;Integer     ;CaptionML=[DAN=Antal records i oversigt;
+                                                              ENU=No. of Records in List] }
+    { 13  ;   ;Form Type           ;Option        ;CaptionML=[DAN=Form Type;
+                                                              ENU=Form Type];
+                                                   OptionCaptionML=[@@@={Locked};
+                                                                    DAN=Card,Selection List,Data List,Data List Input;
+                                                                    ENU=Card,Selection List,Data List,Data List Input];
+                                                   OptionString=Card,Selection List,Data List,Data List Input }
+    { 15  ;   ;Start Miniform      ;Boolean       ;OnValidate=VAR
+                                                                MiniformHeader@1000 : Record 7700;
+                                                              BEGIN
+                                                                MiniformHeader.SETFILTER(Code,'<>%1',Code);
+                                                                MiniformHeader.SETRANGE("Start Miniform",TRUE);
+                                                                IF MiniformHeader.FINDFIRST THEN
+                                                                  ERROR(Text002);
+                                                              END;
+
+                                                   CaptionML=[DAN=Start miniformular;
+                                                              ENU=Start Miniform] }
+    { 20  ;   ;Handling Codeunit   ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Codeunit));
+                                                   CaptionML=[DAN=Ekspederer codeunit;
+                                                              ENU=Handling Codeunit] }
+    { 21  ;   ;Next Miniform       ;Code20        ;TableRelation="Miniform Header";
+                                                   OnValidate=BEGIN
+                                                                IF "Next Miniform" = Code THEN
+                                                                  ERROR(Text000);
+
+                                                                IF "Form Type" IN ["Form Type"::"Selection List","Form Type"::"Data List Input"] THEN
+                                                                  ERROR(Text001,FIELDCAPTION("Form Type"),"Form Type");
+                                                              END;
+
+                                                   CaptionML=[DAN=Næste miniformular;
+                                                              ENU=Next Miniform] }
+    { 25  ;   ;XMLin               ;BLOB          ;CaptionML=[DAN=XMLin;
+                                                              ENU=XMLin] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1001 : TextConst 'DAN=Rekursion er ikke tilladt.;ENU=Recursion is not allowed.';
+      Text001@1000 : TextConst 'DAN=%1 må ikke være %2.;ENU=%1 must not be %2.';
+      Text002@1002 : TextConst 'DAN=Der kan kun være én logonformular.;ENU=There can only be one login form.';
+
+    PROCEDURE SaveXMLin@1(DOMxmlin@1001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");
+    VAR
+      InStrm@1000 : InStream;
+    BEGIN
+      XMLin.CREATEINSTREAM(InStrm);
+      DOMxmlin.Save(InStrm);
+    END;
+
+    PROCEDURE LoadXMLin@2(VAR DOMxmlin@1001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");
+    VAR
+      OutStrm@1000 : OutStream;
+    BEGIN
+      XMLin.CREATEOUTSTREAM(OutStrm);
+      DOMxmlin.Load(OutStrm);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

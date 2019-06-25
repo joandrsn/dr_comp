@@ -1,0 +1,36 @@
+OBJECT Table 2000000151 NAV App Tenant App
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Lejer-app for NAV-app;
+               ENU=NAV App Tenant App];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Tenant ID           ;Text128       ;CaptionML=[DAN=Lejer-id;
+                                                              ENU=Tenant ID] }
+    { 2   ;   ;App Package ID      ;GUID          ;CaptionML=[DAN=Applikationspakke-id;
+                                                              ENU=App Package ID] }
+  }
+  KEYS
+  {
+    {    ;Tenant ID,App Package ID                ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

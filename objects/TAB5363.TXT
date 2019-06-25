@@ -1,0 +1,1473 @@
+OBJECT Table 5363 CRM Organization
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    TableType=CRM;
+    ExternalName=organization;
+    CaptionML=[DAN=Organization;
+               ENU=Organization];
+    Description=Top level of the Microsoft Dynamics CRM business hierarchy. The organization can be a specific business, holding company, or corporation.;
+  }
+  FIELDS
+  {
+    { 1   ;   ;OrganizationId      ;GUID          ;ExternalName=organizationid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Organization;
+                                                              ENU=Organization];
+                                                   Description=Unique identifier of the organization. }
+    { 2   ;   ;Name                ;Text160       ;ExternalName=name;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Organization Name;
+                                                              ENU=Organization Name];
+                                                   Description=Name of the organization. The name is set when Microsoft CRM is installed and should not be changed. }
+    { 3   ;   ;UserGroupId         ;GUID          ;ExternalName=usergroupid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   CaptionML=[DAN=User Group;
+                                                              ENU=User Group];
+                                                   Description=Unique identifier of the default group of users in the organization. }
+    { 4   ;   ;PrivilegeUserGroupId;GUID          ;ExternalName=privilegeusergroupid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   CaptionML=[DAN=Privilege User Group;
+                                                              ENU=Privilege User Group];
+                                                   Description=Unique identifier of the default privilege for users in the organization. }
+    { 5   ;   ;RecurrenceExpansionJobBatchSiz;Integer;
+                                                   ExternalName=recurrenceexpansionjobbatchsize;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Recurrence Expansion On Demand Job Batch Size;
+                                                              ENU=Recurrence Expansion On Demand Job Batch Size];
+                                                   MinValue=0;
+                                                   Description=Specifies the value for number of instances created in on demand job in one shot. }
+    { 6   ;   ;RecurrenceExpansionJobBatchInt;Integer;
+                                                   ExternalName=recurrenceexpansionjobbatchinterval;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Recurrence Expansion Job Batch Interval;
+                                                              ENU=Recurrence Expansion Job Batch Interval];
+                                                   MinValue=0;
+                                                   Description=Specifies the interval (in seconds) for pausing expansion job. }
+    { 7   ;   ;FiscalPeriodType    ;Integer       ;ExternalName=fiscalperiodtype;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Fiscal Period Type;
+                                                              ENU=Fiscal Period Type];
+                                                   Description=Type of fiscal period used throughout Microsoft CRM. }
+    { 8   ;   ;FiscalCalendarStart ;Date          ;ExternalName=fiscalcalendarstart;
+                                                   ExternalType=DateTime;
+                                                   CaptionML=[DAN=Fiscal Calendar Start;
+                                                              ENU=Fiscal Calendar Start];
+                                                   Description=Start date for the fiscal period that is to be used throughout Microsoft CRM. }
+    { 9   ;   ;DateFormatCode      ;Option        ;InitValue=[ ];
+                                                   ExternalName=dateformatcode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=-1;
+                                                   CaptionML=[DAN=Date Format Code;
+                                                              ENU=Date Format Code];
+                                                   OptionCaptionML=[DAN=" ";
+                                                                    ENU=" "];
+                                                   OptionString=[ ];
+                                                   Description=Information about how the date is displayed throughout Microsoft CRM. }
+    { 10  ;   ;TimeFormatCode      ;Option        ;InitValue=[ ];
+                                                   ExternalName=timeformatcode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=-1;
+                                                   CaptionML=[DAN=Time Format Code;
+                                                              ENU=Time Format Code];
+                                                   OptionCaptionML=[DAN=" ";
+                                                                    ENU=" "];
+                                                   OptionString=[ ];
+                                                   Description=Information that specifies how the time is displayed throughout Microsoft CRM. }
+    { 11  ;   ;CurrencySymbol      ;Text13        ;ExternalName=currencysymbol;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Currency Symbol;
+                                                              ENU=Currency Symbol];
+                                                   Description=Symbol used for currency throughout Microsoft Dynamics CRM. }
+    { 12  ;   ;WeekStartDayCode    ;Option        ;InitValue=[ ];
+                                                   ExternalName=weekstartdaycode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=-1;
+                                                   CaptionML=[DAN=Week Start Day Code;
+                                                              ENU=Week Start Day Code];
+                                                   OptionCaptionML=[DAN=" ";
+                                                                    ENU=" "];
+                                                   OptionString=[ ];
+                                                   Description=Designated first day of the week throughout Microsoft Dynamics CRM. }
+    { 13  ;   ;DateSeparator       ;Text5         ;ExternalName=dateseparator;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Date Separator;
+                                                              ENU=Date Separator];
+                                                   Description=Character used to separate the month, the day, and the year in dates throughout Microsoft Dynamics CRM. }
+    { 14  ;   ;FullNameConventionCode;Option      ;InitValue=LastNameFirstName;
+                                                   ExternalName=fullnameconventioncode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[0;1;2;3;4;5;6;7];
+                                                   CaptionML=[DAN=Full Name Display Order;
+                                                              ENU=Full Name Display Order];
+                                                   OptionCaptionML=[DAN="Last Name; First Name,First Name,Last Name; First Name; Middle Initial,First Name; Middle Initial; Last Name,Last Name; First Name; Middle Name,First Name; Middle Name; Last Name,Last Name; space; First Name,Last Name; no space; First Name";
+                                                                    ENU="Last Name; First Name,First Name,Last Name; First Name; Middle Initial,First Name; Middle Initial; Last Name,Last Name; First Name; Middle Name,First Name; Middle Name; Last Name,Last Name; space; First Name,Last Name; no space; First Name"];
+                                                   OptionString=LastNameFirstName,FirstName,LastNameFirstNameMiddleInitial,FirstNameMiddleInitialLastName,LastNameFirstNameMiddleName,FirstNameMiddleNameLastName,LastNamespaceFirstName,LastNamenospaceFirstName;
+                                                   Description=Order in which names are to be displayed throughout Microsoft CRM. }
+    { 15  ;   ;NegativeFormatCode  ;Option        ;InitValue=Brackets;
+                                                   ExternalName=negativeformatcode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[0;1;2;3;4];
+                                                   CaptionML=[DAN=Negative Format;
+                                                              ENU=Negative Format];
+                                                   OptionCaptionML=[DAN=Brackets,Dash,Dash plus Space,Trailing Dash,Space plus Trailing Dash;
+                                                                    ENU=Brackets,Dash,Dash plus Space,Trailing Dash,Space plus Trailing Dash];
+                                                   OptionString=Brackets,Dash,DashplusSpace,TrailingDash,SpaceplusTrailingDash;
+                                                   Description=Information that specifies how negative numbers are displayed throughout Microsoft CRM. }
+    { 16  ;   ;NumberFormat        ;Text2         ;ExternalName=numberformat;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Number Format;
+                                                              ENU=Number Format];
+                                                   Description=Specification of how numbers are displayed throughout Microsoft CRM. }
+    { 17  ;   ;IsDisabled          ;Boolean       ;ExternalName=isdisabled;
+                                                   ExternalType=Boolean;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Is Organization Disabled;
+                                                              ENU=Is Organization Disabled];
+                                                   Description=Information that specifies whether the organization is disabled. }
+    { 18  ;   ;DisabledReason      ;Text250       ;ExternalName=disabledreason;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Disabled Reason;
+                                                              ENU=Disabled Reason];
+                                                   Description=Reason for disabling the organization. }
+    { 19  ;   ;KbPrefix            ;Text20        ;ExternalName=kbprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Article Prefix;
+                                                              ENU=Article Prefix];
+                                                   Description=Prefix to use for all articles in Microsoft Dynamics CRM. }
+    { 20  ;   ;CurrentKbNumber     ;Integer       ;ExternalName=currentkbnumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Current Article Number;
+                                                              ENU=Current Article Number];
+                                                   Description=First article number to use. }
+    { 21  ;   ;CasePrefix          ;Text20        ;ExternalName=caseprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Case Prefix;
+                                                              ENU=Case Prefix];
+                                                   Description=Prefix to use for all cases throughout Microsoft Dynamics CRM. }
+    { 22  ;   ;CurrentCaseNumber   ;Integer       ;ExternalName=currentcasenumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Current Case Number;
+                                                              ENU=Current Case Number];
+                                                   Description=First case number to use. }
+    { 23  ;   ;ContractPrefix      ;Text20        ;ExternalName=contractprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Contract Prefix;
+                                                              ENU=Contract Prefix];
+                                                   Description=Prefix to use for all contracts throughout Microsoft Dynamics CRM. }
+    { 24  ;   ;CurrentContractNumber;Integer      ;ExternalName=currentcontractnumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Current Contract Number;
+                                                              ENU=Current Contract Number];
+                                                   Description=First contract number to use. }
+    { 25  ;   ;QuotePrefix         ;Text20        ;ExternalName=quoteprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Quote Prefix;
+                                                              ENU=Quote Prefix];
+                                                   Description=Prefix to use for all quotes throughout Microsoft Dynamics CRM. }
+    { 26  ;   ;CurrentQuoteNumber  ;Integer       ;ExternalName=currentquotenumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Current Quote Number;
+                                                              ENU=Current Quote Number];
+                                                   Description=First quote number to use. }
+    { 27  ;   ;OrderPrefix         ;Text20        ;ExternalName=orderprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Order Prefix;
+                                                              ENU=Order Prefix];
+                                                   Description=Prefix to use for all orders throughout Microsoft Dynamics CRM. }
+    { 28  ;   ;CurrentOrderNumber  ;Integer       ;ExternalName=currentordernumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Current Order Number;
+                                                              ENU=Current Order Number];
+                                                   Description=First order number to use. }
+    { 29  ;   ;InvoicePrefix       ;Text20        ;ExternalName=invoiceprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Invoice Prefix;
+                                                              ENU=Invoice Prefix];
+                                                   Description=Prefix to use for all invoice numbers throughout Microsoft Dynamics CRM. }
+    { 30  ;   ;CurrentInvoiceNumber;Integer       ;ExternalName=currentinvoicenumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Current Invoice Number;
+                                                              ENU=Current Invoice Number];
+                                                   Description=First invoice number to use. }
+    { 31  ;   ;UniqueSpecifierLength;Integer      ;ExternalName=uniquespecifierlength;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Unique String Length;
+                                                              ENU=Unique String Length];
+                                                   MinValue=4;
+                                                   MaxValue=6;
+                                                   Description=Number of characters appended to invoice, quote, and order numbers. }
+    { 32  ;   ;CreatedOn           ;DateTime      ;ExternalName=createdon;
+                                                   ExternalType=DateTime;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Created On;
+                                                              ENU=Created On];
+                                                   Description=Date and time when the organization was created. }
+    { 33  ;   ;ModifiedOn          ;DateTime      ;ExternalName=modifiedon;
+                                                   ExternalType=DateTime;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Modified On;
+                                                              ENU=Modified On];
+                                                   Description=Date and time when the organization was last modified. }
+    { 34  ;   ;FiscalYearFormat    ;Text25        ;ExternalName=fiscalyearformat;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Fiscal Year Format;
+                                                              ENU=Fiscal Year Format];
+                                                   Description=Information that specifies how the name of the fiscal year is displayed throughout Microsoft CRM. }
+    { 35  ;   ;FiscalPeriodFormat  ;Text25        ;ExternalName=fiscalperiodformat;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Fiscal Period Format;
+                                                              ENU=Fiscal Period Format];
+                                                   Description=Information that specifies how the name of the fiscal period is displayed throughout Microsoft CRM. }
+    { 36  ;   ;FiscalYearPeriodConnect;Text5      ;ExternalName=fiscalyearperiodconnect;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Fiscal Year Period Connector;
+                                                              ENU=Fiscal Year Period Connector];
+                                                   Description=Information that specifies how the names of the fiscal year and the fiscal period should be connected when displayed together. }
+    { 37  ;   ;LanguageCode        ;Integer       ;ExternalName=languagecode;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Language;
+                                                              ENU=Language];
+                                                   Description=Preferred language for the organization. }
+    { 38  ;   ;SortId              ;Integer       ;ExternalName=sortid;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Sort;
+                                                              ENU=Sort];
+                                                   Description=For internal use only. }
+    { 39  ;   ;DateFormatString    ;Text250       ;ExternalName=dateformatstring;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Date Format String;
+                                                              ENU=Date Format String];
+                                                   Description=String showing how the date is displayed throughout Microsoft CRM. }
+    { 40  ;   ;TimeFormatString    ;Text250       ;ExternalName=timeformatstring;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Time Format String;
+                                                              ENU=Time Format String];
+                                                   Description=Text for how time is displayed in Microsoft Dynamics CRM. }
+    { 41  ;   ;PricingDecimalPrecision;Integer    ;ExternalName=pricingdecimalprecision;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Pricing Decimal Precision;
+                                                              ENU=Pricing Decimal Precision];
+                                                   MinValue=0;
+                                                   MaxValue=4;
+                                                   Description=Number of decimal places that can be used for prices. }
+    { 42  ;   ;ShowWeekNumber      ;Boolean       ;ExternalName=showweeknumber;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Show Week Number;
+                                                              ENU=Show Week Number];
+                                                   Description=Information that specifies whether to display the week number in calendar displays throughout Microsoft CRM. }
+    { 43  ;   ;NextTrackingNumber  ;Integer       ;ExternalName=nexttrackingnumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Next Tracking Number;
+                                                              ENU=Next Tracking Number];
+                                                   Description=Next token to be placed on the subject line of an email message. }
+    { 44  ;   ;TagMaxAggressiveCycles;Integer     ;ExternalName=tagmaxaggressivecycles;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Auto-Tag Max Cycles;
+                                                              ENU=Auto-Tag Max Cycles];
+                                                   Description=Maximum number of aggressive polling cycles executed for email auto-tagging when a new email is received. }
+    { 45  ;   ;SystemUserId        ;GUID          ;ExternalName=systemuserid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   CaptionML=[DAN=System User;
+                                                              ENU=System User];
+                                                   Description=Unique identifier of the system user for the organization. }
+    { 46  ;   ;CreatedBy           ;GUID          ;TableRelation="CRM Systemuser".SystemUserId;
+                                                   ExternalName=createdby;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Created By;
+                                                              ENU=Created By];
+                                                   Description=Unique identifier of the user who created the organization. }
+    { 47  ;   ;GrantAccessToNetworkService;Boolean;ExternalName=grantaccesstonetworkservice;
+                                                   ExternalType=Boolean;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Grant Access To Network Service;
+                                                              ENU=Grant Access To Network Service];
+                                                   Description=For internal use only. }
+    { 48  ;   ;AllowOutlookScheduledSyncs;Boolean ;ExternalName=allowoutlookscheduledsyncs;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Scheduled Synchronization;
+                                                              ENU=Allow Scheduled Synchronization];
+                                                   Description=Indicates whether scheduled synchronizations to Outlook are allowed. }
+    { 49  ;   ;AllowMarketingEmailExecution;Boolean;
+                                                   ExternalName=allowmarketingemailexecution;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Marketing Email Execution;
+                                                              ENU=Allow Marketing Email Execution];
+                                                   Description=Indicates whether marketing emails execution is allowed. }
+    { 50  ;   ;SqlAccessGroupId    ;GUID          ;ExternalName=sqlaccessgroupid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   CaptionML=[DAN=SQL Access Group;
+                                                              ENU=SQL Access Group];
+                                                   Description=For internal use only. }
+    { 51  ;   ;CurrencyFormatCode  ;Option        ;InitValue=$123;
+                                                   ExternalName=currencyformatcode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[0;1;2;3];
+                                                   CaptionML=[DAN=Currency Format Code;
+                                                              ENU=Currency Format Code];
+                                                   OptionCaptionML=[DAN=$123,123$,$ 123,123 $;
+                                                                    ENU=$123,123$,$ 123,123 $];
+                                                   OptionString=$123,123$,$1231,123$1;
+                                                   Description=Information about how currency symbols are placed throughout Microsoft Dynamics CRM. }
+    { 52  ;   ;FiscalSettingsUpdated;Boolean      ;ExternalName=fiscalsettingsupdated;
+                                                   ExternalType=Boolean;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Is Fiscal Settings Updated;
+                                                              ENU=Is Fiscal Settings Updated];
+                                                   Description=Information that specifies whether the fiscal settings have been updated. }
+    { 53  ;   ;ReportingGroupId    ;GUID          ;ExternalName=reportinggroupid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   CaptionML=[DAN=Reporting Group;
+                                                              ENU=Reporting Group];
+                                                   Description=For internal use only. }
+    { 54  ;   ;TokenExpiry         ;Integer       ;ExternalName=tokenexpiry;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Modify;
+                                                   CaptionML=[DAN=Token Expiration Duration;
+                                                              ENU=Token Expiration Duration];
+                                                   Description=Duration used for token expiration. }
+    { 55  ;   ;ShareToPreviousOwnerOnAssign;Boolean;
+                                                   ExternalName=sharetopreviousowneronassign;
+                                                   ExternalType=Boolean;
+                                                   ExternalAccess=Modify;
+                                                   CaptionML=[DAN=Share To Previous Owner On Assign;
+                                                              ENU=Share To Previous Owner On Assign];
+                                                   Description=Information that specifies whether to share to previous owner on assign. }
+    { 56  ;   ;ModifiedBy          ;GUID          ;TableRelation="CRM Systemuser".SystemUserId;
+                                                   ExternalName=modifiedby;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Modified By;
+                                                              ENU=Modified By];
+                                                   Description=Unique identifier of the user who last modified the organization. }
+    { 57  ;   ;IntegrationUserId   ;GUID          ;ExternalName=integrationuserid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   CaptionML=[DAN=Integration User;
+                                                              ENU=Integration User];
+                                                   Description=Unique identifier of the integration user for the organization. }
+    { 58  ;   ;TrackingTokenIdBase ;Integer       ;ExternalName=trackingtokenidbase;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Tracking Token Base;
+                                                              ENU=Tracking Token Base];
+                                                   MinValue=0;
+                                                   Description=Base number used to provide separate tracking token identifiers to users belonging to different deployments. }
+    { 59  ;   ;BusinessClosureCalendarId;GUID     ;ExternalName=businessclosurecalendarid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Business Closure Calendar;
+                                                              ENU=Business Closure Calendar];
+                                                   Description=Unique identifier of the business closure calendar of organization. }
+    { 60  ;   ;AllowAutoUnsubscribeAcknowledg;Boolean;
+                                                   ExternalName=allowautounsubscribeacknowledgement;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Automatic Unsubscribe Acknowledgement;
+                                                              ENU=Allow Automatic Unsubscribe Acknowledgement];
+                                                   Description=Indicates whether automatic unsubscribe acknowledgement email is allowed to send. }
+    { 61  ;   ;AllowAutoUnsubscribe;Boolean       ;ExternalName=allowautounsubscribe;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Automatic Unsubscribe;
+                                                              ENU=Allow Automatic Unsubscribe];
+                                                   Description=Indicates whether automatic unsubscribe is allowed. }
+    { 62  ;   ;VersionNumber       ;BigInteger    ;ExternalName=versionnumber;
+                                                   ExternalType=BigInt;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Version Number;
+                                                              ENU=Version Number];
+                                                   Description=Version number of the organization. }
+    { 63  ;   ;TrackingPrefix      ;Text250       ;ExternalName=trackingprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Tracking Prefix;
+                                                              ENU=Tracking Prefix];
+                                                   Description=History list of tracking token prefixes. }
+    { 64  ;   ;MinOutlookSyncInterval;Integer     ;ExternalName=minoutlooksyncinterval;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Min Synchronization Frequency;
+                                                              ENU=Min Synchronization Frequency];
+                                                   MinValue=0;
+                                                   Description=Minimum allowed time between scheduled Outlook synchronizations. }
+    { 65  ;   ;BulkOperationPrefix ;Text20        ;ExternalName=bulkoperationprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Bulk Operation Prefix;
+                                                              ENU=Bulk Operation Prefix];
+                                                   Description=Prefix used for bulk operation numbering. }
+    { 66  ;   ;AllowAutoResponseCreation;Boolean  ;ExternalName=allowautoresponsecreation;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Automatic Response Creation;
+                                                              ENU=Allow Automatic Response Creation];
+                                                   Description=Indicates whether automatic response creation is allowed. }
+    { 67  ;   ;MaximumTrackingNumber;Integer      ;ExternalName=maximumtrackingnumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Max Tracking Number;
+                                                              ENU=Max Tracking Number];
+                                                   MinValue=0;
+                                                   Description=Maximum tracking number before recycling takes place. }
+    { 68  ;   ;CampaignPrefix      ;Text20        ;ExternalName=campaignprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Campaign Prefix;
+                                                              ENU=Campaign Prefix];
+                                                   Description=Prefix used for campaign numbering. }
+    { 69  ;   ;SqlAccessGroupName  ;Text250       ;ExternalName=sqlaccessgroupname;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=SQL Access Group Name;
+                                                              ENU=SQL Access Group Name];
+                                                   Description=For internal use only. }
+    { 70  ;   ;CurrentCampaignNumber;Integer      ;ExternalName=currentcampaignnumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Current Campaign Number;
+                                                              ENU=Current Campaign Number];
+                                                   Description=Current campaign number. }
+    { 71  ;   ;FiscalYearDisplayCode;Integer      ;ExternalName=fiscalyeardisplaycode;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Fiscal Year Display;
+                                                              ENU=Fiscal Year Display];
+                                                   Description=Information that specifies whether the fiscal year should be displayed based on the start date or the end date of the fiscal year. }
+    { 72  ;   ;SiteMapXml          ;BLOB          ;ExternalName=sitemapxml;
+                                                   ExternalType=Memo;
+                                                   CaptionML=[DAN=SiteMap XML;
+                                                              ENU=SiteMap XML];
+                                                   Description=XML string that defines the navigation structure for the application.;
+                                                   SubType=Memo }
+    { 73  ;   ;ReportingGroupName  ;Text250       ;ExternalName=reportinggroupname;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Reporting Group Name;
+                                                              ENU=Reporting Group Name];
+                                                   Description=For internal use only. }
+    { 74  ;   ;CurrentBulkOperationNumber;Integer ;ExternalName=currentbulkoperationnumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Current Bulk Operation Number;
+                                                              ENU=Current Bulk Operation Number];
+                                                   MinValue=0;
+                                                   Description=Current bulk operation number. }
+    { 75  ;   ;SchemaNamePrefix    ;Text8         ;ExternalName=schemanameprefix;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Customization Name Prefix;
+                                                              ENU=Customization Name Prefix];
+                                                   Description=Prefix used for custom entities and attributes. }
+    { 76  ;   ;IgnoreInternalEmail ;Boolean       ;ExternalName=ignoreinternalemail;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Ignore Internal Email;
+                                                              ENU=Ignore Internal Email];
+                                                   Description=Indicates whether incoming email sent by internal Microsoft Dynamics CRM users or queues should be tracked. }
+    { 77  ;   ;TagPollingPeriod    ;Integer       ;ExternalName=tagpollingperiod;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Auto-Tag Interval;
+                                                              ENU=Auto-Tag Interval];
+                                                   MinValue=0;
+                                                   Description=Normal polling frequency used for email receive auto-tagging in outlook. }
+    { 78  ;   ;TrackingTokenIdDigits;Integer      ;ExternalName=trackingtokeniddigits;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Tracking Token Digits;
+                                                              ENU=Tracking Token Digits];
+                                                   Description=Number of digits used to represent a tracking token identifier. }
+    { 79  ;   ;ModifiedByName      ;Text200       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Systemuser".FullName WHERE (SystemUserId=FIELD(ModifiedBy)));
+                                                   ExternalName=modifiedbyname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=ModifiedByName;
+                                                              ENU=ModifiedByName] }
+    { 80  ;   ;CreatedByName       ;Text200       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Systemuser".FullName WHERE (SystemUserId=FIELD(CreatedBy)));
+                                                   ExternalName=createdbyname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=CreatedByName;
+                                                              ENU=CreatedByName] }
+    { 81  ;   ;NumberGroupFormat   ;Text50        ;ExternalName=numbergroupformat;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Number Grouping Format;
+                                                              ENU=Number Grouping Format];
+                                                   Description=Specifies how numbers are grouped in Microsoft Dynamics CRM. }
+    { 82  ;   ;LongDateFormatCode  ;Integer       ;ExternalName=longdateformatcode;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Long Date Format;
+                                                              ENU=Long Date Format];
+                                                   Description=Information that specifies how the Long Date format is displayed in Microsoft Dynamics CRM. }
+    { 83  ;   ;UTCConversionTimeZoneCode;Integer  ;ExternalName=utcconversiontimezonecode;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=UTC Conversion Time Zone Code;
+                                                              ENU=UTC Conversion Time Zone Code];
+                                                   MinValue=-1;
+                                                   Description=Time zone code that was in use when the record was created. }
+    { 84  ;   ;TimeZoneRuleVersionNumber;Integer  ;ExternalName=timezoneruleversionnumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Time Zone Rule Version Number;
+                                                              ENU=Time Zone Rule Version Number];
+                                                   MinValue=-1;
+                                                   Description=For internal use only. }
+    { 85  ;   ;CurrentImportSequenceNumber;Integer;ExternalName=currentimportsequencenumber;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Current Import Sequence Number;
+                                                              ENU=Current Import Sequence Number];
+                                                   Description=Import sequence to use. }
+    { 86  ;   ;ParsedTablePrefix   ;Text20        ;ExternalName=parsedtableprefix;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Parsed Table Prefix;
+                                                              ENU=Parsed Table Prefix];
+                                                   Description=Prefix used for parsed tables. }
+    { 87  ;   ;V3CalloutConfigHash ;Text250       ;ExternalName=v3calloutconfighash;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=V3 Callout Hash;
+                                                              ENU=V3 Callout Hash];
+                                                   Description=Hash of the V3 callout configuration file. }
+    { 88  ;   ;IsFiscalPeriodMonthBased;Boolean   ;ExternalName=isfiscalperiodmonthbased;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Fiscal Period Monthly;
+                                                              ENU=Is Fiscal Period Monthly];
+                                                   Description=Indicates whether the fiscal period is displayed as the month number. }
+    { 89  ;   ;LocaleId            ;Integer       ;ExternalName=localeid;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Locale;
+                                                              ENU=Locale];
+                                                   Description=Unique identifier of the locale of the organization. }
+    { 90  ;   ;ParsedTableColumnPrefix;Text20     ;ExternalName=parsedtablecolumnprefix;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Parsed Table Column Prefix;
+                                                              ENU=Parsed Table Column Prefix];
+                                                   Description=Prefix used for parsed table columns. }
+    { 91  ;   ;SupportUserId       ;GUID          ;ExternalName=supportuserid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Support User;
+                                                              ENU=Support User];
+                                                   Description=Unique identifier of the support user for the organization. }
+    { 92  ;   ;AMDesignator        ;Text25        ;ExternalName=amdesignator;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=AM Designator;
+                                                              ENU=AM Designator];
+                                                   Description=AM designator to use throughout Microsoft Dynamics CRM. }
+    { 93  ;   ;CurrencyDisplayOption;Option       ;InitValue=Currencysymbol;
+                                                   ExternalName=currencydisplayoption;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[0;1];
+                                                   CaptionML=[DAN=Display Currencies Using;
+                                                              ENU=Display Currencies Using];
+                                                   OptionCaptionML=[DAN=Currency symbol,Currency code;
+                                                                    ENU=Currency symbol,Currency code];
+                                                   OptionString=Currencysymbol,Currencycode;
+                                                   Description=Indicates whether to display money fields with currency code or currency symbol. }
+    { 94  ;   ;MinAddressBookSyncInterval;Integer ;ExternalName=minaddressbooksyncinterval;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Min Address Synchronization Frequency;
+                                                              ENU=Min Address Synchronization Frequency];
+                                                   Description=Normal polling frequency used for address book synchronization in Microsoft Office Outlook. }
+    { 95  ;   ;IsDuplicateDetectionEnabledFor;Boolean;
+                                                   ExternalName=isduplicatedetectionenabledforonlinecreateupdate;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Duplicate Detection Enabled for Online Create/Update;
+                                                              ENU=Is Duplicate Detection Enabled for Online Create/Update];
+                                                   Description=Indicates whether duplicate detection during online create or update is enabled. }
+    { 96  ;   ;FeatureSet          ;Text250       ;ExternalName=featureset;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Feature Set;
+                                                              ENU=Feature Set];
+                                                   Description=Features to be enabled as an XML BLOB. }
+    { 97  ;   ;BlockedAttachments  ;Text250       ;ExternalName=blockedattachments;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Block Attachments;
+                                                              ENU=Block Attachments];
+                                                   Description=Prevent upload or download of certain attachment types that are considered dangerous. }
+    { 98  ;   ;IsDuplicateDetectionEnabledFo1;Boolean;
+                                                   ExternalName=isduplicatedetectionenabledforofflinesync;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Duplicate Detection Enabled For Offline Synchronization;
+                                                              ENU=Is Duplicate Detection Enabled For Offline Synchronization];
+                                                   Description=Indicates whether duplicate detection of records during offline synchronization is enabled. }
+    { 99  ;   ;AllowOfflineScheduledSyncs;Boolean ;ExternalName=allowofflinescheduledsyncs;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Offline Scheduled Synchronization;
+                                                              ENU=Allow Offline Scheduled Synchronization];
+                                                   Description=Indicates whether background offline synchronization in Microsoft Office Outlook is allowed. }
+    { 100 ;   ;AllowUnresolvedPartiesOnEmailS;Boolean;
+                                                   ExternalName=allowunresolvedpartiesonemailsend;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Unresolved Address Email Send;
+                                                              ENU=Allow Unresolved Address Email Send];
+                                                   Description=Indicates whether users are allowed to send email to unresolved parties (parties must still have an email address). }
+    { 101 ;   ;TimeSeparator       ;Text5         ;ExternalName=timeseparator;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Time Separator;
+                                                              ENU=Time Separator];
+                                                   Description=Text for how the time separator is displayed throughout Microsoft Dynamics CRM. }
+    { 102 ;   ;CurrentParsedTableNumber;Integer   ;ExternalName=currentparsedtablenumber;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Current Parsed Table Number;
+                                                              ENU=Current Parsed Table Number];
+                                                   Description=First parsed table number to use. }
+    { 103 ;   ;MinOfflineSyncInterval;Integer     ;ExternalName=minofflinesyncinterval;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Min Offline Synchronization Frequency;
+                                                              ENU=Min Offline Synchronization Frequency];
+                                                   Description=Normal polling frequency used for background offline synchronization in Microsoft Office Outlook. }
+    { 104 ;   ;AllowWebExcelExport ;Boolean       ;ExternalName=allowwebexcelexport;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Export to Excel;
+                                                              ENU=Allow Export to Excel];
+                                                   Description=Indicates whether Web-based export of grids to Microsoft Office Excel is allowed. }
+    { 105 ;   ;ReferenceSiteMapXml ;Text250       ;ExternalName=referencesitemapxml;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Reference SiteMap XML;
+                                                              ENU=Reference SiteMap XML];
+                                                   Description=XML string that defines the navigation structure for the application. This is the site map from the previously upgraded build and is used in a 3-way merge during upgrade. }
+    { 106 ;   ;IsDuplicateDetectionEnabledFo2;Boolean;
+                                                   ExternalName=isduplicatedetectionenabledforimport;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Duplicate Detection Enabled For Import;
+                                                              ENU=Is Duplicate Detection Enabled For Import];
+                                                   Description=Indicates whether duplicate detection of records during import is enabled. }
+    { 107 ;   ;CalendarType        ;Integer       ;ExternalName=calendartype;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Calendar Type;
+                                                              ENU=Calendar Type];
+                                                   Description=Calendar type for the system. Set to Gregorian US by default. }
+    { 108 ;   ;SQMEnabled          ;Boolean       ;ExternalName=sqmenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is SQM Enabled;
+                                                              ENU=Is SQM Enabled];
+                                                   Description=Setting for SQM data collection, 0 no, 1 yes enabled }
+    { 109 ;   ;NegativeCurrencyFormatCode;Integer ;ExternalName=negativecurrencyformatcode;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Negative Currency Format;
+                                                              ENU=Negative Currency Format];
+                                                   Description=Information that specifies how negative currency numbers are displayed throughout Microsoft Dynamics CRM. }
+    { 110 ;   ;AllowAddressBookSyncs;Boolean      ;ExternalName=allowaddressbooksyncs;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Address Book Synchronization;
+                                                              ENU=Allow Address Book Synchronization];
+                                                   Description=Indicates whether background address book synchronization in Microsoft Office Outlook is allowed. }
+    { 111 ;   ;ISVIntegrationCode  ;Option        ;InitValue=[ ];
+                                                   ExternalName=isvintegrationcode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[-1;0;1;2;3;4;5;6;7];
+                                                   CaptionML=[DAN=ISV Integration Mode;
+                                                              ENU=ISV Integration Mode];
+                                                   OptionCaptionML=[DAN=" ,None,Web,Outlook Workstation Client,Web; Outlook Workstation Client,Outlook Laptop Client,Web; Outlook Laptop Client,Outlook,All";
+                                                                    ENU=" ,None,Web,Outlook Workstation Client,Web; Outlook Workstation Client,Outlook Laptop Client,Web; Outlook Laptop Client,Outlook,All"];
+                                                   OptionString=[ ,None,Web,OutlookWorkstationClient,Web;OutlookWorkstationClient,OutlookLaptopClient,Web;OutlookLaptopClient,Outlook,All];
+                                                   Description=Indicates whether loading of Microsoft Dynamics CRM in a browser window that does not have address, tool, and menu bars is enabled. }
+    { 112 ;   ;DecimalSymbol       ;Text5         ;ExternalName=decimalsymbol;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Decimal Symbol;
+                                                              ENU=Decimal Symbol];
+                                                   Description=Symbol used for decimal in Microsoft Dynamics CRM. }
+    { 113 ;   ;MaxUploadFileSize   ;Integer       ;ExternalName=maxuploadfilesize;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Max Upload File Size;
+                                                              ENU=Max Upload File Size];
+                                                   MinValue=0;
+                                                   Description=Maximum allowed size of an attachment. }
+    { 114 ;   ;IsAppMode           ;Boolean       ;ExternalName=isappmode;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Application Mode Enabled;
+                                                              ENU=Is Application Mode Enabled];
+                                                   Description=Indicates whether loading of Microsoft Dynamics CRM in a browser window that does not have address, tool, and menu bars is enabled. }
+    { 115 ;   ;EnablePricingOnCreate;Boolean      ;ExternalName=enablepricingoncreate;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Enable Pricing On Create;
+                                                              ENU=Enable Pricing On Create];
+                                                   Description=Enable pricing calculations on a Create call. }
+    { 116 ;   ;IsSOPIntegrationEnabled;Boolean    ;ExternalName=issopintegrationenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Sales Order Integration Enabled;
+                                                              ENU=Is Sales Order Integration Enabled];
+                                                   Description=Enable sales order processing integration. }
+    { 117 ;   ;PMDesignator        ;Text25        ;ExternalName=pmdesignator;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=PM Designator;
+                                                              ENU=PM Designator];
+                                                   Description=PM designator to use throughout Microsoft Dynamics CRM. }
+    { 118 ;   ;CurrencyDecimalPrecision;Integer   ;ExternalName=currencydecimalprecision;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Currency Decimal Precision;
+                                                              ENU=Currency Decimal Precision];
+                                                   Description=Number of decimal places that can be used for currency. }
+    { 119 ;   ;MaxAppointmentDurationDays;Integer ;ExternalName=maxappointmentdurationdays;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Max Appointment Duration;
+                                                              ENU=Max Appointment Duration];
+                                                   MinValue=0;
+                                                   Description=Maximum number of days an appointment can last. }
+    { 120 ;   ;EmailSendPollingPeriod;Integer     ;ExternalName=emailsendpollingperiod;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Email Send Polling Frequency;
+                                                              ENU=Email Send Polling Frequency];
+                                                   Description=Normal polling frequency used for sending email in Microsoft Office Outlook. }
+    { 121 ;   ;RenderSecureIFrameForEmail;Boolean ;ExternalName=rendersecureiframeforemail;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Render Secure Frame For Email;
+                                                              ENU=Render Secure Frame For Email];
+                                                   Description=Flag to render the body of email in the Web form in an IFRAME with the security='restricted' attribute set. This is additional security but can cause a credentials prompt. }
+    { 122 ;   ;NumberSeparator     ;Text5         ;ExternalName=numberseparator;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Number Separator;
+                                                              ENU=Number Separator];
+                                                   Description=Symbol used for number separation in Microsoft Dynamics CRM. }
+    { 123 ;   ;PrivReportingGroupId;GUID          ;ExternalName=privreportinggroupid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   CaptionML=[DAN=Privilege Reporting Group;
+                                                              ENU=Privilege Reporting Group];
+                                                   Description=For internal use only. }
+    { 124 ;   ;BaseCurrencyId      ;GUID          ;TableRelation="CRM Transactioncurrency".TransactionCurrencyId;
+                                                   ExternalName=basecurrencyid;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Currency;
+                                                              ENU=Currency];
+                                                   Description=Unique identifier of the base currency of the organization. }
+    { 125 ;   ;MaxRecordsForExportToExcel;Integer ;ExternalName=maxrecordsforexporttoexcel;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Max Records For Excel Export;
+                                                              ENU=Max Records For Excel Export];
+                                                   MinValue=0;
+                                                   Description=Maximum number of records that will be exported to a static Microsoft Office Excel worksheet when exporting from the grid. }
+    { 126 ;   ;PrivReportingGroupName;Text250     ;ExternalName=privreportinggroupname;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Privilege Reporting Group Name;
+                                                              ENU=Privilege Reporting Group Name];
+                                                   Description=For internal use only. }
+    { 127 ;   ;YearStartWeekCode   ;Integer       ;ExternalName=yearstartweekcode;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Year Start Week Code;
+                                                              ENU=Year Start Week Code];
+                                                   Description=Information that specifies how the first week of the year is specified in Microsoft Dynamics CRM. }
+    { 128 ;   ;IsPresenceEnabled   ;Boolean       ;ExternalName=ispresenceenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Presence Enabled;
+                                                              ENU=Presence Enabled];
+                                                   Description=Information on whether IM presence is enabled. }
+    { 129 ;   ;IsDuplicateDetectionEnabled;Boolean;ExternalName=isduplicatedetectionenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Duplicate Detection Enabled;
+                                                              ENU=Is Duplicate Detection Enabled];
+                                                   Description=Indicates whether duplicate detection of records is enabled. }
+    { 130 ;   ;BaseCurrencyIdName  ;Text100       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Transactioncurrency".CurrencyName WHERE (TransactionCurrencyId=FIELD(BaseCurrencyId)));
+                                                   ExternalName=basecurrencyidname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=BaseCurrencyIdName;
+                                                              ENU=BaseCurrencyIdName] }
+    { 131 ;   ;ExpireSubscriptionsInDays;Integer  ;ExternalName=expiresubscriptionsindays;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Days to Expire Subscriptions;
+                                                              ENU=Days to Expire Subscriptions];
+                                                   MinValue=0;
+                                                   Description=Maximum number of days before deleting inactive subscriptions. }
+    { 132 ;   ;IsAuditEnabled      ;Boolean       ;ExternalName=isauditenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Auditing Enabled;
+                                                              ENU=Is Auditing Enabled];
+                                                   Description=Enable or disable auditing of changes. }
+    { 133 ;   ;BaseCurrencyPrecision;Integer      ;ExternalName=basecurrencyprecision;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Base Currency Precision;
+                                                              ENU=Base Currency Precision];
+                                                   MinValue=0;
+                                                   MaxValue=4;
+                                                   Description=Number of decimal places that can be used for the base currency. }
+    { 134 ;   ;BaseCurrencySymbol  ;Text5         ;ExternalName=basecurrencysymbol;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Base Currency Symbol;
+                                                              ENU=Base Currency Symbol];
+                                                   Description=Symbol used for the base currency. }
+    { 135 ;   ;MaxRecordsForLookupFilters;Integer ;ExternalName=maxrecordsforlookupfilters;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Max Records Filter Selection;
+                                                              ENU=Max Records Filter Selection];
+                                                   MinValue=0;
+                                                   Description=Maximum number of lookup and picklist records that can be selected by user for filtering. }
+    { 136 ;   ;AllowEntityOnlyAudit;Boolean       ;ExternalName=allowentityonlyaudit;
+                                                   ExternalType=Boolean;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Allow Entity Level Auditing;
+                                                              ENU=Allow Entity Level Auditing];
+                                                   Description=Indicates whether auditing of changes to entity is allowed when no attributes have changed. }
+    { 137 ;   ;DefaultRecurrenceEndRangeType;Option;
+                                                   InitValue=[ ];
+                                                   ExternalName=defaultrecurrenceendrangetype;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[-1;1;2;3];
+                                                   CaptionML=[DAN=Default Recurrence End Range Type;
+                                                              ENU=Default Recurrence End Range Type];
+                                                   OptionCaptionML=[DAN=" ,No End Date,Number of Occurrences,End By Date";
+                                                                    ENU=" ,No End Date,Number of Occurrences,End By Date"];
+                                                   OptionString=[ ,NoEndDate,NumberofOccurrences,EndByDate];
+                                                   Description=Type of default recurrence end range date. }
+    { 138 ;   ;FutureExpansionWindow;Integer      ;ExternalName=futureexpansionwindow;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Future Expansion Window;
+                                                              ENU=Future Expansion Window];
+                                                   MinValue=1;
+                                                   MaxValue=140;
+                                                   Description=Specifies the maximum number of months in future for which the recurring activities can be created. }
+    { 139 ;   ;PastExpansionWindow ;Integer       ;ExternalName=pastexpansionwindow;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Past Expansion Window;
+                                                              ENU=Past Expansion Window];
+                                                   MinValue=1;
+                                                   MaxValue=120;
+                                                   Description=Specifies the maximum number of months in past for which the recurring activities can be created. }
+    { 140 ;   ;RecurrenceExpansionSynchCreate;Integer;
+                                                   ExternalName=recurrenceexpansionsynchcreatemax;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Recurrence Expansion Synchronization Create Maximum;
+                                                              ENU=Recurrence Expansion Synchronization Create Maximum];
+                                                   MinValue=1;
+                                                   MaxValue=1000;
+                                                   Description=Specifies the maximum number of instances to be created synchronously after creating a recurring appointment. }
+    { 141 ;   ;RecurrenceDefaultNumberOfOccur;Integer;
+                                                   ExternalName=recurrencedefaultnumberofoccurrences;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Recurrence Default Number of Occurrences;
+                                                              ENU=Recurrence Default Number of Occurrences];
+                                                   MinValue=1;
+                                                   MaxValue=999;
+                                                   Description=Specifies the default value for number of occurrences field in the recurrence dialog. }
+    { 142 ;   ;CreatedOnBehalfBy   ;GUID          ;TableRelation="CRM Systemuser".SystemUserId;
+                                                   ExternalName=createdonbehalfby;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Created By (Delegate);
+                                                              ENU=Created By (Delegate)];
+                                                   Description=Unique identifier of the delegate user who created the organization. }
+    { 143 ;   ;CreatedOnBehalfByName;Text200      ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Systemuser".FullName WHERE (SystemUserId=FIELD(CreatedOnBehalfBy)));
+                                                   ExternalName=createdonbehalfbyname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=CreatedOnBehalfByName;
+                                                              ENU=CreatedOnBehalfByName] }
+    { 144 ;   ;ModifiedOnBehalfBy  ;GUID          ;TableRelation="CRM Systemuser".SystemUserId;
+                                                   ExternalName=modifiedonbehalfby;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Modified By (Delegate);
+                                                              ENU=Modified By (Delegate)];
+                                                   Description=Unique identifier of the delegate user who last modified the organization. }
+    { 145 ;   ;ModifiedOnBehalfByName;Text200     ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Systemuser".FullName WHERE (SystemUserId=FIELD(ModifiedOnBehalfBy)));
+                                                   ExternalName=modifiedonbehalfbyname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=ModifiedOnBehalfByName;
+                                                              ENU=ModifiedOnBehalfByName] }
+    { 146 ;   ;GetStartedPaneContentEnabled;Boolean;
+                                                   ExternalName=getstartedpanecontentenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Get Started Pane Content Enabled;
+                                                              ENU=Is Get Started Pane Content Enabled];
+                                                   Description=Indicates whether Get Started content is enabled for this organization. }
+    { 147 ;   ;UseReadForm         ;Boolean       ;ExternalName=usereadform;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Use Read-Optimized Form;
+                                                              ENU=Use Read-Optimized Form];
+                                                   Description=Indicates whether the read-optimized form should be enabled for this organization. }
+    { 148 ;   ;InitialVersion      ;Text20        ;ExternalName=initialversion;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Initial Version;
+                                                              ENU=Initial Version];
+                                                   Description=Initial version of the organization. }
+    { 149 ;   ;SampleDataImportId  ;GUID          ;ExternalName=sampledataimportid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   CaptionML=[DAN=Sample Data Import;
+                                                              ENU=Sample Data Import];
+                                                   Description=Unique identifier of the sample data import job. }
+    { 150 ;   ;ReportScriptErrors  ;Option        ;InitValue=[ ];
+                                                   ExternalName=reportscripterrors;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[-1;0;1;2;3];
+                                                   CaptionML=[DAN=Report Script Errors;
+                                                              ENU=Report Script Errors];
+                                                   OptionCaptionML=[DAN=" ,No preference for sending an error report to Microsoft about Microsoft Dynamics CRM,Ask me for permission to send an error report to Microsoft,Automatically send an error report to Microsoft without asking me for permission,Never send an error report to Microsoft about Microsoft Dynamics CRM";
+                                                                    ENU=" ,No preference for sending an error report to Microsoft about Microsoft Dynamics CRM,Ask me for permission to send an error report to Microsoft,Automatically send an error report to Microsoft without asking me for permission,Never send an error report to Microsoft about Microsoft Dynamics CRM"];
+                                                   OptionString=[ ,NopreferenceforsendinganerrorreporttoMicrosoftaboutMicrosoftDynamicsCRM,AskmeforpermissiontosendanerrorreporttoMicrosoft,AutomaticallysendanerrorreporttoMicrosoftwithoutaskingmeforpermission,NeversendanerrorreporttoMicrosoftaboutMicrosoftDynamicsCRM];
+                                                   Description=Picklist for selecting the organization preference for reporting scripting errors. }
+    { 151 ;   ;RequireApprovalForUserEmail;Boolean;ExternalName=requireapprovalforuseremail;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Approval For User Email Required;
+                                                              ENU=Is Approval For User Email Required];
+                                                   Description=Indicates whether Send As Other User privilege is enabled. }
+    { 152 ;   ;RequireApprovalForQueueEmail;Boolean;
+                                                   ExternalName=requireapprovalforqueueemail;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Approval For Queue Email Required;
+                                                              ENU=Is Approval For Queue Email Required];
+                                                   Description=Indicates whether Send As Other User privilege is enabled. }
+    { 153 ;   ;GoalRollupExpiryTime;Integer       ;ExternalName=goalrollupexpirytime;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Rollup Expiration Time for Goal;
+                                                              ENU=Rollup Expiration Time for Goal];
+                                                   MinValue=0;
+                                                   MaxValue=400;
+                                                   Description=Number of days after the goal's end date after which the rollup of the goal stops automatically. }
+    { 154 ;   ;GoalRollupFrequency ;Integer       ;ExternalName=goalrollupfrequency;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Automatic Rollup Frequency for Goal;
+                                                              ENU=Automatic Rollup Frequency for Goal];
+                                                   MinValue=1;
+                                                   Description=Number of hours between automatic rollup jobs . }
+    { 155 ;   ;AutoApplyDefaultonCaseCreate;Boolean;
+                                                   ExternalName=autoapplydefaultoncasecreate;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Auto Apply Default Entitlement on Case Create;
+                                                              ENU=Auto Apply Default Entitlement on Case Create];
+                                                   Description=Select whether to auto apply the default customer entitlement on case creation. }
+    { 156 ;   ;AutoApplyDefaultonCaseUpdate;Boolean;
+                                                   ExternalName=autoapplydefaultoncaseupdate;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Auto Apply Default Entitlement on Case Update;
+                                                              ENU=Auto Apply Default Entitlement on Case Update];
+                                                   Description=Select whether to auto apply the default customer entitlement on case update. }
+    { 157 ;   ;FiscalYearFormatPrefix;Option      ;InitValue=[ ];
+                                                   ExternalName=fiscalyearformatprefix;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[-1;1;2];
+                                                   CaptionML=[DAN=Prefix for Fiscal Year;
+                                                              ENU=Prefix for Fiscal Year];
+                                                   OptionCaptionML=[DAN=" ,FY";
+                                                                    ENU=" ,FY"];
+                                                   OptionString=[ ,FY];
+                                                   Description=Prefix for the display of the fiscal year. }
+    { 158 ;   ;FiscalYearFormatSuffix;Option      ;InitValue=[ ];
+                                                   ExternalName=fiscalyearformatsuffix;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[-1;1;2;3];
+                                                   CaptionML=[DAN=Suffix for Fiscal Year;
+                                                              ENU=Suffix for Fiscal Year];
+                                                   OptionCaptionML=[DAN=" ,FY, Fiscal Year";
+                                                                    ENU=" ,FY, Fiscal Year"];
+                                                   OptionString=[ ,FY,FiscalYear];
+                                                   Description=Suffix for the display of the fiscal year. }
+    { 159 ;   ;FiscalYearFormatYear;Option        ;InitValue=[ ];
+                                                   ExternalName=fiscalyearformatyear;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[-1;1;2;3];
+                                                   CaptionML=[DAN=Fiscal Year Format Year;
+                                                              ENU=Fiscal Year Format Year];
+                                                   OptionCaptionML=[DAN=" ,YYYY,YY,GGYY";
+                                                                    ENU=" ,YYYY,YY,GGYY"];
+                                                   OptionString=[ ,YYYY,YY,GGYY];
+                                                   Description=Format for the year. }
+    { 160 ;   ;DiscountCalculationMethod;Option   ;InitValue=Lineitem;
+                                                   ExternalName=discountcalculationmethod;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[0;1];
+                                                   CaptionML=[DAN=Discount calculation method;
+                                                              ENU=Discount calculation method];
+                                                   OptionCaptionML=[DAN=Line item,Per unit;
+                                                                    ENU=Line item,Per unit];
+                                                   OptionString=Lineitem,Perunit;
+                                                   Description=Discount calculation method for the QOOI product. }
+    { 161 ;   ;FiscalPeriodFormatPeriod;Option    ;InitValue=[ ];
+                                                   ExternalName=fiscalperiodformatperiod;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[-1;1;2;3;4;5;6;7];
+                                                   CaptionML=[DAN=Format for Fiscal Period;
+                                                              ENU=Format for Fiscal Period];
+                                                   OptionCaptionML=[DAN=" ,Quarter {0},Q{0},P{0},Month {0},M{0},Semester {0},Month Name";
+                                                                    ENU=" ,Quarter {0},Q{0},P{0},Month {0},M{0},Semester {0},Month Name"];
+                                                   OptionString=[ ,Quarter{0},Q{0},P{0},Month{0},M{0},Semester{0},MonthName];
+                                                   Description=Format in which the fiscal period will be displayed. }
+    { 162 ;   ;AllowClientMessageBarAd;Boolean    ;ExternalName=allowclientmessagebarad;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow Outlook Client Message Bar Advertisement;
+                                                              ENU=Allow Outlook Client Message Bar Advertisement];
+                                                   Description=Indicates whether Outlook Client message bar advertisement is allowed. }
+    { 163 ;   ;AllowUserFormModePreference;Boolean;ExternalName=allowuserformmodepreference;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow User Form Mode Preference;
+                                                              ENU=Allow User Form Mode Preference];
+                                                   Description=Indicates whether individuals can select their form mode preference in their personal options. }
+    { 164 ;   ;HashFilterKeywords  ;Text250       ;ExternalName=hashfilterkeywords;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Hash Filter Keywords;
+                                                              ENU=Hash Filter Keywords];
+                                                   Description=Filter Subject Keywords }
+    { 165 ;   ;HashMaxCount        ;Integer       ;ExternalName=hashmaxcount;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Hash Max Count;
+                                                              ENU=Hash Max Count];
+                                                   MinValue=0;
+                                                   Description=Maximum number of subject keywords or recipients used for correlation }
+    { 166 ;   ;HashDeltaSubjectCount;Integer      ;ExternalName=hashdeltasubjectcount;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Hash Delta Subject Count;
+                                                              ENU=Hash Delta Subject Count];
+                                                   MinValue=0;
+                                                   Description=Maximum difference allowed between subject keywords count of the email messaged to be correlated }
+    { 167 ;   ;HashMinAddressCount ;Integer       ;ExternalName=hashminaddresscount;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Hash Min Address Count;
+                                                              ENU=Hash Min Address Count];
+                                                   MinValue=0;
+                                                   Description=Minimum number of recipients required to match for email messaged to be correlated }
+    { 168 ;   ;EnableSmartMatching ;Boolean       ;ExternalName=enablesmartmatching;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Enable Smart Matching;
+                                                              ENU=Enable Smart Matching];
+                                                   Description=Use Smart Matching. }
+    { 169 ;   ;PinpointLanguageCode;Integer       ;ExternalName=pinpointlanguagecode;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Modify;
+                                                   CaptionML=[DAN=PinpointLanguageCode;
+                                                              ENU=PinpointLanguageCode] }
+    { 170 ;   ;OrgDbOrgSettings    ;Text250       ;ExternalName=orgdborgsettings;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Organization Database Organization Settings;
+                                                              ENU=Organization Database Organization Settings];
+                                                   Description=Organization settings stored in Organization Database. }
+    { 171 ;   ;IsUserAccessAuditEnabled;Boolean   ;ExternalName=isuseraccessauditenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is User Access Auditing Enabled;
+                                                              ENU=Is User Access Auditing Enabled];
+                                                   Description=Enable or disable auditing of user access. }
+    { 172 ;   ;UserAccessAuditingInterval;Integer ;ExternalName=useraccessauditinginterval;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=User Authentication Auditing Interval;
+                                                              ENU=User Authentication Auditing Interval];
+                                                   MinValue=0;
+                                                   Description=The interval at which user access is checked for auditing. }
+    { 173 ;   ;QuickFindRecordLimitEnabled;Boolean;ExternalName=quickfindrecordlimitenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Quick Find Record Limit Enabled;
+                                                              ENU=Quick Find Record Limit Enabled];
+                                                   Description=Indicates whether a quick find record limit should be enabled for this organization (allows for faster Quick Find queries but prevents overly broad searches). }
+    { 174 ;   ;EnableBingMapsIntegration;Boolean  ;ExternalName=enablebingmapsintegration;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Enable Integration with Bing Maps;
+                                                              ENU=Enable Integration with Bing Maps];
+                                                   Description=Enable Integration with Bing Maps }
+    { 175 ;   ;IsDefaultCountryCodeCheckEnabl;Boolean;
+                                                   ExternalName=isdefaultcountrycodecheckenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Enable or disable country code selection;
+                                                              ENU=Enable or disable country code selection];
+                                                   Description=Enable or disable country code selection. }
+    { 176 ;   ;DefaultCountryCode  ;Text30        ;ExternalName=defaultcountrycode;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Default Country Code;
+                                                              ENU=Default Country Code];
+                                                   Description=Text area to enter default country code. }
+    { 177 ;   ;UseSkypeProtocol    ;Boolean       ;ExternalName=useskypeprotocol;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=User Skype Protocol;
+                                                              ENU=User Skype Protocol];
+                                                   Description=Indicates default protocol selected for organization. }
+    { 178 ;   ;IncomingEmailExchangeEmailRetr;Integer;
+                                                   ExternalName=incomingemailexchangeemailretrievalbatchsize;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Exchange Email Retrieval Batch Size;
+                                                              ENU=Exchange Email Retrieval Batch Size];
+                                                   MinValue=1;
+                                                   Description=Setting for the Async Service Mailbox Queue. Defines the retrieval batch size of exchange server. }
+    { 179 ;   ;EmailCorrelationEnabled;Boolean    ;ExternalName=emailcorrelationenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Use Email Correlation;
+                                                              ENU=Use Email Correlation];
+                                                   Description=Flag to turn email correlation on or off. }
+    { 180 ;   ;YammerOAuthAccessTokenExpired;Boolean;
+                                                   ExternalName=yammeroauthaccesstokenexpired;
+                                                   ExternalType=Boolean;
+                                                   ExternalAccess=Modify;
+                                                   CaptionML=[DAN=Yammer OAuth Access Token Expired;
+                                                              ENU=Yammer OAuth Access Token Expired];
+                                                   Description=Denotes whether the OAuth access token for Yammer network has expired }
+    { 181 ;   ;DefaultEmailSettings;Text250       ;ExternalName=defaultemailsettings;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Default Email Settings;
+                                                              ENU=Default Email Settings];
+                                                   Description=XML string containing the default email settings that are applied when a user or queue is created. }
+    { 182 ;   ;YammerGroupId       ;Integer       ;ExternalName=yammergroupid;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Modify;
+                                                   CaptionML=[DAN=Yammer Group Id;
+                                                              ENU=Yammer Group Id];
+                                                   MinValue=0;
+                                                   Description=Denotes the Yammer group ID }
+    { 183 ;   ;YammerNetworkPermalink;Text100     ;ExternalName=yammernetworkpermalink;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Modify;
+                                                   CaptionML=[DAN=Yammer Network Permalink;
+                                                              ENU=Yammer Network Permalink];
+                                                   Description=Denotes the Yammer network permalink }
+    { 184 ;   ;YammerPostMethod    ;Option        ;InitValue=Public;
+                                                   ExternalName=yammerpostmethod;
+                                                   ExternalType=Picklist;
+                                                   ExternalAccess=Modify;
+                                                   OptionOrdinalValues=[0;1];
+                                                   CaptionML=[DAN=Internal Use Only;
+                                                              ENU=Internal Use Only];
+                                                   OptionCaptionML=[DAN=Public,Private;
+                                                                    ENU=Public,Private];
+                                                   OptionString=Public,Private;
+                                                   Description=Internal Use Only }
+    { 185 ;   ;EmailConnectionChannel;Option      ;InitValue=Server-SideSynchronization;
+                                                   ExternalName=emailconnectionchannel;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[0;1];
+                                                   CaptionML=[DAN=Email Connection Channel;
+                                                              ENU=Email Connection Channel];
+                                                   OptionCaptionML=[DAN=Server-Side Synchronization,Microsoft Dynamics CRM 2015 Email Router;
+                                                                    ENU=Server-Side Synchronization,Microsoft Dynamics CRM 2015 Email Router];
+                                                   OptionString=Server-SideSynchronization,MicrosoftDynamicsCRM2015EmailRouter;
+                                                   Description=Select if you want to use the Email Router or server-side synchronization for email processing. }
+    { 186 ;   ;IsAutoSaveEnabled   ;Boolean       ;ExternalName=isautosaveenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Auto Save Enabled;
+                                                              ENU=Auto Save Enabled];
+                                                   Description=Information on whether auto save is enabled. }
+    { 187 ;   ;BingMapsApiKey      ;Text250       ;ExternalName=bingmapsapikey;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Bing Maps API Key;
+                                                              ENU=Bing Maps API Key];
+                                                   Description=Api Key to be used in requests to Bing Maps services. }
+    { 188 ;   ;GenerateAlertsForErrors;Boolean    ;ExternalName=generatealertsforerrors;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Generate Alerts For Errors;
+                                                              ENU=Generate Alerts For Errors];
+                                                   Description=Indicates whether alerts will be generated for errors. }
+    { 189 ;   ;GenerateAlertsForInformation;Boolean;
+                                                   ExternalName=generatealertsforinformation;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Generate Alerts For Information;
+                                                              ENU=Generate Alerts For Information];
+                                                   Description=Indicates whether alerts will be generated for information. }
+    { 190 ;   ;GenerateAlertsForWarnings;Boolean  ;ExternalName=generatealertsforwarnings;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Generate Alerts For Warnings;
+                                                              ENU=Generate Alerts For Warnings];
+                                                   Description=Indicates whether alerts will be generated for warnings. }
+    { 191 ;   ;NotifyMailboxOwnerOfEmailServe;Boolean;
+                                                   ExternalName=notifymailboxownerofemailserverlevelalerts;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Notify Mailbox Owner Of Email Server Level Alerts;
+                                                              ENU=Notify Mailbox Owner Of Email Server Level Alerts];
+                                                   Description=Indicates whether mailbox owners will be notified of email server profile level alerts. }
+    { 192 ;   ;MaximumActiveBusinessProcessFl;Integer;
+                                                   ExternalName=maximumactivebusinessprocessflowsallowedperentity;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Maximum active business process flows per entity;
+                                                              ENU=Maximum active business process flows per entity];
+                                                   MinValue=1;
+                                                   Description=Maximum number of active business process flows allowed per entity }
+    { 193 ;   ;EntityImageId       ;GUID          ;ExternalName=entityimageid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Entity Image Id;
+                                                              ENU=Entity Image Id];
+                                                   Description=For internal use only. }
+    { 194 ;   ;AllowUsersSeeAppdownloadMessag;Boolean;
+                                                   ExternalName=allowusersseeappdownloadmessage;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Allow the showing tablet application notification bars in a browser.;
+                                                              ENU=Allow the showing tablet application notification bars in a browser.];
+                                                   Description=Indicates whether the showing tablet application notification bars in a browser is allowed. }
+    { 195 ;   ;SignupOutlookDownloadFWLink;Text200;ExternalName=signupoutlookdownloadfwlink;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=CRMForOutlookDownloadURL;
+                                                              ENU=CRMForOutlookDownloadURL];
+                                                   Description=CRM for Outlook Download URL }
+    { 196 ;   ;CascadeStatusUpdate ;Boolean       ;ExternalName=cascadestatusupdate;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Cascade Status Update;
+                                                              ENU=Cascade Status Update];
+                                                   Description=Flag to cascade Update on incident. }
+    { 197 ;   ;RestrictStatusUpdate;Boolean       ;ExternalName=restrictstatusupdate;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Restrict Status Update;
+                                                              ENU=Restrict Status Update];
+                                                   Description=Flag to restrict Update on incident. }
+    { 198 ;   ;SuppressSLA         ;Boolean       ;ExternalName=suppresssla;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is SLA suppressed;
+                                                              ENU=Is SLA suppressed];
+                                                   Description=Indicates whether SLA is suppressed. }
+    { 199 ;   ;SocialInsightsTermsAccepted;Boolean;ExternalName=socialinsightstermsaccepted;
+                                                   ExternalType=Boolean;
+                                                   ExternalAccess=Modify;
+                                                   CaptionML=[DAN=Social Insights Terms of Use;
+                                                              ENU=Social Insights Terms of Use];
+                                                   Description=Flag for whether the organization has accepted the Social Insights terms of use. }
+    { 200 ;   ;SocialInsightsInstance;Text250     ;ExternalName=socialinsightsinstance;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Social Insights instance identifier;
+                                                              ENU=Social Insights instance identifier];
+                                                   Description=Identifier for the Social Insights instance for the organization. }
+    { 201 ;   ;DisableSocialCare   ;Boolean       ;ExternalName=disablesocialcare;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Social Care disabled;
+                                                              ENU=Is Social Care disabled];
+                                                   Description=Indicates whether Social Care is disabled. }
+    { 202 ;   ;MaxProductsInBundle ;Integer       ;ExternalName=maxproductsinbundle;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Bundle Item Limit;
+                                                              ENU=Bundle Item Limit];
+                                                   MinValue=0;
+                                                   Description=Restrict the maximum no of items in a bundle }
+    { 203 ;   ;UseInbuiltRuleForDefaultPricel;Boolean;
+                                                   ExternalName=useinbuiltrulefordefaultpricelistselection;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Use Inbuilt Rule For Default Pricelist Selection;
+                                                              ENU=Use Inbuilt Rule For Default Pricelist Selection];
+                                                   Description=Flag indicates whether to Use Inbuilt Rule For DefaultPricelist. }
+    { 204 ;   ;OOBPriceCalculationEnabled;Boolean ;ExternalName=oobpricecalculationenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Enable OOB Price calculation;
+                                                              ENU=Enable OOB Price calculation];
+                                                   Description=Enable OOB pricing calculation logic for Opportunity, Quote, Order and Invoice entities. }
+    { 205 ;   ;IsHierarchicalSecurityModelEna;Boolean;
+                                                   ExternalName=ishierarchicalsecuritymodelenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Enable Hierarchical Security Model;
+                                                              ENU=Enable Hierarchical Security Model];
+                                                   Description=Enable Hierarchical Security Model }
+    { 206 ;   ;MaximumDynamicPropertiesAllowe;Integer;
+                                                   ExternalName=maximumdynamicpropertiesallowed;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Product Properties Item Limit;
+                                                              ENU=Product Properties Item Limit];
+                                                   MinValue=0;
+                                                   Description=Restrict the maximum number of product properties for a product family/bundle }
+    { 207 ;   ;UsePositionHierarchy;Boolean       ;ExternalName=usepositionhierarchy;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Use position hierarchy;
+                                                              ENU=Use position hierarchy];
+                                                   Description=Use position hierarchy }
+    { 208 ;   ;MaxDepthForHierarchicalSecurit;Integer;
+                                                   ExternalName=maxdepthforhierarchicalsecuritymodel;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Maximum depth for hierarchy security propagation.;
+                                                              ENU=Maximum depth for hierarchy security propagation.];
+                                                   Description=Maximum depth for hierarchy security propagation. }
+    { 209 ;   ;SlaPauseStates      ;Text250       ;ExternalName=slapausestates;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=SLA pause states;
+                                                              ENU=SLA pause states];
+                                                   Description=Contains the on hold case status values. }
+    { 210 ;   ;SocialInsightsEnabled;Boolean      ;ExternalName=socialinsightsenabled;
+                                                   ExternalType=Boolean;
+                                                   ExternalAccess=Modify;
+                                                   CaptionML=[DAN=Social Insights Enabled;
+                                                              ENU=Social Insights Enabled];
+                                                   Description=Flag for whether the organization is using Social Insights. }
+    { 211 ;   ;IsAppointmentAttachmentSyncEna;Boolean;
+                                                   ExternalName=isappointmentattachmentsyncenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Attachment Sync Enabled;
+                                                              ENU=Is Attachment Sync Enabled];
+                                                   Description=Enable or disable attachments sync for outlook and exchange. }
+    { 212 ;   ;IsAssignedTasksSyncEnabled;Boolean ;ExternalName=isassignedtaskssyncenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Assigned Tasks Sync Enabled;
+                                                              ENU=Is Assigned Tasks Sync Enabled];
+                                                   Description=Enable or disable assigned tasks sync for outlook and exchange. }
+    { 213 ;   ;IsContactMailingAddressSyncEna;Boolean;
+                                                   ExternalName=iscontactmailingaddresssyncenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Mailing Address Sync Enabled;
+                                                              ENU=Is Mailing Address Sync Enabled];
+                                                   Description=Enable or disable mailing address sync for outlook and exchange. }
+    { 214 ;   ;MaxSupportedInternetExplorerVe;Integer;
+                                                   ExternalName=maxsupportedinternetexplorerversion;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Max supported IE version;
+                                                              ENU=Max supported IE version];
+                                                   MinValue=0;
+                                                   Description=The maximum version of IE to run browser emulation for in Outlook client }
+    { 215 ;   ;GlobalHelpUrl       ;Text250       ;ExternalName=globalhelpurl;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Global Help URL.;
+                                                              ENU=Global Help URL.];
+                                                   Description=URL for the web page global help. }
+    { 216 ;   ;GlobalHelpUrlEnabled;Boolean       ;ExternalName=globalhelpurlenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Customizable Global Help enabled;
+                                                              ENU=Is Customizable Global Help enabled];
+                                                   Description=Indicates whether the customizable global help is enabled. }
+    { 217 ;   ;GlobalAppendUrlParametersEnabl;Boolean;
+                                                   ExternalName=globalappendurlparametersenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is AppendUrl Parameters enabled;
+                                                              ENU=Is AppendUrl Parameters enabled];
+                                                   Description=Indicates whether the append URL parameters is enabled. }
+    { 218 ;   ;KMSettings          ;Text250       ;ExternalName=kmsettings;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Knowledge Management Settings;
+                                                              ENU=Knowledge Management Settings];
+                                                   Description=XML string containing the Knowledge Management settings that are applied in Knowledge Management Wizard. }
+    { 219 ;   ;MobileClientMashupEnabled;Boolean  ;ExternalName=mobileclientmashupenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Mobile Client Mashup enabled;
+                                                              ENU=Is Mobile Client Mashup enabled];
+                                                   Description=Indicates whether the mobile client mashup is enabled. }
+    { 220 ;   ;CreateProductsWithoutParentInA;Boolean;
+                                                   ExternalName=createproductswithoutparentinactivestate;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Enable Active Initial Product State;
+                                                              ENU=Enable Active Initial Product State];
+                                                   Description=Enable Initial state of newly created products to be Active instead of Draft }
+    { 221 ;   ;IsMailboxInactiveBackoffEnable;Boolean;
+                                                   ExternalName=ismailboxinactivebackoffenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Mailbox Keep Alive Enabled;
+                                                              ENU=Is Mailbox Keep Alive Enabled];
+                                                   Description=Enable or disable mailbox keep alive for Server Side Sync. }
+    { 222 ;   ;IsFullTextSearchEnabled;Boolean    ;ExternalName=isfulltextsearchenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Enable Full-text search for Quick Find;
+                                                              ENU=Enable Full-text search for Quick Find];
+                                                   Description=Indicates whether full-text search for Quick Find entities should be enabled for the organization. }
+    { 223 ;   ;EnforceReadOnlyPlugins;Boolean     ;ExternalName=enforcereadonlyplugins;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Organization setting to enforce read only plugins.;
+                                                              ENU=Organization setting to enforce read only plugins.];
+                                                   Description=Organization setting to enforce read only plugins. }
+    { 224 ;   ;SharePointDeploymentType;Option    ;InitValue=Online;
+                                                   ExternalName=sharepointdeploymenttype;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[0;1];
+                                                   CaptionML=[DAN=Choose SharePoint Deployment Type;
+                                                              ENU=Choose SharePoint Deployment Type];
+                                                   OptionCaptionML=[DAN=Online,On-Premises;
+                                                                    ENU=Online,On-Premises];
+                                                   OptionString=Online,On-Premises;
+                                                   Description=Indicates which SharePoint deployment type is configured for Server to Server. (Online or On-Premises) }
+    { 225 ;   ;DefaultThemeData    ;BLOB          ;ExternalName=defaultthemedata;
+                                                   ExternalType=Memo;
+                                                   CaptionML=[DAN=Default Theme Data;
+                                                              ENU=Default Theme Data];
+                                                   Description=Default theme data for the organization.;
+                                                   SubType=Memo }
+    { 226 ;   ;IsFolderBasedTrackingEnabled;Boolean;
+                                                   ExternalName=isfolderbasedtrackingenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Folder Based Tracking Enabled;
+                                                              ENU=Is Folder Based Tracking Enabled];
+                                                   Description=Enable or disable folder based tracking for Server Side Sync. }
+    { 227 ;   ;WebResourceHash     ;Text100       ;ExternalName=webresourcehash;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Web resource hash;
+                                                              ENU=Web resource hash];
+                                                   Description=Hash value of web resources. }
+    { 228 ;   ;ExpireChangeTrackingInDays;Integer ;ExternalName=expirechangetrackingindays;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Days to Expire Change Tracking Deleted Records;
+                                                              ENU=Days to Expire Change Tracking Deleted Records];
+                                                   MinValue=0;
+                                                   MaxValue=365;
+                                                   Description=Maximum number of days to keep change tracking deleted records }
+    { 229 ;   ;MaxFolderBasedTrackingMappings;Integer;
+                                                   ExternalName=maxfolderbasedtrackingmappings;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Max Folder Based Tracking Mappings;
+                                                              ENU=Max Folder Based Tracking Mappings];
+                                                   MinValue=1;
+                                                   MaxValue=25;
+                                                   Description=Maximum number of Folder Based Tracking mappings user can add }
+    { 230 ;   ;PrivacyStatementUrl ;Text250       ;ExternalName=privacystatementurl;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Privacy Statement URL;
+                                                              ENU=Privacy Statement URL];
+                                                   Description=Privacy Statement URL }
+    { 231 ;   ;PluginTraceLogSetting;Option       ;InitValue=Off;
+                                                   ExternalName=plugintracelogsetting;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=[0;1;2];
+                                                   CaptionML=[DAN=Plug-in Trace Log Setting;
+                                                              ENU=Plug-in Trace Log Setting];
+                                                   OptionCaptionML=[DAN=Off,Exception,All;
+                                                                    ENU=Off,Exception,All];
+                                                   OptionString=Off,Exception,All;
+                                                   Description=Plug-in Trace Log Setting for the Organization. }
+    { 232 ;   ;IsMailboxForcedUnlockingEnable;Boolean;
+                                                   ExternalName=ismailboxforcedunlockingenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Mailbox Forced Unlocking Enabled;
+                                                              ENU=Is Mailbox Forced Unlocking Enabled];
+                                                   Description=Enable or disable forced unlocking for Server Side Sync mailboxes. }
+    { 233 ;   ;MailboxIntermittentIssueMinRan;Integer;
+                                                   ExternalName=mailboxintermittentissueminrange;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Lower Threshold For Mailbox Intermittent Issue;
+                                                              ENU=Lower Threshold For Mailbox Intermittent Issue];
+                                                   Description=Lower Threshold For Mailbox Intermittent Issue. }
+    { 234 ;   ;MailboxPermanentIssueMinRange;Integer;
+                                                   ExternalName=mailboxpermanentissueminrange;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Lower Threshold For Mailbox Permanent Issue.;
+                                                              ENU=Lower Threshold For Mailbox Permanent Issue.];
+                                                   Description=Lower Threshold For Mailbox Permanent Issue. }
+    { 235 ;   ;HighContrastThemeData;BLOB         ;ExternalName=highcontrastthemedata;
+                                                   ExternalType=Memo;
+                                                   CaptionML=[DAN=High contrast Theme Data;
+                                                              ENU=High contrast Theme Data];
+                                                   Description=High contrast theme data for the organization.;
+                                                   SubType=Memo }
+    { 236 ;   ;DelegatedAdminUserId;GUID          ;ExternalName=delegatedadminuserid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Delegated Admin;
+                                                              ENU=Delegated Admin];
+                                                   Description=Unique identifier of the delegated admin user for the organization. }
+    { 237 ;   ;IsEmailServerProfileContentFil;Boolean;
+                                                   ExternalName=isemailserverprofilecontentfilteringenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Email Server Profile Content Filtering Enabled;
+                                                              ENU=Is Email Server Profile Content Filtering Enabled];
+                                                   Description=Enable Email Server Profile content filtering }
+    { 238 ;   ;IsDelegateAccessEnabled;Boolean    ;ExternalName=isdelegateaccessenabled;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Is Delegation Access Enabled;
+                                                              ENU=Is Delegation Access Enabled];
+                                                   Description=Enable Delegation Access content }
+    { 239 ;   ;DisplayNavigationTour;Boolean      ;ExternalName=displaynavigationtour;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Display Navigation Tour;
+                                                              ENU=Display Navigation Tour];
+                                                   Description=Indicates whether or not navigation tour is displayed. }
+    { 240 ;   ;UseLegacyRendering  ;Boolean       ;ExternalName=uselegacyrendering;
+                                                   ExternalType=Boolean;
+                                                   CaptionML=[DAN=Legacy Form Rendering;
+                                                              ENU=Legacy Form Rendering];
+                                                   Description=Select whether to use legacy form rendering. }
+  }
+  KEYS
+  {
+    {    ;OrganizationId                          ;Clustered=Yes }
+    {    ;Name                                     }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Name                                     }
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      Dynamics CRM Version: 7.1.0.2040
+    }
+    END.
+  }
+}
+

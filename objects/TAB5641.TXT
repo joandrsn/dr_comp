@@ -1,0 +1,43 @@
+OBJECT Table 5641 FA Buffer Projection
+{
+  OBJECT-PROPERTIES
+  {
+    Date=05-11-08;
+    Time=12:00:00;
+    Version List=NAVW16.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Anlægsbudgetbuffer;
+               ENU=FA Buffer Projection];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;FA Posting Date     ;Date          ;CaptionML=[DAN=Bogføringsdato for anlæg;
+                                                              ENU=FA Posting Date] }
+    { 3   ;   ;Depreciation        ;Decimal       ;CaptionML=[DAN=Afskrivning;
+                                                              ENU=Depreciation];
+                                                   AutoFormatType=1 }
+    { 4   ;   ;Custom 1            ;Decimal       ;CaptionML=[DAN=Bruger 1;
+                                                              ENU=Custom 1];
+                                                   AutoFormatType=1 }
+    { 5   ;   ;Code Name           ;Code20        ;CaptionML=[DAN=Kodenavn;
+                                                              ENU=Code Name] }
+  }
+  KEYS
+  {
+    {    ;Code Name,FA Posting Date,Entry No.     ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

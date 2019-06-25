@@ -1,0 +1,92 @@
+OBJECT Table 801 Online Map Parameter Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               TESTFIELD(Code);
+             END;
+
+    CaptionML=[DAN=Opsætning af parameteren Online Map;
+               ENU=Online Map Parameter Setup];
+    LookupPageID=Page804;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Name                ;Text30        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 3   ;   ;Map Service         ;Text250       ;CaptionML=[DAN=Korttjeneste;
+                                                              ENU=Map Service] }
+    { 4   ;   ;Directions Service  ;Text250       ;OnValidate=VAR
+                                                                i@1000 : Integer;
+                                                                ParmPos@1001 : Integer;
+                                                                RemainingURL@1002 : Text[250];
+                                                              BEGIN
+                                                                FOR i := 1 TO 6 DO BEGIN
+                                                                  ParmPos := STRPOS("Directions Service",STRSUBSTNO('{%1}',i));
+                                                                  IF ParmPos > 1 THEN BEGIN
+                                                                    RemainingURL := COPYSTR("Directions Service",ParmPos + 3);
+                                                                    ParmPos := STRPOS(RemainingURL,STRSUBSTNO('{%1}',i));
+                                                                    IF NOT (ParmPos > 1) THEN
+                                                                      ERROR(Text002,i);
+                                                                    RemainingURL := COPYSTR(RemainingURL,ParmPos + 3);
+                                                                    IF STRPOS(RemainingURL,STRSUBSTNO('{%1}',i)) > 1 THEN
+                                                                      ERROR(Text002,i);
+                                                                  END;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[DAN=Retningsanvisningsservice;
+                                                              ENU=Directions Service] }
+    { 5   ;   ;Comment             ;Text250       ;CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment] }
+    { 6   ;   ;URL Encode Non-ASCII Chars;Boolean ;CaptionML=[DAN=Kod URL ikke-ASCII-tegn;
+                                                              ENU=URL Encode Non-ASCII Chars] }
+    { 7   ;   ;Miles/Kilometers Option List;Text250;
+                                                   CaptionML=[DAN=Indstillingsliste for miles/kilometer;
+                                                              ENU=Miles/Kilometers Option List] }
+    { 8   ;   ;Quickest/Shortest Option List;Text250;
+                                                   CaptionML=[DAN=Indstillingsliste for hurtigste/korteste;
+                                                              ENU=Quickest/Shortest Option List] }
+    { 9   ;   ;Directions from Location Serv.;Text250;
+                                                   CaptionML=[DAN=Retningsanvisninger fra placeringsserver;
+                                                              ENU=Directions from Location Serv.] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Name                                }
+  }
+  CODE
+  {
+    VAR
+      Text001@1000 : TextConst 'DAN=Hvis der indsættes standardværdier, slettes den aktuelle konfiguration.\Vil du fortsætte?;ENU=Inserting default values will delete your current setup.\Do you wish to continue?';
+      Text002@1001 : TextConst 'DAN=Adresseparametre skal optræde nøjagtigt to gange i URL-adressen for anvisninger. Valider brugen af {%1}.;ENU=Address parameters must only occur twice in the Directions URL. Validate the use of {%1}.';
+
+    PROCEDURE InsertDefaults@1();
+    VAR
+      OnlineMapParameterSetup@1001 : Record 801;
+      OnlineMapMgt@1000 : Codeunit 802;
+    BEGIN
+      IF NOT OnlineMapParameterSetup.ISEMPTY THEN
+        IF NOT CONFIRM(Text001,FALSE) THEN
+          EXIT;
+      OnlineMapMgt.SetupDefault;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

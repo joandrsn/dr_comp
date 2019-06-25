@@ -1,0 +1,51 @@
+OBJECT Table 2000000066 Style Sheet
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Typografiark;
+               ENU=Style Sheet];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Style Sheet ID      ;GUID          ;CaptionML=[DAN=Typografiark-id;
+                                                              ENU=Style Sheet ID] }
+    { 2   ;   ;Object Type         ;Option        ;CaptionML=[DAN=Objekttype;
+                                                              ENU=Object Type];
+                                                   OptionCaptionML=[DAN=Form,Report,Page;
+                                                                    ENU=Form,Report,Page];
+                                                   OptionString=Form,Report,Page }
+    { 3   ;   ;Object ID           ;Integer       ;TableRelation=Object.ID WHERE (Type=FIELD(Object Type));
+                                                   CaptionML=[DAN=Objekt-id;
+                                                              ENU=Object ID] }
+    { 4   ;   ;Program ID          ;GUID          ;CaptionML=[DAN=Program-id;
+                                                              ENU=Program ID] }
+    { 5   ;   ;Name                ;Text250       ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 6   ;   ;Style Sheet         ;BLOB          ;CaptionML=[DAN=Typografiark;
+                                                              ENU=Style Sheet] }
+    { 7   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+  }
+  KEYS
+  {
+    {    ;Style Sheet ID                          ;Clustered=Yes }
+    {    ;Object Type,Object ID,Program ID         }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

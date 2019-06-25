@@ -1,0 +1,148 @@
+OBJECT Page 5828 Inventory Periods
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Lagerperioder;
+               ENU=Inventory Periods];
+    SourceTable=Table5814;
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 9       ;1   ;ActionGroup;
+                      CaptionML=[DAN=Lagerper&iode;
+                                 ENU=&Invt. Period];
+                      Image=Period }
+      { 14      ;2   ;Action    ;
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=[DAN=Lage&rperiodeposter;
+                                 ENU=Invt. Period E&ntries];
+                      RunObject=Page 5829;
+                      RunPageView=SORTING(Ending Date,Entry No.);
+                      RunPageLink=Ending Date=FIELD(Ending Date);
+                      Image=PeriodEntries }
+      { 8       ;2   ;Action    ;
+                      CaptionML=[DAN=Regn&skabsperioder;
+                                 ENU=&Accounting Periods];
+                      RunObject=Page 100;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=AccountingPeriods;
+                      PromotedCategory=Process }
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 16      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Fu&nktion;
+                                 ENU=F&unctions];
+                      Image=Action }
+      { 13      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Kontroller;
+                                 ENU=Test Report];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=TestReport;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 ReportPrint.PrintInvtPeriod(Rec);
+                               END;
+                                }
+      { 18      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Luk periode;
+                                 ENU=&Close Period];
+                      Promoted=Yes;
+                      Image=ClosePeriod;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CloseInventoryPeriod.SetReOpen(FALSE);
+                                 CloseInventoryPeriod.RUN(Rec);
+                               END;
+                                }
+      { 19      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Å&bn periode igen;
+                                 ENU=&Reopen Period];
+                      Promoted=Yes;
+                      Image=ReopenPeriod;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CloseInventoryPeriod.SetReOpen(TRUE);
+                                 CloseInventoryPeriod.RUN(Rec);
+                               END;
+                                }
+      { 15      ;2   ;Separator  }
+      { 17      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=J&uster kostpris - vareposter;
+                                 ENU=&Adjust Cost - Item Entries];
+                      RunObject=Report 795;
+                      Image=AdjustEntries }
+      { 20      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Bog&før lagerbeholdning;
+                                 ENU=&Post Inventory to G/L];
+                      RunObject=Report 1002;
+                      Promoted=Yes;
+                      Image=PostInventoryToGL;
+                      PromotedCategory=Process }
+      { 21      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Bog&før lagerbeholdning - kontrol;
+                                 ENU=Post &Inventory to G/L - Test];
+                      RunObject=Report 1003;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostInventoryToGLTest;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr="Ending Date" }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Name }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr=Closed }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      CloseInventoryPeriod@1000 : Codeunit 5820;
+      ReportPrint@1001 : Codeunit 228;
+
+    BEGIN
+    END.
+  }
+}
+

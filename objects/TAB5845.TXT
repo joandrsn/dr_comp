@@ -1,0 +1,56 @@
+OBJECT Table 5845 Inventory Report Header
+{
+  OBJECT-PROPERTIES
+  {
+    Date=05-11-08;
+    Time=12:00:00;
+    Version List=NAVW16.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Lagerrapportoverskrift;
+               ENU=Inventory Report Header];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 3   ;   ;Item Filter         ;Code20        ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Varefilter;
+                                                              ENU=Item Filter] }
+    { 5   ;   ;Location Filter     ;Code10        ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Lokationsfilter;
+                                                              ENU=Location Filter] }
+    { 6   ;   ;Posting Date Filter ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Bogføringsdatofilter;
+                                                              ENU=Posting Date Filter] }
+    { 7   ;   ;Calculated          ;Boolean       ;CaptionML=[DAN=Beregnet;
+                                                              ENU=Calculated] }
+    { 9   ;   ;Line Option         ;Option        ;CaptionML=[DAN=Linjeindstilling;
+                                                              ENU=Line Option];
+                                                   OptionCaptionML=[DAN=Balance,Resultatopgørelse;
+                                                                    ENU=Balance Sheet,Income Statement];
+                                                   OptionString=Balance Sheet,Income Statement }
+    { 10  ;   ;Column Option       ;Option        ;CaptionML=[DAN=Kolonneindstilling;
+                                                              ENU=Column Option];
+                                                   OptionCaptionML=[DAN=Balance,Resultatopgørelse;
+                                                                    ENU=Balance Sheet,Income Statement];
+                                                   OptionString=Balance Sheet,Income Statement }
+    { 11  ;   ;Show Warning        ;Boolean       ;CaptionML=[DAN=Vis advarsel;
+                                                              ENU=Show Warning] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

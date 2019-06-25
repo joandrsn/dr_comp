@@ -1,0 +1,58 @@
+OBJECT Table 2000000110 Active Session
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Aktiv session;
+               ENU=Active Session];
+  }
+  FIELDS
+  {
+    { 1   ;   ;User SID            ;GUID          ;TableRelation=User."User Security ID";
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Bruger-SID;
+                                                              ENU=User SID] }
+    { 2   ;   ;Server Instance ID  ;Integer       ;TableRelation="Server Instance"."Server Instance ID";
+                                                   CaptionML=[DAN=Serverforekomst-id;
+                                                              ENU=Server Instance ID] }
+    { 3   ;   ;Session ID          ;Integer       ;CaptionML=[DAN=Sessions-id;
+                                                              ENU=Session ID] }
+    { 4   ;   ;Server Instance Name;Text250       ;CaptionML=[DAN=Serverforekomstnavn;
+                                                              ENU=Server Instance Name] }
+    { 5   ;   ;Server Computer Name;Text250       ;CaptionML=[DAN=Servercomputernavn;
+                                                              ENU=Server Computer Name] }
+    { 6   ;   ;User ID             ;Text132       ;CaptionML=[DAN=Bruger-id;
+                                                              ENU=User ID] }
+    { 7   ;   ;Client Type         ;Option        ;CaptionML=[DAN=Klienttype;
+                                                              ENU=Client Type];
+                                                   OptionCaptionML=[DAN=Windows-klient,SharePoint-klient,Webtjeneste,Klienttjeneste,NAS,Baggrund,Administrationsklient,Webklient,Ukendt,Tablet,Telefon,Desktop;
+                                                                    ENU=Windows Client,SharePoint Client,Web Service,Client Service,NAS,Background,Management Client,Web Client,Unknown,Tablet,Phone,Desktop];
+                                                   OptionString=Windows Client,SharePoint Client,Web Service,Client Service,NAS,Background,Management Client,Web Client,Unknown,Tablet,Phone,Desktop }
+    { 8   ;   ;Client Computer Name;Text250       ;CaptionML=[DAN=Klientcomputernavn;
+                                                              ENU=Client Computer Name] }
+    { 9   ;   ;Login Datetime      ;DateTime      ;CaptionML=[DAN=Dato/klokkeslæt for logon;
+                                                              ENU=Login Datetime] }
+    { 10  ;   ;Database Name       ;Text250       ;CaptionML=[DAN=Databasenavn;
+                                                              ENU=Database Name] }
+  }
+  KEYS
+  {
+    {    ;Server Instance ID,Session ID           ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

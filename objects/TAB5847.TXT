@@ -1,0 +1,149 @@
+OBJECT Table 5847 Average Cost Calc. Overview
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Oversigt over beregning af gns. kostpris;
+               ENU=Average Cost Calc. Overview];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Lukningspost,Forøg,Udligningsforøgelse,Udligningsreduktion,Reducer,Værdiregulering;
+                                                                    ENU=Closing Entry,Increase,Applied Increase,Applied Decrease,Decrease,Revaluation];
+                                                   OptionString=Closing Entry,Increase,Applied Increase,Applied Decrease,Decrease,Revaluation }
+    { 3   ;   ;Valuation Date      ;Date          ;CaptionML=[DAN=Værdiansættelsesdato;
+                                                              ENU=Valuation Date] }
+    { 4   ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   CaptionML=[DAN=Varenr.;
+                                                              ENU=Item No.] }
+    { 5   ;   ;Location Code       ;Code10        ;TableRelation=Location;
+                                                   CaptionML=[DAN=Lokationskode;
+                                                              ENU=Location Code] }
+    { 6   ;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   CaptionML=[DAN=Variantkode;
+                                                              ENU=Variant Code] }
+    { 7   ;   ;Cost is Adjusted    ;Boolean       ;CaptionML=[DAN=Kostværdien er reguleret;
+                                                              ENU=Cost is Adjusted] }
+    { 11  ;   ;Attached to Entry No.;Integer      ;TableRelation="Item Ledger Entry";
+                                                   CaptionML=[DAN=Tilknyttet løbenr.;
+                                                              ENU=Attached to Entry No.] }
+    { 12  ;   ;Attached to Valuation Date;Date    ;CaptionML=[DAN=Knyttet til værdireguleringsdato;
+                                                              ENU=Attached to Valuation Date] }
+    { 13  ;   ;Level               ;Integer       ;CaptionML=[DAN=Niveau;
+                                                              ENU=Level] }
+    { 21  ;   ;Item Ledger Entry No.;Integer      ;TableRelation="Item Ledger Entry";
+                                                   CaptionML=[DAN=Varepostløbenr.;
+                                                              ENU=Item Ledger Entry No.] }
+    { 22  ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+                                                              ENU=Posting Date] }
+    { 23  ;   ;Entry Type          ;Option        ;CaptionML=[DAN=Posttype;
+                                                              ENU=Entry Type];
+                                                   OptionCaptionML=[DAN=Køb,Salg,Opregulering,Nedregulering,Overførsel,Forbrug,Afgang, ,Montageforbrug,Montageoutput;
+                                                                    ENU=Purchase,Sale,Positive Adjmt.,Negative Adjmt.,Transfer,Consumption,Output, ,Assembly Consumption,Assembly Output];
+                                                   OptionString=Purchase,Sale,Positive Adjmt.,Negative Adjmt.,Transfer,Consumption,Output, ,Assembly Consumption,Assembly Output }
+    { 24  ;   ;Document Type       ;Option        ;CaptionML=[DAN=Bilagstype;
+                                                              ENU=Document Type];
+                                                   OptionCaptionML=[DAN=" ,Salgsleverance,Salgsfaktura,Salgsreturvarekvittering,Salgskreditnota,Købsleverance,Købsfaktura,Købsreturvarekvittering,Købskreditnota,Overflytningsleverance,Overflytningskvittering,Bogført service,Servicefaktura,Servicekreditnota";
+                                                                    ENU=" ,Sales Shipment,Sales Invoice,Sales Return Receipt,Sales Credit Memo,Purchase Receipt,Purchase Invoice,Purchase Return Shipment,Purchase Credit Memo,Transfer Shipment,Transfer Receipt,Service Shipment,Service Invoice,Service Credit Memo"];
+                                                   OptionString=[ ,Sales Shipment,Sales Invoice,Sales Return Receipt,Sales Credit Memo,Purchase Receipt,Purchase Invoice,Purchase Return Shipment,Purchase Credit Memo,Transfer Shipment,Transfer Receipt,Service Shipment,Service Invoice,Service Credit Memo] }
+    { 25  ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+    { 26  ;   ;Document Line No.   ;Integer       ;CaptionML=[DAN=Dokumentlinjenr.;
+                                                              ENU=Document Line No.] }
+    { 27  ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 31  ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+                                                              ENU=Quantity];
+                                                   DecimalPlaces=0:5 }
+    { 32  ;   ;Applied Quantity    ;Integer       ;CaptionML=[DAN=Udlignet antal;
+                                                              ENU=Applied Quantity] }
+    { 33  ;   ;Cost Amount (Expected);Decimal     ;CaptionML=[DAN=Kostbeløb (forventet);
+                                                              ENU=Cost Amount (Expected)] }
+    { 34  ;   ;Cost Amount (Actual);Decimal       ;CaptionML=[DAN=Kostbeløb (faktisk);
+                                                              ENU=Cost Amount (Actual)] }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Attached to Valuation Date,Attached to Entry No.,Type }
+    {    ;Item Ledger Entry No.                    }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      InvtSetup@1001 : Record 313;
+      ValueEntry@1003 : Record 5802;
+      InvtSetupRead@1002 : Boolean;
+
+    PROCEDURE CalculateAverageCost@5801() AverageCost : Decimal;
+    BEGIN
+      AverageCost := 0;
+      IF Type = Type::"Closing Entry" THEN BEGIN
+        SetItemFilters;
+        ValueEntry.SumCostsTillValuationDate(ValueEntry);
+        IF ValueEntry."Item Ledger Entry Quantity" = 0 THEN
+          EXIT(AverageCost);
+        AverageCost :=
+          (ValueEntry."Cost Amount (Actual)" + ValueEntry."Cost Amount (Expected)") /
+          ValueEntry."Item Ledger Entry Quantity";
+        EXIT(ROUND(AverageCost));
+      END;
+      IF Quantity = 0 THEN
+        EXIT(AverageCost);
+      AverageCost := ("Cost Amount (Actual)" + "Cost Amount (Expected)") / Quantity;
+      EXIT(ROUND(AverageCost));
+    END;
+
+    PROCEDURE CalculateRemainingQty@1() : Decimal;
+    BEGIN
+      IF Type <> Type::"Closing Entry" THEN
+        EXIT(0);
+      SetItemFilters;
+      ValueEntry.SumCostsTillValuationDate(ValueEntry);
+      EXIT(ValueEntry."Item Ledger Entry Quantity");
+    END;
+
+    PROCEDURE CalculateCostAmt@4(Actual@1000 : Boolean) : Decimal;
+    BEGIN
+      IF Type <> Type::"Closing Entry" THEN
+        EXIT(0);
+      SetItemFilters;
+      ValueEntry.SumCostsTillValuationDate(ValueEntry);
+      IF Actual THEN
+        EXIT(ValueEntry."Cost Amount (Actual)");
+      EXIT(ValueEntry."Cost Amount (Expected)");
+    END;
+
+    PROCEDURE SetItemFilters@8();
+    BEGIN
+      ValueEntry."Item No." := "Item No.";
+      ValueEntry."Valuation Date" := "Valuation Date";
+      ValueEntry."Location Code" := "Location Code";
+      ValueEntry."Variant Code" := "Variant Code";
+    END;
+
+    LOCAL PROCEDURE GetInvtSetup@3();
+    BEGIN
+      IF InvtSetupRead THEN
+        EXIT;
+      InvtSetup.GET;
+      InvtSetupRead := TRUE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

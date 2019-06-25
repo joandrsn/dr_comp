@@ -1,0 +1,50 @@
+OBJECT Table 5100 Communication Method
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Kommunikationsform;
+               ENU=Communication Method];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Key                 ;Integer       ;CaptionML=[DAN=Nøgle;
+                                                              ENU=Key] }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Number              ;Text30        ;CaptionML=[DAN=Nummer;
+                                                              ENU=Number] }
+    { 4   ;   ;Contact No.         ;Code20        ;TableRelation=Contact;
+                                                   CaptionML=[DAN=Kontaktnr.;
+                                                              ENU=Contact No.] }
+    { 5   ;   ;Name                ;Text50        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 6   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Virksomhed,Person;
+                                                                    ENU=Company,Person];
+                                                   OptionString=Company,Person }
+    { 7   ;   ;E-Mail              ;Text80        ;ExtendedDatatype=E-Mail;
+                                                   CaptionML=[DAN=Mail;
+                                                              ENU=E-Mail] }
+  }
+  KEYS
+  {
+    {    ;Key                                     ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

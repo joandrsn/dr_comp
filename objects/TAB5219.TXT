@@ -1,0 +1,66 @@
+OBJECT Table 5219 HR Confidential Comment Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=No.;
+    CaptionML=[DAN=Fortrolige bemærkn.linjer;
+               ENU=HR Confidential Comment Line];
+    LookupPageID=Page5235;
+    DrillDownPageID=Page5235;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Table Name          ;Option        ;CaptionML=[DAN=Tabelnavn;
+                                                              ENU=Table Name];
+                                                   OptionCaptionML=[DAN=Fortrolige oplysninger;
+                                                                    ENU=Confidential Information];
+                                                   OptionString=Confidential Information }
+    { 2   ;   ;No.                 ;Code20        ;TableRelation=Employee;
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 3   ;   ;Code                ;Code10        ;TableRelation=Confidential.Code;
+                                                   CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 4   ;   ;Table Line No.      ;Integer       ;CaptionML=[DAN=Tabellinjenr.;
+                                                              ENU=Table Line No.] }
+    { 6   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 7   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 9   ;   ;Comment             ;Text80        ;CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment] }
+  }
+  KEYS
+  {
+    {    ;Table Name,No.,Code,Table Line No.,Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE SetUpNewLine@1();
+    VAR
+      HRConfCommentLine@1000 : Record 5219;
+    BEGIN
+      HRConfCommentLine := Rec;
+      HRConfCommentLine.SETRECFILTER;
+      HRConfCommentLine.SETRANGE("Line No.");
+      HRConfCommentLine.SETRANGE(Date,WORKDATE);
+      IF NOT HRConfCommentLine.FINDFIRST THEN
+        Date := WORKDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

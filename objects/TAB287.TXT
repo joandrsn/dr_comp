@@ -1,0 +1,157 @@
+OBJECT Table 287 Customer Bank Account
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00,NAVDK9.00;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Customer No.,Code,Name;
+    OnDelete=VAR
+               CustLedgerEntry@1000 : Record 21;
+             BEGIN
+               CustLedgerEntry.SETRANGE("Customer No.","Customer No.");
+               CustLedgerEntry.SETRANGE("Recipient Bank Account",Code);
+               IF NOT CustLedgerEntry.ISEMPTY THEN
+                 ERROR(BankAccDeleteErr);
+             END;
+
+    CaptionML=[DAN=Debitorbankkonto;
+               ENU=Customer Bank Account];
+    LookupPageID=Page424;
+    DrillDownPageID=Page424;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Customer No.        ;Code20        ;TableRelation=Customer;
+                                                   CaptionML=[DAN=Debitornr.;
+                                                              ENU=Customer No.];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 3   ;   ;Name                ;Text50        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 5   ;   ;Name 2              ;Text50        ;CaptionML=[DAN=Navn 2;
+                                                              ENU=Name 2] }
+    { 6   ;   ;Address             ;Text50        ;CaptionML=[DAN=Adresse;
+                                                              ENU=Address] }
+    { 7   ;   ;Address 2           ;Text50        ;CaptionML=[DAN=Adresse 2;
+                                                              ENU=Address 2] }
+    { 8   ;   ;City                ;Text30        ;TableRelation=IF (Country/Region Code=CONST()) "Post Code".City
+                                                                 ELSE IF (Country/Region Code=FILTER(<>'')) "Post Code".City WHERE (Country/Region Code=FIELD(Country/Region Code));
+                                                   OnValidate=BEGIN
+                                                                PostCode.ValidateCity(City,"Post Code",County,"Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=By;
+                                                              ENU=City] }
+    { 9   ;   ;Post Code           ;Code20        ;TableRelation=IF (Country/Region Code=CONST()) "Post Code"
+                                                                 ELSE IF (Country/Region Code=FILTER(<>'')) "Post Code" WHERE (Country/Region Code=FIELD(Country/Region Code));
+                                                   OnValidate=BEGIN
+                                                                PostCode.ValidatePostCode(City,"Post Code",County,"Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Postnr.;
+                                                              ENU=Post Code] }
+    { 10  ;   ;Contact             ;Text50        ;CaptionML=[DAN=Kontakt;
+                                                              ENU=Contact] }
+    { 11  ;   ;Phone No.           ;Text30        ;ExtendedDatatype=Phone No.;
+                                                   CaptionML=[DAN=Telefon;
+                                                              ENU=Phone No.] }
+    { 12  ;   ;Telex No.           ;Text20        ;CaptionML=[DAN=Telex;
+                                                              ENU=Telex No.] }
+    { 13  ;   ;Bank Branch No.     ;Text20        ;OnValidate=BEGIN
+                                                                IF ("Bank Branch No." <> '') AND (STRLEN("Bank Branch No.") < 4) THEN
+                                                                  "Bank Branch No." := PADSTR('',4 - STRLEN("Bank Branch No."),'0') + "Bank Branch No.";
+                                                              END;
+
+                                                   CaptionML=[DAN=Bankregistreringsnr.;
+                                                              ENU=Bank Branch No.] }
+    { 14  ;   ;Bank Account No.    ;Text30        ;OnValidate=BEGIN
+                                                                IF ("Bank Account No." <> '') AND (STRLEN("Bank Account No.") < 10) THEN
+                                                                  "Bank Account No." := PADSTR('',10 - STRLEN("Bank Account No."),'0') + "Bank Account No.";
+                                                              END;
+
+                                                   CaptionML=[DAN=Bankkontonr.;
+                                                              ENU=Bank Account No.] }
+    { 15  ;   ;Transit No.         ;Text20        ;CaptionML=[DAN=Transitnr.;
+                                                              ENU=Transit No.] }
+    { 16  ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   CaptionML=[DAN=Valutakode;
+                                                              ENU=Currency Code] }
+    { 17  ;   ;Country/Region Code ;Code10        ;TableRelation=Country/Region;
+                                                   CaptionML=[DAN=Lande-/områdekode;
+                                                              ENU=Country/Region Code] }
+    { 18  ;   ;County              ;Text30        ;CaptionML=[DAN=Amt;
+                                                              ENU=County] }
+    { 19  ;   ;Fax No.             ;Text30        ;CaptionML=[DAN=Telefax;
+                                                              ENU=Fax No.] }
+    { 20  ;   ;Telex Answer Back   ;Text20        ;CaptionML=[DAN=Telex (tilbagesvar);
+                                                              ENU=Telex Answer Back] }
+    { 21  ;   ;Language Code       ;Code10        ;TableRelation=Language;
+                                                   CaptionML=[DAN=Sprogkode;
+                                                              ENU=Language Code] }
+    { 22  ;   ;E-Mail              ;Text80        ;ExtendedDatatype=E-Mail;
+                                                   CaptionML=[DAN=Mail;
+                                                              ENU=E-Mail] }
+    { 23  ;   ;Home Page           ;Text80        ;ExtendedDatatype=URL;
+                                                   CaptionML=[DAN=Hjemmeside;
+                                                              ENU=Home Page] }
+    { 24  ;   ;IBAN                ;Code50        ;OnValidate=VAR
+                                                                CompanyInfo@1000 : Record 79;
+                                                              BEGIN
+                                                                CompanyInfo.CheckIBAN(IBAN);
+                                                              END;
+
+                                                   CaptionML=[DAN=IBAN;
+                                                              ENU=IBAN] }
+    { 25  ;   ;SWIFT Code          ;Code20        ;CaptionML=[DAN=SWIFT-kode;
+                                                              ENU=SWIFT Code] }
+    { 1211;   ;Bank Clearing Code  ;Text50        ;CaptionML=[DAN=Kode for bankclearing;
+                                                              ENU=Bank Clearing Code] }
+    { 1212;   ;Bank Clearing Standard;Text50      ;TableRelation="Bank Clearing Standard";
+                                                   CaptionML=[DAN=Bankclearingsstandard;
+                                                              ENU=Bank Clearing Standard] }
+  }
+  KEYS
+  {
+    {    ;Customer No.,Code                       ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;Brick               ;Code,Name,Phone No.,Contact              }
+  }
+  CODE
+  {
+    VAR
+      PostCode@1000 : Record 225;
+      BankAccIdentifierIsEmptyErr@1001 : TextConst 'DAN=Du skal angive et bankkontonr. eller et IBAN.;ENU=You must specify either a Bank Account No. or an IBAN.';
+      BankAccDeleteErr@1002 : TextConst 'DAN=Du kan ikke slette denne bankkonto, fordi en eller flere finansposter er tilknyttet bankkontoen.;ENU=You cannot delete this bank account because there are one or more ledger entries associated with the bank account.';
+
+    PROCEDURE GetBankAccountNoWithCheck@14() AccountNo : Text;
+    BEGIN
+      AccountNo := GetBankAccountNo;
+      IF AccountNo = '' THEN
+        ERROR(BankAccIdentifierIsEmptyErr);
+    END;
+
+    PROCEDURE GetBankAccountNo@1() : Text;
+    BEGIN
+      IF ("Bank Branch No." = '') OR ("Bank Account No." = '') THEN
+        EXIT(DELCHR(IBAN,'=<>'));
+
+      EXIT("Bank Branch No." + "Bank Account No.");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

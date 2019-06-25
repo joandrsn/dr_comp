@@ -1,0 +1,52 @@
+OBJECT Page 980 Balancing Account Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Konfiguration af modkonto;
+               ENU=Balancing Account Setup];
+    SourceTable=Table980;
+    DataCaptionExpr=PageCaption;
+    PageType=StandardDialog;
+    OnOpenPage=BEGIN
+                 GET(USERID);
+                 PageCaption := '';
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                ContainerType=ContentArea }
+
+    { 4   ;1   ;Group     ;
+                GroupType=Group;
+                InstructionalTextML=[DAN=Vælg den saldokonto, som du vil registrere betalinger i.;
+                                     ENU=Select the balance account that you want to register payments for.] }
+
+    { 3   ;2   ;Field     ;
+                CaptionML=[DAN=Modkonto;
+                           ENU=Balancing Account];
+                SourceExpr="Bal. Account No." }
+
+    { 2   ;2   ;Field     ;
+                CaptionML=[DAN=Anvend denne konto som standard;
+                           ENU=Use this Account as Default];
+                SourceExpr="Use this Account as Def." }
+
+  }
+  CODE
+  {
+    VAR
+      PageCaption@1000 : Text[10];
+
+    BEGIN
+    END.
+  }
+}
+

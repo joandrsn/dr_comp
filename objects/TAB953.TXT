@@ -1,0 +1,54 @@
+OBJECT Table 953 Time Sheet Comment Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Bemærkningslinje til timeseddel;
+               ENU=Time Sheet Comment Line];
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 2   ;   ;Time Sheet Line No. ;Integer       ;CaptionML=[DAN=Timeseddellinjenr.;
+                                                              ENU=Time Sheet Line No.] }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 4   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 5   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 6   ;   ;Comment             ;Text80        ;CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment] }
+  }
+  KEYS
+  {
+    {    ;No.,Time Sheet Line No.,Line No.        ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE SetUpNewLine@1();
+    VAR
+      TimeSheetCommentLine@1000 : Record 953;
+    BEGIN
+      TimeSheetCommentLine.SETRANGE("No.","No.");
+      TimeSheetCommentLine.SETRANGE("Time Sheet Line No.","Time Sheet Line No.");
+      TimeSheetCommentLine.SETRANGE(Date,WORKDATE);
+      IF TimeSheetCommentLine.ISEMPTY THEN
+        Date := WORKDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,43 @@
+OBJECT Table 5872 Item Availability by Date
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Varedisponering pr. dato;
+               ENU=Item Availability by Date];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Item No.            ;Code20        ;CaptionML=[DAN=Varenr.;
+                                                              ENU=Item No.] }
+    { 2   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 3   ;   ;Available Qty       ;Decimal       ;CaptionML=[DAN=Disp. antal;
+                                                              ENU=Available Qty] }
+    { 4   ;   ;Updated Available Qty;Decimal      ;CaptionML=[DAN=Opdateret disp. antal;
+                                                              ENU=Updated Available Qty] }
+    { 5   ;   ;Variant Code        ;Code10        ;CaptionML=[DAN=Variantkode;
+                                                              ENU=Variant Code] }
+    { 6   ;   ;Location Code       ;Code10        ;CaptionML=[DAN=Lokationskode;
+                                                              ENU=Location Code] }
+  }
+  KEYS
+  {
+    {    ;Item No.,Variant Code,Location Code,Date;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,44 @@
+OBJECT Table 5211 Employment Contract
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Ansættelseskontrakt;
+               ENU=Employment Contract];
+    LookupPageID=Page5217;
+    DrillDownPageID=Page5217;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;No. of Contracts    ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count(Employee WHERE (Status=CONST(Active),
+                                                                                     Emplymt. Contract Code=FIELD(Code)));
+                                                   CaptionML=[DAN=Kontrakter i alt;
+                                                              ENU=No. of Contracts];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

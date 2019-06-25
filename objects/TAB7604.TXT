@@ -1,0 +1,53 @@
+OBJECT Table 7604 Where Used Base Calendar
+{
+  OBJECT-PROPERTIES
+  {
+    Date=05-11-08;
+    Time=12:00:00;
+    Version List=NAVW16.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Indgår-i - basiskalender;
+               ENU=Where Used Base Calendar];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Source Type         ;Option        ;CaptionML=[DAN=Kildetype;
+                                                              ENU=Source Type];
+                                                   OptionCaptionML=[DAN=Virksomhed,Debitor,Kreditor,Lokation,Speditør,Service;
+                                                                    ENU=Company,Customer,Vendor,Location,Shipping Agent,Service];
+                                                   OptionString=Company,Customer,Vendor,Location,Shipping Agent,Service;
+                                                   Editable=No }
+    { 2   ;   ;Source Code         ;Code20        ;CaptionML=[DAN=Kildespor;
+                                                              ENU=Source Code];
+                                                   Editable=No }
+    { 3   ;   ;Additional Source Code;Code20      ;CaptionML=[DAN=Ekstra kildespor;
+                                                              ENU=Additional Source Code];
+                                                   Editable=No }
+    { 4   ;   ;Base Calendar Code  ;Code10        ;TableRelation="Base Calendar";
+                                                   CaptionML=[DAN=Basiskalenderkode;
+                                                              ENU=Base Calendar Code] }
+    { 5   ;   ;Source Name         ;Text50        ;CaptionML=[DAN=Kildenavn;
+                                                              ENU=Source Name];
+                                                   Editable=No }
+    { 6   ;   ;Customized Changes Exist;Boolean   ;CaptionML=[DAN=Tilpassede ændringer findes;
+                                                              ENU=Customized Changes Exist];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Base Calendar Code,Source Type,Source Code,Source Name;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

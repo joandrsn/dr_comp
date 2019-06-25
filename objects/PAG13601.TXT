@@ -1,0 +1,48 @@
+OBJECT Page 13601 OIOUBL setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVDK7.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Opsætning af OIOUBL;
+               ENU=OIOUBL setup];
+    SourceTable=Table311;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1060000;0;Container ;
+                ContainerType=ContentArea }
+
+    { 1060001;1;Group     ;
+                Name=General;
+                GroupType=Group }
+
+    { 1060002;2;Field     ;
+                SourceExpr="OIOUBL Invoice Path" }
+
+    { 1060003;2;Field     ;
+                SourceExpr="OIOUBL Cr. Memo Path" }
+
+    { 1060004;2;Field     ;
+                SourceExpr="OIOUBL Reminder Path" }
+
+    { 1060005;2;Field     ;
+                SourceExpr="OIOUBL Fin. Chrg. Memo Path" }
+
+    { 1060006;2;Field     ;
+                SourceExpr="Default OIOUBL Profile Code" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

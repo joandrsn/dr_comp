@@ -1,0 +1,41 @@
+OBJECT Table 9181 Generic Chart Filter
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Filter for generisk diagram;
+               ENU=Generic Chart Filter];
+  }
+  FIELDS
+  {
+    { 2   ;   ;ID                  ;Code20        ;CaptionML=[DAN=Id;
+                                                              ENU=ID] }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 10  ;   ;Filter Field ID     ;Integer       ;CaptionML=[DAN=Filtrer felt-id;
+                                                              ENU=Filter Field ID] }
+    { 11  ;   ;Filter Field Name   ;Text30        ;CaptionML=[DAN=Filtrer feltnavn;
+                                                              ENU=Filter Field Name] }
+    { 15  ;   ;Filter Value        ;Text250       ;CaptionML=[DAN=Filterværdi;
+                                                              ENU=Filter Value] }
+  }
+  KEYS
+  {
+    {    ;ID,Line No.                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

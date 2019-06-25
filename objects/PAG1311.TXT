@@ -1,0 +1,53 @@
+OBJECT Page 1311 Mini Standard Sales Code Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Tilbagevendende salgslinjekort;
+               ENU=Recurring Sales Lines Card];
+    SourceTable=Table170;
+    PageType=ListPlus;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                CaptionML=[DAN=Generelt;
+                           ENU=General] }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver en kode, som identificerer denne standardsalgskode.;
+                           ENU=Specifies a code which identifies this standard sales code.];
+                SourceExpr=Code }
+
+    { 4   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver en beskrivelse af standardsalgskoden.;
+                           ENU=Specifies a description of the standard sales code.];
+                SourceExpr=Description }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver koden for den valuta, som beløbene på salgs- eller standardsalgslinjerne vises i.;
+                           ENU=Specifies the code for the currency of the amounts on the standard sales lines.];
+                SourceExpr="Currency Code" }
+
+    { 9   ;1   ;Part      ;
+                Name=StdSalesLines;
+                SubPageLink=Standard Sales Code=FIELD(Code);
+                PagePartID=Page1312 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

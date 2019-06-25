@@ -1,0 +1,58 @@
+OBJECT Table 280 Extended Text Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               ExtendedTextHeader.GET("Table Name","No.","Language Code","Text No.");
+             END;
+
+    CaptionML=[DAN=Udvidet tekst - linje;
+               ENU=Extended Text Line];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Table Name          ;Option        ;CaptionML=[DAN=Tabelnavn;
+                                                              ENU=Table Name];
+                                                   OptionCaptionML=[DAN=Tekst,Finanskonto,Vare,Ressource;
+                                                                    ENU=Standard Text,G/L Account,Item,Resource];
+                                                   OptionString=Standard Text,G/L Account,Item,Resource }
+    { 2   ;   ;No.                 ;Code20        ;TableRelation=IF (Table Name=CONST(Standard Text)) "Standard Text"
+                                                                 ELSE IF (Table Name=CONST(G/L Account)) "G/L Account"
+                                                                 ELSE IF (Table Name=CONST(Item)) Item
+                                                                 ELSE IF (Table Name=CONST(Resource)) Resource;
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 3   ;   ;Language Code       ;Code10        ;TableRelation=Language;
+                                                   CaptionML=[DAN=Sprogkode;
+                                                              ENU=Language Code] }
+    { 4   ;   ;Text No.            ;Integer       ;CaptionML=[DAN=Tekstnr.;
+                                                              ENU=Text No.] }
+    { 5   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 6   ;   ;Text                ;Text50        ;CaptionML=[DAN=Tekst;
+                                                              ENU=Text] }
+  }
+  KEYS
+  {
+    {    ;Table Name,No.,Language Code,Text No.,Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ExtendedTextHeader@1002 : Record 279;
+
+    BEGIN
+    END.
+  }
+}
+

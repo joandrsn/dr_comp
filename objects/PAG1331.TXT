@@ -1,0 +1,271 @@
+OBJECT Page 1331 Mini Vendor List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Leverandørliste (Kreditorer);
+               ENU=Vendor List];
+    SourceTable=Table23;
+    PageType=List;
+    CardPageID=Mini Vendor Card;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Nyt dokument,Kreditor,Historik,Priser og rabatter;
+                                ENU=New,Process,Report,New Document,Vendor,History,Prices and Discounts];
+    ActionList=ACTIONS
+    {
+      { 17      ;0   ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 13      ;1   ;ActionGroup;
+                      Name=NewDocument;
+                      CaptionML=[DAN=Nyt bilag;
+                                 ENU=New Document] }
+      { 1906384905;2 ;Action    ;
+                      Name=NewPurchaseInvoice;
+                      CaptionML=[DAN=Købsfaktura;
+                                 ENU=Purchase Invoice];
+                      ToolTipML=[DAN=Opret en købsfaktura på den valgte leverandør.;
+                                 ENU=Create a purchase invoice for the selected vendor.];
+                      Promoted=Yes;
+                      Image=Invoice;
+                      PromotedCategory=Category4;
+                      RunPageMode=Create;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 CreateAndShowNewInvoice;
+                               END;
+                                }
+      { 1902583505;2 ;Action    ;
+                      Name=NewPurchaseCreditMemo;
+                      CaptionML=[DAN=Købskreditnota;
+                                 ENU=Purchase Credit Memo];
+                      ToolTipML=[DAN=Opret en købskreditnota til den valgte kreditor.;
+                                 ENU=Create a purchase credit memo for the selected vendor.];
+                      Promoted=Yes;
+                      Image=CreditMemo;
+                      PromotedCategory=Category4;
+                      RunPageMode=Create;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 CreateAndShowNewCreditMemo;
+                               END;
+                                }
+      { 9       ;1   ;ActionGroup;
+                      Name=History;
+                      CaptionML=[DAN=Oversigt;
+                                 ENU=History];
+                      Image=History }
+      { 22      ;2   ;Action    ;
+                      Name=<Page Vendor Ledger Entries>;
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=[DAN=Finansp&oster;
+                                 ENU=Ledger E&ntries];
+                      ToolTipML=[DAN=Vis historikken over transaktioner for den valgte kreditor.;
+                                 ENU=View the history of transactions for the selected vendor.];
+                      RunObject=Page 29;
+                      RunPageView=SORTING(Vendor No.);
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      PromotedIsBig=Yes;
+                      Image=VendorLedger;
+                      PromotedCategory=Category6;
+                      Scope=Repeater }
+      { 18      ;1   ;ActionGroup;
+                      Name=PricesAndDiscounts;
+                      CaptionML=[DAN=Priser og rabatter;
+                                 ENU=Prices and Discounts] }
+      { 25      ;2   ;Action    ;
+                      Name=<Page Vendor Invoice Discounts>;
+                      CaptionML=[DAN=&Fakturarabatter;
+                                 ENU=Invoice &Discounts];
+                      ToolTipML=[DAN=Angiv forskellige rabatter, som den valgte leverandør giver dig. En fakturarabat gives automatisk, når en købsfakturas samlede beløb overstiger et bestemt beløb.;
+                                 ENU=Set up different discounts that the selected vendor grants you. An invoice discount is automatically granted when the total on a purchase invoice exceeds a certain amount.];
+                      RunObject=Page 28;
+                      RunPageLink=Code=FIELD(Invoice Disc. Code);
+                      PromotedIsBig=Yes;
+                      Image=CalculateInvoiceDiscount;
+                      PromotedCategory=Category7;
+                      Scope=Repeater }
+      { 26      ;2   ;Action    ;
+                      Name=<Page Purchase Prices>;
+                      CaptionML=[DAN=Priser;
+                                 ENU=Prices];
+                      ToolTipML=[DAN=Angiv forskellige priser for de varer, du køber hos den valgte leverandør. En varepris anføres automatisk på fakturalinjer, når de specificerede kriterier er blevet opfyldt, f.eks. leverandør, mængde eller slutdato.;
+                                 ENU=Set up different prices for items that you buy from the selected vendor. An item price is automatically granted on invoice lines when the specified criteria are met, such as vendor, quantity, or ending date.];
+                      RunObject=Page 7012;
+                      RunPageView=SORTING(Vendor No.);
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      PromotedIsBig=Yes;
+                      Image=Price;
+                      PromotedCategory=Category7;
+                      Scope=Repeater }
+      { 71      ;2   ;Action    ;
+                      Name=<Page Purchase Line Discounts>;
+                      CaptionML=[DAN=Linjerabat;
+                                 ENU=Line Discounts];
+                      ToolTipML=[DAN=Angiv forskellige rabatter for de varer, du køber hos den valgte kreditor. En varerabat anføres automatisk på fakturalinjer, når de specificerede kriterier er blevet opfyldt, f.eks. kreditor, mængde eller slutdato.;
+                                 ENU=Set up different discounts for items that you buy from the selected vendor. An item discount is automatically granted on invoice lines when the specified criteria are met, such as vendor, quantity, or ending date.];
+                      RunObject=Page 7014;
+                      RunPageView=SORTING(Vendor No.);
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      PromotedIsBig=Yes;
+                      Image=LineDiscount;
+                      PromotedCategory=Category7;
+                      Scope=Repeater }
+      { 1900000006;1 ;ActionGroup;
+                      Name=ReportsVendor;
+                      CaptionML=[DAN=Rapporter;
+                                 ENU=Reports];
+                      ActionContainerType=Reports }
+      { 44      ;2   ;ActionGroup;
+                      CaptionML=[DAN=Købsrapporter;
+                                 ENU=Purchase Reports];
+                      Image=Report }
+      { 31      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor - top 10-liste;
+                                 ENU=Vendor - Top 10 List];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en liste over, hvilke kreditorer du køber mest hos, eller som du skylder mest til.;
+                                 ENU=View, print, or save a list of the vendors from whom you purchase the most or to whom you owe the most.];
+                      RunObject=Report 311;
+                      Image=Report }
+      { 32      ;3   ;Action    ;
+                      CaptionML=[DAN=Købsstatistik;
+                                 ENU=Purchase Statistics];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over beløb for køb, fakturarabat og kontantrabat i DKK for hver kreditor, f.eks. for at analysere varekøb for en enkelt debitor og tendenser for varekøb.;
+                                 ENU=View, print, or save an overview of amounts for purchases, invoice discount, and payment discount in LCY for each vendor, for example, to analyze item purchases for an individual customer and trends for item purchases.];
+                      RunObject=Report 312;
+                      Image=Report }
+      { 33      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor - købsoversigt;
+                                 ENU=Vendor - Purchase List];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en liste over dine køb i en periode, f.eks. for at rapportere købsaktiviteter til SKAT.;
+                                 ENU=View, print, or save a list of your purchases in a period, for example, to report purchase activity to customs and tax authorities.];
+                      RunObject=Report 309;
+                      Image=Report }
+      { 36      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor/varer;
+                                 ENU=Vendor Item Catalog];
+                      ToolTipML=[DAN=Vis en liste over de varer, du kan købe hos kreditoren.;
+                                 ENU=View a list of the items that you can buy from the vendor.];
+                      RunObject=Report 320;
+                      Image=Report }
+      { 37      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor/varekøb;
+                                 ENU=Vendor/Item Purchases];
+                      ToolTipML=[DAN=Vis alle de varer, du har købt hos kreditoren i tidens løb.;
+                                 ENU=View all the items that you have purchased from the vendor over time.];
+                      RunObject=Report 313;
+                      Image=Report }
+      { 45      ;2   ;ActionGroup;
+                      CaptionML=[DAN=Finansrapporter;
+                                 ENU=Finance Reports];
+                      Image=Report }
+      { 38      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor - saldo til dato;
+                                 ENU=Vendor - Balance to Date];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en liste over kreditorers betalingshistorik indtil en bestemt dato. Du kan bruge rapporten til at udtrække oplysninger om dine samlede betalingsforpligtelser ved slutningen af en regnskabsperiode eller et regnskabsår.;
+                                 ENU=View, print, or save a list with your payment history to vendors up until a specified date. You can use the report to extract your total payment liabilities at the close of an accounting period or fiscal year.];
+                      RunObject=Report 321;
+                      Image=Report }
+      { 39      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor - balance;
+                                 ENU=Vendor - Trial Balance];
+                      ToolTipML=[DAN=Vis, udskriv eller gem start- og slutsaldo for kreditorer med poster i en bestemt periode.;
+                                 ENU=View, print, or save the beginning and ending balance for vendors with entries within a specified period.];
+                      RunObject=Report 329;
+                      Image=Report }
+      { 40      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor - kontokort;
+                                 ENU=Vendor - Detail Trial Balance];
+                      ToolTipML=[DAN=Vis, udskriv eller gem saldi for kreditorer med saldi på en bestemt dato, f.eks. ved slutningen af en regnskabsperiode eller i forbindelse med revision.;
+                                 ENU=View, print, or save the balance for vendors with balances on a specified date, for example, at the close of an accounting period or for an audit.];
+                      RunObject=Report 304;
+                      Image=Report }
+      { 41      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor - forfaldsoversigt;
+                                 ENU=Vendor - Summary Aging];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over skyldige beløb til hver kreditor, opdelt i tre tidsperioder.;
+                                 ENU=View, print, or save a summary of the payables owed to each vendor, divided into three time periods.];
+                      RunObject=Report 305;
+                      Image=Report }
+      { 42      ;3   ;Action    ;
+                      CaptionML=[DAN=Aldersfordelt gæld;
+                                 ENU=Aged Accounts Payable];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over, hvornår dine skyldige beløb til kreditorer skal betales eller rykkes for, opdelt i fire tidsperioder.;
+                                 ENU=View, print, or save an overview of when your payables to vendors are due or overdue, divided into four periods.];
+                      RunObject=Report 322;
+                      Image=Report }
+      { 43      ;3   ;Action    ;
+                      CaptionML=[DAN=Afventende kreditorposter;
+                                 ENU=Payments on Hold];
+                      ToolTipML=[DAN=Vis købsfakturaer med udestående betalinger til kreditor.;
+                                 ENU=View purchase invoices with outstanding payments to the vendor.];
+                      RunObject=Report 319;
+                      Image=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på kreditoren. Feltet udfyldes enten automatisk fra en defineret nummerserie, eller du kan indtaste nummeret manuelt, fordi du har aktiveret manuel nummerindtastning i opsætningen af nummerserier.;
+                           ENU=Specifies the number of the vendor. The field is either filled automatically from a defined number series, or you enter the number manually because you have enabled manual number entry in the number-series setup.];
+                SourceExpr="No." }
+
+    { 4   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver leverandørens navn. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the vendor's name. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr=Name }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens telefonnummer. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the vendor's telephone number. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr="Phone No." }
+
+    { 34  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver navnet på en eventuel fast kontaktperson hos kreditor. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the name of the person you regularly contact when you do business with this vendor. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr=Contact }
+
+    { 8   ;2   ;Field     ;
+                ToolTipML=[DAN=Viser kreditorens aktuelle saldo i RV.;
+                           ENU=Shows the vendor's current balance in LCY.];
+                SourceExpr="Balance (LCY)" }
+
+    { 10  ;2   ;Field     ;
+                ToolTipML=[DAN=Viser det beløb (i RV), der er forfaldent til betaling hos kreditor.;
+                           ENU=Shows the balance due to this vendor in LCY.];
+                SourceExpr="Balance Due (LCY)" }
+
+    { 21  ;0   ;Container ;
+                ContainerType=FactBoxArea }
+
+    { 23  ;1   ;Part      ;
+                CaptionML=[DAN=Købshistorik;
+                           ENU=Purchase History];
+                SubPageLink=No.=FIELD(No.),
+                            Currency Filter=FIELD(Currency Filter),
+                            Date Filter=FIELD(Date Filter),
+                            Global Dimension 1 Filter=FIELD(Global Dimension 1 Filter),
+                            Global Dimension 2 Filter=FIELD(Global Dimension 2 Filter);
+                PagePartID=Page1332;
+                Visible=False;
+                PartType=Page }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

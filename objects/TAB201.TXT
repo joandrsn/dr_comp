@@ -1,0 +1,59 @@
+OBJECT Table 201 Resource Price
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Ressourcesalgspris;
+               ENU=Resource Price];
+    LookupPageID=Page204;
+    DrillDownPageID=Page204;
+  }
+  FIELDS
+  {
+    { 2   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Ressource,Gruppe (Ressource),Alle;
+                                                                    ENU=Resource,Group(Resource),All];
+                                                   OptionString=Resource,Group(Resource),All }
+    { 3   ;   ;Code                ;Code20        ;TableRelation=IF (Type=CONST(Resource)) Resource
+                                                                 ELSE IF (Type=CONST("Group(Resource)")) "Resource Group";
+                                                   OnValidate=BEGIN
+                                                                IF (Code <> '') AND (Type = Type::All) THEN
+                                                                  FIELDERROR(Code,STRSUBSTNO(Text000,FIELDCAPTION(Type),FORMAT(Type)));
+                                                              END;
+
+                                                   CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 4   ;   ;Work Type Code      ;Code10        ;TableRelation="Work Type";
+                                                   CaptionML=[DAN=Arbejdstypekode;
+                                                              ENU=Work Type Code] }
+    { 5   ;   ;Unit Price          ;Decimal       ;CaptionML=[DAN=Enhedspris;
+                                                              ENU=Unit Price];
+                                                   AutoFormatType=2;
+                                                   AutoFormatExpr="Currency Code" }
+    { 6   ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   CaptionML=[DAN=Valutakode;
+                                                              ENU=Currency Code] }
+  }
+  KEYS
+  {
+    {    ;Type,Code,Work Type Code,Currency Code  ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'DAN=kan ikke indtastes, når %1 er %2;ENU=cannot be specified when %1 is %2';
+
+    BEGIN
+    END.
+  }
+}
+

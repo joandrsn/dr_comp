@@ -1,0 +1,41 @@
+OBJECT Table 5372 Service Connection Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Status for serviceforbindelse;
+               ENU=Service Connection Status];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 2   ;   ;Server Address      ;Text250       ;TableRelation="CRM Connection Setup"."Server Address";
+                                                   CaptionML=[DAN=Dynamics CRM URL;
+                                                              ENU=Dynamics CRM URL] }
+    { 3   ;   ;Status              ;Option        ;CaptionML=[DAN=Status;
+                                                              ENU=Status];
+                                                   OptionCaptionML=[DAN=Forbindelse,Deaktiveret,Fejl;
+                                                                    ENU=Connected,Disabled,Error];
+                                                   OptionString=Connected,Disabled,Error }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

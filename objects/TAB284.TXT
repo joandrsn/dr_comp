@@ -1,0 +1,38 @@
+OBJECT Table 284 Area
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Område;
+               ENU=Area];
+    LookupPageID=Page405;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Text                ;Text50        ;CaptionML=[DAN=Tekst;
+                                                              ENU=Text] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Text                                }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

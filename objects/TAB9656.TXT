@@ -1,0 +1,53 @@
+OBJECT Table 9656 Report Layout Update Log
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Log over rapportlayoutopdatering;
+               ENU=Report Layout Update Log];
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 2   ;   ;Status              ;Option        ;CaptionML=[DAN=Status;
+                                                              ENU=Status];
+                                                   OptionCaptionML=[DAN=None,NoUpgradeApplied,UpgradeSuccess,UpgradeIgnoreSuccess,UpgradeWarnings,UpgradeErrors;
+                                                                    ENU=None,NoUpgradeApplied,UpgradeSuccess,UpgradeIgnoreSuccess,UpgradeWarnings,UpgradeErrors];
+                                                   OptionString=None,NoUpgradeApplied,UpgradeSuccess,UpgradeIgnoreSuccess,UpgradeWarnings,UpgradeErrors }
+    { 3   ;   ;Field Name          ;Text80        ;CaptionML=[DAN=Feltnavn;
+                                                              ENU=Field Name] }
+    { 4   ;   ;Message             ;Text250       ;CaptionML=[DAN=Meddelelse;
+                                                              ENU=Message] }
+    { 5   ;   ;Report ID           ;Integer       ;CaptionML=[DAN=Rapport-id;
+                                                              ENU=Report ID] }
+    { 6   ;   ;Layout Description  ;Text80        ;CaptionML=[DAN=Layoutbeskrivelse;
+                                                              ENU=Layout Description] }
+    { 7   ;   ;Layout Type         ;Option        ;CaptionML=[DAN=Layouttype;
+                                                              ENU=Layout Type];
+                                                   OptionCaptionML=[DAN=RDLC,Word;
+                                                                    ENU=RDLC,Word];
+                                                   OptionString=RDLC,Word }
+  }
+  KEYS
+  {
+    {    ;No.                                     ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

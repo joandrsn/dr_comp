@@ -1,0 +1,69 @@
+OBJECT Table 9061 RapidStart Services Cue
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=RapidStart-tjenestekøindikator;
+               ENU=RapidStart Services Cue];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 10  ;   ;Not Started         ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Line" WHERE (Line Type=CONST(Table),
+                                                                                           Status=CONST(" ")));
+                                                   CaptionML=[DAN=Ikke startet;
+                                                              ENU=Not Started];
+                                                   Editable=No }
+    { 11  ;   ;In Progress         ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Line" WHERE (Line Type=CONST(Table),
+                                                                                           Status=CONST(In Progress)));
+                                                   CaptionML=[DAN=Igangværende;
+                                                              ENU=In Progress];
+                                                   Editable=No }
+    { 12  ;   ;Completed           ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Line" WHERE (Line Type=CONST(Table),
+                                                                                           Status=CONST(Completed)));
+                                                   CaptionML=[DAN=Afsluttet;
+                                                              ENU=Completed];
+                                                   Editable=No }
+    { 13  ;   ;Ignored             ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Line" WHERE (Line Type=CONST(Table),
+                                                                                           Status=CONST(Ignored)));
+                                                   CaptionML=[DAN=Ignoreret;
+                                                              ENU=Ignored];
+                                                   Editable=No }
+    { 14  ;   ;Promoted            ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Line" WHERE (Line Type=CONST(Table),
+                                                                                           Promoted Table=CONST(Yes)));
+                                                   CaptionML=[DAN=Forfremmet;
+                                                              ENU=Promoted];
+                                                   Editable=No }
+    { 15  ;   ;Blocked             ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Line" WHERE (Line Type=CONST(Table),
+                                                                                           Status=CONST(Blocked)));
+                                                   CaptionML=[DAN=Spærret;
+                                                              ENU=Blocked];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

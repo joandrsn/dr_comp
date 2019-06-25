@@ -1,0 +1,115 @@
+OBJECT Page 9021 RapidStart Services RC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.44974;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Rollecenter;
+               ENU=Role Center];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 6       ;    ;ActionContainer;
+                      ActionContainerType=HomeItems }
+      { 11      ;1   ;ActionGroup;
+                      CaptionML=[DAN=RapidStart-tjenester;
+                                 ENU=RapidStart Services] }
+      { 9       ;2   ;Action    ;
+                      Name=Worksheet;
+                      CaptionML=[DAN=Kladde;
+                                 ENU=Worksheet];
+                      RunObject=Page 8632 }
+      { 18      ;2   ;Action    ;
+                      CaptionML=[DAN=Pakker;
+                                 ENU=Packages];
+                      RunObject=Page 8615 }
+      { 19      ;2   ;Action    ;
+                      CaptionML=[DAN=Tabeller;
+                                 ENU=Tables];
+                      RunObject=Page 8630 }
+      { 4       ;2   ;Action    ;
+                      CaptionML=[DAN=Spørgeskemaer;
+                                 ENU=Questionnaires];
+                      RunObject=Page 8610 }
+      { 7       ;2   ;Action    ;
+                      CaptionML=[DAN=Skabeloner;
+                                 ENU=Templates];
+                      RunObject=Page 8620 }
+      { 12      ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 20      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Handlinger;
+                                 ENU=Actions] }
+      { 13      ;2   ;Action    ;
+                      CaptionML=[DAN=Guiden RapidStart-tjenester;
+                                 ENU=RapidStart Services Wizard];
+                      RunObject=Page 8629;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Questionaire;
+                      PromotedCategory=Process }
+      { 15      ;2   ;Action    ;
+                      Name=ConfigurationWorksheet;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Konfigurationskladde;
+                                 ENU=Configuration Worksheet];
+                      RunObject=Page 8632;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=SetupLines;
+                      PromotedCategory=Process }
+      { 24      ;2   ;Action    ;
+                      CaptionML=[DAN=Færdiggøre opsætning;
+                                 ENU=Complete Setup];
+                      RunObject=Page 8638;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Completed;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=RoleCenterArea }
+
+    { 2   ;1   ;Group     ;
+                GroupType=Group }
+
+    { 3   ;2   ;Part      ;
+                CaptionML=[DAN=Aktiviteter;
+                           ENU=Activities];
+                PagePartID=Page9075;
+                PartType=Page }
+
+    { 8   ;2   ;Part      ;
+                CaptionML=[DAN=Konfigurationsområder;
+                           ENU=Configuration Areas];
+                SubPageView=SORTING(Vertical Sorting);
+                PagePartID=Page8631;
+                PartType=Page }
+
+    { 5   ;1   ;Group     ;
+                GroupType=Group }
+
+    { 10  ;2   ;Part      ;
+                PartType=System;
+                SystemPartID=MyNotes }
+
+    { 14  ;2   ;Part      ;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

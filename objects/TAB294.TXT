@@ -1,0 +1,58 @@
+OBJECT Table 294 Reminder Text
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               ReminderLevel.GET("Reminder Terms Code","Reminder Level");
+             END;
+
+    CaptionML=[DAN=Rykkertekst;
+               ENU=Reminder Text];
+    LookupPageID=Page433;
+    DrillDownPageID=Page433;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Reminder Terms Code ;Code10        ;TableRelation="Reminder Terms";
+                                                   CaptionML=[DAN=Rykkerbetingelseskode;
+                                                              ENU=Reminder Terms Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Reminder Level      ;Integer       ;TableRelation="Reminder Level".No. WHERE (Reminder Terms Code=FIELD(Reminder Terms Code));
+                                                   CaptionML=[DAN=Rykkerniveau;
+                                                              ENU=Reminder Level];
+                                                   MinValue=1;
+                                                   NotBlank=Yes }
+    { 3   ;   ;Position            ;Option        ;CaptionML=[DAN=Position;
+                                                              ENU=Position];
+                                                   OptionCaptionML=[DAN=Start,Slut;
+                                                                    ENU=Beginning,Ending];
+                                                   OptionString=Beginning,Ending }
+    { 4   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 5   ;   ;Text                ;Text100       ;CaptionML=[DAN=Tekst;
+                                                              ENU=Text] }
+  }
+  KEYS
+  {
+    {    ;Reminder Terms Code,Reminder Level,Position,Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ReminderLevel@1000 : Record 293;
+
+    BEGIN
+    END.
+  }
+}
+

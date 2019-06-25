@@ -1,0 +1,127 @@
+OBJECT Table 256 VAT Statement Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=22-12-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.44365;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Momsangivelseslinje;
+               ENU=VAT Statement Line];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Statement Template Name;Code10     ;TableRelation="VAT Statement Template";
+                                                   CaptionML=[DAN=Angivelsestypenavn;
+                                                              ENU=Statement Template Name] }
+    { 2   ;   ;Statement Name      ;Code10        ;TableRelation="VAT Statement Name".Name WHERE (Statement Template Name=FIELD(Statement Template Name));
+                                                   CaptionML=[DAN=Angivelsesnavn;
+                                                              ENU=Statement Name] }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 4   ;   ;Row No.             ;Code10        ;CaptionML=[DAN=Rubriknr.;
+                                                              ENU=Row No.] }
+    { 5   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 6   ;   ;Type                ;Option        ;OnValidate=BEGIN
+                                                                IF Type <> xRec.Type THEN BEGIN
+                                                                  TempType := Type;
+                                                                  INIT;
+                                                                  "Statement Template Name" := xRec."Statement Template Name";
+                                                                  "Statement Name" := xRec."Statement Name";
+                                                                  "Line No." := xRec."Line No.";
+                                                                  "Row No." := xRec."Row No.";
+                                                                  Description := xRec.Description;
+                                                                  Type := TempType;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Kontosammentælling,Momspostsammentælling,Rubriksammentælling,Tekst;
+                                                                    ENU=Account Totaling,VAT Entry Totaling,Row Totaling,Description];
+                                                   OptionString=Account Totaling,VAT Entry Totaling,Row Totaling,Description }
+    { 7   ;   ;Account Totaling    ;Text30        ;TableRelation="G/L Account";
+                                                   OnValidate=BEGIN
+                                                                IF "Account Totaling" <> '' THEN BEGIN
+                                                                  GLAcc.SETFILTER("No.","Account Totaling");
+                                                                  GLAcc.SETFILTER("Account Type",'<> 0');
+                                                                  IF GLAcc.FINDFIRST THEN
+                                                                    GLAcc.TESTFIELD("Account Type",GLAcc."Account Type"::Posting);
+                                                                END;
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Kontosammentælling;
+                                                              ENU=Account Totaling] }
+    { 8   ;   ;Gen. Posting Type   ;Option        ;CaptionML=[DAN=Bogføringstype;
+                                                              ENU=Gen. Posting Type];
+                                                   OptionCaptionML=[DAN=" ,Køb,Salg,Afregning";
+                                                                    ENU=" ,Purchase,Sale,Settlement"];
+                                                   OptionString=[ ,Purchase,Sale,Settlement] }
+    { 9   ;   ;VAT Bus. Posting Group;Code10      ;TableRelation="VAT Business Posting Group";
+                                                   CaptionML=[DAN=Momsvirksomhedsbogf.gruppe;
+                                                              ENU=VAT Bus. Posting Group] }
+    { 10  ;   ;VAT Prod. Posting Group;Code10     ;TableRelation="VAT Product Posting Group";
+                                                   CaptionML=[DAN=Momsproduktbogf.gruppe;
+                                                              ENU=VAT Prod. Posting Group] }
+    { 11  ;   ;Row Totaling        ;Text50        ;CaptionML=[DAN=Rubriksammentælling;
+                                                              ENU=Row Totaling] }
+    { 12  ;   ;Amount Type         ;Option        ;CaptionML=[DAN=Beløbstype;
+                                                              ENU=Amount Type];
+                                                   OptionCaptionML=[DAN=" ,Beløb,Grundlag,Urealiseret Beløb,Urealiseret Grundlag";
+                                                                    ENU=" ,Amount,Base,Unrealized Amount,Unrealized Base"];
+                                                   OptionString=[ ,Amount,Base,Unrealized Amount,Unrealized Base] }
+    { 13  ;   ;Calculate with      ;Option        ;OnValidate=BEGIN
+                                                                IF ("Calculate with" = "Calculate with"::"Opposite Sign") AND (Type = Type::"Row Totaling") THEN
+                                                                  FIELDERROR(Type,STRSUBSTNO(Text000,Type));
+                                                              END;
+
+                                                   CaptionML=[DAN=Beregn med;
+                                                              ENU=Calculate with];
+                                                   OptionCaptionML=[DAN=fortegn,modsat fortegn;
+                                                                    ENU=Sign,Opposite Sign];
+                                                   OptionString=Sign,Opposite Sign }
+    { 14  ;   ;Print               ;Boolean       ;InitValue=Yes;
+                                                   CaptionML=[DAN=Udskriv;
+                                                              ENU=Print] }
+    { 15  ;   ;Print with          ;Option        ;CaptionML=[DAN=Udskriv med;
+                                                              ENU=Print with];
+                                                   OptionCaptionML=[DAN=fortegn,modsat fortegn;
+                                                                    ENU=Sign,Opposite Sign];
+                                                   OptionString=Sign,Opposite Sign }
+    { 16  ;   ;Date Filter         ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Datofilter;
+                                                              ENU=Date Filter];
+                                                   Editable=No }
+    { 17  ;   ;New Page            ;Boolean       ;CaptionML=[DAN=Sideskift;
+                                                              ENU=New Page] }
+    { 18  ;   ;Tax Jurisdiction Code;Code10       ;TableRelation="Tax Jurisdiction";
+                                                   CaptionML=[DAN=Skatteregionkode;
+                                                              ENU=Tax Jurisdiction Code] }
+    { 19  ;   ;Use Tax             ;Boolean       ;CaptionML=[DAN=Use Tax;
+                                                              ENU=Use Tax] }
+  }
+  KEYS
+  {
+    {    ;Statement Template Name,Statement Name,Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'DAN=må ikke være %1;ENU=must not be %1';
+      GLAcc@1001 : Record 15;
+      TempType@1002 : Integer;
+
+    BEGIN
+    END.
+  }
+}
+

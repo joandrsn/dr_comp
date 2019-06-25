@@ -1,0 +1,84 @@
+OBJECT Table 1108 Cost Accounting Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Konfiguration af omkostningsregnskab;
+               ENU=Cost Accounting Setup];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 2   ;   ;Starting Date for G/L Transfer;Date;OnValidate=BEGIN
+                                                                CostRegister.SETRANGE(Source,CostRegister.Source::"Transfer from G/L");
+                                                                IF CostRegister.FINDFIRST THEN
+                                                                  ERROR(Text001,CostRegister."No.");
+                                                              END;
+
+                                                   CaptionML=[DAN=Startdato for finansoverførsel;
+                                                              ENU=Starting Date for G/L Transfer] }
+    { 3   ;   ;Align G/L Account   ;Option        ;CaptionML=[DAN=Opdater finanskonto;
+                                                              ENU=Align G/L Account];
+                                                   OptionCaptionML=[DAN=Aldrig,Automatisk,Spørg;
+                                                                    ENU=No Alignment,Automatic,Prompt];
+                                                   OptionString=No Alignment,Automatic,Prompt }
+    { 4   ;   ;Align Cost Center Dimension;Option ;CaptionML=[DAN=Opdater omkostningsstedsdimension;
+                                                              ENU=Align Cost Center Dimension];
+                                                   OptionCaptionML=[DAN=Aldrig,Automatisk,Spørg;
+                                                                    ENU=No Alignment,Automatic,Prompt];
+                                                   OptionString=No Alignment,Automatic,Prompt }
+    { 5   ;   ;Align Cost Object Dimension;Option ;CaptionML=[DAN=Opdater omkostningsemnedimension;
+                                                              ENU=Align Cost Object Dimension];
+                                                   OptionCaptionML=[DAN=Aldrig,Automatisk,Spørg;
+                                                                    ENU=No Alignment,Automatic,Prompt];
+                                                   OptionString=No Alignment,Automatic,Prompt }
+    { 20  ;   ;Last Allocation ID  ;Code10        ;InitValue=001;
+                                                   CaptionML=[DAN=Sidste fordelings-id;
+                                                              ENU=Last Allocation ID] }
+    { 30  ;   ;Last Allocation Doc. No.;Code20    ;InitValue=AL0001;
+                                                   CaptionML=[DAN=Sidste fordelingsbilagsnr.;
+                                                              ENU=Last Allocation Doc. No.] }
+    { 100 ;   ;Auto Transfer from G/L;Boolean     ;OnValidate=VAR
+                                                                TransferGlEntriesToCA@1000 : Codeunit 1105;
+                                                              BEGIN
+                                                                IF "Auto Transfer from G/L" THEN BEGIN
+                                                                  MODIFY;
+                                                                  TransferGlEntriesToCA.GetGLEntries;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[DAN=Automatisk overførlse fra finans;
+                                                              ENU=Auto Transfer from G/L] }
+    { 120 ;   ;Check G/L Postings  ;Boolean       ;CaptionML=[DAN=Kontroller finansbogføringer;
+                                                              ENU=Check G/L Postings] }
+    { 205 ;   ;Cost Center Dimension;Code20       ;TableRelation=Dimension;
+                                                   CaptionML=[DAN=Omkostningsstedsdimension;
+                                                              ENU=Cost Center Dimension] }
+    { 206 ;   ;Cost Object Dimension;Code20       ;TableRelation=Dimension;
+                                                   CaptionML=[DAN=Omkostningsemnedimension;
+                                                              ENU=Cost Object Dimension] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      CostRegister@1000 : Record 1105;
+      Text001@1001 : TextConst 'DAN=Startdatoen kan ikke længere defineres. I henhold til journalnr. %1 er finansposter allerede overført til omkostningsregnskabet.;ENU=The starting date can no longer be defined. According to Register No. %1, general ledger entries have already been transferred to Cost Accounting.';
+
+    BEGIN
+    END.
+  }
+}
+

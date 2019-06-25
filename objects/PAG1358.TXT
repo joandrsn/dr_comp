@@ -1,0 +1,176 @@
+OBJECT Page 1358 Mini Posted Purch. Inv. Subfrm
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Linjer;
+               ENU=Lines];
+    LinksAllowed=No;
+    SourceTable=Table123;
+    PageType=ListPart;
+    AutoSplitKey=Yes;
+    OnAfterGetCurrRecord=BEGIN
+                           MiniDocumentTotals.CalculatePostedPurchInvoiceTotals(TotalPurchInvHeader,VATAmount,Rec);
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 10      ;1   ;Action    ;
+                      Name=DeferralSchedule;
+                      CaptionML=[DAN=Periodiseringsplan;
+                                 ENU=Deferral Schedule];
+                      Image=PaymentPeriod;
+                      OnAction=BEGIN
+                                 ShowDeferrals;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 4   ;2   ;Field     ;
+                CaptionML=[DAN=Varenr.;
+                           ENU=Item No.];
+                ToolTipML=[DAN=Angiver et varenummer, der identificerer varer eller et finanskontonummer, der identificerer finanskontoen, der bruges ved bogføring af linjen.;
+                           ENU=Specifies an item number that identifies the item or a general ledger account number that identifies the general ledger account used when posting the line.];
+                SourceExpr="No." }
+
+    { 62  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver det varereferencenummer, der vedrører varen.;
+                           ENU=Specifies the cross-reference number related to this item.];
+                SourceExpr="Cross-Reference No.";
+                Visible=FALSE }
+
+    { 6   ;2   ;Field     ;
+                CaptionML=[DAN=Beskrivelse/bemærkning;
+                           ENU=Description/Comment];
+                ToolTipML=[DAN=Angiver enten navnet på eller en beskrivelse af varen eller finanskontoen.;
+                           ENU=Specifies either the name of or a description of the item or general ledger account.];
+                SourceExpr=Description }
+
+    { 8   ;2   ;Field     ;
+                Width=8;
+                ToolTipML=[DAN=Angiver det antal, der er bogført fra linjen.;
+                           ENU=Specifies the quantity posted from the line.];
+                BlankZero=Yes;
+                SourceExpr=Quantity }
+
+    { 30  ;2   ;Field     ;
+                Width=8;
+                ToolTipML=[DAN=Angiver enhedskoden for varen.;
+                           ENU=Specifies the unit of measure code for the item.];
+                SourceExpr="Unit of Measure Code" }
+
+    { 12  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver købspris for en enhed af varen.;
+                           ENU=Specifies the direct unit cost of one unit of the item.];
+                BlankZero=Yes;
+                SourceExpr="Direct Unit Cost" }
+
+    { 16  ;2   ;Field     ;
+                Width=8;
+                ToolTipML=[DAN=Angiver den linjerabatprocent, der ydes på varerne på hver enkelt linje.;
+                           ENU=Specifies the line discount percentage granted on items on each individual line.];
+                BlankZero=Yes;
+                SourceExpr="Line Discount %" }
+
+    { 64  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver det nettobeløb (før fradrag af fakturarabatbeløbet), som skal betales for varerne. Hvis du har markeret afkrydsningsfeltet Priser inkl. moms, vil det viste beløb være inkl. moms.;
+                           ENU=Specifies the net amount (before subtracting the invoice discount amount) that must be paid for the items. If you have placed a check mark in the Prices Including VAT field, the amount displayed will include VAT.];
+                BlankZero=Yes;
+                SourceExpr="Line Amount" }
+
+    { 25  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på den sag, som købsfakturalinjen er tilknyttet.;
+                           ENU=Specifies the number of the job that the purchase invoice line is linked to.];
+                SourceExpr="Job No." }
+
+    { 9   ;2   ;Field     ;
+                SourceExpr="Deferral Code" }
+
+    { 21  ;1   ;Group     ;
+                GroupType=Group }
+
+    { 18  ;2   ;Group     ;
+                GroupType=Group }
+
+    { 17  ;3   ;Field     ;
+                Name=Invoice Discount Amount;
+                CaptionML=[DAN=Fakturarabatbeløb;
+                           ENU=Invoice Discount Amount];
+                ToolTipML=[DAN=Angiver er rabatbeløb, der trækkes fra værdien i feltet I alt inkl. moms. Du kan også manuelt angive eller ændre beløbet. Hvis du har konfigureret fakturarabatter, vises den angivne procentværdi i feltet Fakturarabatprocent, hvis kriterierne opfyldes. Det beregnede rabatbeløb indsættes derefter i feltet Fakturarabatbeløb.;
+                           ENU=Specifies a discount amount that is deducted from the value in the Total Incl. VAT field. You can enter or change the amount manually. If you have set up invoice discounts, the specified percentage is shown in the Invoice Discount % field if the criteria are met. The calculated discount amount is then inserted in the Invoice Discount Amount field.];
+                SourceExpr=TotalPurchInvHeader."Invoice Discount Amount";
+                AutoFormatType=1;
+                AutoFormatExpr=TotalPurchInvHeader."Currency Code";
+                Editable=FALSE }
+
+    { 5   ;2   ;Group     ;
+                GroupType=Group }
+
+    { 7   ;3   ;Field     ;
+                Name=Total Amount Excl. VAT;
+                DrillDown=No;
+                CaptionML=[DAN=I alt ekskl. moms;
+                           ENU=Total Amount Excl. VAT];
+                ToolTipML=[DAN=Angiver summen af værdien i feltet Linjebeløb ekskl. moms på alle linjer i dokumentet minus eventuelle rabatbeløb i feltet Fakturarabatbeløb. Bemærk, at beløb på dokumentlinjer vises med eller uden moms afhængigt af, hvad du har valgt i feltet Priser inkl. moms på debitor- eller kreditorkortet.;
+                           ENU=Specifies the sum of the value in the Line Amount Excl. VAT field on all lines in the document minus any discount amount in the Invoice Discount Amount field. Note that amounts on document lines are shown with or without VAT depending on what you selected in the Prices Including VAT field on the customer or vendor card.];
+                SourceExpr=TotalPurchInvHeader.Amount;
+                AutoFormatType=1;
+                AutoFormatExpr=TotalPurchInvHeader."Currency Code";
+                CaptionClass=MiniDocumentTotals.GetTotalExclVATCaption(TotalPurchInvHeader."Currency Code");
+                Editable=FALSE }
+
+    { 2   ;3   ;Field     ;
+                Name=Total VAT Amount;
+                CaptionML=[DAN=Moms i alt;
+                           ENU=Total VAT];
+                ToolTipML=[DAN=Angiver summen af momsbeløb på alle linjer i dokumentet. Bemærk, at beløb på dokumentlinjer vises med eller uden moms afhængigt af, hvad du har valgt i feltet Priser inkl. moms på debitor- eller kreditorkortet.;
+                           ENU=Specifies the sum of VAT amounts on all lines in the document. Note that amounts on document lines are shown with or without VAT depending on what you selected in the Prices Including VAT field on the customer or vendor card.];
+                SourceExpr=VATAmount;
+                AutoFormatType=1;
+                AutoFormatExpr=TotalPurchInvHeader."Currency Code";
+                CaptionClass=MiniDocumentTotals.GetTotalVATCaption(TotalPurchInvHeader."Currency Code");
+                Editable=FALSE }
+
+    { 3   ;3   ;Field     ;
+                Name=Total Amount Incl. VAT;
+                CaptionML=[DAN=I alt inkl. moms;
+                           ENU=Total Amount Incl. VAT];
+                ToolTipML=[DAN=Angiver summen af værdien i feltet Linjebeløb inkl. moms på alle linjer i dokumentet minus eventuelle rabatbeløb i feltet Fakturarabatbeløb. Bemærk, at beløb på dokumentlinjer vises med eller uden moms afhængigt af, hvad du har valgt i feltet Priser inkl. moms på debitor- eller kreditorkortet.;
+                           ENU=Specifies the sum of the value in the Line Amount Incl. VAT field on all lines in the document minus any discount amount in the Invoice Discount Amount field. Note that amounts on document lines are shown with or without VAT depending on what you selected in the Prices Including VAT field on the customer or vendor card.];
+                SourceExpr=TotalPurchInvHeader."Amount Including VAT";
+                AutoFormatType=1;
+                AutoFormatExpr=TotalPurchInvHeader."Currency Code";
+                CaptionClass=MiniDocumentTotals.GetTotalInclVATCaption(TotalPurchInvHeader."Currency Code");
+                Editable=FALSE;
+                Style=Strong;
+                StyleExpr=TRUE }
+
+  }
+  CODE
+  {
+    VAR
+      TotalPurchInvHeader@1002 : Record 122;
+      MiniDocumentTotals@1001 : Codeunit 1301;
+      VATAmount@1000 : Decimal;
+
+    BEGIN
+    END.
+  }
+}
+

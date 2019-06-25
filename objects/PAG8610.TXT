@@ -1,0 +1,164 @@
+OBJECT Page 8610 Config. Questionnaire
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Konfig.spørgeskema;
+               ENU=Config. Questionnaire];
+    SourceTable=Table8610;
+    PageType=List;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Excel;
+                                ENU=New,Process,Report,Excel];
+    ActionList=ACTIONS
+    {
+      { 1900000003;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 14      ;1   ;ActionGroup;
+                      CaptionML=[DAN=&Spørgeskema;
+                                 ENU=&Questionnaire];
+                      Image=Questionaire }
+      { 11      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Udlæs til Excel;
+                                 ENU=E&xport to Excel];
+                      Promoted=Yes;
+                      Image=ExportToExcel;
+                      PromotedCategory=Category4;
+                      OnAction=BEGIN
+                                 TESTFIELD(Code);
+
+                                 FileName := FileMgt.SaveFileDialog(Text002,FileName,'');
+                                 IF FileName = '' THEN
+                                   EXIT;
+
+                                 IF QuestionnaireMgt.ExportQuestionnaireToExcel(FileName,Rec) THEN
+                                   MESSAGE(Text000);
+                               END;
+                                }
+      { 10      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Indlæs fra Excel;
+                                 ENU=&Import from Excel];
+                      Promoted=Yes;
+                      Image=ImportExcel;
+                      PromotedCategory=Category4;
+                      OnAction=BEGIN
+                                 FileName := FileMgt.OpenFileDialog(Text002,FileName,'');
+                                 IF FileName = '' THEN
+                                   EXIT;
+
+                                 IF QuestionnaireMgt.ImportQuestionnaireFromExcel(FileName) THEN
+                                   MESSAGE(Text001);
+                               END;
+                                }
+      { 9       ;2   ;Separator  }
+      { 8       ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Udlæs til XML;
+                                 ENU=&Export to XML];
+                      Image=Export;
+                      OnAction=BEGIN
+                                 IF QuestionnaireMgt.ExportQuestionnaireAsXML(FileName,Rec) THEN
+                                   MESSAGE(Text000)
+                                 ELSE
+                                   MESSAGE(Text003);
+                               END;
+                                }
+      { 7       ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Indlæs fra XML;
+                                 ENU=&Import from XML];
+                      Image=Import;
+                      OnAction=BEGIN
+                                 IF QuestionnaireMgt.ImportQuestionnaireAsXMLFromClient THEN
+                                   MESSAGE(Text001);
+                               END;
+                                }
+      { 6       ;2   ;Separator  }
+      { 5       ;2   ;Action    ;
+                      CaptionML=[DAN=&Opdater spørgeskema;
+                                 ENU=&Update Questionnaire];
+                      Image=Refresh;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 IF QuestionnaireMgt.UpdateQuestionnaire(Rec) THEN
+                                   MESSAGE(Text004);
+                               END;
+                                }
+      { 3       ;2   ;Action    ;
+                      CaptionML=[DAN=&Anvend svar;
+                                 ENU=&Apply Answers];
+                      Promoted=Yes;
+                      Image=Apply;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 IF QuestionnaireMgt.ApplyAnswers(Rec) THEN
+                                   MESSAGE(Text005);
+                               END;
+                                }
+      { 15      ;    ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 16      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Områder;
+                                 ENU=Areas] }
+      { 13      ;2   ;Action    ;
+                      CaptionML=[DAN=&Spørgsmålsområder;
+                                 ENU=&Question Areas];
+                      RunObject=Page 8613;
+                      RunPageLink=Questionnaire Code=FIELD(Code);
+                      Promoted=Yes;
+                      Image=View;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr=Code }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Description }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1001 : TextConst 'DAN=Spørgeskemaet er udlæst.;ENU=The questionnaire has been successfully exported.';
+      Text001@1000 : TextConst 'DAN=Spørgeskemaet er indlæst.;ENU=The questionnaire has been successfully imported.';
+      Text002@1002 : TextConst 'DAN=Gem som Excel-projektmappe.;ENU=Save as Excel workbook';
+      Text003@1003 : TextConst 'DAN=Udlæsning af spørgeskemaet er annulleret.;ENU=The export of the questionnaire has been canceled.';
+      QuestionnaireMgt@1004 : Codeunit 8610;
+      FileMgt@1009 : Codeunit 419;
+      FileName@1005 : Text;
+      Text004@1006 : TextConst 'DAN=Spørgeskemaet er opdateret.;ENU=The questionnaire has been updated.';
+      Text005@1010 : TextConst 'DAN=Svarene er blevet anvendt.;ENU=Answers have been applied.';
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,197 @@
+OBJECT Table 305 Issued Fin. Charge Memo Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10,NAVDK7.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Udstedt rentenotalinje;
+               ENU=Issued Fin. Charge Memo Line];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Finance Charge Memo No.;Code20     ;TableRelation="Issued Fin. Charge Memo Header";
+                                                   CaptionML=[DAN=Rentenotanr.;
+                                                              ENU=Finance Charge Memo No.] }
+    { 2   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 3   ;   ;Attached to Line No.;Integer       ;TableRelation="Issued Fin. Charge Memo Line"."Line No." WHERE (Finance Charge Memo No.=FIELD(Finance Charge Memo No.));
+                                                   CaptionML=[DAN=Tilknyttet linjenr.;
+                                                              ENU=Attached to Line No.] }
+    { 4   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=" ,Finanskonto,Debitorpost";
+                                                                    ENU=" ,G/L Account,Customer Ledger Entry"];
+                                                   OptionString=[ ,G/L Account,Customer Ledger Entry] }
+    { 5   ;   ;Entry No.           ;Integer       ;TableRelation="Cust. Ledger Entry";
+                                                   OnLookup=BEGIN
+                                                              IF Type <> Type::"Customer Ledger Entry" THEN
+                                                                EXIT;
+                                                              IssuedFinChrgMemoHeader.GET("Finance Charge Memo No.");
+                                                              CustLedgEntry.SETCURRENTKEY("Customer No.");
+                                                              CustLedgEntry.SETRANGE("Customer No.",IssuedFinChrgMemoHeader."Customer No.");
+                                                              IF CustLedgEntry.GET("Entry No.") THEN;
+                                                              PAGE.RUNMODAL(0,CustLedgEntry);
+                                                            END;
+
+                                                   CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.];
+                                                   BlankZero=Yes }
+    { 7   ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+                                                              ENU=Posting Date] }
+    { 8   ;   ;Document Date       ;Date          ;CaptionML=[DAN=Bilagsdato;
+                                                              ENU=Document Date] }
+    { 9   ;   ;Due Date            ;Date          ;CaptionML=[DAN=Forfaldsdato;
+                                                              ENU=Due Date] }
+    { 10  ;   ;Document Type       ;Option        ;CaptionML=[DAN=Bilagstype;
+                                                              ENU=Document Type];
+                                                   OptionCaptionML=[DAN=" ,Betaling,Faktura,Kreditnota,Rentenota,Rykker,Refusion";
+                                                                    ENU=" ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund"];
+                                                   OptionString=[ ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund] }
+    { 11  ;   ;Document No.        ;Code20        ;OnLookup=BEGIN
+                                                              IF Type <> Type::"Customer Ledger Entry" THEN
+                                                                EXIT;
+                                                              IssuedFinChrgMemoHeader.GET("Finance Charge Memo No.");
+                                                              CustLedgEntry.SETCURRENTKEY("Customer No.");
+                                                              CustLedgEntry.SETRANGE("Customer No.",IssuedFinChrgMemoHeader."Customer No.");
+                                                              IF CustLedgEntry.GET("Entry No.") THEN;
+                                                              PAGE.RUNMODAL(0,CustLedgEntry);
+                                                            END;
+
+                                                   CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+    { 12  ;   ;Description         ;Text100       ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 13  ;   ;Original Amount     ;Decimal       ;CaptionML=[DAN=Oprindeligt beløb;
+                                                              ENU=Original Amount];
+                                                   BlankZero=Yes;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 14  ;   ;Remaining Amount    ;Decimal       ;CaptionML=[DAN=Restbeløb;
+                                                              ENU=Remaining Amount];
+                                                   BlankZero=Yes;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 15  ;   ;No.                 ;Code20        ;TableRelation=IF (Type=CONST(" ")) "Standard Text"
+                                                                 ELSE IF (Type=CONST(G/L Account)) "G/L Account";
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 16  ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount];
+                                                   BlankZero=Yes;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 17  ;   ;Interest Rate       ;Decimal       ;CaptionML=[DAN=Rentesats;
+                                                              ENU=Interest Rate];
+                                                   DecimalPlaces=0:5;
+                                                   BlankZero=Yes }
+    { 18  ;   ;Gen. Prod. Posting Group;Code10    ;TableRelation="Gen. Product Posting Group";
+                                                   CaptionML=[DAN=Produktbogføringsgruppe;
+                                                              ENU=Gen. Prod. Posting Group] }
+    { 19  ;   ;VAT %               ;Decimal       ;CaptionML=[DAN=Momspct.;
+                                                              ENU=VAT %];
+                                                   DecimalPlaces=0:5 }
+    { 20  ;   ;VAT Calculation Type;Option        ;CaptionML=[DAN=Momsberegningstype;
+                                                              ENU=VAT Calculation Type];
+                                                   OptionCaptionML=[DAN=Normal moms,Modtagermoms,Momskorrektion,Sales tax;
+                                                                    ENU=Normal VAT,Reverse Charge VAT,Full VAT,Sales Tax];
+                                                   OptionString=Normal VAT,Reverse Charge VAT,Full VAT,Sales Tax }
+    { 21  ;   ;VAT Amount          ;Decimal       ;CaptionML=[DAN=Momsbeløb;
+                                                              ENU=VAT Amount];
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 22  ;   ;Tax Group Code      ;Code10        ;TableRelation="Tax Group";
+                                                   CaptionML=[DAN=Skattegruppekode;
+                                                              ENU=Tax Group Code] }
+    { 23  ;   ;VAT Prod. Posting Group;Code10     ;TableRelation="VAT Product Posting Group";
+                                                   CaptionML=[DAN=Momsproduktbogf.gruppe;
+                                                              ENU=VAT Prod. Posting Group] }
+    { 24  ;   ;VAT Identifier      ;Code10        ;CaptionML=[DAN=Moms-id;
+                                                              ENU=VAT Identifier];
+                                                   Editable=No }
+    { 26  ;   ;VAT Clause Code     ;Code10        ;TableRelation="VAT Clause";
+                                                   CaptionML=[DAN=Momsklausulkode;
+                                                              ENU=VAT Clause Code] }
+    { 101 ;   ;System-Created Entry;Boolean       ;CaptionML=[DAN=Automatisk oprettet;
+                                                              ENU=System-Created Entry];
+                                                   Editable=No }
+    { 13600;  ;Account Code        ;Text30        ;OnValidate=BEGIN
+                                                                IF (Type = Type::" ") AND ("Account Code" <> '') THEN
+                                                                  ERROR(Text13600, FIELDCAPTION("Account Code"), FIELDCAPTION(Type), Type);
+                                                              END;
+
+                                                   CaptionML=[DAN=Kontokode;
+                                                              ENU=Account Code] }
+  }
+  KEYS
+  {
+    {    ;Finance Charge Memo No.,Line No.        ;SumIndexFields=Amount,VAT Amount,Remaining Amount;
+                                                   MaintainSIFTIndex=No;
+                                                   Clustered=Yes }
+    {    ;Finance Charge Memo No.,Type            ;SumIndexFields=Amount,VAT Amount,Remaining Amount;
+                                                   MaintainSQLIndex=No;
+                                                   MaintainSIFTIndex=No }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      IssuedFinChrgMemoHeader@1000 : Record 304;
+      CustLedgEntry@1001 : Record 21;
+      Text13600@1101100000 : TextConst 'DAN=Du kan ikke angive %1, hvis %2 er "%3".;ENU=You cannot enter %1 if %2 is "%3".';
+
+    PROCEDURE GetCurrencyCode@1() : Code[10];
+    VAR
+      IssuedFinChrgMemoHeader@1000 : Record 304;
+    BEGIN
+      IF "Finance Charge Memo No." = IssuedFinChrgMemoHeader."No." THEN
+        EXIT(IssuedFinChrgMemoHeader."Currency Code");
+
+      IF IssuedFinChrgMemoHeader.GET("Finance Charge Memo No.") THEN
+        EXIT(IssuedFinChrgMemoHeader."Currency Code");
+
+      EXIT('');
+    END;
+
+    PROCEDURE GetDescription@1101100005(CurrencyCode@1101100002 : Code[10]) : Text[1024];
+    VAR
+      AppMgt@1101100001 : Codeunit 1;
+    BEGIN
+      CASE Type OF
+        Type::" ":
+          EXIT(Description + CrLf);
+        Type::"G/L Account":
+          EXIT(
+            STRSUBSTNO('%1: %2; ', FIELDCAPTION(Description), Description) +
+            STRSUBSTNO('%1: %2; ', FIELDCAPTION(Amount), FORMAT(Amount, 0, AppMgt.AutoFormatTranslate(1, CurrencyCode))) +
+            CrLf);
+        Type::"Customer Ledger Entry":
+          EXIT(
+            STRSUBSTNO('%1: %2; ', FIELDCAPTION("Document Date"), FORMAT("Document Date")) +
+            STRSUBSTNO('%1: %2; ', FIELDCAPTION("Document Type"), FORMAT("Document Type")) +
+            STRSUBSTNO('%1: %2; ', FIELDCAPTION("Document No."), FORMAT("Document No.")) +
+            STRSUBSTNO('%1: %2; ', FIELDCAPTION("Due Date"), FORMAT("Due Date")) +
+            STRSUBSTNO('%1: %2; ', FIELDCAPTION("Original Amount"),
+              FORMAT("Original Amount", 0, AppMgt.AutoFormatTranslate(1, CurrencyCode))) +
+            STRSUBSTNO('%1: %2; ', FIELDCAPTION("Remaining Amount"),
+              FORMAT("Remaining Amount", 0, AppMgt.AutoFormatTranslate(1, CurrencyCode))) +
+            CrLf);
+      END;
+    END;
+
+    LOCAL PROCEDURE CrLf@1101100009() CrLf : Text[2];
+    BEGIN
+      CrLf[1] := 13;
+      CrLf[2] := 10;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

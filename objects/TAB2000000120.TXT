@@ -1,0 +1,61 @@
+OBJECT Table 2000000120 User
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN="Bruger ";
+               ENU=User];
+  }
+  FIELDS
+  {
+    { 1   ;   ;User Security ID    ;GUID          ;CaptionML=[DAN=Brugersikkerheds-id;
+                                                              ENU=User Security ID] }
+    { 2   ;   ;User Name           ;Code50        ;CaptionML=[DAN=Brugernavn;
+                                                              ENU=User Name] }
+    { 3   ;   ;Full Name           ;Text80        ;CaptionML=[DAN=Fulde navn;
+                                                              ENU=Full Name] }
+    { 4   ;   ;State               ;Option        ;CaptionML=[DAN=Tilstand;
+                                                              ENU=State];
+                                                   OptionCaptionML=[DAN=Aktiveret,Deaktiveret;
+                                                                    ENU=Enabled,Disabled];
+                                                   OptionString=Enabled,Disabled }
+    { 5   ;   ;Expiry Date         ;DateTime      ;CaptionML=[DAN=Udløbsdato;
+                                                              ENU=Expiry Date] }
+    { 7   ;   ;Windows Security ID ;Text119       ;CaptionML=[DAN=Windows-sikkerheds-id;
+                                                              ENU=Windows Security ID] }
+    { 8   ;   ;Change Password     ;Boolean       ;CaptionML=[DAN=Skift adgangskode;
+                                                              ENU=Change Password] }
+    { 10  ;   ;License Type        ;Option        ;CaptionML=[DAN=Licenstype;
+                                                              ENU=License Type];
+                                                   OptionCaptionML=[DAN=Fuld bruger,Begrænset bruger,Enhedsbruger,Windows-gruppe,Ekstern bruger;
+                                                                    ENU=Full User,Limited User,Device Only User,Windows Group,External User];
+                                                   OptionString=Full User,Limited User,Device Only User,Windows Group,External User }
+    { 11  ;   ;Authentication Email;Text250       ;CaptionML=[DAN=Godkendelsesmailadresse;
+                                                              ENU=Authentication Email] }
+    { 14  ;   ;Contact Email       ;Text250       ;CaptionML=[DAN=Kontaktens mailadresse;
+                                                              ENU=Contact Email] }
+  }
+  KEYS
+  {
+    {    ;User Security ID                        ;Clustered=Yes }
+    {    ;User Name                                }
+    {    ;Windows Security ID                      }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;User Name                                }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

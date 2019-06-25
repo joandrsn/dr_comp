@@ -1,0 +1,66 @@
+OBJECT Table 905 Assembly Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Montagekonfiguration;
+               ENU=Assembly Setup];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 5   ;   ;Stockout Warning    ;Boolean       ;InitValue=Yes;
+                                                   CaptionML=[DAN=Beholdningsadvarsel;
+                                                              ENU=Stockout Warning] }
+    { 10  ;   ;Assembly Order Nos. ;Code10        ;TableRelation="No. Series";
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Montageordrenr.;
+                                                              ENU=Assembly Order Nos.] }
+    { 20  ;   ;Assembly Quote Nos. ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Montagetilbudsnr.;
+                                                              ENU=Assembly Quote Nos.] }
+    { 30  ;   ;Blanket Assembly Order Nos.;Code10 ;TableRelation="No. Series";
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Montagerammeordrenr.;
+                                                              ENU=Blanket Assembly Order Nos.] }
+    { 50  ;   ;Posted Assembly Order Nos.;Code10  ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Bogførte montageordrenr.;
+                                                              ENU=Posted Assembly Order Nos.] }
+    { 100 ;   ;Copy Component Dimensions from;Option;
+                                                   AccessByPermission=TableData 348=R;
+                                                   CaptionML=[DAN=Kopier komponentdimensioner fra;
+                                                              ENU=Copy Component Dimensions from];
+                                                   OptionCaptionML=[DAN=Vare-/ressourcekort,Ordrehoved;
+                                                                    ENU=Item/Resource Card,Order Header];
+                                                   OptionString=Item/Resource Card,Order Header }
+    { 110 ;   ;Default Location for Orders;Code10 ;TableRelation=Location;
+                                                   CaptionML=[DAN=Standardlokation for ordrer;
+                                                              ENU=Default Location for Orders] }
+    { 120 ;   ;Copy Comments when Posting;Boolean ;InitValue=Yes;
+                                                   CaptionML=[DAN=Kopier bemærkninger ved bogføring;
+                                                              ENU=Copy Comments when Posting] }
+    { 130 ;   ;Create Movements Automatically;Boolean;
+                                                   CaptionML=[DAN=Opret bevægelser automatisk;
+                                                              ENU=Create Movements Automatically] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,43 @@
+OBJECT Table 2000000130 Device
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Enh.;
+               ENU=Device];
+  }
+  FIELDS
+  {
+    { 1   ;   ;MAC Address         ;Code20        ;CaptionML=[DAN=MAC-adresse;
+                                                              ENU=MAC Address] }
+    { 2   ;   ;Name                ;Text80        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 3   ;   ;Device Type         ;Option        ;CaptionML=[DAN=Enhedstype;
+                                                              ENU=Device Type];
+                                                   OptionCaptionML=[DAN=Fuld,Begrænset,ISV,ISV-funktionel;
+                                                                    ENU=Full,Limited,ISV,ISV Functional];
+                                                   OptionString=Full,Limited,ISV,ISV Functional }
+    { 4   ;   ;Enabled             ;Boolean       ;CaptionML=[DAN=Aktiveret;
+                                                              ENU=Enabled] }
+  }
+  KEYS
+  {
+    {    ;MAC Address                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

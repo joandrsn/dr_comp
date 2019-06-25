@@ -1,0 +1,37 @@
+OBJECT Table 1310 Mini Chart Definition
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Definition af minidiagram;
+               ENU=Mini Chart Definition];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code Unit ID        ;Integer       ;CaptionML=[DAN=Kodeenheds-id;
+                                                              ENU=Code Unit ID] }
+    { 2   ;   ;Chart Name          ;Text60        ;CaptionML=[DAN=Diagramnavn;
+                                                              ENU=Chart Name] }
+    { 3   ;   ;Enabled             ;Boolean       ;CaptionML=[DAN=Aktiveret;
+                                                              ENU=Enabled] }
+  }
+  KEYS
+  {
+    {    ;Code Unit ID,Chart Name                 ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

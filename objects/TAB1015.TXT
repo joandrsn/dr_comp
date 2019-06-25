@@ -1,0 +1,38 @@
+OBJECT Table 1015 Job Entry No.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Sagsløbenr.;
+               ENU=Job Entry No.];
+    PasteIsValid=No;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key];
+                                                   Editable=No }
+    { 2   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

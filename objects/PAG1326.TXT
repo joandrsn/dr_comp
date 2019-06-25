@@ -1,0 +1,161 @@
+OBJECT Page 1326 Mini Sales Quotes List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Salgstilbud;
+               ENU=Sales Quotes];
+    SourceTable=Table36;
+    SourceTableView=WHERE(Document Type=CONST(Quote));
+    PageType=List;
+    CardPageID=Mini Sales Quote;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Tilbud,Bogføring;
+                                ENU=New,Process,Report,Quote,Posting];
+    OnOpenPage=BEGIN
+                 SetSecurityFilterOnRespCenter;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 10      ;1   ;ActionGroup;
+                      Name=Process;
+                      CaptionML=[DAN=Proces;
+                                 ENU=Process] }
+      { 23      ;2   ;Action    ;
+                      Name=MakeInvoice;
+                      CaptionML=[DAN=Opret faktura;
+                                 ENU=Make Invoice];
+                      ToolTipML=[DAN=Omdan det valgte salgstilbud til en salgsfaktura.;
+                                 ENU=Convert the selected sales quote to a sales invoice.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=MakeOrder;
+                      PromotedCategory=Process;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 MiniLinesInstructionMgt.SalesCheckAllLinesHaveQuantityAssigned(Rec);
+                                 CODEUNIT.RUN(CODEUNIT::"Sales-Quote to Invoice Yes/No",Rec);
+                               END;
+                                }
+      { 20      ;2   ;Action    ;
+                      Name=Print;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Udskriv;
+                                 ENU=&Print];
+                      ToolTipML=[DAN=Udskriv det valgte salgstilbud.;
+                                 ENU=Print the selected sales quote.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Print;
+                      PromotedCategory=Process;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 MiniLinesInstructionMgt.SalesCheckAllLinesHaveQuantityAssigned(Rec);
+                                 DocPrint.PrintSalesHeader(Rec);
+                               END;
+                                }
+      { 21      ;2   ;Action    ;
+                      Name=Email;
+                      CaptionML=[DAN=&Mail;
+                                 ENU=&Email];
+                      ToolTipML=[DAN=Vedhæft det valgte salgstilbud i en mail til debitoren.;
+                                 ENU=Attach the selected sales quote to an email to the customer.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Email;
+                      PromotedCategory=Process;
+                      Scope=Repeater;
+                      OnAction=VAR
+                                 ReportDistributionManagement@1000 : Codeunit 452;
+                               BEGIN
+                                 MiniLinesInstructionMgt.SalesCheckAllLinesHaveQuantityAssigned(Rec);
+                                 ReportDistributionManagement.EmailDocumentReport(Rec);
+                               END;
+                                }
+      { 1102601019;1 ;ActionGroup;
+                      Name=Quote;
+                      CaptionML=[DAN=&Tilbud;
+                                 ENU=&Quote];
+                      Image=Invoice }
+      { 4       ;2   ;Action    ;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=[DAN=Kunde (Debitor);
+                                 ENU=Customer];
+                      ToolTipML=[DAN=Vis eller rediger detaljerede oplysninger om kunden i det valgte salgsdokument.;
+                                 ENU=View or edit detailed information about the customer on the selected sales document.];
+                      RunObject=Page 1300;
+                      RunPageLink=No.=FIELD(Sell-to Customer No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Customer;
+                      PromotedCategory=Category4;
+                      Scope=Repeater }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på salgsbilaget. Feltet kan udfyldes automatisk eller manuelt og kan konfigureres til at være usynligt.;
+                           ENU=Specifies the number of the sales document. The field can be filled automatically or manually and can be set up to be invisible.];
+                SourceExpr="No." }
+
+    { 6   ;2   ;Field     ;
+                CaptionML=[DAN=Debitornavn;
+                           ENU=Customer Name];
+                ToolTipML=[DAN=Angiver navnet på den kunde, der modtager produkterne og faktureres som standard. Værdien indsættes automatisk fra debitorkortet, når du udfylder feltet Kundenr.. Værdien vises på det udskrevne salgsdokument.;
+                           ENU=Specifies the name of the customer who will receive the products and be billed by default. The value is automatically inserted from the customer card when you fill the Sell-to Customer No. field. The value will appear on the printed sales document.];
+                SourceExpr="Sell-to Customer Name" }
+
+    { 11  ;2   ;Field     ;
+                CaptionML=[DAN=Kontakt;
+                           ENU=Contact];
+                ToolTipML=[DAN=Angiver navnet på personen, der kan kontaktes i kundens virksomhed. Værdien indsættes automatisk fra debitorkortet, når du udfylder feltet Kundenr.. Værdien vises på det udskrevne salgsdokument.;
+                           ENU=Specifies the name of the person to contact at the customer. The value is automatically inserted from the customer card when you fill the Sell-to Customer No. field. The value will appear on the printed sales document.];
+                SourceExpr="Sell-to Contact" }
+
+    { 12  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dato, hvor bogføringen af salgsdokumentet skal registreres. Som standard angives dags dato.;
+                           ENU=Specifies the date when the posting of the sales document will be recorded. By default, today's date is entered.];
+                SourceExpr="Posting Date" }
+
+    { 1102601009;2;Field  ;
+                ToolTipML=[DAN=Angiver, hvornår salgsfakturaen skal betales. Som standard beregnes feltet som datoen i feltet Afsendelsesdato plus den periode, der er defineret i feltet Betalingsbeting.kode.;
+                           ENU=Specifies when the sales invoice must be paid. By default, the field is calculated as the date in the Shipment Date field plus the period defined in the Payment Terms Code field.];
+                SourceExpr="Due Date" }
+
+    { 13  ;2   ;Field     ;
+                ToolTipML=[DAN=Indeholder den dato, hvor debitoren har ønsket varerne leveret. Afsendelsesdatoen beregnes med dette felt som udgangspunkt. Hvis du lader feltet stå tomt, beregnes den tidligst mulige leveringsdato og indsættes.;
+                           ENU=Specifies the date that the customer has asked for the order to be delivered. The shipment date is calculated from this field. If you leave the field empty, the earliest possible delivery date is calculated and inserted.];
+                SourceExpr="Requested Delivery Date" }
+
+    { 3   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver summen af beløbene i feltet Linjebeløb på salgsordrelinjerne. Den bruges til at beregne salgsordrefakturarabat.;
+                           ENU=Specifies the sum of amounts in the Line Amount field on the sales order lines. It is used to calculate the invoice discount of the sales order.];
+                SourceExpr=Amount }
+
+  }
+  CODE
+  {
+    VAR
+      DocPrint@1000 : Codeunit 229;
+      MiniLinesInstructionMgt@1002 : Codeunit 1320;
+
+    BEGIN
+    END.
+  }
+}
+

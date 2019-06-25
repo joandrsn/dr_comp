@@ -1,0 +1,615 @@
+OBJECT Page 1330 Mini Vendor Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00,NAVDK9.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Leverandørkort (Kreditor);
+               ENU=Vendor Card];
+    SourceTable=Table23;
+    PageType=Card;
+    RefreshOnActivate=Yes;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Nyt dokument,Kreditor,Historik,Priser og rabatter;
+                                ENU=New,Process,Report,New Document,Vendor,History,Prices and Discounts];
+    OnOpenPage=BEGIN
+                 CurrPage.AgedAccPayableChart.PAGE.SetPerVendor;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       SetSocialListeningFactboxVisibility
+                     END;
+
+    OnNewRecord=VAR
+                  MiniVendorTemplate@1002 : Record 1303;
+                  Vendor@1001 : Record 23;
+                  NewVendorCode@1000 : Code[20];
+                BEGIN
+                  IF "No." = '' THEN
+                    NewVendorCode := MiniVendorTemplate.NewVendorFromTemplate;
+                  IF NewVendorCode = '' THEN BEGIN
+                    CurrPage.CLOSE;
+                    EXIT;
+                  END;
+                  GET(NewVendorCode);
+                  IF Vendor.GET("No.") THEN
+                    Vendor.DELETE(TRUE);
+                END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 5       ;1   ;ActionGroup;
+                      Name=NewDocument;
+                      CaptionML=[DAN=Nyt bilag;
+                                 ENU=New Document] }
+      { 14      ;2   ;Action    ;
+                      Name=Page Mini Purchase Invoice;
+                      CaptionML=[DAN=Købsfaktura;
+                                 ENU=Purchase Invoice];
+                      ToolTipML=[DAN=Opret en købsfaktura på leverandøren.;
+                                 ENU=Create a purchase invoice for the vendor.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Invoice;
+                      PromotedCategory=Category4;
+                      RunPageMode=Create;
+                      OnAction=BEGIN
+                                 CreateAndShowNewInvoice;
+                               END;
+                                }
+      { 11      ;2   ;Action    ;
+                      Name=Page Mini Purchase Credit Memo;
+                      CaptionML=[DAN=Købskreditnota;
+                                 ENU=Purchase Credit Memo];
+                      ToolTipML=[DAN=Opret en købskreditnota til leverandøren.;
+                                 ENU=Create a purchase credit memo for the vendor.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CreditMemo;
+                      PromotedCategory=Category4;
+                      RunPageMode=Create;
+                      OnAction=BEGIN
+                                 CreateAndShowNewCreditMemo;
+                               END;
+                                }
+      { 64      ;1   ;ActionGroup;
+                      Name=Vendor;
+                      CaptionML=[DAN=Leverandør (Kreditor);
+                                 ENU=Vendor];
+                      Image=Vendor }
+      { 39      ;2   ;Action    ;
+                      Name=RecurringPurchaseLines;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Tilbagevendende købslinjer;
+                                 ENU=Recurring Purchase Lines];
+                      ToolTipML=[DAN=Konfigurer tilbagevendende købslinjer for kreditor, f.eks. en månedlig genbestillingsordre, som hurtigt kan indsættes i et kreditorkøbsdokument.;
+                                 ENU=Set up recurring purchase lines for the vendor, such as a monthly replenishment order, that can quickly be inserted on a purchase document for the vendor.];
+                      RunObject=Page 1364;
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      PromotedIsBig=Yes;
+                      Image=VendorCode;
+                      PromotedCategory=Category5 }
+      { 184     ;2   ;Action    ;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[DAN=Dimensioner;
+                                 ENU=Dimensions];
+                      ToolTipML=[DAN=Angiv standarddimensioner for leverandøren, f.eks. en område- eller kreditorgruppekode. Du kan tildele dimensionskoder for transaktioner for at fordele omkostninger og analysere historikken.;
+                                 ENU=Set up default dimensions for the vendor, such as an area or vendor group code. You can assign dimension codes to transactions to distribute costs and analyze historical information.];
+                      RunObject=Page 540;
+                      RunPageLink=Table ID=CONST(23),
+                                  No.=FIELD(No.);
+                      Image=Dimensions }
+      { 87      ;2   ;Action    ;
+                      CaptionML=[DAN=Bankkonti;
+                                 ENU=Bank Accounts];
+                      ToolTipML=[DAN=Angiv oplysninger om kreditorens bankkonto.;
+                                 ENU=Set up information about the vendor's bank account.];
+                      RunObject=Page 426;
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      Image=BankAccount }
+      { 54      ;2   ;Action    ;
+                      CaptionML=[DAN=B&estillingsadresser;
+                                 ENU=Order &Addresses];
+                      ToolTipML=[DAN=Angiv en eller flere alternative adresser, hvorfra du kan købe varer af leverandøren. Derefter kan du angive en alternativ adresse på leverandøren i købsdokumenter.;
+                                 ENU=Set up one or more alternate addresses from where you can buy items from the vendor. You can then enter an alternate address on purchase documents for the vendor.];
+                      RunObject=Page 369;
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      Image=Addresses }
+      { 84      ;2   ;Action    ;
+                      CaptionML=[DAN=Varereferencer;
+                                 ENU=Cross References];
+                      ToolTipML=[DAN=Angiv leverandørens egen identifikation af de varer, du køber hos leverandøren. Krydshenvisninger til kreditors varenummer betyder, at kreditors varenummer automatisk vises i købsdokumenter i stedet for det nummer, som du anvender.;
+                                 ENU=Set up the vendor's own identification of items that you buy from the vendor. Cross-references to the vendor's item number means that their item number is automatically shown on purchase documents instead of the number that you use.];
+                      RunObject=Page 5723;
+                      RunPageView=SORTING(Cross-Reference Type,Cross-Reference Type No.);
+                      RunPageLink=Cross-Reference Type=CONST(Vendor),
+                                  Cross-Reference Type No.=FIELD(No.);
+                      Image=Change }
+      { 102     ;2   ;Action    ;
+                      CaptionML=[DAN=Online Map;
+                                 ENU=Online Map];
+                      ToolTipML=[DAN=Vis kreditors adresse på dit foretrukne kortwebsted.;
+                                 ENU=View the vendor's address on your preferred map website.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Map;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 DisplayMap;
+                               END;
+                                }
+      { 3       ;2   ;Action    ;
+                      Name=VendorReportSelections;
+                      CaptionML=[DAN=Dokumentlayouts;
+                                 ENU=Document Layouts];
+                      Visible=false;
+                      Image=Quote;
+                      OnAction=VAR
+                                 CustomReportSelection@1000 : Record 9657;
+                               BEGIN
+                                 CustomReportSelection.SETRANGE("Source Type",DATABASE::Vendor);
+                                 CustomReportSelection.SETRANGE("Source No.","No.");
+                                 PAGE.RUNMODAL(PAGE::"Vendor Report Selections",CustomReportSelection);
+                               END;
+                                }
+      { 21      ;1   ;ActionGroup;
+                      Name=History;
+                      CaptionML=[DAN=Oversigt;
+                                 ENU=History];
+                      Image=History }
+      { 7       ;2   ;Action    ;
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=[DAN=Finansp&oster;
+                                 ENU=Ledger E&ntries];
+                      ToolTipML=[DAN=Vis historikken over transaktioner for kreditoren.;
+                                 ENU=View the history of transactions for the vendor.];
+                      RunObject=Page 29;
+                      RunPageView=SORTING(Vendor No.);
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      Promoted=No;
+                      Image=VendorLedger;
+                      PromotedCategory=Process }
+      { 71      ;1   ;ActionGroup;
+                      Name=PricesAndDiscounts;
+                      CaptionML=[DAN=Priser og rabatter;
+                                 ENU=Prices and Discounts];
+                      Image=Purchasing }
+      { 73      ;2   ;Action    ;
+                      CaptionML=[DAN=&Fakturarabatter;
+                                 ENU=Invoice &Discounts];
+                      ToolTipML=[DAN=Angiv forskellige rabatter, som leverandøren giver dig. En fakturarabat gives automatisk, når en købsfakturas samlede beløb overstiger et bestemt beløb.;
+                                 ENU=Set up different discounts that the vendor grants you. An invoice discount is automatically granted when the total on a purchase invoice exceeds a certain amount.];
+                      RunObject=Page 28;
+                      RunPageLink=Code=FIELD(Invoice Disc. Code);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CalculateInvoiceDiscount;
+                      PromotedCategory=Category7 }
+      { 72      ;2   ;Action    ;
+                      CaptionML=[DAN=Priser;
+                                 ENU=Prices];
+                      ToolTipML=[DAN=Angiv forskellige priser for de varer, du køber hos leverandøren. En varepris anføres automatisk på fakturalinjer, når de specificerede kriterier er blevet opfyldt, f.eks. leverandør, mængde eller slutdato.;
+                                 ENU=Set up different prices for items that you buy from the vendor. An item price is automatically granted on invoice lines when the specified criteria are met, such as vendor, quantity, or ending date.];
+                      RunObject=Page 7012;
+                      RunPageView=SORTING(Vendor No.);
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Price;
+                      PromotedCategory=Category7 }
+      { 116     ;2   ;Action    ;
+                      CaptionML=[DAN=Linjerabat;
+                                 ENU=Line Discounts];
+                      ToolTipML=[DAN=Angiv forskellige rabatter for de varer, du køber hos leverandøren. En varerabat anføres automatisk på fakturalinjer, når de specificerede kriterier er blevet opfyldt, f.eks. leverandør, mængde eller slutdato.;
+                                 ENU=Set up different discounts for items that you buy from the vendor. An item discount is automatically granted on invoice lines when the specified criteria are met, such as vendor, quantity, or ending date.];
+                      RunObject=Page 7014;
+                      RunPageView=SORTING(Vendor No.);
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=LineDiscount;
+                      PromotedCategory=Category7 }
+      { 37      ;1   ;ActionGroup;
+                      Name=DataTemplate;
+                      CaptionML=[DAN=Dataskabelon;
+                                 ENU=Data Template] }
+      { 35      ;2   ;Action    ;
+                      Name=SaveAsTemplate;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Gem som skabelon;
+                                 ENU=Save as Template];
+                      ToolTipML=[DAN=Gem kreditorkortet som en skabelon, der kan genbruges ved oprettelse af nye kreditorkort. Kreditorskabeloner indeholder forudindstillede oplysninger som en hjælp til udfyldelse af kreditorkortene.;
+                                 ENU=Save the vendor card as a template that can be reused to create new vendor cards. Vendor templates contain preset information to help you fill fields on vendor cards.];
+                      PromotedIsBig=Yes;
+                      Image=Save;
+                      PromotedCategory=New;
+                      OnAction=VAR
+                                 TempMiniVendorTemplate@1000 : TEMPORARY Record 1303;
+                               BEGIN
+                                 TempMiniVendorTemplate.SaveAsTemplate(Rec);
+                               END;
+                                }
+      { 19      ;2   ;Action    ;
+                      Name=Templates;
+                      CaptionML=[DAN=Skabeloner;
+                                 ENU=Templates];
+                      ToolTipML=[DAN=Vis eller rediger kreditorskabeloner.;
+                                 ENU=View or edit vendor templates.];
+                      RunObject=Page 1340;
+                      RunPageView=WHERE(Table ID=CONST(23));
+                      PromotedIsBig=Yes;
+                      Image=Template }
+      { 1900000006;1 ;ActionGroup;
+                      Name=ReportsVendor;
+                      CaptionML=[DAN=Rapporter;
+                                 ENU=Reports];
+                      ActionContainerType=Reports }
+      { 43      ;2   ;ActionGroup;
+                      Name=Reports;
+                      CaptionML=[DAN=Rapporter;
+                                 ENU=Reports];
+                      Image=Report }
+      { 1905916106;3 ;Action    ;
+                      CaptionML=[DAN=Kreditor - forfaldsoversigt;
+                                 ENU=Vendor - Summary Aging];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over skyldige beløb til hver kreditor, opdelt i tre tidsperioder.;
+                                 ENU=View, print, or save a summary of the payables owed to each vendor, divided into three time periods.];
+                      RunObject=Report 305;
+                      Promoted=No;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1904504206;3 ;Action    ;
+                      CaptionML=[DAN=Kreditor - saldo til dato;
+                                 ENU=Vendor - Balance to Date];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en liste over kreditorers betalingshistorik indtil en bestemt dato. Du kan bruge rapporten til at udtrække oplysninger om dine samlede betalingsforpligtelser ved slutningen af en regnskabsperiode eller et regnskabsår.;
+                                 ENU=View, print, or save a list with your payment history to vendors up until a specified date. You can use the report to extract your total payment liabilities at the close of an accounting period or fiscal year.];
+                      RunObject=Report 321;
+                      Promoted=No;
+                      Image=Report;
+                      PromotedCategory=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Vendor;
+                CaptionML=[DAN=Leverandør (Kreditor);
+                           ENU=Vendor];
+                GroupType=Group }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på kreditoren. Feltet udfyldes enten automatisk fra en defineret nummerserie, eller du kan indtaste nummeret manuelt, fordi du har aktiveret manuel nummerindtastning i opsætningen af nummerserier.;
+                           ENU=Specifies the number of the vendor. The field is either filled automatically from a defined number series, or you enter the number manually because you have enabled manual number entry in the number-series setup.];
+                SourceExpr="No.";
+                Importance=Additional;
+                OnAssistEdit=BEGIN
+                               IF AssistEdit(xRec) THEN
+                                 CurrPage.UPDATE;
+                             END;
+                              }
+
+    { 4   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver leverandørens navn. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the vendor's name. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr=Name;
+                Importance=Promoted;
+                ShowMandatory=TRUE }
+
+    { 24  ;2   ;Field     ;
+                ToolTipML=[DAN=Ved at vælge et passende blokeringsniveau kan du undgå, at bestemte transaktioner behandles for en kunde.;
+                           ENU=Prevents specific transactions from being processed for a customer by selecting an appropriate blocking level.];
+                SourceExpr=Blocked }
+
+    { 26  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver det tidspunkt, hvor debitorkortet sidst blev ændret.;
+                           ENU=Specifies when the vendor card was last modified.];
+                SourceExpr="Last Date Modified";
+                Importance=Additional }
+
+    { 18  ;2   ;Field     ;
+                ToolTipML=[DAN=Viser kreditorens aktuelle saldo i RV.;
+                           ENU=Shows the vendor's current balance in LCY.];
+                SourceExpr="Balance (LCY)" }
+
+    { 28  ;2   ;Field     ;
+                ToolTipML=[DAN=Viser det beløb (i RV), der er forfaldent til betaling hos kreditor.;
+                           ENU=Shows the balance due to this vendor in LCY.];
+                SourceExpr="Balance Due (LCY)" }
+
+    { 9   ;1   ;Group     ;
+                Name=AdressContactTab;
+                CaptionML=[DAN=Adresse og kontakt;
+                           ENU=Address & Contact];
+                GroupType=Group }
+
+    { 10  ;2   ;Group     ;
+                Name=AddressDetails;
+                CaptionML=[DAN=Adresse;
+                           ENU=Address];
+                GroupType=Group }
+
+    { 6   ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens adresse. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the vendor's address. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr=Address }
+
+    { 8   ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver en eventuel ekstra linje for kreditorens adresse. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies another line of the vendor's address, if necessary. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr="Address 2" }
+
+    { 79  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens postnummer.;
+                           ENU=Specifies the vendor's post code.];
+                SourceExpr="Post Code";
+                Importance=Promoted }
+
+    { 15  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens by.;
+                           ENU=Specifies the vendor's city.];
+                SourceExpr=City }
+
+    { 81  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver lande-/områdekoden for kreditoren.;
+                           ENU=Specifies the country/region code for this vendor.];
+                SourceExpr="Country/Region Code" }
+
+    { 13  ;2   ;Group     ;
+                Name=ContactDetails;
+                CaptionML=[DAN=Kontakt;
+                           ENU=Contact];
+                GroupType=Group }
+
+    { 12  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens telefonnummer. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the vendor's telephone number. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr="Phone No." }
+
+    { 22  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens mailadresse. Du kan bruge op til 80 tegn (både tal og bogstaver).;
+                           ENU=Specifies the vendor's e-mail address. You can enter a maximum of 80 characters, both numbers and letters.];
+                SourceExpr="E-Mail" }
+
+    { 23  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens hjemmesideadresse. Du kan bruge op til 80 tegn (både tal og bogstaver).;
+                           ENU=Specifies the vendor's home page address. You can enter a maximum of 80 characters, both numbers and letters.];
+                SourceExpr="Home Page" }
+
+    { 25  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver navnet på en eventuel fast kontaktperson hos kreditor. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the name of the person you regularly contact when you do business with this vendor. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr=Contact;
+                Importance=Promoted }
+
+    { 47  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver et kontonummer hos kreditoren, hvis du har en konto. Du kan bruge op til 20 tegn (både tal og bogstaver). Feltet er kun til orientering.;
+                           ENU=Specifies your account number with the vendor, if you have one. You can enter a maximum of 20 characters, both numbers and letters. This field is only informational.];
+                SourceExpr="Our Account No." }
+
+    { 1905885101;1;Group  ;
+                Name=InvoicingTab;
+                CaptionML=[DAN=Fakturering;
+                           ENU=Invoicing];
+                GroupType=Group }
+
+    { 29  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens momsregistreringsnummer. Du kan bruge op til 20 tegn (både tal og bogstaver).;
+                           ENU=Specifies the vendor's VAT registration number. You can enter a maximum of 20 characters, both numbers and letters.];
+                SourceExpr="VAT Registration No.";
+                OnDrillDown=VAR
+                              VATRegistrationLogMgt@1000 : Codeunit 249;
+                            BEGIN
+                              VATRegistrationLogMgt.AssistEditVendorVATReg(Rec);
+                            END;
+                             }
+
+    { 48  ;2   ;Field     ;
+                ToolTipML=[DAN=Identificerer leverandøren i forbindelse med modtagelse af elektronisk dokument. For PEPPOL formatet bruges feltet på følgende måde: Hvis EndPointID elementet i Leverandør gruppen har SchemeID attributten indstillet til GLN, knyttes elementet til feltet GLN på kreditorkortet. Hvis feltet er tomt, anvendes værdien i feltet SE/CVR-nr..;
+                           ENU=Identifies the vendor in connection with electronic document receiving. For the PEPPOL format, the field is used as follows: If the EndPointID element in the Supplier group has the SchemeID attribute set to GLN, then the element is mapped to the GLN field on the vendor card. If the field is blank, then the value in the VAT Registration No. field is used.];
+                SourceExpr=GLN;
+                Importance=Additional }
+
+    { 30  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på en anden kreditor, som du betaler for produkter, der leveres af kreditoren, på kreditorkortet.;
+                           ENU=Specifies the number of a different vendor whom you pay for products delivered by the vendor on the vendor card.];
+                SourceExpr="Pay-to Vendor No.";
+                Importance=Additional }
+
+    { 34  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver leverandørens fakturarabatkode. Når du opretter et nyt kreditorkort, indsættes det nummer, du har angivet i feltet Nummer, automatisk.;
+                           ENU=Specifies the vendor's invoice discount code. When you set up a new vendor card, the number you have entered in the No. field is automatically inserted.];
+                NotBlank=Yes;
+                SourceExpr="Invoice Disc. Code";
+                Importance=Additional }
+
+    { 94  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om felterne Købspris og Linjebeløb på købslinjer og i købsrapporter skal vises med eller uden moms.;
+                           ENU=Specifies if the Direct Unit Cost and Line Amount fields on the purchase lines and in purchase reports should be shown with or without VAT.];
+                SourceExpr="Prices Including VAT" }
+
+    { 16  ;2   ;Group     ;
+                Name=PostingDetails;
+                CaptionML=[DAN=Bogføringsoplysninger;
+                           ENU=Posting Details];
+                GroupType=Group }
+
+    { 60  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiv kreditorens handelstype for at knytte transaktioner, der er foretaget for denne kreditoren, til den relevante finanskonto i overensstemmelse med den generelle bogføringsopsætning.;
+                           ENU=Specify the vendor's trade type to link transactions made for this vendor with the appropriate general ledger account according to the general posting setup.];
+                SourceExpr="Gen. Bus. Posting Group";
+                Importance=Additional;
+                ShowMandatory=TRUE }
+
+    { 90  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens momsspecifikation for at knytte transaktioner, der er foretaget for denne kreditor, til den relevante finanskonto i overensstemmelse med momsbogføringsopsætningen.;
+                           ENU=Specifies the vendor's VAT specification to link transactions made for this vendor with the appropriate general ledger account according to the VAT posting setup.];
+                SourceExpr="VAT Bus. Posting Group";
+                Importance=Additional;
+                ShowMandatory=TRUE }
+
+    { 32  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens markedstype for at knytte forretningstransaktioner, der er foretaget for kreditoren, til den relevante konto i regnskabet.;
+                           ENU=Specifies the vendor's market type to link business transactions made for the vendor with the appropriate account in the general ledger.];
+                SourceExpr="Vendor Posting Group";
+                Importance=Additional;
+                ShowMandatory=TRUE }
+
+    { 27  ;2   ;Group     ;
+                Name=ForeignTrade;
+                CaptionML=[DAN=Udenrigshandel;
+                           ENU=Foreign Trade];
+                GroupType=Group }
+
+    { 33  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver en standardvalutakode for kreditoren.;
+                           ENU=Specifies a default currency code for the vendor.];
+                SourceExpr="Currency Code";
+                Importance=Additional }
+
+    { 31  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver sproget på udskrifter for denne kreditor.;
+                           ENU=Specifies the language on printouts for this vendor.];
+                SourceExpr="Language Code";
+                Importance=Additional }
+
+    { 1901677601;1;Group  ;
+                Name=PaymentsTab;
+                CaptionML=[DAN=Betalinger;
+                           ENU=Payments];
+                GroupType=Group }
+
+    { 36  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvordan du kan udligne betalinger på poster for denne kreditor. Vælg Manuel for manuelt at angive det dokument, en betaling gælder for. Dette er standardmetoden Vælg Saldo for automatisk at udligne betalinger med den ældste åbne kreditorpost.;
+                           ENU=Specifies how to apply payments to entries for this vendor. Select Manual to manually specify the document that a payment applies to. This is the default method. Select Apply to Oldest to automatically apply payments to the oldest open vendor ledger entry.];
+                SourceExpr="Application Method";
+                Importance=Additional }
+
+    { 38  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver en kode, der angiver, hvilke betalingsbetingelser kreditoren sædvanligvis forlanger. Den betalingsbetingelseskode, du definerer i dette felt, indsættes på købsfakturaer til kreditoren.;
+                           ENU=Specifies a code that indicates the payment terms that the vendor usually requires. The payment terms code you define in this field is inserted on purchase invoices for the vendor.];
+                SourceExpr="Payment Terms Code";
+                Importance=Promoted }
+
+    { 40  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvordan kreditoren kræver, at du sender betaling, f.eks. via bankoverførsel eller check. Den betalingsformkode, du vælger i dette felt, indsættes på købsfakturaer til kreditoren.;
+                           ENU=Specifies how the vendor requires you to submit payment, such as bank transfer or check. The payment method code that you select in this field is inserted on purchase invoices for the vendor.];
+                SourceExpr="Payment Method Code";
+                Importance=Promoted }
+
+    { 42  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver vigtigheden af kreditoren, når der foreslås betalinger ved brug af funktionen Lav kreditorbetalingsforslag. Lad feltet stå tomt for ikke at bruge betalingsprioritet.;
+                           ENU=Specifies the importance of the vendor when suggesting payments using the Suggest Vendor Payments function. Leave the field blank to not use payment priority.];
+                SourceExpr=Priority }
+
+    { 119 ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om kreditoren tillader betalingstolerance. Du skal kun udfylde feltet, hvis du kender kreditorens rykkerpolitik.;
+                           ENU=Specifies if the vendor allows payment tolerance. You only fill this field if you know the vendor's payment reminder policy.];
+                SourceExpr="Block Payment Tolerance";
+                Importance=Additional;
+                OnValidate=BEGIN
+                             IF "Block Payment Tolerance" THEN BEGIN
+                               IF CONFIRM(RemovePaymentToleranceQst,FALSE) THEN
+                                 PaymentToleranceMgt.DelTolVendLedgEntry(Rec);
+                             END ELSE BEGIN
+                               IF CONFIRM(AllowPaymentToleranceQst,FALSE) THEN
+                                 PaymentToleranceMgt.CalcTolVendLedgEntry(Rec);
+                             END;
+                           END;
+                            }
+
+    { 20  ;2   ;Field     ;
+                ToolTipML=[DAN=Specifies the vendor bank account that will be used by default on payment journal lines for export to a payment bank file.;
+                           ENU=Specifies the vendor bank account that will be used by default on payment journal lines for export to a payment bank file.];
+                SourceExpr="Preferred Bank Account";
+                Importance=Additional }
+
+    { 61  ;2   ;Field     ;
+                CaptionML=[DAN=Girokontonummer;
+                           ENU=Giro Account Number];
+                ToolTipML=[DAN=Angiver kreditorens girokonto. Dette nummer indsættes på betalingskladdens linjer, når du konfigurerer kreditoren med GIRO-betalingsmetoden i Betalingsformer.;
+                           ENU=Specifies the vendor's giro account. This number is inserted on payment journal lines when you set the vendor up with the GIRO payment method in the Payment Methods.];
+                SourceExpr="Giro Acc. No.";
+                Importance=Additional }
+
+    { 62  ;2   ;Field     ;
+                CaptionML=[DAN=Kreditornummer;
+                           ENU=Creditor Number];
+                ToolTipML=[DAN=Identificerer den kreditor, som har sendt købsfakturaen.;
+                           ENU=Identifies the vendor who sent the purchase invoice.];
+                SourceExpr="Creditor No.";
+                Importance=Additional }
+
+    { 44  ;0   ;Container ;
+                ContainerType=FactBoxArea }
+
+    { 59  ;1   ;Part      ;
+                CaptionML=[DAN=Detaljer;
+                           ENU=Details];
+                SubPageLink=No.=FIELD(No.);
+                PagePartID=Page1621;
+                Visible=FALSE;
+                PartType=Page }
+
+    { 63  ;1   ;Part      ;
+                Name=AgedAccPayableChart;
+                SubPageLink=No.=FIELD(No.);
+                PagePartID=Page769;
+                Visible=FALSE;
+                PartType=Page }
+
+    { 41  ;1   ;Part      ;
+                SubPageLink=Source Type=CONST(Vendor),
+                            Source No.=FIELD(No.);
+                PagePartID=Page875;
+                Visible=SocialListeningVisible;
+                PartType=Page }
+
+    { 46  ;1   ;Part      ;
+                SubPageLink=Source Type=CONST(Vendor),
+                            Source No.=FIELD(No.);
+                PagePartID=Page876;
+                Visible=SocialListeningSetupVisible;
+                PartType=Page;
+                UpdatePropagation=Both }
+
+    { 45  ;1   ;Part      ;
+                CaptionML=[DAN=Købshistorik;
+                           ENU=Purchase History];
+                SubPageLink=No.=FIELD(No.),
+                            Currency Filter=FIELD(Currency Filter),
+                            Date Filter=FIELD(Date Filter),
+                            Global Dimension 1 Filter=FIELD(Global Dimension 1 Filter),
+                            Global Dimension 2 Filter=FIELD(Global Dimension 2 Filter);
+                PagePartID=Page1332;
+                PartType=Page }
+
+  }
+  CODE
+  {
+    VAR
+      PaymentToleranceMgt@1002 : Codeunit 426;
+      AllowPaymentToleranceQst@1005 : TextConst 'DAN=Vil du tillade betalingstolerance for poster, der aktuelt er åbne?;ENU=Do you want to allow payment tolerance for entries that are currently open?';
+      RemovePaymentToleranceQst@1004 : TextConst 'DAN=Vil du fjerne betalingstolerance fra poster, der aktuelt er åbne?;ENU=Do you want to remove payment tolerance from entries that are currently open?';
+      SocialListeningSetupVisible@1001 : Boolean INDATASET;
+      SocialListeningVisible@1000 : Boolean INDATASET;
+
+    LOCAL PROCEDURE SetSocialListeningFactboxVisibility@1();
+    VAR
+      SocialListeningMgt@1000 : Codeunit 871;
+    BEGIN
+      SocialListeningMgt.GetVendFactboxVisibility(Rec,SocialListeningSetupVisible,SocialListeningVisible);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

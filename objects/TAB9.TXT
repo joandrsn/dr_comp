@@ -1,0 +1,68 @@
+OBJECT Table 9 Country/Region
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00,NAVDK9.00;
+  }
+  PROPERTIES
+  {
+    OnDelete=VAR
+               VATRegNoFormat@1000 : Record 381;
+             BEGIN
+               VATRegNoFormat.SETFILTER("Country/Region Code",Code);
+               VATRegNoFormat.DELETEALL;
+             END;
+
+    CaptionML=[DAN=Land/område;
+               ENU=Country/Region];
+    LookupPageID=Page10;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Name                ;Text50        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 6   ;   ;EU Country/Region Code;Code10      ;CaptionML=[DAN=EU-lande-/områdekode;
+                                                              ENU=EU Country/Region Code] }
+    { 7   ;   ;Intrastat Code      ;Code10        ;CaptionML=[DAN=Intrastatkode;
+                                                              ENU=Intrastat Code] }
+    { 8   ;   ;Address Format      ;Option        ;InitValue=City+Post Code;
+                                                   CaptionML=[DAN=Adresseformat;
+                                                              ENU=Address Format];
+                                                   OptionCaptionML=[DAN=Postnummer+by,By+postnummer,By+amt+postnummer,Tom linje+postnummer+by;
+                                                                    ENU=Post Code+City,City+Post Code,City+County+Post Code,Blank Line+Post Code+City];
+                                                   OptionString=Post Code+City,City+Post Code,City+County+Post Code,Blank Line+Post Code+City }
+    { 9   ;   ;Contact Address Format;Option      ;InitValue=After Company Name;
+                                                   CaptionML=[DAN=Personnavn;
+                                                              ENU=Contact Address Format];
+                                                   OptionCaptionML=[DAN=Først,Efter virks.navn,Sidst;
+                                                                    ENU=First,After Company Name,Last];
+                                                   OptionString=First,After Company Name,Last }
+    { 10  ;   ;VAT Scheme          ;Code10        ;CaptionML=[DAN=Momsskema;
+                                                              ENU=VAT Scheme] }
+    { 13600;  ;OIOUBL Country/Region Code;Code10  ;CaptionML=[DAN=OIOUBL-lande-/områdekode;
+                                                              ENU=OIOUBL Country/Region Code] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+    {    ;EU Country/Region Code                   }
+    {    ;Intrastat Code                           }
+    {    ;Name                                     }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;Brick               ;Code,Name,VAT Scheme                     }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

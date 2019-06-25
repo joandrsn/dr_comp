@@ -1,0 +1,197 @@
+OBJECT Table 6084 Service Line Price Adjmt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    OnModify=BEGIN
+               "Manually Adjusted" := TRUE;
+             END;
+
+    CaptionML=[DAN=Prisregulering på servicelinje;
+               ENU=Service Line Price Adjmt.];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Document Type       ;Option        ;CaptionML=[DAN=Bilagstype;
+                                                              ENU=Document Type];
+                                                   OptionCaptionML=[DAN=Tilbud,Ordre;
+                                                                    ENU=Quote,Order];
+                                                   OptionString=Quote,Order }
+    { 2   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+    { 3   ;   ;Service Line No.    ;Integer       ;CaptionML=[DAN=Servicelinjenr.;
+                                                              ENU=Service Line No.] }
+    { 4   ;   ;Service Item Line No.;Integer      ;CaptionML=[DAN=Serviceartikellinjenr.;
+                                                              ENU=Service Item Line No.] }
+    { 5   ;   ;Service Item No.    ;Code20        ;TableRelation="Service Item";
+                                                   CaptionML=[DAN=Serviceartikelnr.;
+                                                              ENU=Service Item No.] }
+    { 6   ;   ;Serv. Price Adjmt. Gr. Code;Code10 ;TableRelation="Service Price Adjustment Group";
+                                                   CaptionML=[DAN=Serviceprisreg.gruppekode;
+                                                              ENU=Serv. Price Adjmt. Gr. Code] }
+    { 7   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=" ,Vare,Ressource,Omkostning,Finanskonto";
+                                                                    ENU=" ,Item,Resource,Cost,G/L Account"];
+                                                   OptionString=[ ,Item,Resource,Cost,G/L Account];
+                                                   Editable=No }
+    { 8   ;   ;No.                 ;Code20        ;TableRelation=IF (Type=CONST(Item)) Item
+                                                                 ELSE IF (Type=CONST(Resource)) Resource
+                                                                 ELSE IF (Type=CONST(Cost)) "Service Cost";
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.];
+                                                   Editable=No }
+    { 9   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description];
+                                                   Editable=No }
+    { 10  ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+                                                              ENU=Quantity];
+                                                   Editable=No }
+    { 14  ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount];
+                                                   Editable=No;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrency }
+    { 15  ;   ;New Amount          ;Decimal       ;OnValidate=BEGIN
+                                                                GetServHeader;
+                                                                "New Unit Price" :=
+                                                                  ROUND(("New Amount" * 100 / (100 - "Discount %")) / Quantity,Currency."Unit-Amount Rounding Precision");
+                                                                IF ServHeader."Prices Including VAT" THEN
+                                                                  "New Amount incl. VAT" := "New Amount"
+                                                                ELSE
+                                                                  "New Amount incl. VAT" := ROUND("New Amount" + "New Amount" * "Vat %" / 100,Currency."Amount Rounding Precision");
+                                                                "Discount Amount" :=
+                                                                  ROUND("New Unit Price" * Quantity * "Discount %" / 100,Currency."Amount Rounding Precision");
+                                                                "New Amount Excl. VAT" := ROUND("New Amount incl. VAT" / (1 + "Vat %" / 100),Currency."Amount Rounding Precision");
+                                                              END;
+
+                                                   CaptionML=[DAN=Nyt beløb;
+                                                              ENU=New Amount];
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrency }
+    { 16  ;   ;Unit Price          ;Decimal       ;CaptionML=[DAN=Enhedspris;
+                                                              ENU=Unit Price];
+                                                   Editable=No;
+                                                   AutoFormatType=2;
+                                                   AutoFormatExpr=GetCurrency }
+    { 17  ;   ;New Unit Price      ;Decimal       ;OnValidate=BEGIN
+                                                                GetServHeader;
+                                                                "Discount Amount" :=
+                                                                  ROUND("New Unit Price" * Quantity * "Discount %" / 100,Currency."Amount Rounding Precision");
+                                                                "New Amount" := ROUND("New Unit Price" * Quantity - "Discount Amount",Currency."Amount Rounding Precision");
+                                                                IF ServHeader."Prices Including VAT" THEN
+                                                                  "New Amount incl. VAT" := "New Amount"
+                                                                ELSE
+                                                                  "New Amount incl. VAT" := ROUND("New Amount" + "New Amount" * "Vat %" / 100,Currency."Amount Rounding Precision");
+                                                                "New Amount Excl. VAT" := ROUND("New Amount incl. VAT" / (1 + "Vat %" / 100),Currency."Amount Rounding Precision");
+                                                              END;
+
+                                                   CaptionML=[DAN=Ny enhedspris;
+                                                              ENU=New Unit Price];
+                                                   AutoFormatType=2;
+                                                   AutoFormatExpr=GetCurrency }
+    { 18  ;   ;Unit Cost           ;Decimal       ;CaptionML=[DAN=Kostpris;
+                                                              ENU=Unit Cost];
+                                                   Editable=No;
+                                                   AutoFormatType=2;
+                                                   AutoFormatExpr=GetCurrency }
+    { 19  ;   ;Discount %          ;Decimal       ;CaptionML=[DAN=Rabatpct.;
+                                                              ENU=Discount %];
+                                                   Editable=No }
+    { 20  ;   ;Discount Amount     ;Decimal       ;CaptionML=[DAN=Rabatbeløb;
+                                                              ENU=Discount Amount];
+                                                   Editable=No;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrency }
+    { 21  ;   ;Amount incl. VAT    ;Decimal       ;CaptionML=[DAN=Beløb inkl. moms;
+                                                              ENU=Amount incl. VAT];
+                                                   Editable=No;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrency }
+    { 22  ;   ;New Amount incl. VAT;Decimal       ;OnValidate=BEGIN
+                                                                GetServHeader;
+                                                                IF ServHeader."Prices Including VAT" THEN
+                                                                  "New Amount" := "New Amount incl. VAT"
+                                                                ELSE
+                                                                  "New Amount" := ROUND("New Amount incl. VAT" / (1 + "Vat %" / 100),Currency."Amount Rounding Precision");
+                                                                "New Unit Price" :=
+                                                                  ROUND(("New Amount" * 100 / (100 - "Discount %")) / Quantity,Currency."Unit-Amount Rounding Precision");
+                                                                "Discount Amount" :=
+                                                                  ROUND("New Unit Price" * Quantity * "Discount %" / 100,Currency."Amount Rounding Precision");
+                                                                "New Amount Excl. VAT" := ROUND("New Amount incl. VAT" / (1 + "Vat %" / 100),Currency."Amount Rounding Precision");
+                                                              END;
+
+                                                   CaptionML=[DAN=Nyt beløb inkl. moms;
+                                                              ENU=New Amount incl. VAT];
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrency }
+    { 24  ;   ;Weight              ;Decimal       ;CaptionML=[DAN=Vægt;
+                                                              ENU=Weight];
+                                                   Editable=No }
+    { 25  ;   ;Adjustment Type     ;Option        ;CaptionML=[DAN=Reguleringstype;
+                                                              ENU=Adjustment Type];
+                                                   OptionCaptionML=[DAN=Fast,Maksimum,Minimum;
+                                                                    ENU=Fixed,Maximum,Minimum];
+                                                   OptionString=Fixed,Maximum,Minimum;
+                                                   Editable=No }
+    { 26  ;   ;Service Price Group Code;Code10    ;TableRelation="Service Price Group";
+                                                   CaptionML=[DAN=Serviceprisgruppekode;
+                                                              ENU=Service Price Group Code];
+                                                   Editable=No }
+    { 27  ;   ;Manually Adjusted   ;Boolean       ;CaptionML=[DAN=Reguleret manuelt;
+                                                              ENU=Manually Adjusted];
+                                                   Editable=No }
+    { 28  ;   ;Vat %               ;Decimal       ;CaptionML=[DAN=Momspct.;
+                                                              ENU=Vat %];
+                                                   Editable=No }
+    { 29  ;   ;New Amount Excl. VAT;Decimal       ;CaptionML=[DAN=Nyt beløb ekskl. moms;
+                                                              ENU=New Amount Excl. VAT];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Document Type,Document No.,Service Item Line No.,Service Line No.;
+                                                   SumIndexFields=Amount,Amount incl. VAT,New Amount,New Amount incl. VAT,New Amount Excl. VAT;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ServHeader@1000 : Record 5900;
+      Currency@1001 : Record 4;
+
+    LOCAL PROCEDURE GetServHeader@1();
+    BEGIN
+      IF ("Document Type" <> ServHeader."Document Type") OR
+         ("Document No." <> ServHeader."No.")
+      THEN BEGIN
+        ServHeader.GET("Document Type","Document No.");
+        IF ServHeader."Currency Code" = '' THEN
+          Currency.InitRoundingPrecision
+        ELSE BEGIN
+          ServHeader.TESTFIELD("Currency Factor");
+          Currency.GET(ServHeader."Currency Code");
+          Currency.TESTFIELD("Amount Rounding Precision");
+        END;
+      END;
+    END;
+
+    LOCAL PROCEDURE GetCurrency@2() : Code[10];
+    BEGIN
+      GetServHeader;
+      EXIT(ServHeader."Currency Code");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

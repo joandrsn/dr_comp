@@ -1,0 +1,51 @@
+OBJECT Table 7702 Miniform Function Group
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    OnDelete=BEGIN
+               MiniFunc.RESET;
+               MiniFunc.SETRANGE("Function Code",Code);
+               MiniFunc.DELETEALL;
+             END;
+
+    CaptionML=[DAN=Miniformular - funktionsgruppe;
+               ENU=Miniform Function Group];
+    LookupPageID=Page7704;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 11  ;   ;Description         ;Text30        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 20  ;   ;KeyDef              ;Option        ;CaptionML=[DAN=KeyDef;
+                                                              ENU=KeyDef];
+                                                   OptionCaptionML=[@@@={Locked};
+                                                                    DAN=Input,Esc,First,Last,Code,PgUp,PgDn,LnUp,LnDn,Reset,Register;
+                                                                    ENU=Input,Esc,First,Last,Code,PgUp,PgDn,LnUp,LnDn,Reset,Register];
+                                                   OptionString=Input,Esc,First,Last,Code,PgUp,PgDn,LnUp,LnDn,Reset,Register }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      MiniFunc@1000 : Record 7703;
+
+    BEGIN
+    END.
+  }
+}
+

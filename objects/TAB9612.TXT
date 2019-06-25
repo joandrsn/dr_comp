@@ -1,0 +1,37 @@
+OBJECT Table 9612 Referenced XML Schema
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Refereret XML-skema;
+               ENU=Referenced XML Schema];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 2   ;   ;Referenced Schema Code;Code20      ;CaptionML=[DAN=Refereret skemakode;
+                                                              ENU=Referenced Schema Code] }
+    { 3   ;   ;Referenced Schema Namespace;Text250;CaptionML=[DAN=Refereret skemanavneområde;
+                                                              ENU=Referenced Schema Namespace] }
+  }
+  KEYS
+  {
+    {    ;Code,Referenced Schema Code             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

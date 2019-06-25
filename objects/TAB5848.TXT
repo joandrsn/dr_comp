@@ -1,0 +1,138 @@
+OBJECT Table 5848 Cost Share Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Kostprisfordelingsbuffer;
+               ENU=Cost Share Buffer];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Item Ledger Entry No.;Integer      ;CaptionML=[DAN=Varepostløbenr.;
+                                                              ENU=Item Ledger Entry No.] }
+    { 2   ;   ;Capacity Ledger Entry No.;Integer  ;CaptionML=[DAN=Kapacitetspostløbenr.;
+                                                              ENU=Capacity Ledger Entry No.] }
+    { 3   ;   ;Item No.            ;Code20        ;CaptionML=[DAN=Varenr.;
+                                                              ENU=Item No.] }
+    { 4   ;   ;Location Code       ;Code10        ;CaptionML=[DAN=Lokationskode;
+                                                              ENU=Location Code] }
+    { 5   ;   ;Variant Code        ;Code10        ;CaptionML=[DAN=Variantkode;
+                                                              ENU=Variant Code] }
+    { 6   ;   ;Entry Type          ;Option        ;CaptionML=[DAN=Posttype;
+                                                              ENU=Entry Type];
+                                                   OptionCaptionML=[DAN=Køb,Salg,Opregulering,Nedregulering,Overførsel,Forbrug,Afgang, ,Montageforbrug,Montageoutput;
+                                                                    ENU=Purchase,Sale,Positive Adjmt.,Negative Adjmt.,Transfer,Consumption,Output, ,Assembly Consumption,Assembly Output];
+                                                   OptionString=Purchase,Sale,Positive Adjmt.,Negative Adjmt.,Transfer,Consumption,Output, ,Assembly Consumption,Assembly Output }
+    { 7   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+    { 10  ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 20  ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+                                                              ENU=Quantity] }
+    { 21  ;   ;Direct Cost         ;Decimal       ;CaptionML=[DAN=Købspris;
+                                                              ENU=Direct Cost] }
+    { 22  ;   ;Indirect Cost       ;Decimal       ;CaptionML=[DAN=Indir. omkostninger;
+                                                              ENU=Indirect Cost] }
+    { 23  ;   ;Revaluation         ;Decimal       ;CaptionML=[DAN=Værdiregulering;
+                                                              ENU=Revaluation] }
+    { 24  ;   ;Rounding            ;Decimal       ;CaptionML=[DAN=Afrunding;
+                                                              ENU=Rounding] }
+    { 25  ;   ;Variance            ;Decimal       ;CaptionML=[DAN=Afvigelse;
+                                                              ENU=Variance] }
+    { 26  ;   ;Purchase Variance   ;Decimal       ;CaptionML=[DAN=Købsafvigelse;
+                                                              ENU=Purchase Variance] }
+    { 27  ;   ;Material Variance   ;Decimal       ;CaptionML=[DAN=Materialeomkostningsafvigelse;
+                                                              ENU=Material Variance] }
+    { 28  ;   ;Capacity Variance   ;Decimal       ;CaptionML=[DAN=Kapacitetsomkostningsafvigelse;
+                                                              ENU=Capacity Variance] }
+    { 29  ;   ;Capacity Overhead Variance;Decimal ;CaptionML=[DAN=Indir. kap. omk. afv.;
+                                                              ENU=Capacity Overhead Variance] }
+    { 30  ;   ;Mfg. Overhead Variance;Decimal     ;CaptionML=[DAN=Indir. prod. omkostningsafv.;
+                                                              ENU=Mfg. Overhead Variance] }
+    { 31  ;   ;Subcontracted Variance;Decimal     ;CaptionML=[DAN=Kostprisafvigelse for underleverandører;
+                                                              ENU=Subcontracted Variance] }
+    { 32  ;   ;Material            ;Decimal       ;CaptionML=[DAN=Materiel;
+                                                              ENU=Material] }
+    { 34  ;   ;Capacity            ;Decimal       ;CaptionML=[DAN=Kapacitet;
+                                                              ENU=Capacity] }
+    { 35  ;   ;Capacity Overhead   ;Decimal       ;CaptionML=[DAN=Indirekte kap.kostpris;
+                                                              ENU=Capacity Overhead] }
+    { 36  ;   ;Material Overhead   ;Decimal       ;CaptionML=[DAN=Indirekte kostpris for materiel;
+                                                              ENU=Material Overhead] }
+    { 37  ;   ;Subcontracted       ;Decimal       ;AccessByPermission=TableData 99000758=R;
+                                                   CaptionML=[DAN=Fra underleverandører;
+                                                              ENU=Subcontracted] }
+    { 40  ;   ;New Quantity        ;Decimal       ;CaptionML=[DAN=Nyt antal;
+                                                              ENU=New Quantity] }
+    { 41  ;   ;New Direct Cost     ;Decimal       ;CaptionML=[DAN=Ny købspris;
+                                                              ENU=New Direct Cost];
+                                                   AutoFormatType=2 }
+    { 42  ;   ;New Indirect Cost   ;Decimal       ;CaptionML=[DAN=Ny indirekte kostpris;
+                                                              ENU=New Indirect Cost] }
+    { 43  ;   ;New Revaluation     ;Decimal       ;CaptionML=[DAN=Ny værdiregulering;
+                                                              ENU=New Revaluation] }
+    { 44  ;   ;New Rounding        ;Decimal       ;CaptionML=[DAN=Ny afrunding;
+                                                              ENU=New Rounding] }
+    { 45  ;   ;New Variance        ;Decimal       ;CaptionML=[DAN=Ny afvigelse;
+                                                              ENU=New Variance] }
+    { 46  ;   ;New Purchase Variance;Decimal      ;CaptionML=[DAN=Ny købsafvigelse;
+                                                              ENU=New Purchase Variance] }
+    { 47  ;   ;New Material Variance;Decimal      ;CaptionML=[DAN=Ny materialeomkostningsafvigelse;
+                                                              ENU=New Material Variance] }
+    { 48  ;   ;New Capacity Variance;Decimal      ;CaptionML=[DAN=Ny kapacitetsomkostningsafvigelse;
+                                                              ENU=New Capacity Variance] }
+    { 49  ;   ;New Capacity Overhead Variance;Decimal;
+                                                   CaptionML=[DAN=Ny indir. kap. omk. afv.;
+                                                              ENU=New Capacity Overhead Variance] }
+    { 50  ;   ;New Mfg. Overhead Variance;Decimal ;CaptionML=[DAN=Ny indir. prod. omkostningsafv.;
+                                                              ENU=New Mfg. Overhead Variance] }
+    { 51  ;   ;New Subcontracted Variance;Decimal ;AccessByPermission=TableData 99000758=R;
+                                                   CaptionML=[DAN=Ny afvigelse for underleverandører;
+                                                              ENU=New Subcontracted Variance] }
+    { 52  ;   ;Share of Cost in Period;Decimal    ;CaptionML=[DAN=Kostprisfordeling i periode;
+                                                              ENU=Share of Cost in Period] }
+    { 54  ;   ;New Material        ;Decimal       ;CaptionML=[DAN=Nyt materiel;
+                                                              ENU=New Material] }
+    { 56  ;   ;New Capacity        ;Decimal       ;CaptionML=[DAN=Ny kapacitet;
+                                                              ENU=New Capacity] }
+    { 57  ;   ;New Capacity Overhead;Decimal      ;CaptionML=[DAN=Ny indirekte kapacitet;
+                                                              ENU=New Capacity Overhead] }
+    { 58  ;   ;New Material Overhead;Decimal      ;CaptionML=[DAN=Nyt indirekte materiel;
+                                                              ENU=New Material Overhead] }
+    { 59  ;   ;New Subcontracted   ;Decimal       ;CaptionML=[DAN=Ny underleverance;
+                                                              ENU=New Subcontracted] }
+    { 60  ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+                                                              ENU=Posting Date] }
+    { 90  ;   ;Order Type          ;Option        ;CaptionML=[DAN=Ordretype;
+                                                              ENU=Order Type];
+                                                   OptionCaptionML=[DAN=" ,Produktion,Overførsel,Service,Montage";
+                                                                    ENU=" ,Production,Transfer,Service,Assembly"];
+                                                   OptionString=[ ,Production,Transfer,Service,Assembly] }
+    { 91  ;   ;Order No.           ;Code20        ;CaptionML=[DAN=Ordrenr.;
+                                                              ENU=Order No.] }
+    { 92  ;   ;Order Line No.      ;Integer       ;CaptionML=[DAN=Ordrelinjenr.;
+                                                              ENU=Order Line No.] }
+  }
+  KEYS
+  {
+    {    ;Item Ledger Entry No.,Capacity Ledger Entry No.;
+                                                   Clustered=Yes }
+    {    ;Item No.,Location Code,Variant Code,Entry Type }
+    {    ;Order Type,Order No.,Order Line No.,Entry Type }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

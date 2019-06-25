@@ -1,0 +1,61 @@
+OBJECT Table 6081 Serv. Price Group Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=05-11-08;
+    Time=12:00:00;
+    Version List=NAVW16.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Opsætn. af serviceprisgruppe;
+               ENU=Serv. Price Group Setup];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Service Price Group Code;Code10    ;TableRelation="Service Price Group";
+                                                   CaptionML=[DAN=Serviceprisgruppekode;
+                                                              ENU=Service Price Group Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Fault Area Code     ;Code10        ;TableRelation="Fault Area";
+                                                   CaptionML=[DAN=Fejlområdekode;
+                                                              ENU=Fault Area Code] }
+    { 3   ;   ;Cust. Price Group Code;Code10      ;TableRelation="Customer Price Group";
+                                                   CaptionML=[DAN=Debitorprisgruppekode;
+                                                              ENU=Cust. Price Group Code] }
+    { 4   ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   CaptionML=[DAN=Valutakode;
+                                                              ENU=Currency Code] }
+    { 5   ;   ;Starting Date       ;Date          ;CaptionML=[DAN=Startdato;
+                                                              ENU=Starting Date] }
+    { 6   ;   ;Serv. Price Adjmt. Gr. Code;Code10 ;TableRelation="Service Price Adjustment Group";
+                                                   CaptionML=[DAN=Serviceprisreg.gruppekode;
+                                                              ENU=Serv. Price Adjmt. Gr. Code] }
+    { 7   ;   ;Include Discounts   ;Boolean       ;CaptionML=[DAN=Inkl. rabatter;
+                                                              ENU=Include Discounts] }
+    { 8   ;   ;Adjustment Type     ;Option        ;CaptionML=[DAN=Reguleringstype;
+                                                              ENU=Adjustment Type];
+                                                   OptionCaptionML=[DAN=Fast,Maksimum,Minimum;
+                                                                    ENU=Fixed,Maximum,Minimum];
+                                                   OptionString=Fixed,Maximum,Minimum }
+    { 9   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount] }
+    { 10  ;   ;Include VAT         ;Boolean       ;CaptionML=[DAN=Inkl. moms;
+                                                              ENU=Include VAT] }
+  }
+  KEYS
+  {
+    {    ;Service Price Group Code,Fault Area Code,Cust. Price Group Code,Currency Code,Starting Date;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,271 @@
+OBJECT Page 5116 Salesperson/Purchaser Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26-11-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.43897;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Sælger-/indkøberkort;
+               ENU=Salesperson/Purchaser Card];
+    SourceTable=Table13;
+    PageType=Card;
+    OnOpenPage=VAR
+                 CRMIntegrationManagement@1000 : Codeunit 5330;
+               BEGIN
+                 CRMIntegrationEnabled := CRMIntegrationManagement.IsCRMIntegrationEnabled;
+               END;
+
+    OnInsertRecord=BEGIN
+                     IF xRec.Code = '' THEN
+                       RESET;
+                   END;
+
+    OnAfterGetCurrRecord=VAR
+                           CRMCouplingManagement@1001 : Codeunit 5331;
+                         BEGIN
+                           IF CRMIntegrationEnabled THEN
+                             CRMIsCoupledToRecord := CRMCouplingManagement.IsRecordCoupledToCRM(RECORDID);
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 19      ;1   ;ActionGroup;
+                      CaptionML=[DAN=&Sælger;
+                                 ENU=&Salesperson];
+                      Image=SalesPerson }
+      { 28      ;2   ;Action    ;
+                      CaptionML=[DAN=Tea&m;
+                                 ENU=Tea&ms];
+                      RunObject=Page 5107;
+                      RunPageView=SORTING(Salesperson Code);
+                      RunPageLink=Salesperson Code=FIELD(Code);
+                      Image=TeamSales }
+      { 25      ;2   ;Action    ;
+                      CaptionML=[DAN=Kon&takter;
+                                 ENU=Con&tacts];
+                      RunObject=Page 5052;
+                      RunPageView=SORTING(Salesperson Code);
+                      RunPageLink=Salesperson Code=FIELD(Code);
+                      Image=CustomerContact }
+      { 23      ;2   ;Action    ;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[DAN=Dimensioner;
+                                 ENU=Dimensions];
+                      RunObject=Page 540;
+                      RunPageLink=Table ID=CONST(13),
+                                  No.=FIELD(Code);
+                      Image=Dimensions }
+      { 21      ;2   ;Action    ;
+                      ShortCutKey=F7;
+                      CaptionML=[DAN=Statistik;
+                                 ENU=Statistics];
+                      RunObject=Page 5117;
+                      RunPageLink=Code=FIELD(Code);
+                      Promoted=Yes;
+                      Image=Statistics;
+                      PromotedCategory=Process }
+      { 26      ;2   ;Action    ;
+                      CaptionML=[DAN=K&ampagner;
+                                 ENU=C&ampaigns];
+                      RunObject=Page 5087;
+                      RunPageView=SORTING(Salesperson Code);
+                      RunPageLink=Salesperson Code=FIELD(Code);
+                      Image=Campaign }
+      { 27      ;2   ;Action    ;
+                      CaptionML=[DAN=M&ålgrupper;
+                                 ENU=S&egments];
+                      RunObject=Page 5093;
+                      RunPageView=SORTING(Salesperson Code);
+                      RunPageLink=Salesperson Code=FIELD(Code);
+                      Image=Segment }
+      { 33      ;2   ;Separator ;
+                      CaptionML=[DAN="";
+                                 ENU=""] }
+      { 32      ;2   ;Action    ;
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=[DAN=&Interaktionslogposter;
+                                 ENU=Interaction Log E&ntries];
+                      RunObject=Page 5076;
+                      RunPageView=SORTING(Salesperson Code);
+                      RunPageLink=Salesperson Code=FIELD(Code);
+                      Image=InteractionLog }
+      { 76      ;2   ;Action    ;
+                      CaptionML=[DAN=&Udsatte interaktioner;
+                                 ENU=Postponed &Interactions];
+                      RunObject=Page 5082;
+                      RunPageView=SORTING(Salesperson Code);
+                      RunPageLink=Salesperson Code=FIELD(Code);
+                      Image=PostponedInteractions }
+      { 35      ;2   ;Action    ;
+                      CaptionML=[DAN=Op&gaver;
+                                 ENU=T&o-dos];
+                      RunObject=Page 5096;
+                      RunPageView=SORTING(Salesperson Code);
+                      RunPageLink=Salesperson Code=FIELD(Code),
+                                  System To-do Type=FILTER(Organizer|Salesperson Attendee);
+                      Image=TaskList }
+      { 78      ;2   ;ActionGroup;
+                      CaptionML=[DAN=&Salgsmuligheder;
+                                 ENU=Oppo&rtunities];
+                      Image=OpportunityList }
+      { 34      ;3   ;Action    ;
+                      CaptionML=[DAN=Oversigt;
+                                 ENU=List];
+                      RunObject=Page 5123;
+                      RunPageView=SORTING(Salesperson Code);
+                      RunPageLink=Salesperson Code=FIELD(Code);
+                      Image=OpportunitiesList }
+      { 13      ;1   ;ActionGroup;
+                      Name=ActionGroupCRM;
+                      CaptionML=[DAN=Dynamics CRM;
+                                 ENU=Dynamics CRM];
+                      Visible=CRMIntegrationEnabled }
+      { 11      ;2   ;Action    ;
+                      Name=CRMGotoSystemUser;
+                      CaptionML=[DAN=Bruger;
+                                 ENU=User];
+                      ToolTipML=[DAN=Åbn den sammenkædede Microsoft Dynamics CRM-systembruger.;
+                                 ENU=Open the coupled Microsoft Dynamics CRM system user.];
+                      Image=CoupledUser;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.ShowCRMEntityFromRecordID(RECORDID);
+                               END;
+                                }
+      { 20      ;2   ;Action    ;
+                      Name=CRMSynchronizeNow;
+                      AccessByPermission=TableData 5331=IM;
+                      CaptionML=[DAN=Synkroniser nu;
+                                 ENU=Synchronize Now];
+                      ToolTipML=[DAN=Send eller hent opdaterede data til eller fra Microsoft Dynamics CRM.;
+                                 ENU=Send or get updated data to or from Microsoft Dynamics CRM.];
+                      Image=Refresh;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1001 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.UpdateOneNow(RECORDID);
+                               END;
+                                }
+      { 18      ;2   ;ActionGroup;
+                      Name=Coupling;
+                      CaptionML=[@@@=Coupling is a noun;
+                                 DAN=Sammenkædning;
+                                 ENU=Coupling];
+                      ToolTipML=[DAN=Opret, ret eller slet en sammenkædning mellem Microsoft Dynamics NAV-recorden og en Microsoft Dynamics CRM-post.;
+                                 ENU=Create, change, or delete a coupling between the Microsoft Dynamics NAV record and a Microsoft Dynamics CRM record.];
+                      Image=LinkAccount }
+      { 9       ;3   ;Action    ;
+                      Name=ManageCRMCoupling;
+                      AccessByPermission=TableData 5331=IM;
+                      CaptionML=[DAN=Konfigurer sammenkædning;
+                                 ENU=Set Up Coupling];
+                      ToolTipML=[DAN=Opret eller rediger sammenkædningen med en Microsoft Dynamics CRM-bruger.;
+                                 ENU=Create or modify the coupling to a Microsoft Dynamics CRM user.];
+                      Image=LinkAccount;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.CreateOrUpdateCoupling(RECORDID);
+                               END;
+                                }
+      { 7       ;3   ;Action    ;
+                      Name=DeleteCRMCoupling;
+                      AccessByPermission=TableData 5331=IM;
+                      CaptionML=[DAN=Slet sammenkædning;
+                                 ENU=Delete Coupling];
+                      ToolTipML=[DAN=Slet sammenkædningen med en Microsoft Dynamics CRM-bruger.;
+                                 ENU=Delete the coupling to a Microsoft Dynamics CRM user.];
+                      Enabled=CRMIsCoupledToRecord;
+                      Image=UnLinkAccount;
+                      OnAction=VAR
+                                 CRMCouplingManagement@1000 : Codeunit 5331;
+                               BEGIN
+                                 CRMCouplingManagement.RemoveCoupling(RECORDID);
+                               END;
+                                }
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 36      ;1   ;Action    ;
+                      AccessByPermission=TableData 5062=R;
+                      CaptionML=[DAN=O&pret interaktion;
+                                 ENU=Create &Interact];
+                      Promoted=Yes;
+                      Image=CreateInteraction;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CreateInteraction;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                CaptionML=[DAN=Generelt;
+                           ENU=General] }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr=Code }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Name }
+
+    { 22  ;2   ;Field     ;
+                SourceExpr="Job Title" }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr="Commission %" }
+
+    { 10  ;2   ;Field     ;
+                SourceExpr="Phone No." }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="E-Mail" }
+
+    { 12  ;2   ;Field     ;
+                SourceExpr="Next To-do Date" }
+
+    { 1905885101;1;Group  ;
+                CaptionML=[DAN=Fakturering;
+                           ENU=Invoicing] }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr="Global Dimension 1 Code" }
+
+    { 16  ;2   ;Field     ;
+                SourceExpr="Global Dimension 2 Code" }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      CRMIntegrationEnabled@1001 : Boolean;
+      CRMIsCoupledToRecord@1000 : Boolean;
+
+    BEGIN
+    END.
+  }
+}
+

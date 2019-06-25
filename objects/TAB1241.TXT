@@ -1,0 +1,52 @@
+OBJECT Table 1241 Positive Pay Detail
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Oplysn. om Positive Pay;
+               ENU=Positive Pay Detail];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Data Exch. Entry No.;Integer       ;TableRelation="Data Exch."."Entry No.";
+                                                   CaptionML=[DAN=Dataudvekslingspostnr.;
+                                                              ENU=Data Exch. Entry No.] }
+    { 2   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 3   ;   ;Account Number      ;Text30        ;CaptionML=[DAN=Kontonummer;
+                                                              ENU=Account Number] }
+    { 4   ;   ;Record Type Code    ;Text1         ;CaptionML=[DAN=Posttypekode;
+                                                              ENU=Record Type Code] }
+    { 5   ;   ;Void Check Indicator;Text1         ;CaptionML=[DAN=Indikator for annullerede checks;
+                                                              ENU=Void Check Indicator] }
+    { 6   ;   ;Check Number        ;Code20        ;CaptionML=[DAN=Checknummer;
+                                                              ENU=Check Number] }
+    { 7   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount] }
+    { 8   ;   ;Issue Date          ;Date          ;CaptionML=[DAN=Udstedelsesdato;
+                                                              ENU=Issue Date] }
+    { 9   ;   ;Payee               ;Text50        ;CaptionML=[DAN=Indbetalt til;
+                                                              ENU=Payee] }
+    { 10  ;   ;Currency Code       ;Code10        ;CaptionML=[DAN=Valutakode;
+                                                              ENU=Currency Code] }
+  }
+  KEYS
+  {
+    {    ;Data Exch. Entry No.,Entry No.          ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

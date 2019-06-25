@@ -1,0 +1,55 @@
+OBJECT Table 317 Payable Vendor Ledger Entry
+{
+  OBJECT-PROPERTIES
+  {
+    Date=05-11-08;
+    Time=12:00:00;
+    Version List=NAVW16.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Skyldige kreditorposter;
+               ENU=Payable Vendor Ledger Entry];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Priority            ;Integer       ;CaptionML=[DAN=Prioritet;
+                                                              ENU=Priority] }
+    { 2   ;   ;Vendor No.          ;Code20        ;TableRelation=Vendor;
+                                                   CaptionML=[DAN=Kreditornr.;
+                                                              ENU=Vendor No.] }
+    { 3   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 4   ;   ;Vendor Ledg. Entry No.;Integer     ;TableRelation="Vendor Ledger Entry";
+                                                   CaptionML=[DAN=Kreditorpostløbenr.;
+                                                              ENU=Vendor Ledg. Entry No.] }
+    { 5   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount];
+                                                   AutoFormatType=1 }
+    { 6   ;   ;Amount (LCY)        ;Decimal       ;CaptionML=[DAN=Beløb (RV);
+                                                              ENU=Amount (LCY)];
+                                                   AutoFormatType=1 }
+    { 7   ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   CaptionML=[DAN=Valutakode;
+                                                              ENU=Currency Code] }
+    { 8   ;   ;Positive            ;Boolean       ;CaptionML=[DAN=Positiv;
+                                                              ENU=Positive] }
+    { 9   ;   ;Future              ;Boolean       ;CaptionML=[DAN=Fremtidige;
+                                                              ENU=Future] }
+  }
+  KEYS
+  {
+    {    ;Priority,Vendor No.,Currency Code,Positive,Future,Entry No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

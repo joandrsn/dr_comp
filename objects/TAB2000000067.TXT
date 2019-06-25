@@ -1,0 +1,48 @@
+OBJECT Table 2000000067 User Default Style Sheet
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Standardtypografiark;
+               ENU=User Default Style Sheet];
+  }
+  FIELDS
+  {
+    { 1   ;   ;User ID             ;GUID          ;TableRelation=User."User Security ID";
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Bruger-id;
+                                                              ENU=User ID] }
+    { 2   ;   ;Object Type         ;Option        ;CaptionML=[DAN=Objekttype;
+                                                              ENU=Object Type];
+                                                   OptionCaptionML=[DAN=Form,Report,Page;
+                                                                    ENU=Form,Report,Page];
+                                                   OptionString=Form,Report,Page }
+    { 3   ;   ;Object ID           ;Integer       ;TableRelation=Object.ID WHERE (Type=FIELD(Object Type));
+                                                   CaptionML=[DAN=Objekt-id;
+                                                              ENU=Object ID] }
+    { 4   ;   ;Program ID          ;GUID          ;CaptionML=[DAN=Program-id;
+                                                              ENU=Program ID] }
+    { 5   ;   ;Style Sheet ID      ;GUID          ;CaptionML=[DAN=Typografiark-id;
+                                                              ENU=Style Sheet ID] }
+  }
+  KEYS
+  {
+    {    ;User ID,Object Type,Object ID,Program ID;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,36 @@
+OBJECT Table 1280 Bank Clearing Standard
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Bankclearingsstandard;
+               ENU=Bank Clearing Standard];
+    LookupPageID=Page1280;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Text50        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 2   ;   ;Description         ;Text80        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

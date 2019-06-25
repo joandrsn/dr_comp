@@ -1,0 +1,281 @@
+OBJECT Page 9002 Acc. Payables Coordinator RC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.44974;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Rollecenter;
+               ENU=Role Center];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      ActionContainerType=Reports }
+      { 45      ;1   ;Action    ;
+                      CaptionML=[DAN=K&reditor - stamoplysninger;
+                                 ENU=&Vendor - List];
+                      RunObject=Report 301;
+                      Image=Report }
+      { 46      ;1   ;Action    ;
+                      CaptionML=[DAN=Kredi&tor - saldo til dato;
+                                 ENU=Vendor - &Balance to date];
+                      RunObject=Report 321;
+                      Image=Report }
+      { 47      ;1   ;Action    ;
+                      CaptionML=[DAN=Kreditor - forfaldsoversi&gt;
+                                 ENU=Vendor - &Summary Aging];
+                      RunObject=Report 305;
+                      Image=Report }
+      { 51      ;1   ;Action    ;
+                      CaptionML=[DAN=&Aldersfordelt gæld;
+                                 ENU=Aged &Accounts Payable];
+                      RunObject=Report 322;
+                      Image=Report }
+      { 48      ;1   ;Action    ;
+                      CaptionML=[DAN=Kr&editor - købsoversigt;
+                                 ENU=Vendor - &Purchase List];
+                      RunObject=Report 309;
+                      Image=Report }
+      { 49      ;1   ;Action    ;
+                      CaptionML=[DAN=Af&ventende kreditorposter;
+                                 ENU=Pa&yments on Hold];
+                      RunObject=Report 319;
+                      Image=Report }
+      { 50      ;1   ;Action    ;
+                      CaptionML=[DAN=Kø&bsstatistik;
+                                 ENU=P&urchase Statistics];
+                      RunObject=Report 312;
+                      Image=Report }
+      { 63      ;1   ;Separator  }
+      { 64      ;1   ;Action    ;
+                      CaptionML=[DAN=Kre&ditorbilagsnumre;
+                                 ENU=Vendor &Document Nos.];
+                      RunObject=Report 328;
+                      Image=Report }
+      { 65      ;1   ;Action    ;
+                      CaptionML=[DAN=K&øbsfakturanumre;
+                                 ENU=Purchase &Invoice Nos.];
+                      RunObject=Report 324;
+                      Image=Report }
+      { 66      ;1   ;Action    ;
+                      CaptionML=[DAN=Købskred&itnotanumre;
+                                 ENU=Purchase &Credit Memo Nos.];
+                      RunObject=Report 325;
+                      Image=Report }
+      { 1900000011;0 ;ActionContainer;
+                      ToolTipML=[DAN=Vis og behandl kreditorbetalinger, og godkend indgående bilag.;
+                                 ENU=View and process vendor payments, and approve incoming documents.];
+                      ActionContainerType=HomeItems }
+      { 3       ;1   ;Action    ;
+                      Name=Vendors;
+                      CaptionML=[DAN=Kreditorer;
+                                 ENU=Vendors];
+                      RunObject=Page 27;
+                      Image=Vendor }
+      { 5       ;1   ;Action    ;
+                      Name=VendorsBalance;
+                      CaptionML=[DAN=Saldo;
+                                 ENU=Balance];
+                      RunObject=Page 27;
+                      RunPageView=WHERE(Balance (LCY)=FILTER(<>0));
+                      Image=Balance }
+      { 6       ;1   ;Action    ;
+                      CaptionML=[DAN=Købsordrer;
+                                 ENU=Purchase Orders];
+                      RunObject=Page 9307 }
+      { 94      ;1   ;Action    ;
+                      CaptionML=[DAN=Købsfakturaer;
+                                 ENU=Purchase Invoices];
+                      RunObject=Page 9308 }
+      { 96      ;1   ;Action    ;
+                      CaptionML=[DAN=Købsreturvareordrer;
+                                 ENU=Purchase Return Orders];
+                      RunObject=Page 9311 }
+      { 17      ;1   ;Action    ;
+                      CaptionML=[DAN=Købskreditnotaer;
+                                 ENU=Purchase Credit Memos];
+                      RunObject=Page 9309 }
+      { 95      ;1   ;Action    ;
+                      CaptionML=[DAN=Bankkonti;
+                                 ENU=Bank Accounts];
+                      RunObject=Page 371;
+                      Image=BankAccount }
+      { 11      ;1   ;Action    ;
+                      CaptionML=[DAN=Varer;
+                                 ENU=Items];
+                      RunObject=Page 31;
+                      Image=Item }
+      { 22      ;1   ;Action    ;
+                      Name=PurchaseJournals;
+                      CaptionML=[DAN=Købskladder;
+                                 ENU=Purchase Journals];
+                      RunObject=Page 251;
+                      RunPageView=WHERE(Template Type=CONST(Purchases),
+                                        Recurring=CONST(No)) }
+      { 23      ;1   ;Action    ;
+                      Name=PaymentJournals;
+                      CaptionML=[DAN=Udbetalingskladder;
+                                 ENU=Payment Journals];
+                      RunObject=Page 251;
+                      RunPageView=WHERE(Template Type=CONST(Payments),
+                                        Recurring=CONST(No));
+                      Image=Journals }
+      { 24      ;1   ;Action    ;
+                      Name=GeneralJournals;
+                      CaptionML=[DAN=Finanskladder;
+                                 ENU=General Journals];
+                      RunObject=Page 251;
+                      RunPageView=WHERE(Template Type=CONST(General),
+                                        Recurring=CONST(No));
+                      Image=Journal }
+      { 1900000012;0 ;ActionContainer;
+                      ActionContainerType=ActivityButtons }
+      { 97      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Bogførte dokumenter;
+                                 ENU=Posted Documents];
+                      ToolTipML=[DAN=Vis bogførte købsordrer, fakturaer og kreditnotaer, og analysér finansjournaler.;
+                                 ENU=View posted purchase invoices and credit memos, and analyze G/L registers.];
+                      Image=FiledPosted }
+      { 102     ;2   ;Action    ;
+                      CaptionML=[DAN=Bogf. købsmodtagelser;
+                                 ENU=Posted Purchase Receipts];
+                      RunObject=Page 145 }
+      { 103     ;2   ;Action    ;
+                      CaptionML=[DAN=Bogf. købsfakturaer;
+                                 ENU=Posted Purchase Invoices];
+                      RunObject=Page 146 }
+      { 105     ;2   ;Action    ;
+                      CaptionML=[DAN=Bogførte købskreditnotaer;
+                                 ENU=Posted Purchase Credit Memos];
+                      RunObject=Page 147 }
+      { 9       ;2   ;Action    ;
+                      CaptionML=[DAN=Bogførte returvareleverancer;
+                                 ENU=Posted Return Shipments];
+                      RunObject=Page 6652 }
+      { 108     ;2   ;Action    ;
+                      CaptionML=[DAN=Finansjournaler;
+                                 ENU=G/L Registers];
+                      RunObject=Page 116;
+                      Image=GLRegisters }
+      { 1       ;0   ;ActionContainer;
+                      ActionContainerType=NewDocumentItems }
+      { 8       ;1   ;Action    ;
+                      CaptionML=[DAN=&Kreditor;
+                                 ENU=&Vendor];
+                      RunObject=Page 26;
+                      Promoted=No;
+                      Image=Vendor;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 7       ;1   ;Action    ;
+                      CaptionML=[DAN=&Købsordre;
+                                 ENU=&Purchase Order];
+                      RunObject=Page 50;
+                      Promoted=No;
+                      Image=Document;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 4       ;1   ;Action    ;
+                      CaptionML=[DAN=&Købsfaktura;
+                                 ENU=Purchase &Invoice];
+                      RunObject=Page 51;
+                      Promoted=No;
+                      Image=Invoice;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 2       ;1   ;Action    ;
+                      CaptionML=[DAN=&Købskreditnota;
+                                 ENU=Purchase Credit &Memo];
+                      RunObject=Page 52;
+                      Promoted=No;
+                      Image=CreditMemo;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 18      ;1   ;Separator ;
+                      CaptionML=[DAN=Opgaver;
+                                 ENU=Tasks];
+                      IsHeader=Yes }
+      { 16      ;1   ;Action    ;
+                      CaptionML=[DAN=&Udbetalingskladde;
+                                 ENU=Payment &Journal];
+                      RunObject=Page 256;
+                      Image=PaymentJournal }
+      { 26      ;1   ;Action    ;
+                      CaptionML=[DAN=Kø&bskladde;
+                                 ENU=P&urchase Journal];
+                      RunObject=Page 254;
+                      Image=Journals }
+      { 31      ;1   ;Separator ;
+                      CaptionML=[DAN=Opsætning;
+                                 ENU=Administration];
+                      IsHeader=Yes }
+      { 20      ;1   ;Action    ;
+                      CaptionML=[DAN=Købsop&sætning;
+                                 ENU=Purchases && Payables &Setup];
+                      RunObject=Page 460;
+                      Image=Setup }
+      { 40      ;1   ;Separator ;
+                      CaptionML=[DAN=Oversigt;
+                                 ENU=History];
+                      IsHeader=Yes }
+      { 41      ;1   ;Action    ;
+                      CaptionML=[DAN=Navi&ger;
+                                 ENU=Navi&gate];
+                      RunObject=Page 344;
+                      Image=Navigate }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000008;0;Container;
+                ContainerType=RoleCenterArea }
+
+    { 1900724808;1;Group   }
+
+    { 1900601808;2;Part   ;
+                PagePartID=Page9032;
+                PartType=Page }
+
+    { 1905989608;2;Part   ;
+                PagePartID=Page9152;
+                PartType=Page }
+
+    { 1900724708;1;Group   }
+
+    { 1902476008;2;Part   ;
+                PagePartID=Page9151;
+                PartType=Page }
+
+    { 10  ;2   ;Part      ;
+                PagePartID=Page681;
+                PartType=Page }
+
+    { 12  ;2   ;Part      ;
+                PagePartID=Page675;
+                Visible=false;
+                PartType=Page }
+
+    { 1903012608;2;Part   ;
+                PagePartID=Page9175;
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1901377608;2;Part   ;
+                PartType=System;
+                SystemPartID=MyNotes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

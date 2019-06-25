@@ -1,0 +1,56 @@
+OBJECT Page 871 Social Listening Search Topic
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Søgeemne i sociale medier;
+               ENU=Social Media Search Topic];
+    SourceTable=Table871;
+    DataCaptionExpr=GetCaption;
+    PageType=Card;
+    RefreshOnActivate=Yes;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                CaptionML=[DAN=Generelt;
+                           ENU=General];
+                GroupType=Group }
+
+    { 5   ;2   ;Group     ;
+                GroupType=Group;
+                InstructionalTextML=[DAN=Opret et søgeemne i Microsoft Social Engagement, og indsæt søgeemnets id eller URL-adresse i feltet Søgeemne-id.;
+                                     ENU=Create a search topic in Microsoft Social Engagement and paste the search topic ID or URL into the Search Topic ID field.] }
+
+    { 4   ;3   ;Field     ;
+                SourceExpr=SetupSearchTopicLbl;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              HYPERLINK(SocialListeningMgt.MSLSearchItemsURL);
+                            END;
+
+                ShowCaption=No }
+
+    { 3   ;2   ;Field     ;
+                SourceExpr="Search Topic" }
+
+  }
+  CODE
+  {
+    VAR
+      SocialListeningMgt@1000 : Codeunit 871;
+      SetupSearchTopicLbl@1001 : TextConst 'DAN=Konfigurer søgeemne.;ENU=Set up search topic.';
+
+    BEGIN
+    END.
+  }
+}
+

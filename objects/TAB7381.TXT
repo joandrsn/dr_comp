@@ -1,0 +1,43 @@
+OBJECT Table 7381 Phys. Invt. Counting Period
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Lageroptællingsperiode;
+               ENU=Phys. Invt. Counting Period];
+    LookupPageID=Page7381;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Count Frequency per Year;Integer   ;InitValue=1;
+                                                   CaptionML=[DAN=Optællingsfrekvens pr. år;
+                                                              ENU=Count Frequency per Year];
+                                                   MinValue=1;
+                                                   NotBlank=Yes }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Description,Count Frequency per Year }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

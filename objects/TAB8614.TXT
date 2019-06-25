@@ -1,0 +1,59 @@
+OBJECT Table 8614 Config. Package Record
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    OnDelete=VAR
+               ConfigPackageData@1000 : Record 8615;
+               ConfigPackageManagement@1001 : Codeunit 8611;
+             BEGIN
+               ConfigPackageData.SETRANGE("Package Code","Package Code");
+               ConfigPackageData.SETRANGE("Table ID","Table ID");
+               ConfigPackageData.SETRANGE("No.","No.");
+               ConfigPackageData.DELETEALL;
+
+               ConfigPackageManagement.CleanRecordError(Rec);
+             END;
+
+    CaptionML=[DAN=Konfig.pakkerecord;
+               ENU=Config. Package Record];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Package Code        ;Code20        ;TableRelation="Config. Package";
+                                                   CaptionML=[DAN=Pakkekode;
+                                                              ENU=Package Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Table ID            ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+                                                   CaptionML=[DAN=Tabel-id;
+                                                              ENU=Table ID];
+                                                   NotBlank=Yes;
+                                                   Editable=Yes }
+    { 3   ;   ;No.                 ;Integer       ;CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 4   ;   ;Invalid             ;Boolean       ;CaptionML=[DAN=Ugyldigt;
+                                                              ENU=Invalid] }
+    { 10  ;   ;Parent Record No.   ;Integer       ;CaptionML=[DAN=Overordnet recordnr.;
+                                                              ENU=Parent Record No.] }
+  }
+  KEYS
+  {
+    {    ;Package Code,Table ID,No.               ;Clustered=Yes }
+    {    ;Package Code,Table ID,Invalid            }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

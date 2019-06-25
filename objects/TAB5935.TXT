@@ -1,0 +1,77 @@
+OBJECT Table 5935 Service E-Mail Queue
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               IF "Entry No." = 0 THEN BEGIN
+                 ServEMailQueue.RESET;
+                 IF ServEMailQueue.FINDLAST THEN
+                   "Entry No." := ServEMailQueue."Entry No." + 1
+                 ELSE
+                   "Entry No." := 1;
+               END;
+
+               "Sending Date" := TODAY;
+               "Sending Time" := TIME;
+             END;
+
+    CaptionML=[DAN=Servicemailkø;
+               ENU=Service E-Mail Queue];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;To Address          ;Text80        ;CaptionML=[DAN=Til-adresse;
+                                                              ENU=To Address] }
+    { 3   ;   ;Copy-to Address     ;Text80        ;CaptionML=[DAN=CC;
+                                                              ENU=Copy-to Address] }
+    { 4   ;   ;Subject Line        ;Text250       ;CaptionML=[DAN=Emne;
+                                                              ENU=Subject Line] }
+    { 5   ;   ;Body Line           ;Text250       ;CaptionML=[DAN=Tekst;
+                                                              ENU=Body Line] }
+    { 6   ;   ;Attachment Filename ;Text80        ;CaptionML=[DAN=Vedhæftet fil;
+                                                              ENU=Attachment Filename] }
+    { 7   ;   ;Sending Date        ;Date          ;CaptionML=[DAN=Sendt den;
+                                                              ENU=Sending Date] }
+    { 8   ;   ;Sending Time        ;Time          ;CaptionML=[DAN=Sendt kl.;
+                                                              ENU=Sending Time] }
+    { 9   ;   ;Status              ;Option        ;CaptionML=[DAN=Status;
+                                                              ENU=Status];
+                                                   OptionCaptionML=[DAN=" ,Sendt,Fejl";
+                                                                    ENU=" ,Processed,Error"];
+                                                   OptionString=[ ,Processed,Error];
+                                                   Editable=No }
+    { 10  ;   ;Document Type       ;Option        ;CaptionML=[DAN=Bilagstype;
+                                                              ENU=Document Type];
+                                                   OptionCaptionML=[DAN=" ,Serviceordre";
+                                                                    ENU=" ,Service Order"];
+                                                   OptionString=[ ,Service Order] }
+    { 11  ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Status,Sending Date,Document Type,Document No. }
+    {    ;Document Type,Document No.,Status,Sending Date }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ServEMailQueue@1000 : Record 5935;
+
+    BEGIN
+    END.
+  }
+}
+

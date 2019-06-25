@@ -1,0 +1,97 @@
+OBJECT Table 5201 Alternative Address
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Employee No.,Name,Code;
+    CaptionML=[DAN=Alternativ adresse;
+               ENU=Alternative Address];
+    LookupPageID=Page5204;
+    DrillDownPageID=Page5204;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Employee No.        ;Code20        ;TableRelation=Employee;
+                                                   OnValidate=BEGIN
+                                                                Employee.GET("Employee No.");
+                                                                Name := Employee."Last Name";
+                                                              END;
+
+                                                   CaptionML=[DAN=Medarbejdernr.;
+                                                              ENU=Employee No.];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 3   ;   ;Name                ;Text50        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 4   ;   ;Name 2              ;Text50        ;CaptionML=[DAN=Navn 2;
+                                                              ENU=Name 2] }
+    { 5   ;   ;Address             ;Text50        ;CaptionML=[DAN=Adresse;
+                                                              ENU=Address] }
+    { 6   ;   ;Address 2           ;Text50        ;CaptionML=[DAN=Adresse 2;
+                                                              ENU=Address 2] }
+    { 7   ;   ;City                ;Text30        ;TableRelation=IF (Country/Region Code=CONST()) "Post Code".City
+                                                                 ELSE IF (Country/Region Code=FILTER(<>'')) "Post Code".City WHERE (Country/Region Code=FIELD(Country/Region Code));
+                                                   OnValidate=BEGIN
+                                                                PostCode.ValidateCity(City,"Post Code",County,"Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=By;
+                                                              ENU=City] }
+    { 8   ;   ;Post Code           ;Code20        ;TableRelation=IF (Country/Region Code=CONST()) "Post Code"
+                                                                 ELSE IF (Country/Region Code=FILTER(<>'')) "Post Code" WHERE (Country/Region Code=FIELD(Country/Region Code));
+                                                   OnValidate=BEGIN
+                                                                PostCode.ValidatePostCode(City,"Post Code",County,"Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Postnr.;
+                                                              ENU=Post Code] }
+    { 9   ;   ;County              ;Text30        ;CaptionML=[DAN=Amt;
+                                                              ENU=County] }
+    { 10  ;   ;Phone No.           ;Text30        ;ExtendedDatatype=Phone No.;
+                                                   CaptionML=[DAN=Telefon;
+                                                              ENU=Phone No.] }
+    { 11  ;   ;Fax No.             ;Text30        ;CaptionML=[DAN=Telefax;
+                                                              ENU=Fax No.] }
+    { 12  ;   ;E-Mail              ;Text80        ;ExtendedDatatype=E-Mail;
+                                                   CaptionML=[DAN=Mail;
+                                                              ENU=E-Mail] }
+    { 13  ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("Human Resource Comment Line" WHERE (Table Name=CONST(Alternative Address),
+                                                                                                          No.=FIELD(Employee No.),
+                                                                                                          Alternative Address Code=FIELD(Code)));
+                                                   CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment];
+                                                   Editable=No }
+    { 14  ;   ;Country/Region Code ;Code10        ;TableRelation=Country/Region;
+                                                   CaptionML=[DAN=Lande-/områdekode;
+                                                              ENU=Country/Region Code] }
+  }
+  KEYS
+  {
+    {    ;Employee No.,Code                       ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      PostCode@1000 : Record 225;
+      Employee@1001 : Record 5200;
+
+    BEGIN
+    END.
+  }
+}
+

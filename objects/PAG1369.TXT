@@ -1,0 +1,658 @@
+OBJECT Page 1369 Mini Purchase Credit Memo
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Købskreditnota;
+               ENU=Purchase Credit Memo];
+    SourceTable=Table38;
+    SourceTableView=WHERE(Document Type=FILTER(Credit Memo));
+    PageType=Document;
+    RefreshOnActivate=Yes;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Faktura,Bogføring,Vis;
+                                ENU=New,Process,Report,Invoice,Posting,View];
+    OnInit=BEGIN
+             ShowPayToShipToTab := FALSE;
+             ShowCurrencyTab := FALSE;
+             SetExtDocNoMandatoryCondition;
+           END;
+
+    OnOpenPage=VAR
+                 FileManagement@1000 : Codeunit 419;
+               BEGIN
+                 IF UserSetupManagement.GetPurchasesFilter <> '' THEN BEGIN
+                   FILTERGROUP(2);
+                   SETRANGE("Responsibility Center",UserSetupManagement.GetPurchasesFilter);
+                   FILTERGROUP(0);
+                 END;
+
+                 AllowDotNetAddIn := FileManagement.CanRunDotNetOnClient;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       HasIncomingDocument := "Incoming Document Entry No." <> 0;
+                       SetExtDocNoMandatoryCondition;
+                     END;
+
+    OnNewRecord=BEGIN
+                  "Responsibility Center" := UserSetupManagement.GetPurchasesFilter;
+                END;
+
+    OnDeleteRecord=BEGIN
+                     CurrPage.SAVERECORD;
+                     EXIT(ConfirmDeletion);
+                   END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 2       ;1   ;ActionGroup;
+                      Name=Manage;
+                      CaptionML=[DAN=Administrer;
+                                 ENU=Manage] }
+      { 64      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Kopiér linjer;
+                                 ENU=Copy Document];
+                      ToolTipML=[DAN=Kopiér linjer og sidehovedoplysninger fra et andet købsdokument til dette dokument. Du kan kopiere en bogført købsfaktura til en ny købsfaktura, hvis du hurtigt vil oprette et lignende dokument.;
+                                 ENU=Copy document lines and header information from another purchase document to this document. You can copy a posted purchase invoice into a new purchase invoice to quickly create a similar document.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyDocument;
+                      PromotedCategory=New;
+                      OnAction=VAR
+                                 CopyPurchDoc@1000 : Report 492;
+                               BEGIN
+                                 CopyPurchDoc.SetPurchHeader(Rec);
+                                 CopyPurchDoc.RUNMODAL;
+                               END;
+                                }
+      { 57      ;1   ;ActionGroup;
+                      Name=Invoice;
+                      CaptionML=[DAN=&Kreditnota;
+                                 ENU=&Credit Memo];
+                      Image=CreditMemo }
+      { 60      ;2   ;Action    ;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=[DAN=Leverandør (Kreditor);
+                                 ENU=Vendor];
+                      ToolTipML=[DAN=Vis eller rediger detaljerede oplysninger om kreditoren i købsdokumentet.;
+                                 ENU=View or edit detailed information about the vendor on the purchase document.];
+                      RunObject=Page 1330;
+                      RunPageLink=No.=FIELD(Buy-from Vendor No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Vendor;
+                      PromotedCategory=Category4 }
+      { 10      ;2   ;Action    ;
+                      Name=Dimensions;
+                      AccessByPermission=TableData 348=R;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[DAN=Dimensioner;
+                                 ENU=Dimensions];
+                      ToolTipML=[DAN=Vis eller rediger de dimensionsgrupper, der er oprettet til kreditoren i købsdokumentet.;
+                                 ENU=View or edit the dimension sets that are set up for the vendor on the purchase document.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Dimensions;
+                      PromotedCategory=Category4;
+                      OnAction=BEGIN
+                                 ShowDocDim;
+                                 CurrPage.SAVERECORD;
+                               END;
+                                }
+      { 46      ;2   ;ActionGroup;
+                      Name=IncomingDocument;
+                      CaptionML=[DAN=Indgående bilag;
+                                 ENU=Incoming Document];
+                      ActionContainerType=NewDocumentItems;
+                      Image=Documents }
+      { 32      ;3   ;Action    ;
+                      Name=IncomingDocCard;
+                      CaptionML=[DAN=Vis indgående bilag;
+                                 ENU=View Incoming Document];
+                      ToolTipML=;
+                      Enabled=HasIncomingDocument;
+                      Image=ViewOrder;
+                      OnAction=VAR
+                                 IncomingDocument@1000 : Record 130;
+                               BEGIN
+                                 IncomingDocument.ShowCardFromEntryNo("Incoming Document Entry No.");
+                               END;
+                                }
+      { 29      ;3   ;Action    ;
+                      Name=SelectIncomingDoc;
+                      AccessByPermission=TableData 130=R;
+                      CaptionML=[DAN=Vælg indgående bilag;
+                                 ENU=Select Incoming Document];
+                      ToolTipML=;
+                      Image=SelectLineToApply;
+                      OnAction=VAR
+                                 IncomingDocument@1000 : Record 130;
+                               BEGIN
+                                 VALIDATE("Incoming Document Entry No.",IncomingDocument.SelectIncomingDocument("Incoming Document Entry No."));
+                               END;
+                                }
+      { 27      ;3   ;Action    ;
+                      Name=IncomingDocAttachFile;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Opret indgående bilag ud fra fil;
+                                 ENU=Create Incoming Document from File];
+                      ToolTipML=;
+                      Enabled=NOT HasIncomingDocument;
+                      Image=Attach;
+                      OnAction=VAR
+                                 IncomingDocumentAttachment@1000 : Record 133;
+                               BEGIN
+                                 IncomingDocumentAttachment.NewAttachmentFromPurchaseDocument(Rec);
+                               END;
+                                }
+      { 25      ;3   ;Action    ;
+                      Name=RemoveIncomingDoc;
+                      CaptionML=[DAN=Fjern indgående bilag;
+                                 ENU=Remove Incoming Document];
+                      ToolTipML=;
+                      Enabled=HasIncomingDocument;
+                      Image=RemoveLine;
+                      OnAction=BEGIN
+                                 "Incoming Document Entry No." := 0;
+                               END;
+                                }
+      { 41      ;1   ;ActionGroup;
+                      Name=Apply;
+                      CaptionML=[DAN=Anvend;
+                                 ENU=Apply] }
+      { 45      ;2   ;Action    ;
+                      Name=ApplyEntries;
+                      ShortCutKey=Shift+F11;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Udlign poster;
+                                 ENU=Apply Entries];
+                      ToolTipML=[DAN=Vælg ét eller flere bogførte købsdokumenter, som købskreditnotaen skal udlignes til.;
+                                 ENU=Select one or more posted purchase documents that you want the purchase credit memo to be applied to.];
+                      RunObject=Codeunit 402;
+                      Promoted=No;
+                      Image=ApplyEntries;
+                      PromotedCategory=Process }
+      { 69      ;1   ;ActionGroup;
+                      Name=Posting;
+                      CaptionML=[DAN=&Bogføring;
+                                 ENU=P&osting];
+                      Image=Post }
+      { 71      ;2   ;Action    ;
+                      Name=Post;
+                      ShortCutKey=F9;
+                      CaptionML=[DAN=&Bogfør;
+                                 ENU=P&ost];
+                      ToolTipML=[DAN=Færdiggør købsdokumentet. Ved bogføring opdateres kontiene med de beløb og mængder, der er angivet i dokumentet.;
+                                 ENU=Finalize the purchase document. Posting updates your books with the document's amounts and quantities.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostOrder;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 Post(CODEUNIT::"Purch.-Post (Yes/No)");
+                               END;
+                                }
+      { 47      ;2   ;Action    ;
+                      Name=Preview;
+                      CaptionML=[DAN=Vis bogføring;
+                                 ENU=Preview Posting];
+                      Image=ViewPostedOrder;
+                      OnAction=VAR
+                                 PurchPostYesNo@1000 : Codeunit 91;
+                               BEGIN
+                                 PurchPostYesNo.Preview(Rec);
+                               END;
+                                }
+      { 31      ;2   ;Action    ;
+                      Name=Print;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=U&dskriv;
+                                 ENU=&Print];
+                      ToolTipML=[DAN=Udskriv en kopi af købskreditnotaen.;
+                                 ENU=Print a copy of the purchase credit memo.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Print;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 PostAndPrint(CODEUNIT::"Purch.-Post");
+                               END;
+                                }
+      { 3       ;1   ;ActionGroup;
+                      Name=View;
+                      CaptionML=[DAN=Vis;
+                                 ENU=View] }
+      { 4       ;2   ;Action    ;
+                      Name=Pay-to and Ship-to Address;
+                      CaptionML=[DAN=Leveringsadresse og adresse;
+                                 ENU=Ship-to and Pay-to Address];
+                      ToolTipML=[DAN=Vis felter til kreditorens betalings- og leveringsadresser. Forsendelsesadressen bruges, når du returnerer varer til leverandøren. Du kan angive en anden adresse, som varen eller servicen skal leveres til, eller angive en anden adresse, som dokumentet skal sendes til.;
+                                 ENU=Show fields for the vendor's payment and shipping addresses. The shipping address is used when you return items to the vendor. You can specify a different address where the item or service is delivered or specify a different address where the document is sent.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ShipAddress;
+                      PromotedCategory=Category6;
+                      OnAction=BEGIN
+                                 ShowPayToShipToTab := NOT ShowPayToShipToTab;
+                               END;
+                                }
+      { 5       ;2   ;Action    ;
+                      Name=Currency;
+                      CaptionML=[DAN=Valuta;
+                                 ENU=Currency];
+                      ToolTipML=[DAN=Vis et felt for at angive en alternativ valuta. Du kan angive beløb i dette købsdokument i en anden valuta end den lokale valuta.;
+                                 ENU=Show a field to specify an alternate currency. You can specify a currency that is different than your local currency for amounts on this purchase document.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Currency;
+                      PromotedCategory=Category6;
+                      OnAction=BEGIN
+                                 ShowCurrencyTab := NOT ShowCurrencyTab;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=General;
+                CaptionML=[DAN=Generelt;
+                           ENU=General];
+                GroupType=Group }
+
+    { 13  ;2   ;Group     ;
+                Name=VendorDetails;
+                CaptionML=[DAN=Kreditordetaljer;
+                           ENU=Vendor Details];
+                GroupType=Group }
+
+    { 6   ;3   ;Field     ;
+                CaptionML=[DAN=Kreditornavn;
+                           ENU=Vendor Name];
+                ToolTipML=[DAN=Angiver navnet på den kreditor, der leverer varerne.;
+                           ENU=Specifies the name of the vendor who ships the items.];
+                NotBlank=Yes;
+                SourceExpr="Buy-from Vendor Name";
+                TableRelation=Vendor.Name;
+                LookupPageID=Mini Vendor List;
+                DrillDownPageID=Mini Vendor List;
+                OnValidate=VAR
+                             NewVendNo@1000 : Code[20];
+                           BEGIN
+                             IF "No." = '' THEN
+                               InitRecord;
+                             IF "Buy-from Vendor Name" <> xRec."Buy-from Vendor Name" THEN BEGIN
+                               NewVendNo := MiniVendorMgt.GetVendorNoByName("Buy-from Vendor Name");
+                               VALIDATE("Buy-from Vendor No.",NewVendNo);
+                             END;
+                             CurrPage.UPDATE;
+                             MiniPurchCalcDiscByType.ApplyDefaultInvoiceDiscount(0,Rec);
+                           END;
+
+                ShowMandatory=TRUE }
+
+    { 75  ;3   ;Field     ;
+                CaptionML=[DAN=Adresse;
+                           ENU=Address];
+                ToolTipML=[DAN=Angiver adressen på den kreditor, der leverer varerne.;
+                           ENU=Specifies the address of the vendor who ships the items.];
+                SourceExpr="Buy-from Address" }
+
+    { 11  ;3   ;Field     ;
+                CaptionML=[DAN=Adresse 2;
+                           ENU=Address 2];
+                ToolTipML=[DAN=Angiver en supplerende del af adressen på den leverandør, der leverer varerne.;
+                           ENU=Specifies an additional part of the address of the vendor who ships the items.];
+                SourceExpr="Buy-from Address 2" }
+
+    { 80  ;3   ;Field     ;
+                CaptionML=[DAN=Postnr.;
+                           ENU=Post Code];
+                ToolTipML=[DAN=Angiver postnummeret på kreditorens adresse, hvorfra varerne er købt.;
+                           ENU=Specifies the post code of the vendor's address that items are purchased from.];
+                SourceExpr="Buy-from Post Code" }
+
+    { 79  ;3   ;Field     ;
+                CaptionML=[DAN=By;
+                           ENU=City];
+                ToolTipML=[DAN=Angiver bynavnet på den kreditor, der leverer varerne.;
+                           ENU=Specifies the city name of the vendor who ships the items.];
+                SourceExpr="Buy-from City" }
+
+    { 8   ;3   ;Field     ;
+                CaptionML=[DAN=Kontakt;
+                           ENU=Contact];
+                ToolTipML=[DAN=Angiver navnet på den kontaktperson, der skal kontaktes om levering af varen fra denne kreditor.;
+                           ENU=Specifies the name of the person to contact about shipment of the item from this vendor.];
+                SourceExpr="Buy-from Contact" }
+
+    { 15  ;2   ;Group     ;
+                Name=InvoiceDetails;
+                CaptionML=[DAN=Fakturadetaljer;
+                           ENU=Invoice Details];
+                GroupType=Group }
+
+    { 12  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver den dato, hvor bogføringen af købsdokumentet skal registreres. Som standard angives dags dato.;
+                           ENU=Specifies the date when the posting of the purchase document will be recorded. By default, today's date is entered.];
+                SourceExpr="Posting Date";
+                Importance=Promoted }
+
+    { 43  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver den dato, kreditoren oprettede købsdokumentet (datoen på kreditorens faktura).;
+                           ENU=Specifies the date on which the vendor created the purchase document (the date of the vendor's invoice).];
+                SourceExpr="Document Date" }
+
+    { 33  ;3   ;Field     ;
+                ToolTipML=[DAN=Viser den dato, hvor varerne forventes modtaget, på købsdokumentet.;
+                           ENU=Specifies the date you expect to receive the items on the purchase document.];
+                SourceExpr="Expected Receipt Date" }
+
+    { 121 ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver, om enhedsprisen på linjen skal vises med eller uden moms.;
+                           ENU=Specifies whether the unit price on the line should be displayed including or excluding VAT.];
+                SourceExpr="Prices Including VAT";
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             CurrPage.UPDATE;
+                             CALCFIELDS("Invoice Discount Amount");
+                             MiniPurchCalcDiscByType.ApplyDefaultInvoiceDiscount("Invoice Discount Amount",Rec);
+                           END;
+                            }
+
+    { 156 ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens momsspecifikation for at knytte transaktioner, der er foretaget for denne kreditor, til den relevante finanskonto i overensstemmelse med momsbogføringsopsætningen.;
+                           ENU=Specifies the vendor's VAT specification to link transactions made for this vendor with the appropriate general ledger account according to the VAT posting setup.];
+                SourceExpr="VAT Bus. Posting Group";
+                OnValidate=BEGIN
+                             CurrPage.UPDATE;
+                             MiniPurchCalcDiscByType.ApplyDefaultInvoiceDiscount(0,Rec);
+                           END;
+                            }
+
+    { 112 ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver, om posten er åben, venter på godkendelse, er faktureret til forudbetaling eller er frigivet til næste fase i behandlingen.;
+                           ENU=Specifies whether the record is open, is waiting to be approved, has been invoiced for prepayment, or has been released to the next stage of processing.];
+                SourceExpr=Status;
+                Importance=Promoted;
+                Visible=FALSE }
+
+    { 30  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver det nummer, som kreditoren bruger til den kreditnota, du er ved at oprette i dette købskreditnotahoved.;
+                           ENU=Specifies the number that the vendor uses for the credit memo you are creating in this purchase credit memo header.];
+                SourceExpr="Vendor Cr. Memo No.";
+                ShowMandatory=VendorCreditMemoNoMandatory }
+
+    { 23  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret for transaktionstypen med henblik på rapportering til INTRASTAT.;
+                           ENU=Specifies the number for the transaction type, for the purpose of reporting to INTRASTAT.];
+                SourceExpr="Transaction Type" }
+
+    { 17  ;2   ;Group     ;
+                Name=PaymentDetails;
+                CaptionML=[DAN=Betalingsdetaljer;
+                           ENU=Payment Details];
+                GroupType=Group }
+
+    { 26  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver en formel, der beregner betalingens forfaldsdato, kontantrabatdato og kontantrabatbeløb på købsdokumentet. Som standard angives betalingsvilkårene fra kreditorkortet.;
+                           ENU=Specifies a formula that calculates the payment due date, payment discount date, and payment discount amount on the purchase document. By default, the payment term from the vendor card is entered.];
+                SourceExpr="Payment Terms Code";
+                Importance=Promoted }
+
+    { 28  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvornår fakturaen er forfalden. Datoen beregnes automatisk på baggrund af oplysningerne i felterne Betalingsbeting.kode og Bilagsdato.;
+                           ENU=Specifies when the invoice is due. The program calculates the date using the Payment Terms Code and Document Date fields.];
+                SourceExpr="Due Date";
+                Importance=Promoted }
+
+    { 101 ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvordan betaling af købsdokumentet skal sendes, som f.eks. bankoverførsel eller check. Som standard angives betalingsformen fra kreditorkortet.;
+                           ENU=Specifies how payment for the purchase document must be submitted, such as bank transfer or check. By default, the payment method from the vendor card is entered.];
+                SourceExpr="Payment Method Code" }
+
+    { 35  ;2   ;Group     ;
+                Name=Application;
+                CaptionML=[DAN=Udligningsdetaljer;
+                           ENU=Application Details];
+                GroupType=Group }
+
+    { 37  ;3   ;Field     ;
+                ToolTipML=[DAN=Dette felt kan bruges, hvis købshovedet ved bogføring skal udligne et allerede bogført dokument. I dette tilfælde skal du her indsætte den bilagstype, der skal udlignes.;
+                           ENU=You can use this field when you post the purchase header, to have the program apply it to a document that has already been posted. In this case, enter here the type of document that you want it to be applied to.];
+                SourceExpr="Applies-to Doc. Type" }
+
+    { 39  ;3   ;Field     ;
+                ToolTipML=[DAN=Dette felt kan bruges, hvis købshovedet ved bogføring skal udligne et allerede bogført dokument. Hvis det er tilfældet, skal du indsætte nummeret på det dokument, som købshovedet skal udlignes med.;
+                           ENU=You can use this field if you want to apply the purchase header to a document that has already been posted. If so, enter the number of the document that the purchase header should be applied to.];
+                SourceExpr="Applies-to Doc. No." }
+
+    { 40  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver det udlignings-id, der udlignes af købsdokumentet, hvis du bruger funktionen Udlign poster.;
+                           ENU=Specifies the applies-to ID of entries that will be applied to by the purchase document if you use the Apply Entries function.];
+                SourceExpr="Applies-to ID" }
+
+    { 7   ;2   ;Group     ;
+                Name=Currency;
+                CaptionML=[DAN=Valuta;
+                           ENU=Currency];
+                Visible=ShowCurrencyTab;
+                GroupType=Group }
+
+    { 107 ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver koden for valutaen for beløbene på købslinjerne.;
+                           ENU=Specifies the code of the currency of the amounts on the purchase lines.];
+                SourceExpr="Currency Code";
+                Importance=Promoted;
+                OnValidate=BEGIN
+                             CurrPage.UPDATE;
+                             MiniPurchCalcDiscByType.ApplyDefaultInvoiceDiscount(0,Rec);
+                           END;
+
+                OnAssistEdit=VAR
+                               ChangeExchangeRate@1000 : Page 511;
+                             BEGIN
+                               IF "Posting Date" <> 0D THEN
+                                 ChangeExchangeRate.SetParameter("Currency Code","Currency Factor","Posting Date")
+                               ELSE
+                                 ChangeExchangeRate.SetParameter("Currency Code","Currency Factor",WORKDATE);
+                               IF ChangeExchangeRate.RUNMODAL = ACTION::OK THEN BEGIN
+                                 VALIDATE("Currency Factor",ChangeExchangeRate.GetParameter);
+                                 CurrPage.UPDATE;
+                               END;
+                             END;
+                              }
+
+    { 56  ;1   ;Part      ;
+                Name=PurchLines;
+                SubPageLink=Document No.=FIELD(No.);
+                PagePartID=Page1370 }
+
+    { 1905885101;1;Group  ;
+                Name=PaytoandShiptoAddresses;
+                CaptionML=[DAN=Adresser og leveringsadresser;
+                           ENU=Pay-to and Ship-to Addresses];
+                Visible=ShowPayToShipToTab;
+                GroupType=Group }
+
+    { 19  ;2   ;Group     ;
+                Name=PayToVendor;
+                CaptionML=[DAN=Faktureringsleverandør;
+                           ENU=Pay-to Vendor];
+                GroupType=Group }
+
+    { 14  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver den kreditor, der sender fakturaen.;
+                           ENU=Specifies the vendor who is sending the invoice.];
+                SourceExpr="Pay-to Vendor No.";
+                Importance=Promoted;
+                LookupPageID=Mini Vendor List;
+                DrillDownPageID=Mini Vendor List;
+                OnValidate=BEGIN
+                             CurrPage.UPDATE;
+                             MiniPurchCalcDiscByType.ApplyDefaultInvoiceDiscount(0,Rec);
+                           END;
+                            }
+
+    { 16  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver navnet på den kreditor, fakturaen er sendt fra.;
+                           ENU=Specifies the name of the vendor sending the invoice.];
+                SourceExpr="Pay-to Name" }
+
+    { 18  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver adressen den kreditor, der sender fakturaen.;
+                           ENU=Specifies the address of the vendor sending the invoice.];
+                SourceExpr="Pay-to Address" }
+
+    { 9   ;3   ;Field     ;
+                ToolTipML=[DAN=Indeholder en supplerende del af adressen på den kreditor, der sender fakturaen.;
+                           ENU=Contains another line of the address of the vendor who sends the invoice.];
+                SourceExpr="Pay-to Address 2" }
+
+    { 85  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver postnummeret for kreditorens adresse, som betalingen sker til.;
+                           ENU=Specifies the post code of the vendor's address that payment is made to.];
+                SourceExpr="Pay-to Post Code" }
+
+    { 22  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver bynavnet på den kreditor, fakturaen er sendt fra.;
+                           ENU=Specifies the city name of the vendor sending the invoice.];
+                SourceExpr="Pay-to City" }
+
+    { 24  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver navnet på en kontaktperson hos den kreditor, fakturaen er sendt fra.;
+                           ENU=Specifies the name of the person to contact about an invoice from this vendor.];
+                SourceExpr="Pay-to Contact" }
+
+    { 21  ;2   ;Group     ;
+                Name=Shiptoaddress;
+                CaptionML=[DAN=Leveringsadresse;
+                           ENU=Ship-to address];
+                GroupType=Group }
+
+    { 34  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver en leveringsadressekode, hvis du ønsker en anden leveringsadresse end den, der er indsat automatisk. Klik på feltet, hvis du vil se de leveringsadressekoder, der er oprettet i tabellen Leveringsadresse.;
+                           ENU=Specifies a ship-to code if you want a different shipment address from the one that has been automatically entered. To see the ship-to codes that have been set up in the Ship-to Address table, click the field.];
+                SourceExpr="Ship-to Code";
+                Importance=Promoted }
+
+    { 36  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver navnet på firmaet på den adresse, som varerne i købsordren skal leveres til.;
+                           ENU=Specifies the name of the company at the address to which you want the items in the purchase order to be shipped.];
+                SourceExpr="Ship-to Name" }
+
+    { 38  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver den adresse, som varerne i købsordren skal leveres på.;
+                           ENU=Specifies the address that you want the items in the purchase order to be shipped to.];
+                SourceExpr="Ship-to Address" }
+
+    { 20  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver en supplerende adresse, som varerne i købsordren skal leveres på.;
+                           ENU=Specifies an additional part of the address to which you want the items in the purchase order to be shipped.];
+                SourceExpr="Ship-to Address 2" }
+
+    { 93  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver postnummeret for leveringsadressen.;
+                           ENU=Specifies the post code of the shipping address.];
+                SourceExpr="Ship-to Post Code" }
+
+    { 42  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver bynavnet på virksomhedens adresse, hvortil varerne i købsordren vil blive leveret.;
+                           ENU=Specifies the city name of the address thta the items in the purchase order will be shipped to.];
+                SourceExpr="Ship-to City" }
+
+    { 44  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver navnet på kontaktpersonen for adresse, hvortil varerne i købsordren skal leveres.;
+                           ENU=Specifies the name of a contact person for the address where the items in the purchase order should be shipped.];
+                SourceExpr="Ship-to Contact" }
+
+  }
+  CODE
+  {
+    VAR
+      UserSetupManagement@1004 : Codeunit 5700;
+      MiniPurchCalcDiscByType@1002 : Codeunit 1310;
+      MiniVendorMgt@1000 : Codeunit 1312;
+      MiniLinesInstructionMgt@1001 : Codeunit 1320;
+      HasIncomingDocument@1010 : Boolean;
+      ShowPayToShipToTab@1005 : Boolean;
+      ShowCurrencyTab@1007 : Boolean;
+      OpenPostedPurchCrMemoQst@1006 : TextConst 'DAN=Kreditnotaen er blevet bogført og arkiveret.\\Vil du åbne den bogførte kreditnota fra listen Bogført købskreditnota?;ENU=The credit memo has been posted and archived.\\Do you want to open the posted credit memo from the Posted Purchase Credit Memo list?';
+      PostAndPrintQst@1003 : TextConst 'DAN=Vil du bogføre og udskrive kreditnotaen?;ENU=Do you want to post and print the credit memo?';
+      AllowDotNetAddIn@1008 : Boolean INDATASET;
+      VendorCreditMemoNoMandatory@1009 : Boolean;
+
+    LOCAL PROCEDURE Post@4(PostingCodeunitID@1000 : Integer);
+    VAR
+      PreAssignedNo@1001 : Code[20];
+    BEGIN
+      MiniLinesInstructionMgt.PurchaseCheckAllLinesHaveQuantityAssigned(Rec);
+      PreAssignedNo := "No.";
+      SendToPosting(PostingCodeunitID);
+      IF "Job Queue Status" = "Job Queue Status"::"Scheduled for Posting" THEN
+        CurrPage.CLOSE
+      ELSE
+        ShowPostedConfirmationMessage(PreAssignedNo);
+    END;
+
+    LOCAL PROCEDURE PostAndPrint@1(PostingCodeunitID@1000 : Integer);
+    VAR
+      PurchCrMemoHdr@1001 : Record 124;
+      DocumentNo@1002 : Code[20];
+      PreAssignedNo@1003 : Code[20];
+    BEGIN
+      MiniLinesInstructionMgt.PurchaseCheckAllLinesHaveQuantityAssigned(Rec);
+
+      IF NOT CONFIRM(PostAndPrintQst,FALSE) THEN
+        EXIT;
+
+      PreAssignedNo := "No.";
+      SendToPosting(PostingCodeunitID);
+
+      IF "Last Posting No." = '' THEN
+        DocumentNo := "No."
+      ELSE
+        DocumentNo := "Last Posting No.";
+
+      IF PurchCrMemoHdr.GET(DocumentNo) THEN BEGIN
+        PurchCrMemoHdr.SETRECFILTER;
+        COMMIT;
+        PurchCrMemoHdr.PrintRecords(NOT AllowDotNetAddIn);
+        ShowPostedConfirmationMessage(PreAssignedNo);
+      END;
+    END;
+
+    LOCAL PROCEDURE ShowPostedConfirmationMessage@7(PreAssignedNo@1001 : Code[20]);
+    VAR
+      PurchCrMemoHdr@1000 : Record 124;
+    BEGIN
+      PurchCrMemoHdr.SETRANGE("Pre-Assigned No.",PreAssignedNo);
+      IF PurchCrMemoHdr.FINDFIRST THEN
+        IF DIALOG.CONFIRM(OpenPostedPurchCrMemoQst,FALSE) THEN
+          PAGE.RUN(PAGE::"Mini Posted Purch. Credit Memo",PurchCrMemoHdr);
+    END;
+
+    LOCAL PROCEDURE SetExtDocNoMandatoryCondition@3();
+    VAR
+      PurchasesPayablesSetup@1000 : Record 312;
+    BEGIN
+      PurchasesPayablesSetup.GET;
+      VendorCreditMemoNoMandatory := PurchasesPayablesSetup."Ext. Doc. No. Mandatory"
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

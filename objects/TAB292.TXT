@@ -1,0 +1,76 @@
+OBJECT Table 292 Reminder Terms
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    OnDelete=BEGIN
+               ReminderLevel.SETRANGE("Reminder Terms Code",Code);
+               ReminderLevel.DELETEALL(TRUE);
+
+               ReminderTermsTranslation.SETRANGE("Reminder Terms Code",Code);
+               ReminderTermsTranslation.DELETEALL(TRUE);
+             END;
+
+    OnRename=BEGIN
+               ReminderTermsTranslation.SETRANGE("Reminder Terms Code",xRec.Code);
+               WHILE ReminderTermsTranslation.FINDFIRST DO
+                 ReminderTermsTranslation.RENAME(
+                   Code,ReminderTermsTranslation."Language Code");
+
+               ReminderLevel.SETRANGE("Reminder Terms Code",xRec.Code);
+               WHILE ReminderLevel.FINDFIRST DO
+                 ReminderLevel.RENAME(Code,ReminderLevel."No.");
+             END;
+
+    CaptionML=[DAN=Rykkerbetingelser;
+               ENU=Reminder Terms];
+    LookupPageID=Page431;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Post Interest       ;Boolean       ;CaptionML=[DAN=Bogfør rente;
+                                                              ENU=Post Interest] }
+    { 4   ;   ;Post Additional Fee ;Boolean       ;CaptionML=[DAN=Bogfør opkrævningsgebyr;
+                                                              ENU=Post Additional Fee] }
+    { 5   ;   ;Max. No. of Reminders;Integer      ;CaptionML=[DAN=Maks. antal rykkere;
+                                                              ENU=Max. No. of Reminders];
+                                                   MinValue=0 }
+    { 6   ;   ;Minimum Amount (LCY);Decimal       ;CaptionML=[DAN=Min. beløb (RV);
+                                                              ENU=Minimum Amount (LCY)];
+                                                   MinValue=0;
+                                                   AutoFormatType=1 }
+    { 7   ;   ;Post Add. Fee per Line;Boolean     ;CaptionML=[DAN=Bogfør opkrævningsgebyr pr. linje;
+                                                              ENU=Post Add. Fee per Line] }
+    { 8   ;   ;Note About Line Fee on Report;Text150;
+                                                   CaptionML=[DAN=Bemærkning om linjegebyr i rapport;
+                                                              ENU=Note About Line Fee on Report] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ReminderTermsTranslation@1001 : Record 1052;
+      ReminderLevel@1000 : Record 293;
+
+    BEGIN
+    END.
+  }
+}
+

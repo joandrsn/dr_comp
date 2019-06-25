@@ -1,0 +1,67 @@
+OBJECT Table 5063 Interaction Group
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    CaptionML=[DAN=Interaktionsgruppe;
+               ENU=Interaction Group];
+    LookupPageID=Page5074;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Date Filter         ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Datofilter;
+                                                              ENU=Date Filter] }
+    { 4   ;   ;No. of Interactions ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Interaction Log Entry" WHERE (Interaction Group Code=FIELD(Code),
+                                                                                                    Canceled=CONST(No),
+                                                                                                    Date=FIELD(Date Filter),
+                                                                                                    Postponed=CONST(No)));
+                                                   CaptionML=[DAN=Antal interaktioner;
+                                                              ENU=No. of Interactions];
+                                                   Editable=No }
+    { 5   ;   ;Cost (LCY)          ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Interaction Log Entry"."Cost (LCY)" WHERE (Interaction Group Code=FIELD(Code),
+                                                                                                               Canceled=CONST(No),
+                                                                                                               Date=FIELD(Date Filter),
+                                                                                                               Postponed=CONST(No)));
+                                                   CaptionML=[DAN=Kostbeløb (RV);
+                                                              ENU=Cost (LCY)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 6   ;   ;Duration (Min.)     ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Interaction Log Entry"."Duration (Min.)" WHERE (Interaction Group Code=FIELD(Code),
+                                                                                                                    Canceled=CONST(No),
+                                                                                                                    Date=FIELD(Date Filter),
+                                                                                                                    Postponed=CONST(No)));
+                                                   CaptionML=[DAN=Varighed (min.);
+                                                              ENU=Duration (Min.)];
+                                                   DecimalPlaces=0:0;
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

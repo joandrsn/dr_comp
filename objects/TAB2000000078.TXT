@@ -1,0 +1,38 @@
+OBJECT Table 2000000078 Chart
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Diagram;
+               ENU=Chart];
+  }
+  FIELDS
+  {
+    { 3   ;   ;ID                  ;Code20        ;CaptionML=[DAN=ID;
+                                                              ENU=ID] }
+    { 6   ;   ;Name                ;Text30        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 9   ;   ;BLOB                ;BLOB          ;CaptionML=[DAN=BLOB;
+                                                              ENU=BLOB] }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

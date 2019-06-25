@@ -1,0 +1,254 @@
+OBJECT Table 242 Source Code Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Kildesporsdefinition;
+               ENU=Source Code Setup];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 2   ;   ;Sales               ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Salg;
+                                                              ENU=Sales] }
+    { 3   ;   ;Purchases           ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Køb;
+                                                              ENU=Purchases] }
+    { 4   ;   ;Inventory Post Cost ;Code10        ;TableRelation="Source Code";
+                                                   AccessByPermission=TableData 27=R;
+                                                   CaptionML=[DAN=Lagerregulering;
+                                                              ENU=Inventory Post Cost] }
+    { 5   ;   ;Exchange Rate Adjmt.;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Valutakursregulering;
+                                                              ENU=Exchange Rate Adjmt.] }
+    { 6   ;   ;Post Recognition    ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Ompost. til res.opg.;
+                                                              ENU=Post Recognition] }
+    { 7   ;   ;Post Value          ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Ompost. til igv.arb.;
+                                                              ENU=Post Value] }
+    { 8   ;   ;Close Income Statement;Code10      ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Nulstil resultatopgørelse;
+                                                              ENU=Close Income Statement] }
+    { 9   ;   ;Consolidation       ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Konsolidering;
+                                                              ENU=Consolidation] }
+    { 10  ;   ;General Journal     ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Finanskladde;
+                                                              ENU=General Journal] }
+    { 11  ;   ;Sales Journal       ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Salgskladde;
+                                                              ENU=Sales Journal] }
+    { 12  ;   ;Purchase Journal    ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Købskladde;
+                                                              ENU=Purchase Journal] }
+    { 13  ;   ;Cash Receipt Journal;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Indbetalingskladde;
+                                                              ENU=Cash Receipt Journal] }
+    { 14  ;   ;Payment Journal     ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Udbetalingskladde;
+                                                              ENU=Payment Journal] }
+    { 16  ;   ;Item Journal        ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Varekladde;
+                                                              ENU=Item Journal] }
+    { 19  ;   ;Resource Journal    ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Ressourcekladde;
+                                                              ENU=Resource Journal] }
+    { 20  ;   ;Job Journal         ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Sagskladde;
+                                                              ENU=Job Journal] }
+    { 21  ;   ;Sales Entry Application;Code10     ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Debitorefterudligning;
+                                                              ENU=Sales Entry Application] }
+    { 22  ;   ;Purchase Entry Application;Code10  ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Kreditorefterudligning;
+                                                              ENU=Purchase Entry Application] }
+    { 23  ;   ;VAT Settlement      ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Momsafregning;
+                                                              ENU=VAT Settlement] }
+    { 24  ;   ;Compress G/L        ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer fin.poster;
+                                                              ENU=Compress G/L] }
+    { 25  ;   ;Compress VAT Entries;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer momsposter;
+                                                              ENU=Compress VAT Entries] }
+    { 26  ;   ;Compress Cust. Ledger;Code10       ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer deb.poster;
+                                                              ENU=Compress Cust. Ledger] }
+    { 27  ;   ;Compress Vend. Ledger;Code10       ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer kred.post.;
+                                                              ENU=Compress Vend. Ledger] }
+    { 28  ;   ;Compress Item Ledger;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer vareposter;
+                                                              ENU=Compress Item Ledger] }
+    { 31  ;   ;Compress Res. Ledger;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer ress.post.;
+                                                              ENU=Compress Res. Ledger] }
+    { 32  ;   ;Compress Job Ledger ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer sagsposter;
+                                                              ENU=Compress Job Ledger] }
+    { 33  ;   ;Item Reclass. Journal;Code10       ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Vareomposteringskladde;
+                                                              ENU=Item Reclass. Journal] }
+    { 34  ;   ;Phys. Inventory Journal;Code10     ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Lageropgørelseskladde;
+                                                              ENU=Phys. Inventory Journal] }
+    { 35  ;   ;Compress Bank Acc. Ledger;Code10   ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer bankposter;
+                                                              ENU=Compress Bank Acc. Ledger] }
+    { 36  ;   ;Compress Check Ledger;Code10       ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer checkposter;
+                                                              ENU=Compress Check Ledger] }
+    { 37  ;   ;Financially Voided Check;Code10    ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Annulleret og tilbagef. check;
+                                                              ENU=Financially Voided Check] }
+    { 38  ;   ;Finance Charge Memo ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Rentenota;
+                                                              ENU=Finance Charge Memo] }
+    { 39  ;   ;Reminder            ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Rykkermeddelelse;
+                                                              ENU=Reminder] }
+    { 40  ;   ;Deleted Document    ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Slettet dokument;
+                                                              ENU=Deleted Document] }
+    { 41  ;   ;Adjust Add. Reporting Currency;Code10;
+                                                   TableRelation="Source Code";
+                                                   CaptionML=[DAN=Reguler eks. rapport.valuta;
+                                                              ENU=Adjust Add. Reporting Currency] }
+    { 42  ;   ;Trans. Bank Rec. to Gen. Jnl.;Code10;
+                                                   TableRelation="Source Code";
+                                                   CaptionML=[DAN=Overfør afstemning til fin.kld;
+                                                              ENU=Trans. Bank Rec. to Gen. Jnl.] }
+    { 43  ;   ;IC General Journal  ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=IC-finanskladde;
+                                                              ENU=IC General Journal] }
+    { 45  ;   ;Unapplied Sales Entry Appln.;Code10;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Annulleret debitorpostudlign.;
+                                                              ENU=Unapplied Sales Entry Appln.] }
+    { 46  ;   ;Unapplied Purch. Entry Appln.;Code10;
+                                                   TableRelation="Source Code";
+                                                   CaptionML=[DAN=Annulleret kreditorpostudlign.;
+                                                              ENU=Unapplied Purch. Entry Appln.] }
+    { 47  ;   ;Reversal            ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Tilbageførsel;
+                                                              ENU=Reversal] }
+    { 49  ;   ;Payment Reconciliation Journal;Code10;
+                                                   CaptionML=[DAN=Betalingsafstemningskladde;
+                                                              ENU=Payment Reconciliation Journal] }
+    { 840 ;   ;Cash Flow Worksheet ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Pengestrømskladde;
+                                                              ENU=Cash Flow Worksheet] }
+    { 900 ;   ;Assembly            ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Montage;
+                                                              ENU=Assembly] }
+    { 1000;   ;Job G/L Journal     ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Sagsfinanskladde;
+                                                              ENU=Job G/L Journal] }
+    { 1001;   ;Job G/L WIP         ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=VIA - finansafstemning;
+                                                              ENU=Job G/L WIP] }
+    { 1100;   ;G/L Entry to CA     ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Finanspost til CA;
+                                                              ENU=G/L Entry to CA] }
+    { 1102;   ;Cost Journal        ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Omkostningskladde;
+                                                              ENU=Cost Journal] }
+    { 1104;   ;Cost Allocation     ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Omkostningsfordeling;
+                                                              ENU=Cost Allocation] }
+    { 1105;   ;Transfer Budget to Actual;Code10   ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Overfør budget til faktisk;
+                                                              ENU=Transfer Budget to Actual] }
+    { 5400;   ;Consumption Journal ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Forbrugskladde;
+                                                              ENU=Consumption Journal] }
+    { 5402;   ;Output Journal      ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Afgangskladde;
+                                                              ENU=Output Journal] }
+    { 5403;   ;Flushing            ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Træk;
+                                                              ENU=Flushing] }
+    { 5404;   ;Capacity Journal    ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Kapacitetskladde;
+                                                              ENU=Capacity Journal] }
+    { 5500;   ;Production Journal  ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Produktionskladde;
+                                                              ENU=Production Journal] }
+    { 5600;   ;Fixed Asset Journal ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Anlægskladde;
+                                                              ENU=Fixed Asset Journal] }
+    { 5601;   ;Fixed Asset G/L Journal;Code10     ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Anlægsfinanskladde;
+                                                              ENU=Fixed Asset G/L Journal] }
+    { 5602;   ;Insurance Journal   ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Forsikringskladde;
+                                                              ENU=Insurance Journal] }
+    { 5603;   ;Compress FA Ledger  ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer anlægsposter;
+                                                              ENU=Compress FA Ledger] }
+    { 5604;   ;Compress Maintenance Ledger;Code10 ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer reparationsposter;
+                                                              ENU=Compress Maintenance Ledger] }
+    { 5605;   ;Compress Insurance Ledger;Code10   ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer forsikringsposter;
+                                                              ENU=Compress Insurance Ledger] }
+    { 5700;   ;Transfer            ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Overførsel;
+                                                              ENU=Transfer] }
+    { 5800;   ;Revaluation Journal ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Værdireguleringskladde;
+                                                              ENU=Revaluation Journal] }
+    { 5801;   ;Adjust Cost         ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Reguler kostværdi;
+                                                              ENU=Adjust Cost] }
+    { 5900;   ;Service Management  ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Service;
+                                                              ENU=Service Management] }
+    { 7139;   ;Compress Item Budget;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer varebudget;
+                                                              ENU=Compress Item Budget] }
+    { 7300;   ;Whse. Item Journal  ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Lagerkladde;
+                                                              ENU=Whse. Item Journal] }
+    { 7302;   ;Whse. Phys. Invt. Journal;Code10   ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Lagersted - fysisk lagerkladde;
+                                                              ENU=Whse. Phys. Invt. Journal] }
+    { 7303;   ;Whse. Reclassification Journal;Code10;
+                                                   TableRelation="Source Code";
+                                                   CaptionML=[DAN=Lageromposteringskladde;
+                                                              ENU=Whse. Reclassification Journal] }
+    { 7304;   ;Whse. Put-away      ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Læg-på-lager (logistik);
+                                                              ENU=Whse. Put-away] }
+    { 7305;   ;Whse. Pick          ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Pluk (logistik);
+                                                              ENU=Whse. Pick] }
+    { 7306;   ;Whse. Movement      ;Code10        ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Bev. (logistik);
+                                                              ENU=Whse. Movement] }
+    { 7307;   ;Compress Whse. Entries;Code10      ;TableRelation="Source Code";
+                                                   CaptionML=[DAN=Komprimer lagerposter;
+                                                              ENU=Compress Whse. Entries] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,110 @@
+OBJECT Table 1004 Job WIP Entry
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=VIA-post for sag;
+               ENU=Job WIP Entry];
+    LookupPageID=Page1008;
+    DrillDownPageID=Page1008;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;Job No.             ;Code20        ;TableRelation=Job;
+                                                   CaptionML=[DAN=Sagsnr.;
+                                                              ENU=Job No.] }
+    { 3   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+    { 4   ;   ;G/L Account No.     ;Code20        ;TableRelation="G/L Account";
+                                                   CaptionML=[DAN=Finanskontonr.;
+                                                              ENU=G/L Account No.] }
+    { 5   ;   ;WIP Posting Date    ;Date          ;CaptionML=[DAN=VIA-bogføringsdato;
+                                                              ENU=WIP Posting Date] }
+    { 6   ;   ;WIP Entry Amount    ;Decimal       ;CaptionML=[DAN=Bogført VIA-beløb;
+                                                              ENU=WIP Entry Amount];
+                                                   AutoFormatType=1 }
+    { 7   ;   ;Job Posting Group   ;Code10        ;TableRelation="Job Posting Group";
+                                                   CaptionML=[DAN=Sagsbogføringsgruppe;
+                                                              ENU=Job Posting Group] }
+    { 8   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Udlignede omkostninger,Udlignet salg,Realiserede omkostninger,Realiseret salg,Periodiserede omkostninger,Periodiseret salg;
+                                                                    ENU=Applied Costs,Applied Sales,Recognized Costs,Recognized Sales,Accrued Costs,Accrued Sales];
+                                                   OptionString=Applied Costs,Applied Sales,Recognized Costs,Recognized Sales,Accrued Costs,Accrued Sales }
+    { 9   ;   ;G/L Bal. Account No.;Code20        ;TableRelation="G/L Account";
+                                                   CaptionML=[DAN=Modkontonr.;
+                                                              ENU=G/L Bal. Account No.] }
+    { 10  ;   ;WIP Method Used     ;Code20        ;TableRelation="Job WIP Method";
+                                                   CaptionML=[DAN=Anvendt VIA-metode;
+                                                              ENU=WIP Method Used];
+                                                   Editable=No }
+    { 11  ;   ;Job Complete        ;Boolean       ;CaptionML=[DAN=Sagen er afsluttet;
+                                                              ENU=Job Complete] }
+    { 12  ;   ;Job WIP Total Entry No.;Integer    ;TableRelation="Job WIP Total";
+                                                   CaptionML=[DAN=Løbenr. for sags-VIA-total;
+                                                              ENU=Job WIP Total Entry No.] }
+    { 13  ;   ;Reverse             ;Boolean       ;InitValue=Yes;
+                                                   CaptionML=[DAN=Tilbagefør;
+                                                              ENU=Reverse] }
+    { 14  ;   ;WIP Posting Method Used;Option     ;CaptionML=[DAN=Anvendt VIA-bogføringsmetode;
+                                                              ENU=WIP Posting Method Used];
+                                                   OptionCaptionML=[DAN=Pr. sag,Pr. sagspost;
+                                                                    ENU=Per Job,Per Job Ledger Entry];
+                                                   OptionString=Per Job,Per Job Ledger Entry }
+    { 60  ;   ;Global Dimension 1 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+                                                   CaptionML=[DAN=Global dimension 1-kode;
+                                                              ENU=Global Dimension 1 Code];
+                                                   CaptionClass='1,1,1' }
+    { 61  ;   ;Global Dimension 2 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+                                                   CaptionML=[DAN=Global dimension 2-kode;
+                                                              ENU=Global Dimension 2 Code];
+                                                   CaptionClass='1,1,2' }
+    { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   OnLookup=BEGIN
+                                                              ShowDimensions;
+                                                            END;
+
+                                                   CaptionML=[DAN=Dimensionsgruppe-id;
+                                                              ENU=Dimension Set ID];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Job No.,Job Posting Group,WIP Posting Date,Type,Job Complete;
+                                                   SumIndexFields=WIP Entry Amount }
+    {    ;G/L Account No.                          }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      DimMgt@1000 : Codeunit 408;
+
+    PROCEDURE DeleteEntriesForJob@3(Job@1000 : Record 167);
+    BEGIN
+      SETCURRENTKEY("Job No.");
+      SETRANGE("Job No.",Job."No.");
+      IF NOT ISEMPTY THEN
+        DELETEALL(TRUE);
+    END;
+
+    PROCEDURE ShowDimensions@2();
+    BEGIN
+      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2',TABLECAPTION,"Entry No."));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,41 @@
+OBJECT Table 5811 Post Value Entry to G/L
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Bogfør værdi;
+               ENU=Post Value Entry to G/L];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Value Entry No.     ;Integer       ;TableRelation="Value Entry";
+                                                   CaptionML=[DAN=Værdiløbenr.;
+                                                              ENU=Value Entry No.] }
+    { 2   ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   CaptionML=[DAN=Varenr.;
+                                                              ENU=Item No.] }
+    { 3   ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+                                                              ENU=Posting Date] }
+  }
+  KEYS
+  {
+    {    ;Value Entry No.                         ;Clustered=Yes }
+    {    ;Item No.,Posting Date                    }
+    {    ;Item No.                                 }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,385 @@
+OBJECT Table 5771 Warehouse Source Filter
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Lagerkildefilter;
+               ENU=Warehouse Source Filter];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Item No. Filter     ;Code100       ;TableRelation=Item;
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Varenummerfilter;
+                                                              ENU=Item No. Filter] }
+    { 4   ;   ;Variant Code Filter ;Code100       ;TableRelation="Item Variant".Code;
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Variantkodefilter;
+                                                              ENU=Variant Code Filter] }
+    { 5   ;   ;Unit of Measure Filter;Code100     ;TableRelation="Unit of Measure";
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Enhedsfilter;
+                                                              ENU=Unit of Measure Filter] }
+    { 6   ;   ;Sell-to Customer No. Filter;Code100;TableRelation=Customer;
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Kundenummerfilter;
+                                                              ENU=Sell-to Customer No. Filter] }
+    { 7   ;   ;Buy-from Vendor No. Filter;Code100 ;TableRelation=Vendor;
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Leverandørnummerfilter;
+                                                              ENU=Buy-from Vendor No. Filter] }
+    { 8   ;   ;Customer No. Filter ;Code100       ;TableRelation=Customer;
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Debitornr.filter;
+                                                              ENU=Customer No. Filter] }
+    { 10  ;   ;Planned Delivery Date Filter;Date  ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Planlagt leveringsdatofilter;
+                                                              ENU=Planned Delivery Date Filter] }
+    { 11  ;   ;Shipment Method Code Filter;Code100;TableRelation="Shipment Method";
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Leveringskodefilter;
+                                                              ENU=Shipment Method Code Filter] }
+    { 12  ;   ;Shipping Agent Code Filter;Code100 ;TableRelation="Shipping Agent";
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Speditørkodefilter;
+                                                              ENU=Shipping Agent Code Filter] }
+    { 13  ;   ;Shipping Advice Filter;Code100     ;CaptionML=[DAN=Afsendelsesadvisfilter;
+                                                              ENU=Shipping Advice Filter] }
+    { 15  ;   ;Do Not Fill Qty. to Handle;Boolean ;CaptionML=[DAN=Udfyld ikke håndteringsantal;
+                                                              ENU=Do Not Fill Qty. to Handle] }
+    { 16  ;   ;Show Filter Request ;Boolean       ;CaptionML=[DAN=Vis filterforespørgsel;
+                                                              ENU=Show Filter Request] }
+    { 17  ;   ;Shipping Agent Service Filter;Code100;
+                                                   TableRelation="Shipping Agent Services".Code;
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Speditørservicefilter;
+                                                              ENU=Shipping Agent Service Filter] }
+    { 18  ;   ;In-Transit Code Filter;Code100     ;TableRelation=Location WHERE (Use As In-Transit=CONST(Yes));
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Transitkodefilter;
+                                                              ENU=In-Transit Code Filter] }
+    { 19  ;   ;Transfer-from Code Filter;Code100  ;TableRelation=Location WHERE (Use As In-Transit=CONST(No));
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Overflyt fra-kode-filter;
+                                                              ENU=Transfer-from Code Filter] }
+    { 20  ;   ;Transfer-to Code Filter;Code100    ;TableRelation=Location WHERE (Use As In-Transit=CONST(No));
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Overflyt til-kode-filter;
+                                                              ENU=Transfer-to Code Filter] }
+    { 21  ;   ;Planned Shipment Date Filter;Date  ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Filter for plan. afsend.dato;
+                                                              ENU=Planned Shipment Date Filter] }
+    { 22  ;   ;Planned Receipt Date Filter;Date   ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Filter for plan. modt.dato;
+                                                              ENU=Planned Receipt Date Filter] }
+    { 23  ;   ;Expected Receipt Date Filter;Date  ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Filter for forven. modt.dato;
+                                                              ENU=Expected Receipt Date Filter] }
+    { 24  ;   ;Shipment Date Filter;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Afsendelsesdatofilter;
+                                                              ENU=Shipment Date Filter] }
+    { 25  ;   ;Receipt Date Filter ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Modt.datofilter;
+                                                              ENU=Receipt Date Filter] }
+    { 28  ;   ;Sales Shipment Date Filter;Date    ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Salg - leveringsdatofilter;
+                                                              ENU=Sales Shipment Date Filter] }
+    { 98  ;   ;Source No. Filter   ;Code100       ;CaptionML=[DAN=Kildenummerfilter;
+                                                              ENU=Source No. Filter] }
+    { 99  ;   ;Source Document     ;Code250       ;CaptionML=[DAN=Kildedokument;
+                                                              ENU=Source Document] }
+    { 100 ;   ;Type                ;Option        ;OnValidate=BEGIN
+                                                                IF Type = Type::Inbound THEN BEGIN
+                                                                  "Sales Orders" := FALSE;
+                                                                  "Purchase Return Orders" := FALSE;
+                                                                  "Outbound Transfers" := FALSE;
+                                                                  "Service Orders" := FALSE;
+                                                                END ELSE BEGIN
+                                                                  "Purchase Orders" := FALSE;
+                                                                  "Sales Return Orders" := FALSE;
+                                                                  "Inbound Transfers" := FALSE;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Indgående,Udgående;
+                                                                    ENU=Inbound,Outbound];
+                                                   OptionString=Inbound,Outbound }
+    { 101 ;   ;Sales Orders        ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF Type = Type::Outbound THEN
+                                                                  CheckOutboundSourceDocumentChosen;
+                                                              END;
+
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Salgsordrer;
+                                                              ENU=Sales Orders] }
+    { 102 ;   ;Sales Return Orders ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF Type = Type::Inbound THEN
+                                                                  CheckInboundSourceDocumentChosen;
+                                                              END;
+
+                                                   AccessByPermission=TableData 6660=R;
+                                                   CaptionML=[DAN=Salgsreturvareordrer;
+                                                              ENU=Sales Return Orders] }
+    { 103 ;   ;Purchase Orders     ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF Type = Type::Inbound THEN
+                                                                  CheckInboundSourceDocumentChosen;
+                                                              END;
+
+                                                   AccessByPermission=TableData 120=R;
+                                                   CaptionML=[DAN=Købsordrer;
+                                                              ENU=Purchase Orders] }
+    { 104 ;   ;Purchase Return Orders;Boolean     ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF Type = Type::Outbound THEN
+                                                                  CheckOutboundSourceDocumentChosen;
+                                                              END;
+
+                                                   AccessByPermission=TableData 6650=R;
+                                                   CaptionML=[DAN=Købsreturvareordrer;
+                                                              ENU=Purchase Return Orders] }
+    { 105 ;   ;Inbound Transfers   ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF Type = Type::Inbound THEN
+                                                                  CheckInboundSourceDocumentChosen;
+                                                              END;
+
+                                                   AccessByPermission=TableData 5740=R;
+                                                   CaptionML=[DAN=Indgående overflytn.;
+                                                              ENU=Inbound Transfers] }
+    { 106 ;   ;Outbound Transfers  ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF Type = Type::Outbound THEN
+                                                                  CheckOutboundSourceDocumentChosen;
+                                                              END;
+
+                                                   AccessByPermission=TableData 5740=R;
+                                                   CaptionML=[DAN=Udgående overflytn.;
+                                                              ENU=Outbound Transfers] }
+    { 108 ;   ;Partial             ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF NOT Partial AND NOT Complete THEN
+                                                                  ERROR(Text000,FIELDCAPTION("Shipping Advice Filter"));
+                                                              END;
+
+                                                   CaptionML=[DAN=Delvis;
+                                                              ENU=Partial] }
+    { 109 ;   ;Complete            ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF NOT Partial AND NOT Complete THEN
+                                                                  ERROR(Text000,FIELDCAPTION("Shipping Advice Filter"));
+                                                              END;
+
+                                                   CaptionML=[DAN=Afsluttet;
+                                                              ENU=Complete] }
+    { 110 ;   ;Service Orders      ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                IF Type = Type::Outbound THEN
+                                                                  CheckOutboundSourceDocumentChosen;
+                                                              END;
+
+                                                   CaptionML=[DAN=Serviceordrer;
+                                                              ENU=Service Orders] }
+    { 7300;   ;Planned Delivery Date;Text250      ;CaptionML=[DAN=Planlagt leveringsdato;
+                                                              ENU=Planned Delivery Date] }
+    { 7301;   ;Planned Shipment Date;Text250      ;CaptionML=[DAN=Planlagt afsendelsesdato;
+                                                              ENU=Planned Shipment Date] }
+    { 7302;   ;Planned Receipt Date;Text250       ;CaptionML=[DAN=Planlagt modtagelsesdato;
+                                                              ENU=Planned Receipt Date] }
+    { 7303;   ;Expected Receipt Date;Text250      ;CaptionML=[DAN=Forventet modt.dato;
+                                                              ENU=Expected Receipt Date] }
+    { 7304;   ;Shipment Date       ;Text250       ;CaptionML=[DAN=Afsendelsesdato;
+                                                              ENU=Shipment Date] }
+    { 7305;   ;Receipt Date        ;Text250       ;CaptionML=[DAN=Modtagelsesdato;
+                                                              ENU=Receipt Date] }
+    { 7306;   ;Sales Shipment Date ;Text250       ;CaptionML=[DAN=Salgsleveringsdato;
+                                                              ENU=Sales Shipment Date] }
+  }
+  KEYS
+  {
+    {    ;Type,Code                               ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'DAN=%1 skal vælges.;ENU=%1 must be chosen.';
+
+    PROCEDURE SetFilters@1(VAR GetSourceBatch@1000 : Report 5753;LocationCode@1001 : Code[10]);
+    VAR
+      WhseRequest@1002 : Record 5765;
+      SalesLine@1004 : Record 37;
+      PurchLine@1006 : Record 39;
+      TransLine@1008 : Record 5741;
+      SalesHeader@1003 : Record 36;
+      ServiceHeader@1005 : Record 5900;
+      ServiceLine@1007 : Record 5902;
+    BEGIN
+      "Source Document" := '';
+
+      IF "Sales Orders" THEN BEGIN
+        WhseRequest."Source Document" := WhseRequest."Source Document"::"Sales Order";
+        AddFilter("Source Document",FORMAT(WhseRequest."Source Document"));
+      END;
+
+      IF "Service Orders" THEN BEGIN
+        WhseRequest."Source Document" := WhseRequest."Source Document"::"Service Order";
+        AddFilter("Source Document",FORMAT(WhseRequest."Source Document"));
+      END;
+
+      IF "Sales Return Orders" THEN BEGIN
+        WhseRequest."Source Document" := WhseRequest."Source Document"::"Sales Return Order";
+        AddFilter("Source Document",FORMAT(WhseRequest."Source Document"));
+      END;
+
+      IF "Outbound Transfers" THEN BEGIN
+        WhseRequest."Source Document" := WhseRequest."Source Document"::"Outbound Transfer";
+        AddFilter("Source Document",FORMAT(WhseRequest."Source Document"));
+      END;
+
+      IF "Purchase Orders" THEN BEGIN
+        WhseRequest."Source Document" := WhseRequest."Source Document"::"Purchase Order";
+        AddFilter("Source Document",FORMAT(WhseRequest."Source Document"));
+      END;
+
+      IF "Purchase Return Orders" THEN BEGIN
+        WhseRequest."Source Document" := WhseRequest."Source Document"::"Purchase Return Order";
+        AddFilter("Source Document",FORMAT(WhseRequest."Source Document"));
+      END;
+
+      IF "Inbound Transfers" THEN BEGIN
+        WhseRequest."Source Document" := WhseRequest."Source Document"::"Inbound Transfer";
+        AddFilter("Source Document",FORMAT(WhseRequest."Source Document"));
+      END;
+
+      IF "Source Document" = '' THEN
+        ERROR(Text000,FIELDCAPTION("Source Document"));
+
+      WhseRequest.SETFILTER("Source Document","Source Document");
+
+      WhseRequest.SETFILTER("Source No.","Source No. Filter");
+      WhseRequest.SETFILTER("Shipment Method Code","Shipment Method Code Filter");
+
+      "Shipping Advice Filter" := '';
+
+      IF Partial THEN BEGIN
+        WhseRequest."Shipping Advice" := WhseRequest."Shipping Advice"::Partial;
+        AddFilter("Shipping Advice Filter",FORMAT(WhseRequest."Shipping Advice"));
+      END;
+
+      IF Complete THEN BEGIN
+        WhseRequest."Shipping Advice" := WhseRequest."Shipping Advice"::Complete;
+        AddFilter("Shipping Advice Filter",FORMAT(WhseRequest."Shipping Advice"));
+      END;
+
+      WhseRequest.SETFILTER("Shipping Advice","Shipping Advice Filter");
+      WhseRequest.SETRANGE("Location Code",LocationCode);
+
+      SalesLine.SETFILTER("No.","Item No. Filter");
+      SalesLine.SETFILTER("Variant Code","Variant Code Filter");
+      SalesLine.SETFILTER("Unit of Measure Code","Unit of Measure Filter");
+
+      ServiceLine.SETRANGE(Type,ServiceLine.Type::Item);
+      ServiceLine.SETFILTER("No.","Item No. Filter");
+      ServiceLine.SETFILTER("Variant Code","Variant Code Filter");
+      ServiceLine.SETFILTER("Unit of Measure Code","Unit of Measure Filter");
+
+      PurchLine.SETFILTER("No.","Item No. Filter");
+      PurchLine.SETFILTER("Variant Code","Variant Code Filter");
+      PurchLine.SETFILTER("Unit of Measure Code","Unit of Measure Filter");
+
+      TransLine.SETFILTER("Item No.","Item No. Filter");
+      TransLine.SETFILTER("Variant Code","Variant Code Filter");
+      TransLine.SETFILTER("Unit of Measure Code","Unit of Measure Filter");
+
+      SalesHeader.SETFILTER("Sell-to Customer No.","Sell-to Customer No. Filter");
+      SalesLine.SETFILTER("Planned Delivery Date","Planned Delivery Date");
+      SalesLine.SETFILTER("Planned Shipment Date","Planned Shipment Date");
+      SalesLine.SETFILTER("Shipment Date","Sales Shipment Date");
+
+      ServiceHeader.SETFILTER("Customer No.","Customer No. Filter");
+
+      ServiceLine.SETFILTER("Planned Delivery Date","Planned Delivery Date");
+
+      PurchLine.SETFILTER("Buy-from Vendor No.","Buy-from Vendor No. Filter");
+      PurchLine.SETFILTER("Expected Receipt Date","Expected Receipt Date");
+      PurchLine.SETFILTER("Planned Receipt Date","Planned Receipt Date");
+
+      TransLine.SETFILTER("In-Transit Code","In-Transit Code Filter");
+      TransLine.SETFILTER("Transfer-from Code","Transfer-from Code Filter");
+      TransLine.SETFILTER("Transfer-to Code","Transfer-to Code Filter");
+      TransLine.SETFILTER("Shipment Date","Shipment Date");
+      TransLine.SETFILTER("Receipt Date","Receipt Date");
+
+      SalesLine.SETFILTER("Shipping Agent Code","Shipping Agent Code Filter");
+      SalesLine.SETFILTER("Shipping Agent Service Code","Shipping Agent Service Filter");
+
+      ServiceLine.SETFILTER("Shipping Agent Code","Shipping Agent Code Filter");
+      ServiceLine.SETFILTER("Shipping Agent Service Code","Shipping Agent Service Filter");
+
+      TransLine.SETFILTER("Shipping Agent Code","Shipping Agent Code Filter");
+      TransLine.SETFILTER("Shipping Agent Service Code","Shipping Agent Service Filter");
+
+      GetSourceBatch.SETTABLEVIEW(WhseRequest);
+      GetSourceBatch.SETTABLEVIEW(SalesHeader);
+      GetSourceBatch.SETTABLEVIEW(SalesLine);
+      GetSourceBatch.SETTABLEVIEW(PurchLine);
+      GetSourceBatch.SETTABLEVIEW(TransLine);
+      GetSourceBatch.SETTABLEVIEW(ServiceHeader);
+      GetSourceBatch.SETTABLEVIEW(ServiceLine);
+      GetSourceBatch.SetDoNotFillQtytoHandle("Do Not Fill Qty. to Handle");
+    END;
+
+    LOCAL PROCEDURE AddFilter@2(VAR CodeField@1000 : Code[250];NewFilter@1001 : Text[100]);
+    BEGIN
+      IF CodeField = '' THEN
+        CodeField := NewFilter
+      ELSE
+        CodeField := CodeField + '|' + NewFilter;
+    END;
+
+    LOCAL PROCEDURE CheckInboundSourceDocumentChosen@3();
+    BEGIN
+      IF NOT ("Sales Return Orders" OR "Purchase Orders" OR "Inbound Transfers") THEN
+        ERROR(Text000,FIELDCAPTION("Source Document"));
+    END;
+
+    LOCAL PROCEDURE CheckOutboundSourceDocumentChosen@5();
+    BEGIN
+      IF NOT ("Sales Orders" OR "Purchase Return Orders" OR "Outbound Transfers" OR "Service Orders") THEN
+        ERROR(Text000,FIELDCAPTION("Source Document"));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

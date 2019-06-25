@@ -1,0 +1,77 @@
+OBJECT Table 5905 Service Cost
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    OnDelete=BEGIN
+               MoveEntries.MoveServiceCostLedgerEntries(Rec);
+             END;
+
+    CaptionML=[DAN=Serviceomkostninger;
+               ENU=Service Cost];
+    LookupPageID=Page5910;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Account No.         ;Code20        ;TableRelation="G/L Account";
+                                                   CaptionML=[DAN=Kontonr.;
+                                                              ENU=Account No.] }
+    { 4   ;   ;Default Unit Price  ;Decimal       ;CaptionML=[DAN=Standardenhedspris;
+                                                              ENU=Default Unit Price];
+                                                   AutoFormatType=2 }
+    { 5   ;   ;Default Quantity    ;Decimal       ;CaptionML=[DAN=Standardantal;
+                                                              ENU=Default Quantity];
+                                                   DecimalPlaces=0:5 }
+    { 6   ;   ;Unit of Measure Code;Code10        ;TableRelation="Unit of Measure";
+                                                   CaptionML=[DAN=Enhedskode;
+                                                              ENU=Unit of Measure Code] }
+    { 7   ;   ;Cost Type           ;Option        ;OnValidate=BEGIN
+                                                                VALIDATE("Service Zone Code");
+                                                              END;
+
+                                                   CaptionML=[DAN=Pristype;
+                                                              ENU=Cost Type];
+                                                   OptionCaptionML=[DAN=Rejse,Support,Andet;
+                                                                    ENU=Travel,Support,Other];
+                                                   OptionString=Travel,Support,Other }
+    { 8   ;   ;Service Zone Code   ;Code10        ;TableRelation="Service Zone";
+                                                   OnValidate=BEGIN
+                                                                IF "Service Zone Code" <> '' THEN
+                                                                  TESTFIELD("Cost Type","Cost Type"::Travel);
+                                                              END;
+
+                                                   CaptionML=[DAN=Servicezonekode;
+                                                              ENU=Service Zone Code] }
+    { 9   ;   ;Default Unit Cost   ;Decimal       ;CaptionML=[DAN=Standardkostpris;
+                                                              ENU=Default Unit Cost];
+                                                   AutoFormatType=2 }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+    {    ;Service Zone Code                        }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Description,Cost Type,Default Unit Price }
+  }
+  CODE
+  {
+    VAR
+      MoveEntries@1000 : Codeunit 361;
+
+    BEGIN
+    END.
+  }
+}
+

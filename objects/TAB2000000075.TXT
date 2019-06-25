@@ -1,0 +1,57 @@
+OBJECT Table 2000000075 User Metadata
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Bruger-metadata;
+               ENU=User Metadata];
+  }
+  FIELDS
+  {
+    { 3   ;   ;User SID            ;GUID          ;TableRelation=User."User Security ID";
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Bruger-SID;
+                                                              ENU=User SID] }
+    { 6   ;   ;User ID             ;Code50        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(User."User Name" WHERE (User Security ID=FIELD(User SID)));
+                                                   CaptionML=[DAN=Bruger-id;
+                                                              ENU=User ID] }
+    { 9   ;   ;Page ID             ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Page));
+                                                   CaptionML=[DAN=Side-id;
+                                                              ENU=Page ID] }
+    { 12  ;   ;Description         ;Text250       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Page),
+                                                                                                                Object ID=FIELD(Page ID)));
+                                                   CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 15  ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 18  ;   ;Time                ;Time          ;CaptionML=[DAN=Tidspunkt;
+                                                              ENU=Time] }
+    { 21  ;   ;Personalization ID  ;Code40        ;CaptionML=[DAN=Tilpasnings-id;
+                                                              ENU=Personalization ID] }
+    { 24  ;   ;Page Metadata Delta ;BLOB          ;CaptionML=[DAN=Metadata-delta for side;
+                                                              ENU=Page Metadata Delta] }
+  }
+  KEYS
+  {
+    {    ;User SID,Page ID,Personalization ID     ;Clustered=Yes }
+    {    ;Date                                     }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

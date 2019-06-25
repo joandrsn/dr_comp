@@ -1,0 +1,41 @@
+OBJECT Table 99000782 Standard Task Personnel
+{
+  OBJECT-PROPERTIES
+  {
+    Date=05-11-08;
+    Time=12:00:00;
+    Version List=NAVW16.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Std.operation - medarb.;
+               ENU=Standard Task Personnel];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Standard Task Code  ;Code10        ;TableRelation="Standard Task";
+                                                   CaptionML=[DAN=Standardoperationskode;
+                                                              ENU=Standard Task Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 4   ;   ;No.                 ;Code20        ;CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 5   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+  }
+  KEYS
+  {
+    {    ;Standard Task Code,Line No.             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

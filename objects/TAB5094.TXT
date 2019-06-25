@@ -1,0 +1,49 @@
+OBJECT Table 5094 Close Opportunity Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26-11-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.43897;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    CaptionML=[DAN=Salgsmulighed - lukkekode;
+               ENU=Close Opportunity Code];
+    LookupPageID=Page5133;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;No. of Opportunities;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Opportunity Entry" WHERE (Close Opportunity Code=FIELD(Code)));
+                                                   CaptionML=[DAN=Antal salgsmuligheder;
+                                                              ENU=No. of Opportunities];
+                                                   Editable=No }
+    { 4   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Vundet,Tabt;
+                                                                    ENU=Won,Lost];
+                                                   OptionString=Won,Lost }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Description,Type                    }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,54 @@
+OBJECT Table 5336 Integration Field Mapping
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Integrationsfelttilkobling;
+               ENU=Integration Field Mapping];
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 2   ;   ;Integration Table Mapping Name;Code20;
+                                                   TableRelation="Integration Table Mapping".Name;
+                                                   CaptionML=[DAN=Integrationstabelkoblingsnavn;
+                                                              ENU=Integration Table Mapping Name] }
+    { 3   ;   ;Field No.           ;Integer       ;CaptionML=[DAN=Feltnr.;
+                                                              ENU=Field No.] }
+    { 4   ;   ;Integration Table Field No.;Integer;CaptionML=[DAN=Feltnr. til integrationstabel;
+                                                              ENU=Integration Table Field No.] }
+    { 6   ;   ;Direction           ;Option        ;CaptionML=[DAN=Retning;
+                                                              ENU=Direction];
+                                                   OptionCaptionML=[DAN=Begge retninger,TilIntegrationstabel,FraIntegrationstabel;
+                                                                    ENU=Bidirectional,ToIntegrationTable,FromIntegrationTable];
+                                                   OptionString=Bidirectional,ToIntegrationTable,FromIntegrationTable }
+    { 7   ;   ;Constant Value      ;Text100       ;CaptionML=[DAN=Konstant værdi;
+                                                              ENU=Constant Value] }
+    { 8   ;   ;Validate Field      ;Boolean       ;CaptionML=[DAN=Valider felt;
+                                                              ENU=Validate Field] }
+    { 9   ;   ;Validate Integration Table Fld;Boolean;
+                                                   CaptionML=[DAN=Valider felt for integrationstabel;
+                                                              ENU=Validate Integration Table Fld] }
+  }
+  KEYS
+  {
+    {    ;No.                                     ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

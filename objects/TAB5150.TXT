@@ -1,0 +1,47 @@
+OBJECT Table 5150 Integration Page
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02-12-10;
+    Time=12:00:00;
+    Version List=NAVW16.00.10;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Integrationsside;
+               ENU=Integration Page];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Service Name        ;Text240       ;TableRelation="Web Service"."Service Name" WHERE (Object Type=CONST(Page));
+                                                   CaptionML=[DAN=Servicenavn;
+                                                              ENU=Service Name] }
+    { 2   ;   ;Page ID             ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Web Service"."Object ID" WHERE (Object Type=CONST(Page),
+                                                                                                       Service Name=FIELD(Service Name)));
+                                                   CaptionML=[DAN=Side-id;
+                                                              ENU=Page ID] }
+    { 3   ;   ;Source Table ID     ;Integer       ;CaptionML=[DAN=Kildetabel-id;
+                                                              ENU=Source Table ID] }
+    { 4   ;   ;Published           ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("Web Service" WHERE (Service Name=FIELD(Service Name),
+                                                                                          Published=CONST(Yes)));
+                                                   CaptionML=[DAN=Publiceret;
+                                                              ENU=Published] }
+  }
+  KEYS
+  {
+    {    ;Service Name                            ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

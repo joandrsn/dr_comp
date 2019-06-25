@@ -1,0 +1,60 @@
+OBJECT Table 2000000160 NAV App
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=NAV-app;
+               ENU=NAV App];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Package ID          ;GUID          ;CaptionML=[DAN=Pakke-id;
+                                                              ENU=Package ID] }
+    { 2   ;   ;ID                  ;GUID          ;CaptionML=[DAN=Id;
+                                                              ENU=ID] }
+    { 3   ;   ;Name                ;Text250       ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 4   ;   ;Publisher           ;Text250       ;CaptionML=[DAN=Udgiver;
+                                                              ENU=Publisher] }
+    { 5   ;   ;Version Major       ;Integer       ;CaptionML=[DAN=Overordnet version;
+                                                              ENU=Version Major] }
+    { 6   ;   ;Version Minor       ;Integer       ;CaptionML=[DAN=Underordnet version;
+                                                              ENU=Version Minor] }
+    { 7   ;   ;Version Build       ;Integer       ;CaptionML=[DAN=Versionsbuild;
+                                                              ENU=Version Build] }
+    { 8   ;   ;Version Revision    ;Integer       ;CaptionML=[DAN=Versionsrevision;
+                                                              ENU=Version Revision] }
+    { 9   ;   ;Compatibility Major ;Integer       ;CaptionML=[DAN=Overordnet kompatibilitet;
+                                                              ENU=Compatibility Major] }
+    { 10  ;   ;Compatibility Minor ;Integer       ;CaptionML=[DAN=Underordnet kompatibilitet;
+                                                              ENU=Compatibility Minor] }
+    { 11  ;   ;Compatibility Build ;Integer       ;CaptionML=[DAN=Kompatibilitetsbuild;
+                                                              ENU=Compatibility Build] }
+    { 12  ;   ;Compatibility Revision;Integer     ;CaptionML=[DAN=Kompatibilitetsrevision;
+                                                              ENU=Compatibility Revision] }
+    { 13  ;   ;Description         ;BLOB          ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 14  ;   ;Blob                ;BLOB          ;CaptionML=[DAN=Blob;
+                                                              ENU=Blob] }
+  }
+  KEYS
+  {
+    {    ;Package ID                              ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

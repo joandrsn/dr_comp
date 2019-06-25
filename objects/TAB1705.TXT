@@ -1,0 +1,71 @@
+OBJECT Table 1705 Posted Deferral Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Bogført periodiseringslinje;
+               ENU=Posted Deferral Line];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Deferral Doc. Type  ;Option        ;TableRelation="Posted Deferral Header"."Deferral Doc. Type";
+                                                   CaptionML=[DAN=Periodiseringsdok.type;
+                                                              ENU=Deferral Doc. Type];
+                                                   OptionCaptionML=[DAN=Køb,Salg,Finans;
+                                                                    ENU=Purchase,Sales,G/L];
+                                                   OptionString=Purchase,Sales,G/L }
+    { 2   ;   ;Gen. Jnl. Document No.;Code20      ;TableRelation="Posted Deferral Header"."Gen. Jnl. Document No.";
+                                                   CaptionML=[DAN=Finansbilagsnr.;
+                                                              ENU=Gen. Jnl. Document No.] }
+    { 3   ;   ;Account No.         ;Code20        ;TableRelation="Posted Deferral Header"."Account No.";
+                                                   CaptionML=[DAN=Kontonr.;
+                                                              ENU=Account No.] }
+    { 4   ;   ;Document Type       ;Integer       ;TableRelation="Posted Deferral Header"."Document Type";
+                                                   CaptionML=[DAN=Bilagstype;
+                                                              ENU=Document Type] }
+    { 5   ;   ;Document No.        ;Code20        ;TableRelation="Posted Deferral Header"."Document No.";
+                                                   CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+    { 6   ;   ;Line No.            ;Integer       ;TableRelation="Posted Deferral Header"."Line No.";
+                                                   CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 7   ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+                                                              ENU=Posting Date] }
+    { 8   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 9   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount];
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+    { 10  ;   ;Amount (LCY)        ;Decimal       ;CaptionML=[DAN=Beløb (RV);
+                                                              ENU=Amount (LCY)];
+                                                   AutoFormatType=1 }
+    { 11  ;   ;Currency Code       ;Code10        ;CaptionML=[DAN=Valutakode;
+                                                              ENU=Currency Code] }
+    { 12  ;   ;Deferral Account    ;Code20        ;TableRelation="G/L Account" WHERE (Account Type=CONST(Posting),
+                                                                                      Blocked=CONST(No));
+                                                   CaptionML=[DAN=Periodiseringskonto;
+                                                              ENU=Deferral Account];
+                                                   NotBlank=Yes }
+  }
+  KEYS
+  {
+    {    ;Deferral Doc. Type,Gen. Jnl. Document No.,Account No.,Document Type,Document No.,Line No.,Posting Date;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

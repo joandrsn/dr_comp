@@ -1,0 +1,64 @@
+OBJECT Table 2000000073 User Personalization
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Brugertilpasning;
+               ENU=User Personalization];
+  }
+  FIELDS
+  {
+    { 3   ;   ;User SID            ;GUID          ;TableRelation=User."User Security ID";
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Bruger-SID;
+                                                              ENU=User SID] }
+    { 6   ;   ;User ID             ;Code50        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(User."User Name" WHERE (User Security ID=FIELD(User SID)));
+                                                   CaptionML=[DAN=Bruger-id;
+                                                              ENU=User ID] }
+    { 9   ;   ;Profile ID          ;Code30        ;TableRelation=Profile."Profile ID";
+                                                   CaptionML=[DAN=Profil-id;
+                                                              ENU=Profile ID] }
+    { 12  ;   ;Language ID         ;Integer       ;CaptionML=[DAN=Sprog-id;
+                                                              ENU=Language ID] }
+    { 15  ;   ;Company             ;Text30        ;TableRelation=Company.Name;
+                                                   CaptionML=[DAN=Virksomhed;
+                                                              ENU=Company] }
+    { 18  ;   ;Debugger Break On Error;Boolean    ;InitValue=Yes;
+                                                   CaptionML=[DAN=Debugger stopper ved fejl;
+                                                              ENU=Debugger Break On Error] }
+    { 21  ;   ;Debugger Break On Rec Changes;Boolean;
+                                                   CaptionML=[DAN=Debugger stopper ved postændringer;
+                                                              ENU=Debugger Break On Rec Changes] }
+    { 24  ;   ;Debugger Skip System Triggers;Boolean;
+                                                   InitValue=Yes;
+                                                   CaptionML=[DAN=Debugger springer over systemudløsere;
+                                                              ENU=Debugger Skip System Triggers] }
+    { 27  ;   ;Locale ID           ;Integer       ;CaptionML=[DAN=Landestandard-id;
+                                                              ENU=Locale ID] }
+    { 30  ;   ;Time Zone           ;Text180       ;CaptionML=[DAN=Tidszone;
+                                                              ENU=Time Zone] }
+  }
+  KEYS
+  {
+    {    ;User SID                                ;Clustered=Yes }
+    {    ;Profile ID                               }
+    {    ;Company                                  }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

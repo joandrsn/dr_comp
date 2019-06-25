@@ -1,0 +1,57 @@
+OBJECT Table 856 Cash Flow Report Selection
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Pengestrømsrapportvalg;
+               ENU=Cash Flow Report Selection];
+  }
+  FIELDS
+  {
+    { 2   ;   ;Sequence            ;Code10        ;CaptionML=[DAN=Rækkefølge;
+                                                              ENU=Sequence];
+                                                   Numeric=Yes }
+    { 3   ;   ;Report ID           ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Report));
+                                                   OnValidate=BEGIN
+                                                                CALCFIELDS("Report Caption");
+                                                              END;
+
+                                                   CaptionML=[DAN=Rapport-id;
+                                                              ENU=Report ID] }
+    { 4   ;   ;Report Caption      ;Text250       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Report),
+                                                                                                                Object ID=FIELD(Report ID)));
+                                                   CaptionML=[DAN=Rapportoverskrift;
+                                                              ENU=Report Caption];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Sequence                                ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      CashFlowReportSelection@1000 : Record 856;
+
+    PROCEDURE NewRecord@1000();
+    BEGIN
+      IF CashFlowReportSelection.FINDLAST AND (CashFlowReportSelection.Sequence <> '') THEN
+        Sequence := INCSTR(CashFlowReportSelection.Sequence)
+      ELSE
+        Sequence := '1';
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

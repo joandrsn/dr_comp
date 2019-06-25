@@ -1,0 +1,43 @@
+OBJECT Table 957 Time Sheet Cmt. Line Archive
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Arkiv for timesiddelbemærkningslinje;
+               ENU=Time Sheet Cmt. Line Archive];
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 2   ;   ;Time Sheet Line No. ;Integer       ;CaptionML=[DAN=Timeseddellinjenr.;
+                                                              ENU=Time Sheet Line No.] }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 4   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 5   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 6   ;   ;Comment             ;Text80        ;CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment] }
+  }
+  KEYS
+  {
+    {    ;No.,Time Sheet Line No.,Line No.        ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

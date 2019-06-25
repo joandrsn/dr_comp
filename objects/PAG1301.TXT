@@ -1,0 +1,473 @@
+OBJECT Page 1301 Mini Customer List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Kundeliste (Debitorer);
+               ENU=Customer List];
+    SourceTable=Table18;
+    PageType=List;
+    CardPageID=Mini Customer Card;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Nyt dokument,Stamdata,Historik,Priser og rabatter;
+                                ENU=New,Process,Report,New Document,Master Data,History,Prices and Discounts];
+    OnOpenPage=VAR
+                 CRMIntegrationManagement@1000 : Codeunit 5330;
+               BEGIN
+                 SETRANGE("Date Filter",0D,WORKDATE);
+                 CRMIntegrationEnabled := CRMIntegrationManagement.IsCRMIntegrationEnabled;
+               END;
+
+    OnAfterGetCurrRecord=VAR
+                           CRMCouplingManagement@1001 : Codeunit 5331;
+                         BEGIN
+                           CRMIsCoupledToRecord :=
+                             CRMCouplingManagement.IsRecordCoupledToCRM(RECORDID) AND CRMIntegrationEnabled;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 17      ;0   ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 13      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Nyt bilag;
+                                 ENU=New Document] }
+      { 1906384905;2 ;Action    ;
+                      Name=NewSalesInvoice;
+                      CaptionML=[DAN=Salgsfaktura;
+                                 ENU=Sales Invoice];
+                      ToolTipML=[DAN=Opret en faktura til den valgte debitor.;
+                                 ENU=Create an invoice for the selected customer.];
+                      Promoted=Yes;
+                      Image=Invoice;
+                      PromotedCategory=Category4;
+                      RunPageMode=Create;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 CreateAndShowNewInvoice;
+                               END;
+                                }
+      { 14      ;2   ;Action    ;
+                      Name=NewSalesQuote;
+                      CaptionML=[DAN=Salgstilbud;
+                                 ENU=Sales Quote];
+                      ToolTipML=[DAN=Opret et tilbud til kunden.;
+                                 ENU=Create a quote for the customer.];
+                      Promoted=Yes;
+                      Image=Quote;
+                      PromotedCategory=Category4;
+                      RunPageMode=Create;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 CreateAndShowNewQuote;
+                               END;
+                                }
+      { 1902583505;2 ;Action    ;
+                      Name=NewSalesCreditMemo;
+                      CaptionML=[DAN=Salgskreditnota;
+                                 ENU=Sales Credit Memo];
+                      ToolTipML=[DAN=Opret en kreditnota til den valgte debitor.;
+                                 ENU=Create a credit memo for the selected customer.];
+                      Promoted=Yes;
+                      Image=CreditMemo;
+                      PromotedCategory=Category4;
+                      RunPageMode=Create;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 CreateAndShowNewCreditMemo;
+                               END;
+                                }
+      { 35      ;1   ;ActionGroup;
+                      Name=ActionGroupCRM;
+                      CaptionML=[DAN=Dynamics CRM;
+                                 ENU=Dynamics CRM];
+                      Visible=CRMIntegrationEnabled }
+      { 33      ;2   ;Action    ;
+                      Name=CRMGotoAccount;
+                      CaptionML=[DAN=Konto;
+                                 ENU=Account];
+                      ToolTipML=[DAN=Åbn den sammenkædede Microsoft Dynamics CRM-konto.;
+                                 ENU=Open the coupled Microsoft Dynamics CRM account.];
+                      Image=CoupledCustomer;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.ShowCRMEntityFromRecordID(RECORDID);
+                               END;
+                                }
+      { 30      ;2   ;Action    ;
+                      Name=CRMSynchronizeNow;
+                      CaptionML=[DAN=Synkroniser nu;
+                                 ENU=Synchronize Now];
+                      ToolTipML=[DAN=Send eller hent opdaterede data til eller fra Microsoft Dynamics CRM.;
+                                 ENU=Send or get updated data to or from Microsoft Dynamics CRM.];
+                      Image=Refresh;
+                      OnAction=VAR
+                                 Customer@1000 : Record 18;
+                                 CRMIntegrationManagement@1001 : Codeunit 5330;
+                                 CustomerRecordRef@1002 : RecordRef;
+                               BEGIN
+                                 CurrPage.SETSELECTIONFILTER(Customer);
+                                 Customer.NEXT;
+
+                                 IF Customer.COUNT = 1 THEN
+                                   CRMIntegrationManagement.UpdateOneNow(Customer.RECORDID)
+                                 ELSE BEGIN
+                                   CustomerRecordRef.GETTABLE(Customer);
+                                   CRMIntegrationManagement.UpdateMultipleNow(CustomerRecordRef);
+                                 END
+                               END;
+                                }
+      { 97      ;2   ;Action    ;
+                      Name=UpdateStatisticsInCRM;
+                      CaptionML=[DAN=Opdatér kontostatistik;
+                                 ENU=Update Account Statistics];
+                      ToolTipML=[DAN=Send debitorstatistikdata til Microsoft Dynamics CRM til opdatering af faktaboksen Kontostatistik;
+                                 ENU=Send Customer Statistics data to Microsoft Dynamics CRM to update the Account Statistics factbox];
+                      Enabled=CRMIsCoupledToRecord;
+                      Image=UpdateXML;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.CreateOrUpdateCRMAccountStatistics(Rec);
+                               END;
+                                }
+      { 29      ;2   ;ActionGroup;
+                      Name=Coupling;
+                      CaptionML=[@@@=Coupling is a noun;
+                                 DAN=Sammenkædning;
+                                 ENU=Coupling];
+                      ToolTipML=[DAN=Opret, ret eller slet en sammenkædning mellem Microsoft Dynamics NAV-recorden og en Microsoft Dynamics CRM-post.;
+                                 ENU=Create, change, or delete a coupling between the Microsoft Dynamics NAV record and a Microsoft Dynamics CRM record.];
+                      Image=LinkAccount }
+      { 28      ;3   ;Action    ;
+                      Name=ManageCRMCoupling;
+                      CaptionML=[DAN=Konfigurer sammenkædning;
+                                 ENU=Set Up Coupling];
+                      ToolTipML=[DAN=Opret eller rediger sammenkædningen med en Microsoft Dynamics CRM-konto.;
+                                 ENU=Create or modify the coupling to a Microsoft Dynamics CRM account.];
+                      Image=LinkAccount;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.CreateOrUpdateCoupling(RECORDID);
+                               END;
+                                }
+      { 27      ;3   ;Action    ;
+                      Name=DeleteCRMCoupling;
+                      CaptionML=[DAN=Slet sammenkædning;
+                                 ENU=Delete Coupling];
+                      ToolTipML=[DAN=Slet sammenkædningen med en Microsoft Dynamics CRM-konto.;
+                                 ENU=Delete the coupling to a Microsoft Dynamics CRM account.];
+                      Enabled=CRMIsCoupledToRecord;
+                      Image=UnLinkAccount;
+                      OnAction=VAR
+                                 CRMCouplingManagement@1000 : Codeunit 5331;
+                               BEGIN
+                                 CRMCouplingManagement.RemoveCoupling(RECORDID);
+                               END;
+                                }
+      { 16      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Kunde (Debitor);
+                                 ENU=Customer];
+                      Image=Customer }
+      { 20      ;2   ;Action    ;
+                      CaptionML=[DAN=Bankkonti;
+                                 ENU=Bank Accounts];
+                      ToolTipML=[DAN=Tilføj oplysninger om debitorens bankkonto.;
+                                 ENU=Set up information about the customer's bank account.];
+                      RunObject=Page 424;
+                      RunPageLink=Customer No.=FIELD(No.);
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=BankAccount;
+                      PromotedCategory=Category5;
+                      Scope=Repeater }
+      { 19      ;2   ;Action    ;
+                      CaptionML=[DAN=Leverings&adresser;
+                                 ENU=Ship-&to Addresses];
+                      ToolTipML=[DAN=Angiv den alternative adresse, den valgte debitor ønsker varen leveret til, hvis adressen adskiller sig fra debitors standardadresse.;
+                                 ENU=Set up the alternate address where the selected customer wants the item delivered if different from its regular address.];
+                      RunObject=Page 301;
+                      RunPageLink=Customer No.=FIELD(No.);
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=ShipAddress;
+                      PromotedCategory=Category5;
+                      Scope=Repeater }
+      { 15      ;2   ;Action    ;
+                      CaptionML=[DAN=Varere&ferencer;
+                                 ENU=Cross Re&ferences];
+                      ToolTipML=[DAN=Opsætning af debitors egen identifikation af de varer, som du sælger til debitor. Krydshenvisninger til debitors varenummer betyder, at dette varenummer automatisk vises i salgsdokumenter i stedet for det nummer, som du anvender.;
+                                 ENU=Set up the customer's own identification of items that you sell to the customer. Cross-references to the customer's item number means that that item number is automatically shown on sales documents instead of the number that you use.];
+                      RunObject=Page 5723;
+                      RunPageView=SORTING(Cross-Reference Type,Cross-Reference Type No.);
+                      RunPageLink=Cross-Reference Type=CONST(Customer),
+                                  Cross-Reference Type No.=FIELD(No.);
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=Change;
+                      PromotedCategory=Category5;
+                      Scope=Repeater }
+      { 11      ;2   ;Action    ;
+                      Name=<Online Map>;
+                      CaptionML=[DAN=Online Map;
+                                 ENU=Online Map];
+                      ToolTipML=[DAN=Vis den valgte debitors adresse på dit foretrukne kortwebsted.;
+                                 ENU=View the selected customer's address on your preferred map website.];
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=Map;
+                      PromotedCategory=Category5;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 DisplayMap;
+                               END;
+                                }
+      { 7       ;2   ;Action    ;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[DAN=Dimensioner;
+                                 ENU=Dimensions];
+                      ToolTipML=[DAN=Opret standarddimensioner for den valgte kunde, f.eks. en område- eller kundegruppekode. Du kan tildele dimensionskoder til transaktioner for at fordele omkostninger og analysere historikken.;
+                                 ENU=Set up default dimensions for the selected customer, such as an area or customer group code. You can assign dimension codes to transactions to distribute costs and analyze historical information.];
+                      RunObject=Page 540;
+                      RunPageLink=Table ID=CONST(18),
+                                  No.=FIELD(No.);
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=Dimensions;
+                      PromotedCategory=Category5;
+                      Scope=Repeater }
+      { 9       ;1   ;ActionGroup;
+                      CaptionML=[DAN=Oversigt;
+                                 ENU=History];
+                      Image=History }
+      { 22      ;2   ;Action    ;
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=[DAN=Fina&nsposter;
+                                 ENU=Ledger E&ntries];
+                      ToolTipML=[DAN=Vis historikken over transaktioner for den valgte debitor.;
+                                 ENU=View the history of transactions for the selected customer.];
+                      RunObject=Page 25;
+                      RunPageView=SORTING(Customer No.);
+                      RunPageLink=Customer No.=FIELD(No.);
+                      PromotedIsBig=Yes;
+                      Image=CustomerLedger;
+                      PromotedCategory=Category6;
+                      Scope=Repeater }
+      { 18      ;1   ;ActionGroup;
+                      Name=PricesAndDiscounts;
+                      CaptionML=[DAN=Priser og rabatter;
+                                 ENU=Prices and Discounts] }
+      { 25      ;2   ;Action    ;
+                      CaptionML=[DAN=Faktura&rabatter;
+                                 ENU=Invoice &Discounts];
+                      ToolTipML=[DAN=Angiv forskellige rabatter, som kan tilføjes fakturaer til den valgte debitor. Der gives automatisk en fakturarabat til debitor, når det samlede fakturabeløb overstiger et vist beløb.;
+                                 ENU=Set up different discounts applied to invoices for the selected customer. An invoice discount is automatically granted to the customer when the total on a sales invoice exceeds a certain amount.];
+                      RunObject=Page 23;
+                      RunPageLink=Code=FIELD(Invoice Disc. Code);
+                      PromotedIsBig=Yes;
+                      Image=CalculateInvoiceDiscount;
+                      PromotedCategory=Category7;
+                      Scope=Repeater }
+      { 26      ;2   ;Action    ;
+                      CaptionML=[DAN=Priser;
+                                 ENU=Prices];
+                      ToolTipML=[DAN=Angiv forskellige priser for de varer, du sælger til den valgte kunde. En varepris anføres automatisk på fakturalinjer, når de specificerede kriterier er blevet opfyldt, f.eks. kunde, mængde eller slutdato.;
+                                 ENU=Set up different prices for items that you sell to the selected customer. An item price is automatically granted on invoice lines when the specified criteria are met, such as customer, quantity, or ending date.];
+                      RunObject=Page 7002;
+                      RunPageView=SORTING(Sales Type,Sales Code);
+                      RunPageLink=Sales Type=CONST(Customer),
+                                  Sales Code=FIELD(No.);
+                      PromotedIsBig=Yes;
+                      Image=Price;
+                      PromotedCategory=Category7;
+                      Scope=Repeater }
+      { 71      ;2   ;Action    ;
+                      CaptionML=[DAN=Linjerabat;
+                                 ENU=Line Discounts];
+                      ToolTipML=[DAN=Angiv forskellige rabatter for de varer, du sælger til den valgte kunde. En varerabat anføres automatisk på fakturalinjer, når de specificerede kriterier er blevet opfyldt, f.eks. kunde, mængde eller slutdato.;
+                                 ENU=Set up different discounts for items that you sell to the selected customer. An item discount is automatically granted on invoice lines when the specified criteria are met, such as customer, quantity, or ending date.];
+                      RunObject=Page 7004;
+                      RunPageView=SORTING(Sales Type,Sales Code);
+                      RunPageLink=Sales Type=CONST(Customer),
+                                  Sales Code=FIELD(No.);
+                      PromotedIsBig=Yes;
+                      Image=LineDiscount;
+                      PromotedCategory=Category7;
+                      Scope=Repeater }
+      { 32      ;1   ;ActionGroup;
+                      Name=Reports;
+                      CaptionML=[DAN=Rapporter;
+                                 ENU=Reports] }
+      { 5       ;2   ;ActionGroup;
+                      Name=SalesReports;
+                      CaptionML=[DAN=Salgsrapporter;
+                                 ENU=Sales Reports];
+                      Image=Report }
+      { 1907152806;3 ;Action    ;
+                      CaptionML=[DAN=Debitor - top 10-liste;
+                                 ENU=Customer - Top 10 List];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over de debitorer, der køber mest, eller som skylder mest, i en bestemt periode. Kun de debitorer, der har køb i løbet af perioden eller en saldo ved periodens afslutning, vil blive vist i rapporten.;
+                                 ENU=View, print, or save an overview of the customers that purchase the most or that owe the most in a selected period. Only customers that have either purchases during the period or a balance at the end of the period will be included.];
+                      RunObject=Report 111;
+                      Image=Report }
+      { 1906073506;3 ;Action    ;
+                      CaptionML=[DAN=Debitor - salgsoversigt;
+                                 ENU=Customer - Sales List];
+                      ToolTipML=[DAN=Vis, udskriv eller gem debitorsalg over en periode, for eksempel med henblik på at rapportere salgsaktiviteter til SKAT.;
+                                 ENU=View, print, or save customer sales in a period, for example, to report sales activity to customs and tax authorities.];
+                      RunObject=Report 119;
+                      Image=Report }
+      { 1904190506;3 ;Action    ;
+                      CaptionML=[DAN=Salgsstatistik;
+                                 ENU=Sales Statistics];
+                      ToolTipML=[DAN=Vis, udskriv eller gem debitorers samlede omkostninger, salg eller avance over tid, f.eks. med henblik på at analysere indtjeningstendenser. Rapporten viser beløb for den oprindelige og regulerede kostpris, omsætning, avance, fakturarabat, kontantrabat og avanceprocent i tre regulerbare perioder.;
+                                 ENU=View, print, or save customers' total costs, sales, and profits over time, for example, to analyze earnings trends. The report shows amounts for original and adjusted costs, sales, profits, invoice discounts, payment discounts, and profit percentage in three adjustable periods.];
+                      RunObject=Report 112;
+                      Image=Report }
+      { 3       ;2   ;ActionGroup;
+                      Name=FinanceReports;
+                      CaptionML=[DAN=Finansrapporter;
+                                 ENU=Finance Reports];
+                      Image=Report }
+      { 1906768606;3 ;Action    ;
+                      CaptionML=[DAN=Kontoudtog;
+                                 ENU=Statement];
+                      ToolTipML=[DAN=Vis, udskriv, eller gem en liste over debitors transaktioner i en bestemt periode, f.eks. for at sende udskriften til debitor i slutningen af en regnskabsperiode. Du kan vælge at få vist samtlige forfaldne saldi, uafhængigt af den angivne periode, eller du kan vælge at inkludere et aldersfordelingsinterval.;
+                                 ENU=View, print, or save a list of a customer's transactions for a selected period, for example, to send to the customer at the close of an accounting period. You can choose to have all overdue balances displayed regardless of the period specified, or you can choose to include an aging band.];
+                      RunObject=Report 116;
+                      Image=Report }
+      { 1902299006;3 ;Action    ;
+                      CaptionML=[DAN=Debitor - saldo til dato;
+                                 ENU=Customer - Balance to Date];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en debitors saldo på en bestemt dato. Du kan bruge rapporten til at udtrække oplysninger om din samlede salgsindkomst ved slutningen af en regnskabsperiode eller et regnskabsår.;
+                                 ENU=View, print, or save a customer's balance on a certain date. You can use the report to extract your total sales income at the close of an accounting period or fiscal year.];
+                      RunObject=Report 121;
+                      Image=Report }
+      { 1906359306;3 ;Action    ;
+                      CaptionML=[DAN=Debitor - balance;
+                                 ENU=Customer - Trial Balance];
+                      ToolTipML=[DAN=Vis, udskriv eller gem start- og slutsaldi for debitorer med poster i en bestemt periode. Rapporten kan bruges til at bekræfte, at saldoen for en debitorbogføringsgruppe stemmer overens med saldoen på den tilsvarende finanskonto på en bestemt dato.;
+                                 ENU=View, print, or save the beginning and ending balance for customers with entries within a specified period. The report can be used to verify that the balance for a customer posting group is equal to the balance on the corresponding general ledger account on a certain date.];
+                      RunObject=Report 129;
+                      Image=Report }
+      { 1906871306;3 ;Action    ;
+                      CaptionML=[DAN=Debitor - kontokort;
+                                 ENU=Customer - Detail Trial Bal.];
+                      ToolTipML=[DAN=Vis, udskriv eller gem saldi for debitorer med saldi på en bestemt dato. Rapporten kan f.eks. bruges i slutningen af en regnskabsperiode eller i forbindelse med revision.;
+                                 ENU=View, print, or save the balance for customers with balances on a specified date. The report can be used at the close of an accounting period, for example, or for an audit.];
+                      RunObject=Report 104;
+                      Image=Report }
+      { 1907944606;3 ;Action    ;
+                      CaptionML=[DAN=Debitor - forfaldsoversigt;
+                                 ENU=Customer - Summary Aging];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over hver debitors samlede forfaldne betalinger, opdelt i tre tidsperioder. Rapporten kan bruges til at bestemme, hvornår der skal udstedes rykkere, til at vurdere en debitors kreditværdighed eller til at udarbejde likviditetsanalyser.;
+                                 ENU=View, print, or save a summary of each customer's total payments due, divided into three time periods. The report can be used to decide when to issue reminders, to evaluate a customer's creditworthiness, or to prepare liquidity analyses.];
+                      RunObject=Report 105;
+                      Image=Report }
+      { 1906813206;3 ;Action    ;
+                      CaptionML=[DAN=Debitor - forfaldne debitorposter;
+                                 ENU=Customer - Detailed Aging];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en detaljeret liste over hver debitors samlede forfaldne betalinger, opdelt i tre tidsperioder. Rapporten kan bruges til at bestemme, hvornår der skal udstedes rykkere, til at vurdere en debitors kreditværdighed eller til at udarbejde likviditetsanalyser.;
+                                 ENU=View, print, or save a detailed list of each customer's total payments due, divided into three time periods. The report can be used to decide when to issue reminders, to evaluate a customer's creditworthiness, or to prepare liquidity analyses.];
+                      RunObject=Report 106;
+                      Image=Report }
+      { 1900711606;3 ;Action    ;
+                      CaptionML=[DAN=Aldersfordelte tilgodehavender;
+                                 ENU=Aged Accounts Receivable];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over, hvornår debitorers betalinger skal betales eller rykkes for, opdelt i fire perioder. Du skal angive den dato, som aldersfordelingen skal beregnes ud fra, og du skal angive den periode, som hver kolonne skal indeholde data for.;
+                                 ENU=View, print, or save an overview of when customer payments are due or overdue, divided into four periods. You must specify the date you want aging calculated from and the length of the period that each column will contain data for.];
+                      RunObject=Report 120;
+                      Image=Report }
+      { 1904039606;3 ;Action    ;
+                      CaptionML=[DAN=Debitor - betalingskvittering;
+                                 ENU=Customer - Payment Receipt];
+                      ToolTipML=[DAN=Vis, udskriv eller gem et dokument, der viser de debitorposter, som en betaling er tilknyttet. Denne rapport kan anvendes som den betalingskvittering, du sender til debitor.;
+                                 ENU=View, print, or save a document showing which customer ledger entries that a payment has been applied to. This report can be used as a payment receipt that you send to the customer.];
+                      RunObject=Report 211;
+                      Image=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på debitoren. Feltet udfyldes enten automatisk fra en defineret nummerserie, eller du kan indtaste nummeret manuelt, fordi du har aktiveret manuel nummerindtastning i opsætningen af nummerserier.;
+                           ENU=Specifies the number of the customer. The field is either filled automatically from a defined number series, or you enter the number manually because you have enabled manual number entry in the number-series setup.];
+                SourceExpr="No." }
+
+    { 4   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver kundens navn. Dette navn vises på alle salgsdokumenter for debitoren. Du kan maksimalt skrive 50 tegn, som kan være både tal og bogstaver.;
+                           ENU=Specifies the customer's name. This name will appear on all sales documents for the customer. You can enter a maximum of 50 characters, both numbers and letters.];
+                SourceExpr=Name }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver debitorens telefonnummer. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the customer's telephone number. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr="Phone No." }
+
+    { 34  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver navnet på en fast kontaktperson hos debitoren. Du kan bruge op til 30 tegn (både tal og bogstaver).;
+                           ENU=Specifies the name of the person you regularly contact when you do business with this customer. You can enter a maximum of 30 characters, both numbers and letters.];
+                SourceExpr=Contact }
+
+    { 8   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver det betalingsbeløb, som debitoren skylder for afsluttede salg. Denne værdi er også kendt som debitorens saldo.;
+                           ENU=Specifies the payment amount that the customer owes for completed sales. This value is also known as the customer's balance.];
+                SourceExpr="Balance (LCY)" }
+
+    { 10  ;2   ;Field     ;
+                ToolTipML=[DAN=Viser debitors forfaldne beløb i RV.;
+                           ENU=Displays the customer's balance due in LCY.];
+                SourceExpr="Balance Due (LCY)" }
+
+    { 24  ;2   ;Field     ;
+                ToolTipML=[DAN=Viser det beløb i RV, debitoren totalt har købt for.;
+                           ENU=Shows the total net amount of sales to the customer in LCY.];
+                SourceExpr="Sales (LCY)" }
+
+    { 21  ;0   ;Container ;
+                ContainerType=FactBoxArea }
+
+    { 23  ;1   ;Part      ;
+                CaptionML=[DAN=Salgshistorik;
+                           ENU=Sales History];
+                SubPageLink=No.=FIELD(No.),
+                            Currency Filter=FIELD(Currency Filter),
+                            Date Filter=FIELD(Date Filter),
+                            Global Dimension 1 Filter=FIELD(Global Dimension 1 Filter),
+                            Global Dimension 2 Filter=FIELD(Global Dimension 2 Filter);
+                PagePartID=Page1318;
+                Visible=False;
+                PartType=Page }
+
+    { 12  ;1   ;Part      ;
+                SubPageLink=No.=FIELD(No.);
+                PagePartID=Page5360;
+                Visible=CRMIsCoupledToRecord;
+                PartType=Page }
+
+  }
+  CODE
+  {
+    VAR
+      CRMIntegrationEnabled@1001 : Boolean;
+      CRMIsCoupledToRecord@1000 : Boolean;
+
+    BEGIN
+    END.
+  }
+}
+

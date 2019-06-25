@@ -1,0 +1,45 @@
+OBJECT Table 386 Entry No. Amount Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Løbenr. - Beløbsbuffer;
+               ENU=Entry No. Amount Buffer];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount];
+                                                   AutoFormatType=1 }
+    { 3   ;   ;Amount2             ;Decimal       ;CaptionML=[DAN=Beløb 2;
+                                                              ENU=Amount2];
+                                                   AutoFormatType=1 }
+    { 4   ;   ;Business Unit Code  ;Code10        ;CaptionML=[DAN=Konc.virksomhedskode;
+                                                              ENU=Business Unit Code] }
+    { 5   ;   ;Start Date          ;Date          ;CaptionML=[DAN=Startdato;
+                                                              ENU=Start Date] }
+    { 6   ;   ;End Date            ;Date          ;CaptionML=[DAN=Slutdato;
+                                                              ENU=End Date] }
+  }
+  KEYS
+  {
+    {    ;Business Unit Code,Entry No.            ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

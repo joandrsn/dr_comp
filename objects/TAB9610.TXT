@@ -1,0 +1,144 @@
+OBJECT Table 9610 XML Schema Element
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Element i XML-skema;
+               ENU=XML Schema Element];
+  }
+  FIELDS
+  {
+    { 1   ;   ;XML Schema Code     ;Code20        ;TableRelation="XML Schema";
+                                                   CaptionML=[DAN=Kode til XML-skema;
+                                                              ENU=XML Schema Code] }
+    { 2   ;   ;ID                  ;Integer       ;CaptionML=[DAN=Id;
+                                                              ENU=ID] }
+    { 3   ;   ;Parent ID           ;Integer       ;CaptionML=[DAN=Id for overordnet;
+                                                              ENU=Parent ID] }
+    { 4   ;   ;Node Name           ;Text250       ;CaptionML=[DAN=Nodenavn;
+                                                              ENU=Node Name] }
+    { 5   ;   ;Node Type           ;Option        ;CaptionML=[DAN=Nodetype;
+                                                              ENU=Node Type];
+                                                   OptionCaptionML=[DAN=Element,Attribut,Definitionsnode;
+                                                                    ENU=Element,Attribute,Definition Node];
+                                                   OptionString=Element,Attribute,Definition Node }
+    { 6   ;   ;Data Type           ;Text250       ;CaptionML=[DAN=Datatype;
+                                                              ENU=Data Type] }
+    { 7   ;   ;MinOccurs           ;Integer       ;CaptionML=[DAN=MinOccurs;
+                                                              ENU=MinOccurs] }
+    { 8   ;   ;MaxOccurs           ;Integer       ;CaptionML=[DAN=MaxOccurs;
+                                                              ENU=MaxOccurs] }
+    { 9   ;   ;Choice              ;Boolean       ;CaptionML=[DAN=Valg;
+                                                              ENU=Choice] }
+    { 20  ;   ;Sort Key            ;Text200       ;CaptionML=[DAN=Sortér nøgle;
+                                                              ENU=Sort Key] }
+    { 21  ;   ;Indentation         ;Integer       ;CaptionML=[DAN=Indrykning;
+                                                              ENU=Indentation] }
+    { 22  ;   ;Visible             ;Boolean       ;InitValue=Yes;
+                                                   CaptionML=[DAN=Synlig;
+                                                              ENU=Visible] }
+    { 23  ;   ;Selected            ;Boolean       ;OnValidate=VAR
+                                                                XSDParser@1001 : Codeunit 9610;
+                                                                xID@1000 : Integer;
+                                                              BEGIN
+                                                                xID := ID;
+
+                                                                MODIFY;
+                                                                IF Selected THEN BEGIN
+                                                                  XSDParser.ExtendSelectedElement(Rec);
+
+                                                                  WHILE Indentation > 0 DO BEGIN
+                                                                    GET("XML Schema Code","Parent ID");
+                                                                    IF NOT Selected THEN BEGIN
+                                                                      Selected := TRUE;
+                                                                      MODIFY;
+                                                                    END;
+                                                                  END;
+                                                                  GET("XML Schema Code",xID);
+                                                                  SelectMandatoryNodes;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[DAN=Markeret;
+                                                              ENU=Selected] }
+    { 24  ;   ;Simple Data Type    ;Text50        ;OnValidate=VAR
+                                                                NamespaceLength@1000 : Integer;
+                                                              BEGIN
+                                                                NamespaceLength := STRPOS("Simple Data Type",':');
+                                                                IF NamespaceLength > 0 THEN
+                                                                  "Simple Data Type" := COPYSTR("Simple Data Type",NamespaceLength + 1);
+                                                              END;
+
+                                                   CaptionML=[DAN=Enkel datatype;
+                                                              ENU=Simple Data Type];
+                                                   Editable=No }
+    { 25  ;   ;Defintion XML Schema Code;Code20   ;CaptionML=[DAN=Definitionskode til XML-skema;
+                                                              ENU=Defintion XML Schema Code] }
+    { 26  ;   ;Definition XML Schema ID;Integer   ;CaptionML=[DAN=Definitions-id til XML-skema;
+                                                              ENU=Definition XML Schema ID] }
+  }
+  KEYS
+  {
+    {    ;XML Schema Code,ID                      ;Clustered=Yes }
+    {    ;Parent ID,XML Schema Code                }
+    {    ;XML Schema Code,Sort Key                 }
+    {    ;Node Name,XML Schema Code                }
+    {    ;Data Type,XML Schema Code                }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE IsLeaf@1063() : Boolean;
+    VAR
+      ChildXMLSchemaElement@1061 : Record 9610;
+    BEGIN
+      ChildXMLSchemaElement.SETRANGE("XML Schema Code","XML Schema Code");
+      ChildXMLSchemaElement.SETRANGE("Parent ID",ID);
+      ChildXMLSchemaElement.SETRANGE("Node Type","Node Type"::Element);
+      EXIT(ChildXMLSchemaElement.ISEMPTY);
+    END;
+
+    PROCEDURE GetFullPath@1() : Text;
+    VAR
+      ParentXMLSchemaElement@1000 : Record 9610;
+      Prefix@1001 : Text;
+      Suffix@1002 : Text;
+    BEGIN
+      Prefix := '/';
+      IF "Node Type" = "Node Type"::Attribute THEN BEGIN
+        Prefix := '[@';
+        Suffix := ']'
+      END;
+
+      IF ParentXMLSchemaElement.GET("XML Schema Code","Parent ID") THEN
+        EXIT(ParentXMLSchemaElement.GetFullPath + Prefix + "Node Name" + Suffix);
+      EXIT(Prefix + "Node Name" + Suffix);
+    END;
+
+    PROCEDURE SelectMandatoryNodes@3();
+    VAR
+      XMLSchemaElement@1000 : Record 9610;
+    BEGIN
+      XMLSchemaElement.SETRANGE("XML Schema Code","XML Schema Code");
+      XMLSchemaElement.SETRANGE("Parent ID",ID);
+      IF XMLSchemaElement.FINDSET THEN
+        REPEAT
+          XMLSchemaElement.Selected := XMLSchemaElement.Selected OR (XMLSchemaElement.MinOccurs > 0);
+          XMLSchemaElement.MODIFY;
+          XMLSchemaElement.SelectMandatoryNodes;
+        UNTIL XMLSchemaElement.NEXT = 0;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

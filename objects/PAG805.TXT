@@ -1,0 +1,97 @@
+OBJECT Page 805 Online Map Parameter FactBox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Faktaboks om parameteren Online Map;
+               ENU=Online Map Parameter FactBox];
+    PageType=CardPart;
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Container;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Field     ;
+                CaptionML=[DAN={1};
+                           ENU={1}];
+                SourceExpr=Text001 }
+
+    { 3   ;1   ;Field     ;
+                CaptionML=[DAN={2};
+                           ENU={2}];
+                SourceExpr=Text002 }
+
+    { 4   ;1   ;Field     ;
+                CaptionML=[DAN={3};
+                           ENU={3}];
+                SourceExpr=Text003 }
+
+    { 5   ;1   ;Field     ;
+                CaptionML=[DAN={4};
+                           ENU={4}];
+                SourceExpr=Text004 }
+
+    { 6   ;1   ;Field     ;
+                CaptionML=[DAN={5};
+                           ENU={5}];
+                SourceExpr=Text005 }
+
+    { 7   ;1   ;Field     ;
+                CaptionML=[DAN={6};
+                           ENU={6}];
+                SourceExpr=Text006 }
+
+    { 8   ;1   ;Field     ;
+                CaptionML=[DAN={7};
+                           ENU={7}];
+                SourceExpr=Text007 }
+
+    { 9   ;1   ;Field     ;
+                CaptionML=[DAN={8};
+                           ENU={8}];
+                SourceExpr=Text008 }
+
+    { 10  ;1   ;Field     ;
+                CaptionML=[DAN={9};
+                           ENU={9}];
+                SourceExpr=Text009 }
+
+    { 11  ;1   ;Field     ;
+                CaptionML=[DAN={10};
+                           ENU={10}];
+                SourceExpr=LatitudeLbl }
+
+    { 12  ;1   ;Field     ;
+                CaptionML=[DAN={11};
+                           ENU={11}];
+                SourceExpr=LongitudeLbl }
+
+  }
+  CODE
+  {
+    VAR
+      Text001@1000 : TextConst 'DAN=Gade (Adresse1);ENU=Street (Address1)';
+      Text002@1001 : TextConst 'DAN=By;ENU=City';
+      Text003@1002 : TextConst 'DAN=Stat (Amt);ENU=State (County)';
+      Text004@1003 : TextConst 'DAN=Postnr.;ENU=Post Code/ZIP Code';
+      Text005@1004 : TextConst 'DAN=Lande-/områdekode;ENU=Country/Region Code';
+      Text006@1008 : TextConst 'DAN=Lande-/områdenavn;ENU=Country/Region Name';
+      Text007@1005 : TextConst 'DAN=Kulturoplysninger, f.eks. da-dk;ENU=Culture Information, e.g., en-us';
+      Text008@1006 : TextConst 'DAN=Afstand i (mil/kilometer);ENU=Distance in (Miles/Kilometers)';
+      Text009@1007 : TextConst 'DAN=Rute (hurtigst/kortest);ENU=Route (Quickest/Shortest)';
+      LatitudeLbl@1009 : TextConst 'DAN=GPS-breddegrad;ENU=GPS Latitude';
+      LongitudeLbl@1010 : TextConst 'DAN=GPS-længdegrad;ENU=GPS Longitude';
+
+    BEGIN
+    END.
+  }
+}
+

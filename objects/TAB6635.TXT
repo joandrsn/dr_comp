@@ -1,0 +1,44 @@
+OBJECT Table 6635 Return Reason
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Returårsag;
+               ENU=Return Reason];
+    LookupPageID=Page6635;
+    DrillDownPageID=Page6635;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Default Location Code;Code10       ;TableRelation=Location WHERE (Use As In-Transit=CONST(No));
+                                                   CaptionML=[DAN=Standardlokationskode;
+                                                              ENU=Default Location Code] }
+    { 4   ;   ;Inventory Value Zero;Boolean       ;CaptionML=[DAN=Lagerværdi - nul;
+                                                              ENU=Inventory Value Zero] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Description,Default Location Code,Inventory Value Zero }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

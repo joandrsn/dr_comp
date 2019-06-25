@@ -1,0 +1,116 @@
+OBJECT Table 1296 Posted Payment Recon. Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-10-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.43402;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Afstemn.linje for bogført betaling;
+               ENU=Posted Payment Recon. Line];
+    PasteIsValid=No;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Bank Account No.    ;Code20        ;TableRelation="Bank Account";
+                                                   CaptionML=[DAN=Bankkontonr.;
+                                                              ENU=Bank Account No.] }
+    { 2   ;   ;Statement No.       ;Code20        ;TableRelation="Bank Acc. Reconciliation"."Statement No." WHERE (Bank Account No.=FIELD(Bank Account No.));
+                                                   CaptionML=[DAN=Kontoudtogsnr.;
+                                                              ENU=Statement No.] }
+    { 3   ;   ;Statement Line No.  ;Integer       ;CaptionML=[DAN=Kontoudtogslinjenr.;
+                                                              ENU=Statement Line No.] }
+    { 4   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+    { 5   ;   ;Transaction Date    ;Date          ;CaptionML=[DAN=Transaktionsdato;
+                                                              ENU=Transaction Date] }
+    { 6   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 7   ;   ;Statement Amount    ;Decimal       ;CaptionML=[DAN=Kontoudtogsbeløb;
+                                                              ENU=Statement Amount];
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 8   ;   ;Difference          ;Decimal       ;CaptionML=[DAN=Difference;
+                                                              ENU=Difference];
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 9   ;   ;Applied Amount      ;Decimal       ;CaptionML=[DAN=Udligningsbeløb;
+                                                              ENU=Applied Amount];
+                                                   Editable=No;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 10  ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Bankkontopost,Checkpost,Difference;
+                                                                    ENU=Bank Account Ledger Entry,Check Ledger Entry,Difference];
+                                                   OptionString=Bank Account Ledger Entry,Check Ledger Entry,Difference }
+    { 11  ;   ;Applied Entries     ;Integer       ;CaptionML=[DAN=Udlignede poster;
+                                                              ENU=Applied Entries];
+                                                   Editable=No }
+    { 12  ;   ;Value Date          ;Date          ;CaptionML=[DAN=Valørdato;
+                                                              ENU=Value Date] }
+    { 14  ;   ;Check No.           ;Code20        ;CaptionML=[DAN=Checknr.;
+                                                              ENU=Check No.] }
+    { 15  ;   ;Related-Party Name  ;Text250       ;CaptionML=[DAN=Navn på relateret part;
+                                                              ENU=Related-Party Name] }
+    { 16  ;   ;Additional Transaction Info;Text100;CaptionML=[DAN=Flere transaktionsoplysninger;
+                                                              ENU=Additional Transaction Info] }
+    { 17  ;   ;Data Exch. Entry No.;Integer       ;TableRelation="Data Exch.";
+                                                   CaptionML=[DAN=Dataudvekslingspostnr.;
+                                                              ENU=Data Exch. Entry No.];
+                                                   Editable=No }
+    { 18  ;   ;Data Exch. Line No. ;Integer       ;CaptionML=[DAN=Dataudvekslingslinjenr.;
+                                                              ENU=Data Exch. Line No.];
+                                                   Editable=No }
+    { 21  ;   ;Account Type        ;Option        ;CaptionML=[DAN=Kontotype;
+                                                              ENU=Account Type];
+                                                   OptionCaptionML=[DAN=Finanskonto,Debitor,Kreditor,Bankkonto,Anlæg,IC-partner;
+                                                                    ENU=G/L Account,Customer,Vendor,Bank Account,Fixed Asset,IC Partner];
+                                                   OptionString=G/L Account,Customer,Vendor,Bank Account,Fixed Asset,IC Partner }
+    { 22  ;   ;Account No.         ;Code20        ;TableRelation=IF (Account Type=CONST(G/L Account)) "G/L Account" WHERE (Account Type=CONST(Posting),
+                                                                                                                           Blocked=CONST(No))
+                                                                                                                           ELSE IF (Account Type=CONST(Customer)) Customer
+                                                                                                                           ELSE IF (Account Type=CONST(Vendor)) Vendor
+                                                                                                                           ELSE IF (Account Type=CONST(Bank Account)) "Bank Account"
+                                                                                                                           ELSE IF (Account Type=CONST(Fixed Asset)) "Fixed Asset"
+                                                                                                                           ELSE IF (Account Type=CONST(IC Partner)) "IC Partner";
+                                                   CaptionML=[DAN=Kontonr.;
+                                                              ENU=Account No.] }
+    { 23  ;   ;Applied Document No.;Text250       ;CaptionML=[DAN=Udlignet bilagsnr.;
+                                                              ENU=Applied Document No.] }
+    { 24  ;   ;Applied Entry No.   ;Text250       ;CaptionML=[DAN=Udlignet løbenr.;
+                                                              ENU=Applied Entry No.] }
+  }
+  KEYS
+  {
+    {    ;Bank Account No.,Statement No.,Statement Line No.;
+                                                   SumIndexFields=Statement Amount,Difference;
+                                                   MaintainSIFTIndex=No;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE GetCurrencyCode@1() : Code[10];
+    VAR
+      BankAcc2@1000 : Record 270;
+    BEGIN
+      IF "Bank Account No." = BankAcc2."No." THEN
+        EXIT(BankAcc2."Currency Code");
+
+      IF BankAcc2.GET("Bank Account No.") THEN
+        EXIT(BankAcc2."Currency Code");
+
+      EXIT('');
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,95 @@
+OBJECT Table 417 Handled IC Outbox Jnl. Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    OnDelete=VAR
+               DimMgt@1000 : Codeunit 408;
+             BEGIN
+               DimMgt.DeleteICJnlDim(
+                 DATABASE::"Handled IC Outbox Jnl. Line","Transaction No.","IC Partner Code","Transaction Source","Line No.");
+             END;
+
+    CaptionML=[DAN=Håndteret kladdelinje i IC-udbakke;
+               ENU=Handled IC Outbox Jnl. Line];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Transaction No.     ;Integer       ;CaptionML=[DAN=Transaktionsnr.;
+                                                              ENU=Transaction No.];
+                                                   Editable=No }
+    { 2   ;   ;IC Partner Code     ;Code20        ;TableRelation="IC Partner";
+                                                   CaptionML=[DAN=IC-partner kode;
+                                                              ENU=IC Partner Code];
+                                                   Editable=No }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.];
+                                                   Editable=No }
+    { 4   ;   ;Account Type        ;Option        ;CaptionML=[DAN=Kontotype;
+                                                              ENU=Account Type];
+                                                   OptionCaptionML=[DAN=Finanskonto,Debitor,Kreditor,IC-partner;
+                                                                    ENU=G/L Account,Customer,Vendor,IC Partner];
+                                                   OptionString=G/L Account,Customer,Vendor,IC Partner;
+                                                   Editable=No }
+    { 5   ;   ;Account No.         ;Code20        ;TableRelation=IF (Account Type=CONST(G/L Account)) "IC G/L Account"
+                                                                 ELSE IF (Account Type=CONST(Customer)) Customer
+                                                                 ELSE IF (Account Type=CONST(Vendor)) Vendor
+                                                                 ELSE IF (Account Type=CONST(IC Partner)) "IC Partner";
+                                                   CaptionML=[DAN=Kontonr.;
+                                                              ENU=Account No.];
+                                                   Editable=No }
+    { 6   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount];
+                                                   Editable=No }
+    { 7   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description];
+                                                   Editable=No }
+    { 8   ;   ;VAT Amount          ;Decimal       ;CaptionML=[DAN=Momsbeløb;
+                                                              ENU=VAT Amount];
+                                                   Editable=No }
+    { 9   ;   ;Currency Code       ;Code10        ;AccessByPermission=TableData 4=R;
+                                                   CaptionML=[DAN=Valutakode;
+                                                              ENU=Currency Code];
+                                                   Editable=No }
+    { 11  ;   ;Due Date            ;Date          ;CaptionML=[DAN=Forfaldsdato;
+                                                              ENU=Due Date];
+                                                   Editable=No }
+    { 12  ;   ;Payment Discount %  ;Decimal       ;CaptionML=[DAN=Kontantrabatpct.;
+                                                              ENU=Payment Discount %];
+                                                   Editable=No }
+    { 13  ;   ;Payment Discount Date;Date         ;CaptionML=[DAN=Kontantrabatdato;
+                                                              ENU=Payment Discount Date];
+                                                   Editable=No }
+    { 14  ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+                                                              ENU=Quantity];
+                                                   Editable=No }
+    { 15  ;   ;Transaction Source  ;Option        ;CaptionML=[DAN=Transaktionskilde;
+                                                              ENU=Transaction Source];
+                                                   OptionCaptionML=[DAN=Afvist af aktuelt regnskab,Oprettet af aktuelt regnskab;
+                                                                    ENU=Rejected by Current Company,Created by Current Company];
+                                                   OptionString=Rejected by Current Company,Created by Current Company }
+    { 16  ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Transaction No.,IC Partner Code,Transaction Source,Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

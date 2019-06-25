@@ -1,0 +1,68 @@
+OBJECT Table 2000000053 Access Control
+{
+  OBJECT-PROPERTIES
+  {
+    Date=25-05-05;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Adgangskontrol;
+               ENU=Access Control];
+  }
+  FIELDS
+  {
+    { 1   ;   ;User Security ID    ;GUID          ;TableRelation=User."User Security ID";
+                                                   CaptionML=[DAN=Brugersikkerheds-id;
+                                                              ENU=User Security ID] }
+    { 2   ;   ;Role ID             ;Code20        ;TableRelation="Aggregate Permission Set"."Role ID";
+                                                   CaptionML=[DAN=Rolle-id;
+                                                              ENU=Role ID] }
+    { 3   ;   ;Company Name        ;Text30        ;TableRelation=Company.Name;
+                                                   CaptionML=[DAN=Regnskab;
+                                                              ENU=Company Name] }
+    { 5   ;   ;User Name           ;Code50        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(User."User Name" WHERE (User Security ID=FIELD(User Security ID)));
+                                                   CaptionML=[DAN=Brugernavn;
+                                                              ENU=User Name] }
+    { 7   ;   ;Role Name           ;Text30        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Aggregate Permission Set".Name WHERE (Scope=FIELD(Scope),
+                                                                                                             App ID=FIELD(App ID),
+                                                                                                             Role ID=FIELD(Role ID)));
+                                                   CaptionML=[DAN=Rollenavn;
+                                                              ENU=Role Name] }
+    { 8   ;   ;Scope               ;Option        ;TableRelation="Aggregate Permission Set".Scope;
+                                                   CaptionML=[DAN=Område;
+                                                              ENU=Scope];
+                                                   OptionCaptionML=[DAN=System,Lejer;
+                                                                    ENU=System,Tenant];
+                                                   OptionString=System,Tenant }
+    { 9   ;   ;App ID              ;GUID          ;TableRelation="Aggregate Permission Set"."App ID";
+                                                   CaptionML=[DAN=App-id;
+                                                              ENU=App ID] }
+    { 10  ;   ;App Name            ;Text250       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Aggregate Permission Set"."App Name" WHERE (Scope=FIELD(Scope),
+                                                                                                                   App ID=FIELD(App ID),
+                                                                                                                   Role ID=FIELD(Role ID)));
+                                                   CaptionML=[DAN=App-navn;
+                                                              ENU=App Name] }
+  }
+  KEYS
+  {
+    {    ;User Security ID,Role ID,Company Name,Scope,App ID;
+                                                   Clustered=Yes }
+    {    ;Role ID                                  }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

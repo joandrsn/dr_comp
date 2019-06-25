@@ -1,0 +1,62 @@
+OBJECT Table 306 Fin. Charge Comment Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Rentebemærkningslinje;
+               ENU=Fin. Charge Comment Line];
+    LookupPageID=Page455;
+    DrillDownPageID=Page455;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Rentenota,Udstedt rentenota;
+                                                                    ENU=Finance Charge Memo,Issued Finance Charge Memo];
+                                                   OptionString=Finance Charge Memo,Issued Finance Charge Memo }
+    { 2   ;   ;No.                 ;Code20        ;TableRelation=IF (Type=CONST(Finance Charge Memo)) "Finance Charge Memo Header"
+                                                                 ELSE IF (Type=CONST(Issued Finance Charge Memo)) "Issued Fin. Charge Memo Header";
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.];
+                                                   NotBlank=Yes }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 4   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 5   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 6   ;   ;Comment             ;Text80        ;CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment] }
+  }
+  KEYS
+  {
+    {    ;Type,No.,Line No.                       ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE SetUpNewLine@1();
+    VAR
+      FinChrgCommentLine@1000 : Record 306;
+    BEGIN
+      FinChrgCommentLine.SETRANGE(Type,Type);
+      FinChrgCommentLine.SETRANGE("No.","No.");
+      FinChrgCommentLine.SETRANGE(Date,WORKDATE);
+      IF NOT FinChrgCommentLine.FINDFIRST THEN
+        Date := WORKDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

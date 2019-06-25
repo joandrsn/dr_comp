@@ -1,0 +1,130 @@
+OBJECT Page 5343 CRM Opportunity List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26-11-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.43897;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Microsoft Dynamics CRM-salgsmuligheder;
+               ENU=Microsoft Dynamics CRM Opportunities];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    LinksAllowed=No;
+    SourceTable=Table5343;
+    SourceTableView=SORTING(Name);
+    PageType=List;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapporter,Dynamics CRM;
+                                ENU=New,Process,Reports,Dynamics CRM];
+    OnInit=BEGIN
+             CODEUNIT.RUN(CODEUNIT::"CRM Integration Management");
+           END;
+
+    ActionList=ACTIONS
+    {
+      { 13      ;    ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 15      ;1   ;ActionGroup;
+                      Name=ActionGroupCRM;
+                      CaptionML=[DAN=Dynamics CRM;
+                                 ENU=Dynamics CRM] }
+      { 14      ;2   ;Action    ;
+                      Name=CRMGotoOpportunities;
+                      CaptionML=[DAN=Salgsmulighed;
+                                 ENU=Opportunity];
+                      Promoted=Yes;
+                      Image=CoupledOpportunity;
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 HYPERLINK(CRMIntegrationManagement.GetCRMEntityUrlFromCRMID(DATABASE::"CRM Opportunity",OpportunityId));
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 16  ;2   ;Field     ;
+                CaptionML=[DAN=Status;
+                           ENU=Status];
+                OptionCaptionML=[DAN=" ,Igangværende,Afvent,Vundet,Annulleret,Udsolgt";
+                                 ENU=" ,In Progress,On Hold,Won,Canceled,Out-Sold"];
+                SourceExpr=StatusCode }
+
+    { 3   ;2   ;Field     ;
+                CaptionML=[DAN=Statusårsag;
+                           ENU=Status Reason];
+                OptionCaptionML=[DAN=Åben,Vundet,Tabt;
+                                 ENU=Open,Won,Lost];
+                SourceExpr=StateCode }
+
+    { 4   ;2   ;Field     ;
+                CaptionML=[DAN=Emne;
+                           ENU=Topic];
+                SourceExpr=Name }
+
+    { 5   ;2   ;Field     ;
+                CaptionML=[DAN=Anslået ultimodato;
+                           ENU=Est. Close Date];
+                SourceExpr=EstimatedCloseDate }
+
+    { 6   ;2   ;Field     ;
+                CaptionML=[DAN=Anslået omsætning;
+                           ENU=Est. Revenue];
+                SourceExpr=EstimatedValue }
+
+    { 7   ;2   ;Field     ;
+                CaptionML=[DAN=Totale beløb;
+                           ENU=Total Amount];
+                SourceExpr=TotalAmount }
+
+    { 8   ;2   ;Field     ;
+                CaptionML=[DAN=Kontaktnavn;
+                           ENU=Contact Name];
+                SourceExpr=ParentContactIdName }
+
+    { 9   ;2   ;Field     ;
+                CaptionML=[DAN=Kontonavn;
+                           ENU=Account Name];
+                SourceExpr=ParentAccountIdName }
+
+    { 10  ;2   ;Field     ;
+                CaptionML=[DAN=Sandsynlighed;
+                           ENU=Probability];
+                SourceExpr=CloseProbability }
+
+    { 11  ;2   ;Field     ;
+                CaptionML=[DAN=Vurdering;
+                           ENU=Rating];
+                OptionCaptionML=[DAN=Lovende,Varm,Kold;
+                                 ENU=Hot,Warm,Cold];
+                SourceExpr=OpportunityRatingCode }
+
+    { 12  ;2   ;Field     ;
+                CaptionML=[DAN=Behov;
+                           ENU=Need];
+                OptionCaptionML=[DAN=" ,Skal have,Bør have,God at have,Ikke nødvendig";
+                                 ENU=" ,Must have,Should have,Good to have,No need"];
+                SourceExpr=Need }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

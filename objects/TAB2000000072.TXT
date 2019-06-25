@@ -1,0 +1,55 @@
+OBJECT Table 2000000072 Profile
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Profil;
+               ENU=Profile];
+  }
+  FIELDS
+  {
+    { 3   ;   ;Profile ID          ;Code30        ;CaptionML=[DAN=Profil-id;
+                                                              ENU=Profile ID] }
+    { 12  ;   ;Description         ;Text250       ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 15  ;   ;Role Center ID      ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Page));
+                                                   CaptionML=[DAN=Rollecenter-id;
+                                                              ENU=Role Center ID] }
+    { 18  ;   ;Default Role Center ;Boolean       ;CaptionML=[DAN=Standardrollecenter;
+                                                              ENU=Default Role Center] }
+    { 21  ;   ;Use Comments        ;Boolean       ;CaptionML=[DAN=Brug bemærkninger;
+                                                              ENU=Use Comments] }
+    { 24  ;   ;Use Notes           ;Boolean       ;CaptionML=[DAN=Brug noter;
+                                                              ENU=Use Notes] }
+    { 27  ;   ;Use Record Notes    ;Boolean       ;CaptionML=[DAN=Brug recordnoter;
+                                                              ENU=Use Record Notes] }
+    { 30  ;   ;Record Notebook     ;Text250       ;CaptionML=[DAN=Recordnotesbog;
+                                                              ENU=Record Notebook] }
+    { 33  ;   ;Use Page Notes      ;Boolean       ;CaptionML=[DAN=Brug sidenoter;
+                                                              ENU=Use Page Notes] }
+    { 36  ;   ;Page Notebook       ;Text250       ;CaptionML=[DAN=Sidenotesbog;
+                                                              ENU=Page Notebook] }
+    { 39  ;   ;Disable Personalization;Boolean    ;CaptionML=[DAN=Deaktiver tilpasning;
+                                                              ENU=Disable Personalization] }
+  }
+  KEYS
+  {
+    {    ;Profile ID                              ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,159 @@
+OBJECT Table 99000763 Routing Header
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=No.,Description;
+    OnInsert=BEGIN
+               MfgSetup.GET;
+               IF "No." = '' THEN BEGIN
+                 MfgSetup.TESTFIELD("Routing Nos.");
+                 NoSeriesMgt.InitSeries(MfgSetup."Routing Nos.",xRec."No. Series",0D,"No.","No. Series");
+               END;
+             END;
+
+    OnModify=BEGIN
+               "Last Date Modified" := TODAY;
+             END;
+
+    OnDelete=VAR
+               Item@1000 : Record 27;
+               RtngLine@1001 : Record 99000764;
+               MfgComment@1002 : Record 99000770;
+             BEGIN
+               MfgComment.SETRANGE("Table Name",MfgComment."Table Name"::"Routing Header");
+               MfgComment.SETRANGE("No.","No.");
+               MfgComment.DELETEALL;
+
+               RtngLine.LOCKTABLE;
+               RtngLine.SETRANGE("Routing No.","No.");
+               RtngLine.DELETEALL(TRUE);
+
+               RtngVersion.SETRANGE("Routing No.","No.");
+               RtngVersion.DELETEALL;
+
+               Item.SETCURRENTKEY("Routing No.");
+               Item.SETRANGE("Routing No.","No.");
+               IF Item.FINDFIRST THEN
+                 ERROR(Text000);
+             END;
+
+    OnRename=BEGIN
+               IF Status = Status::Certified THEN
+                 ERROR(Text002,TABLECAPTION,FIELDCAPTION(Status),FORMAT(Status));
+             END;
+
+    CaptionML=[DAN=Rutehoved;
+               ENU=Routing Header];
+    LookupPageID=Page99000764;
+    DrillDownPageID=Page99000764;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Description;
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 2   ;   ;Description         ;Text50        ;OnValidate=BEGIN
+                                                                "Search Description" := Description;
+                                                              END;
+
+                                                   CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Description 2       ;Text50        ;CaptionML=[DAN=Beskrivelse 2;
+                                                              ENU=Description 2] }
+    { 4   ;   ;Search Description  ;Code50        ;CaptionML=[DAN=Søgebeskrivelse;
+                                                              ENU=Search Description] }
+    { 10  ;   ;Last Date Modified  ;Date          ;CaptionML=[DAN=Rettet den;
+                                                              ENU=Last Date Modified];
+                                                   Editable=No }
+    { 12  ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("Manufacturing Comment Line" WHERE (Table Name=CONST(Routing Header),
+                                                                                                         No.=FIELD(No.)));
+                                                   CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment];
+                                                   Editable=No }
+    { 20  ;   ;Status              ;Option        ;OnValidate=BEGIN
+                                                                IF (Status <> xRec.Status) AND (Status = Status::Certified) THEN
+                                                                  CheckRouting.Calculate(Rec,'');
+
+                                                                IF Status = Status::Closed THEN BEGIN
+                                                                  IF CONFIRM(
+                                                                       Text001,FALSE)
+                                                                  THEN BEGIN
+                                                                    RtngVersion.SETRANGE("Routing No.","No.");
+                                                                    RtngVersion.MODIFYALL(Status,RtngVersion.Status::Closed);
+                                                                  END ELSE
+                                                                    Status := xRec.Status;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[DAN=Status;
+                                                              ENU=Status];
+                                                   OptionCaptionML=[DAN=Ny,Godkendt,Under udvikling,Lukket;
+                                                                    ENU=New,Certified,Under Development,Closed];
+                                                   OptionString=New,Certified,Under Development,Closed }
+    { 21  ;   ;Type                ;Option        ;OnValidate=BEGIN
+                                                                IF Status = Status::Certified THEN
+                                                                  FIELDERROR(Status);
+                                                              END;
+
+                                                   CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Seriel,Parallel;
+                                                                    ENU=Serial,Parallel];
+                                                   OptionString=Serial,Parallel }
+    { 50  ;   ;Version Nos.        ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Versionsnr.;
+                                                              ENU=Version Nos.] }
+    { 51  ;   ;No. Series          ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Nummerserie;
+                                                              ENU=No. Series];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;No.                                     ;Clustered=Yes }
+    {    ;Search Description                       }
+    {    ;Description                              }
+    {    ;Status                                   }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;No.,Description,Status                   }
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'DAN=Denne rute bruges til varer.;ENU=This Routing is being used on Items.';
+      Text001@1001 : TextConst 'DAN=Alle versioner, som er knyttet til ruten, vil blive lukket. Skal ruten lukkes?;ENU=All versions attached to the routing will be closed. Close routing?';
+      MfgSetup@1002 : Record 99000765;
+      RoutingHeader@1003 : Record 99000763;
+      RtngVersion@1004 : Record 99000786;
+      CheckRouting@1005 : Codeunit 99000752;
+      NoSeriesMgt@1006 : Codeunit 396;
+      Text002@1007 : TextConst 'DAN=Du kan ikke omdøbe %1, når %2 er %3.;ENU=You cannot rename the %1 when %2 is %3.';
+
+    PROCEDURE AssistEdit@2(OldRtngHeader@1000 : Record 99000763) : Boolean;
+    BEGIN
+      WITH RoutingHeader DO BEGIN
+        RoutingHeader := Rec;
+        MfgSetup.GET;
+        MfgSetup.TESTFIELD("Routing Nos.");
+        IF NoSeriesMgt.SelectSeries(MfgSetup."Routing Nos.",OldRtngHeader."No. Series","No. Series") THEN BEGIN
+          NoSeriesMgt.SetSeries("No.");
+          Rec := RoutingHeader;
+          EXIT(TRUE);
+        END;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

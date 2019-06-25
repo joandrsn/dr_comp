@@ -1,0 +1,48 @@
+OBJECT Table 1259 Bank Data Conv. Bank
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Bank til bankdatakonvertering;
+               ENU=Bank Data Conv. Bank];
+    LookupPageID=Page1259;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Bank                ;Text50        ;CaptionML=[DAN=Bank;
+                                                              ENU=Bank];
+                                                   Editable=No }
+    { 2   ;   ;Bank Name           ;Text50        ;CaptionML=[DAN=Banknavn;
+                                                              ENU=Bank Name];
+                                                   Editable=No }
+    { 3   ;   ;Country/Region Code ;Code10        ;CaptionML=[DAN=Lande-/områdekode;
+                                                              ENU=Country/Region Code];
+                                                   Editable=No }
+    { 4   ;   ;Last Update Date    ;Date          ;CaptionML=[DAN=Dato for sidste opdatering;
+                                                              ENU=Last Update Date];
+                                                   Editable=No }
+    { 5   ;   ;Index               ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[DAN=Indekser;
+                                                              ENU=Index] }
+  }
+  KEYS
+  {
+    {    ;Bank,Index                              ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Bank                                     }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

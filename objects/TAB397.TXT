@@ -1,0 +1,80 @@
+OBJECT Table 397 XBRL G/L Map Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=05-11-08;
+    Time=12:00:00;
+    Version List=NAVW16.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=XBRL-finanskoblinglinje;
+               ENU=XBRL G/L Map Line];
+  }
+  FIELDS
+  {
+    { 1   ;   ;XBRL Taxonomy Name  ;Code20        ;TableRelation="XBRL Taxonomy";
+                                                   CaptionML=[DAN=XBRL-taksonominavn;
+                                                              ENU=XBRL Taxonomy Name] }
+    { 2   ;   ;XBRL Taxonomy Line No.;Integer     ;TableRelation="XBRL Taxonomy Line"."Line No." WHERE (XBRL Taxonomy Name=FIELD(XBRL Taxonomy Name));
+                                                   CaptionML=[DAN=XBRL-taksonomilinjenr.;
+                                                              ENU=XBRL Taxonomy Line No.] }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 4   ;   ;G/L Account Filter  ;Text250       ;TableRelation="G/L Account";
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Finanskontofilter;
+                                                              ENU=G/L Account Filter] }
+    { 5   ;   ;Business Unit Filter;Text250       ;TableRelation="Business Unit";
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Koncernvirk.filter;
+                                                              ENU=Business Unit Filter] }
+    { 6   ;   ;Global Dimension 1 Filter;Text250  ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Global dimension 1-filter;
+                                                              ENU=Global Dimension 1 Filter];
+                                                   CaptionClass='1,3,1' }
+    { 7   ;   ;Global Dimension 2 Filter;Text250  ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Global dimension 2-filter;
+                                                              ENU=Global Dimension 2 Filter];
+                                                   CaptionClass='1,3,2' }
+    { 8   ;   ;Timeframe Type      ;Option        ;CaptionML=[DAN=Tidsrammetype;
+                                                              ENU=Timeframe Type];
+                                                   OptionCaptionML=[DAN=Bevægelse,Startsaldo,Slutsaldo;
+                                                                    ENU=Net Change,Beginning Balance,Ending Balance];
+                                                   OptionString=Net Change,Beginning Balance,Ending Balance }
+    { 9   ;   ;Amount Type         ;Option        ;CaptionML=[DAN=Beløbstype;
+                                                              ENU=Amount Type];
+                                                   OptionCaptionML=[DAN=Nettobeløb,Kun debet,Kun kredit;
+                                                                    ENU=Net Amount,Debits Only,Credits Only];
+                                                   OptionString=Net Amount,Debits Only,Credits Only }
+    { 10  ;   ;Normal Balance      ;Option        ;CaptionML=[DAN=Normal saldo;
+                                                              ENU=Normal Balance];
+                                                   OptionCaptionML=[DAN=Debet (positiv),Kredit (negativ);
+                                                                    ENU=Debit (positive),Credit (negative)];
+                                                   OptionString=Debit (positive),Credit (negative) }
+    { 11  ;   ;Label Language Filter;Text10       ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Tekstsprogfilter;
+                                                              ENU=Label Language Filter] }
+  }
+  KEYS
+  {
+    {    ;XBRL Taxonomy Name,XBRL Taxonomy Line No.,Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

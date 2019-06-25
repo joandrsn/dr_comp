@@ -1,0 +1,62 @@
+OBJECT Table 5722 Item Category
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    OnDelete=BEGIN
+               ProductGroup.SETRANGE("Item Category Code",Code);
+               ProductGroup.DELETEALL;
+             END;
+
+    CaptionML=[DAN=Varekategori;
+               ENU=Item Category];
+    LookupPageID=Page5730;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 3   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 4   ;   ;Def. Gen. Prod. Posting Group;Code10;
+                                                   TableRelation="Gen. Product Posting Group".Code;
+                                                   CaptionML=[DAN=Produktbogf.gruppe (standard);
+                                                              ENU=Def. Gen. Prod. Posting Group] }
+    { 5   ;   ;Def. Inventory Posting Group;Code10;TableRelation="Inventory Posting Group".Code;
+                                                   CaptionML=[DAN=Varebogf.gruppe (standard);
+                                                              ENU=Def. Inventory Posting Group] }
+    { 6   ;   ;Def. Tax Group Code ;Code10        ;TableRelation="Tax Group".Code;
+                                                   CaptionML=[DAN=Skattegruppekode (standard);
+                                                              ENU=Def. Tax Group Code] }
+    { 7   ;   ;Def. Costing Method ;Option        ;CaptionML=[DAN=Kostmetode (standard);
+                                                              ENU=Def. Costing Method];
+                                                   OptionCaptionML=[DAN=FIFO,LIFO,Serienummer,Gennemsnit,Standard;
+                                                                    ENU=FIFO,LIFO,Specific,Average,Standard];
+                                                   OptionString=FIFO,LIFO,Specific,Average,Standard }
+    { 8   ;   ;Def. VAT Prod. Posting Group;Code10;TableRelation="VAT Product Posting Group".Code;
+                                                   CaptionML=[DAN=Momsprod.bogf.gruppe (stand.);
+                                                              ENU=Def. VAT Prod. Posting Group] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ProductGroup@1000 : Record 5723;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,79 @@
+OBJECT Table 1022 Job Planning Line Invoice
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Sagsplanlægningslinjefaktura;
+               ENU=Job Planning Line Invoice];
+    LookupPageID=Page1029;
+    DrillDownPageID=Page1029;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Job No.             ;Code20        ;TableRelation=Job;
+                                                   CaptionML=[DAN=Sagsnr.;
+                                                              ENU=Job No.];
+                                                   Editable=No }
+    { 2   ;   ;Job Task No.        ;Code20        ;TableRelation="Job Task"."Job Task No." WHERE (Job No.=FIELD(Job No.));
+                                                   CaptionML=[DAN=Sagsopgavenr.;
+                                                              ENU=Job Task No.];
+                                                   Editable=No }
+    { 3   ;   ;Job Planning Line No.;Integer      ;TableRelation="Job Planning Line"."Line No." WHERE (Job No.=FIELD(Job No.),
+                                                                                                       Job Task No.=FIELD(Job Task No.));
+                                                   CaptionML=[DAN=Sagsplanlægningslinjenr.;
+                                                              ENU=Job Planning Line No.];
+                                                   Editable=No }
+    { 4   ;   ;Document Type       ;Option        ;CaptionML=[DAN=Dokumenttype;
+                                                              ENU=Document Type];
+                                                   OptionCaptionML=[DAN=" ,Faktura,Kreditnota,Bogført faktura,Bogført kreditnota";
+                                                                    ENU=" ,Invoice,Credit Memo,Posted Invoice,Posted Credit Memo"];
+                                                   OptionString=[ ,Invoice,Credit Memo,Posted Invoice,Posted Credit Memo];
+                                                   Editable=No }
+    { 5   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.];
+                                                   Editable=No }
+    { 6   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 7   ;   ;Quantity Transferred;Decimal       ;CaptionML=[DAN=Overført antal;
+                                                              ENU=Quantity Transferred];
+                                                   Editable=No }
+    { 8   ;   ;Transferred Date    ;Date          ;CaptionML=[DAN=Overførselsdato;
+                                                              ENU=Transferred Date];
+                                                   Editable=No }
+    { 9   ;   ;Invoiced Date       ;Date          ;CaptionML=[DAN=Faktureringsdato;
+                                                              ENU=Invoiced Date];
+                                                   Editable=No }
+    { 10  ;   ;Invoiced Amount (LCY);Decimal      ;CaptionML=[DAN=Fakturabeløb (RV);
+                                                              ENU=Invoiced Amount (LCY)];
+                                                   Editable=No }
+    { 11  ;   ;Invoiced Cost Amount (LCY);Decimal ;CaptionML=[DAN=Faktureret kostbeløb (RV);
+                                                              ENU=Invoiced Cost Amount (LCY)];
+                                                   Editable=No }
+    { 12  ;   ;Job Ledger Entry No.;Integer       ;TableRelation="Job Ledger Entry";
+                                                   CaptionML=[DAN=Sagspostløbenr.;
+                                                              ENU=Job Ledger Entry No.];
+                                                   BlankZero=Yes;
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Job No.,Job Task No.,Job Planning Line No.,Document Type,Document No.,Line No.;
+                                                   SumIndexFields=Quantity Transferred,Invoiced Amount (LCY),Invoiced Cost Amount (LCY);
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,74 @@
+OBJECT Table 5208 Human Resource Comment Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=No.;
+    CaptionML=[DAN=Medarbejderbemærkning;
+               ENU=Human Resource Comment Line];
+    LookupPageID=Page5223;
+    DrillDownPageID=Page5223;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Table Name          ;Option        ;CaptionML=[DAN=Tabelnavn;
+                                                              ENU=Table Name];
+                                                   OptionCaptionML=[DAN=Medarbejder,Alternativ adresse,Medarb.kvalifikation,Medarb. familiemedlem,Medarb.fravær,Udstyrsoplysninger,Fortrolige oplysninger;
+                                                                    ENU=Employee,Alternative Address,Employee Qualification,Employee Relative,Employee Absence,Misc. Article Information,Confidential Information];
+                                                   OptionString=Employee,Alternative Address,Employee Qualification,Employee Relative,Employee Absence,Misc. Article Information,Confidential Information }
+    { 2   ;   ;No.                 ;Code20        ;TableRelation=IF (Table Name=CONST(Employee)) Employee.No.
+                                                                 ELSE IF (Table Name=CONST(Alternative Address)) "Alternative Address"."Employee No."
+                                                                 ELSE IF (Table Name=CONST(Employee Qualification)) "Employee Qualification"."Employee No."
+                                                                 ELSE IF (Table Name=CONST(Misc. Article Information)) "Misc. Article Information"."Employee No."
+                                                                 ELSE IF (Table Name=CONST(Confidential Information)) "Confidential Information"."Employee No."
+                                                                 ELSE IF (Table Name=CONST(Employee Absence)) "Employee Absence"."Employee No."
+                                                                 ELSE IF (Table Name=CONST(Employee Relative)) "Employee Relative"."Employee No.";
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 3   ;   ;Table Line No.      ;Integer       ;CaptionML=[DAN=Tabellinjenr.;
+                                                              ENU=Table Line No.] }
+    { 4   ;   ;Alternative Address Code;Code10    ;TableRelation=IF (Table Name=CONST(Alternative Address)) "Alternative Address".Code WHERE (Employee No.=FIELD(No.));
+                                                   CaptionML=[DAN=Alternativ adresse - kode;
+                                                              ENU=Alternative Address Code] }
+    { 6   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 7   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 8   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 9   ;   ;Comment             ;Text80        ;CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment] }
+  }
+  KEYS
+  {
+    {    ;Table Name,No.,Table Line No.,Alternative Address Code,Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE SetUpNewLine@1();
+    VAR
+      HumanResCommentLine@1000 : Record 5208;
+    BEGIN
+      HumanResCommentLine := Rec;
+      HumanResCommentLine.SETRECFILTER;
+      HumanResCommentLine.SETRANGE("Line No.");
+      HumanResCommentLine.SETRANGE(Date,WORKDATE);
+      IF NOT HumanResCommentLine.FINDFIRST THEN
+        Date := WORKDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

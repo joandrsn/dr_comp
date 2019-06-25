@@ -1,0 +1,36 @@
+OBJECT Table 2000000162 NAV App Capabilities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=NAV-applikationsfunktioner;
+               ENU=NAV App Capabilities];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Package ID          ;GUID          ;CaptionML=[DAN=Pakke-id;
+                                                              ENU=Package ID] }
+    { 2   ;   ;Capability ID       ;Integer       ;CaptionML=[DAN=Funktions-id;
+                                                              ENU=Capability ID] }
+  }
+  KEYS
+  {
+    {    ;Package ID,Capability ID                ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

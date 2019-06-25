@@ -1,0 +1,130 @@
+OBJECT Table 5971 Filed Contract Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Linje til arkiveret kontrakt;
+               ENU=Filed Contract Line];
+    LookupPageID=Page6086;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Contract Type       ;Option        ;CaptionML=[DAN=Kontrakttype;
+                                                              ENU=Contract Type];
+                                                   OptionCaptionML=[DAN=Tilbud,Kontrakt;
+                                                                    ENU=Quote,Contract];
+                                                   OptionString=Quote,Contract }
+    { 2   ;   ;Contract No.        ;Code20        ;CaptionML=[DAN=Kontraktnr.;
+                                                              ENU=Contract No.] }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 4   ;   ;Contract Status     ;Option        ;CaptionML=[DAN=Kontraktstatus;
+                                                              ENU=Contract Status];
+                                                   OptionCaptionML=[DAN=" ,Underskr.,Annull.";
+                                                                    ENU=" ,Signed,Cancelled"];
+                                                   OptionString=[ ,Signed,Cancelled] }
+    { 5   ;   ;Service Item No.    ;Code20        ;TableRelation="Service Item";
+                                                   CaptionML=[DAN=Serviceartikelnr.;
+                                                              ENU=Service Item No.];
+                                                   Editable=Yes }
+    { 6   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 7   ;   ;Serial No.          ;Code20        ;CaptionML=[DAN=Serienr.;
+                                                              ENU=Serial No.] }
+    { 8   ;   ;Service Item Group Code;Code10     ;TableRelation="Service Item Group";
+                                                   CaptionML=[DAN=Serviceartikelgruppekode;
+                                                              ENU=Service Item Group Code] }
+    { 9   ;   ;Customer No.        ;Code20        ;TableRelation=Customer;
+                                                   CaptionML=[DAN=Debitornr.;
+                                                              ENU=Customer No.] }
+    { 10  ;   ;Ship-to Code        ;Code10        ;TableRelation="Ship-to Address".Code WHERE (Customer No.=FIELD(Customer No.));
+                                                   CaptionML=[DAN=Leveringsadressekode;
+                                                              ENU=Ship-to Code] }
+    { 11  ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   CaptionML=[DAN=Varenr.;
+                                                              ENU=Item No.] }
+    { 12  ;   ;Unit of Measure Code;Code10        ;TableRelation=IF (Item No.=FILTER(<>'')) "Item Unit of Measure".Code WHERE (Item No.=FIELD(Item No.))
+                                                                 ELSE "Unit of Measure";
+                                                   CaptionML=[DAN=Enhedskode;
+                                                              ENU=Unit of Measure Code] }
+    { 13  ;   ;Response Time (Hours);Decimal      ;CaptionML=[DAN=Svartid (timer);
+                                                              ENU=Response Time (Hours)];
+                                                   DecimalPlaces=0:5;
+                                                   MinValue=0 }
+    { 14  ;   ;Last Planned Service Date;Date     ;CaptionML=[DAN=Sidste planlagte servicedato;
+                                                              ENU=Last Planned Service Date];
+                                                   Editable=No }
+    { 15  ;   ;Next Planned Service Date;Date     ;CaptionML=[DAN=Næste planlagte servicedato;
+                                                              ENU=Next Planned Service Date] }
+    { 16  ;   ;Last Service Date   ;Date          ;CaptionML=[DAN=Sidste servicedato;
+                                                              ENU=Last Service Date] }
+    { 17  ;   ;Last Preventive Maint. Date;Date   ;CaptionML=[DAN=Dato for sidste forebyg. service;
+                                                              ENU=Last Preventive Maint. Date];
+                                                   Editable=No }
+    { 18  ;   ;Invoiced to Date    ;Date          ;CaptionML=[DAN=Faktureret til dato;
+                                                              ENU=Invoiced to Date];
+                                                   Editable=No }
+    { 19  ;   ;Credit Memo Date    ;Date          ;CaptionML=[DAN=Kreditnotadato;
+                                                              ENU=Credit Memo Date] }
+    { 20  ;   ;Contract Expiration Date;Date      ;CaptionML=[DAN=Udløbsdato for kontrakt;
+                                                              ENU=Contract Expiration Date] }
+    { 21  ;   ;Service Period      ;DateFormula   ;CaptionML=[DAN=Serviceperiode;
+                                                              ENU=Service Period] }
+    { 22  ;   ;Line Value          ;Decimal       ;CaptionML=[DAN=Linjeværdi;
+                                                              ENU=Line Value];
+                                                   BlankZero=Yes;
+                                                   AutoFormatType=2 }
+    { 23  ;   ;Line Discount %     ;Decimal       ;CaptionML=[DAN=Linjerabatpct.;
+                                                              ENU=Line Discount %];
+                                                   DecimalPlaces=0:5;
+                                                   MinValue=0;
+                                                   MaxValue=100;
+                                                   BlankZero=Yes;
+                                                   AutoFormatType=2 }
+    { 24  ;   ;Line Amount         ;Decimal       ;CaptionML=[DAN=Linjebeløb;
+                                                              ENU=Line Amount];
+                                                   MinValue=0;
+                                                   BlankZero=Yes;
+                                                   AutoFormatType=2 }
+    { 28  ;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   CaptionML=[DAN=Variantkode;
+                                                              ENU=Variant Code] }
+    { 29  ;   ;Starting Date       ;Date          ;CaptionML=[DAN=Startdato;
+                                                              ENU=Starting Date];
+                                                   Editable=No }
+    { 30  ;   ;New Line            ;Boolean       ;CaptionML=[DAN=Ny linje;
+                                                              ENU=New Line] }
+    { 31  ;   ;Credited            ;Boolean       ;CaptionML=[DAN=Krediteret;
+                                                              ENU=Credited] }
+    { 32  ;   ;Line Cost           ;Decimal       ;CaptionML=[DAN=Linjekostpris;
+                                                              ENU=Line Cost];
+                                                   AutoFormatType=2 }
+    { 33  ;   ;Line Discount Amount;Decimal       ;CaptionML=[DAN=Linjerabatbeløb;
+                                                              ENU=Line Discount Amount];
+                                                   AutoFormatType=2 }
+    { 34  ;   ;Profit              ;Decimal       ;CaptionML=[DAN=Avance;
+                                                              ENU=Profit];
+                                                   AutoFormatType=2 }
+    { 100 ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+  }
+  KEYS
+  {
+    {    ;Entry No.,Line No.                      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

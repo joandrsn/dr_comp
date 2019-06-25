@@ -1,0 +1,249 @@
+OBJECT Table 5346 CRM Pricelevel
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    TableType=CRM;
+    ExternalName=pricelevel;
+    CaptionML=[DAN=Price List;
+               ENU=Price List];
+    Description=Entity that defines pricing levels.;
+  }
+  FIELDS
+  {
+    { 1   ;   ;PriceLevelId        ;GUID          ;ExternalName=pricelevelid;
+                                                   ExternalType=Uniqueidentifier;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Price List;
+                                                              ENU=Price List];
+                                                   Description=Unique identifier of the price list. }
+    { 2   ;   ;OrganizationId      ;GUID          ;TableRelation="CRM Organization".OrganizationId;
+                                                   ExternalName=organizationid;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Organization;
+                                                              ENU=Organization];
+                                                   Description=Unique identifier of the organization associated with the price list. }
+    { 3   ;   ;Name                ;Text100       ;ExternalName=name;
+                                                   ExternalType=String;
+                                                   CaptionML=[DAN=Name;
+                                                              ENU=Name];
+                                                   Description=Name of the price list. }
+    { 4   ;   ;Description         ;BLOB          ;ExternalName=description;
+                                                   ExternalType=Memo;
+                                                   CaptionML=[DAN=Description;
+                                                              ENU=Description];
+                                                   Description=Description of the price list.;
+                                                   SubType=Memo }
+    { 5   ;   ;ShippingMethodCode  ;Option        ;InitValue=DefaultValue;
+                                                   ExternalName=shippingmethodcode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=1;
+                                                   CaptionML=[DAN=Shipping Method;
+                                                              ENU=Shipping Method];
+                                                   OptionCaptionML=[DAN=Default Value;
+                                                                    ENU=Default Value];
+                                                   OptionString=DefaultValue;
+                                                   Description=Method of shipment for products in the price list. }
+    { 6   ;   ;BeginDate           ;Date          ;ExternalName=begindate;
+                                                   ExternalType=DateTime;
+                                                   CaptionML=[DAN=Start Date;
+                                                              ENU=Start Date];
+                                                   Description=Date on which the price list becomes effective. }
+    { 7   ;   ;PaymentMethodCode   ;Option        ;InitValue=DefaultValue;
+                                                   ExternalName=paymentmethodcode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=1;
+                                                   CaptionML=[DAN="Payment Method ";
+                                                              ENU="Payment Method "];
+                                                   OptionCaptionML=[DAN=Default Value;
+                                                                    ENU=Default Value];
+                                                   OptionString=DefaultValue;
+                                                   Description=Payment terms to use with the price list. }
+    { 8   ;   ;FreightTermsCode    ;Option        ;InitValue=DefaultValue;
+                                                   ExternalName=freighttermscode;
+                                                   ExternalType=Picklist;
+                                                   OptionOrdinalValues=1;
+                                                   CaptionML=[DAN=Freight Terms;
+                                                              ENU=Freight Terms];
+                                                   OptionCaptionML=[DAN=Default Value;
+                                                                    ENU=Default Value];
+                                                   OptionString=DefaultValue;
+                                                   Description=Freight terms for the price list. }
+    { 9   ;   ;EndDate             ;Date          ;ExternalName=enddate;
+                                                   ExternalType=DateTime;
+                                                   CaptionML=[DAN=End Date;
+                                                              ENU=End Date];
+                                                   Description=Date that is the last day the price list is valid. }
+    { 10  ;   ;CreatedBy           ;GUID          ;TableRelation="CRM Systemuser".SystemUserId;
+                                                   ExternalName=createdby;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Created By;
+                                                              ENU=Created By];
+                                                   Description=Unique identifier of the user who created the price list. }
+    { 11  ;   ;CreatedOn           ;DateTime      ;ExternalName=createdon;
+                                                   ExternalType=DateTime;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Created On;
+                                                              ENU=Created On];
+                                                   Description=Date and time when the price list was created. }
+    { 12  ;   ;ModifiedBy          ;GUID          ;TableRelation="CRM Systemuser".SystemUserId;
+                                                   ExternalName=modifiedby;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Modified By;
+                                                              ENU=Modified By];
+                                                   Description=Unique identifier of the user who last modified the price list. }
+    { 13  ;   ;ModifiedOn          ;DateTime      ;ExternalName=modifiedon;
+                                                   ExternalType=DateTime;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Modified On;
+                                                              ENU=Modified On];
+                                                   Description=Date and time when the price list was last modified. }
+    { 14  ;   ;StateCode           ;Option        ;InitValue=Active;
+                                                   ExternalName=statecode;
+                                                   ExternalType=State;
+                                                   ExternalAccess=Modify;
+                                                   OptionOrdinalValues=[0;1];
+                                                   CaptionML=[DAN="Status ";
+                                                              ENU="Status "];
+                                                   OptionCaptionML=[DAN=Active,Inactive;
+                                                                    ENU=Active,Inactive];
+                                                   OptionString=Active,Inactive;
+                                                   Description=Status of the price list. }
+    { 15  ;   ;VersionNumber       ;BigInteger    ;ExternalName=versionnumber;
+                                                   ExternalType=BigInt;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Version Number;
+                                                              ENU=Version Number];
+                                                   Description=Version number of the price level. }
+    { 16  ;   ;StatusCode          ;Option        ;InitValue=[ ];
+                                                   ExternalName=statuscode;
+                                                   ExternalType=Status;
+                                                   OptionOrdinalValues=[-1;100001;100002];
+                                                   CaptionML=[DAN=Status Reason;
+                                                              ENU=Status Reason];
+                                                   OptionCaptionML=[DAN=" ,Active,Inactive";
+                                                                    ENU=" ,Active,Inactive"];
+                                                   OptionString=[ ,Active,Inactive];
+                                                   Description=Reason for the status of the price list. }
+    { 17  ;   ;CreatedByName       ;Text200       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Systemuser".FullName WHERE (SystemUserId=FIELD(CreatedBy)));
+                                                   ExternalName=createdbyname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=CreatedByName;
+                                                              ENU=CreatedByName] }
+    { 18  ;   ;ModifiedByName      ;Text200       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Systemuser".FullName WHERE (SystemUserId=FIELD(ModifiedBy)));
+                                                   ExternalName=modifiedbyname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=ModifiedByName;
+                                                              ENU=ModifiedByName] }
+    { 19  ;   ;OrganizationIdName  ;Text160       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Organization".Name WHERE (OrganizationId=FIELD(OrganizationId)));
+                                                   ExternalName=organizationidname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=OrganizationIdName;
+                                                              ENU=OrganizationIdName] }
+    { 20  ;   ;ImportSequenceNumber;Integer       ;ExternalName=importsequencenumber;
+                                                   ExternalType=Integer;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Import Sequence Number;
+                                                              ENU=Import Sequence Number];
+                                                   Description=Unique identifier of the data import or data migration that created this record. }
+    { 21  ;   ;TransactionCurrencyId;GUID         ;TableRelation="CRM Transactioncurrency".TransactionCurrencyId;
+                                                   ExternalName=transactioncurrencyid;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Currency;
+                                                              ENU=Currency];
+                                                   Description=Unique identifier of the currency associated with the price level. }
+    { 22  ;   ;OverriddenCreatedOn ;Date          ;ExternalName=overriddencreatedon;
+                                                   ExternalType=DateTime;
+                                                   ExternalAccess=Insert;
+                                                   CaptionML=[DAN=Record Created On;
+                                                              ENU=Record Created On];
+                                                   Description=Date and time that the record was migrated. }
+    { 23  ;   ;TimeZoneRuleVersionNumber;Integer  ;ExternalName=timezoneruleversionnumber;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=Time Zone Rule Version Number;
+                                                              ENU=Time Zone Rule Version Number];
+                                                   MinValue=-1;
+                                                   Description=For internal use only. }
+    { 24  ;   ;UTCConversionTimeZoneCode;Integer  ;ExternalName=utcconversiontimezonecode;
+                                                   ExternalType=Integer;
+                                                   CaptionML=[DAN=UTC Conversion Time Zone Code;
+                                                              ENU=UTC Conversion Time Zone Code];
+                                                   MinValue=-1;
+                                                   Description=Time zone code that was in use when the record was created. }
+    { 25  ;   ;TransactionCurrencyIdName;Text100  ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Transactioncurrency".CurrencyName WHERE (TransactionCurrencyId=FIELD(TransactionCurrencyId)));
+                                                   ExternalName=transactioncurrencyidname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=TransactionCurrencyIdName;
+                                                              ENU=TransactionCurrencyIdName] }
+    { 26  ;   ;CreatedOnBehalfBy   ;GUID          ;TableRelation="CRM Systemuser".SystemUserId;
+                                                   ExternalName=createdonbehalfby;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Created By (Delegate);
+                                                              ENU=Created By (Delegate)];
+                                                   Description=Unique identifier of the delegate user who created the pricelevel. }
+    { 27  ;   ;CreatedOnBehalfByName;Text200      ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Systemuser".FullName WHERE (SystemUserId=FIELD(CreatedOnBehalfBy)));
+                                                   ExternalName=createdonbehalfbyname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=CreatedOnBehalfByName;
+                                                              ENU=CreatedOnBehalfByName] }
+    { 28  ;   ;ModifiedOnBehalfBy  ;GUID          ;TableRelation="CRM Systemuser".SystemUserId;
+                                                   ExternalName=modifiedonbehalfby;
+                                                   ExternalType=Lookup;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Modified By (Delegate);
+                                                              ENU=Modified By (Delegate)];
+                                                   Description=Unique identifier of the delegate user who last modified the pricelevel. }
+    { 29  ;   ;ModifiedOnBehalfByName;Text200     ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("CRM Systemuser".FullName WHERE (SystemUserId=FIELD(ModifiedOnBehalfBy)));
+                                                   ExternalName=modifiedonbehalfbyname;
+                                                   ExternalType=String;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=ModifiedOnBehalfByName;
+                                                              ENU=ModifiedOnBehalfByName] }
+    { 30  ;   ;ExchangeRate        ;Decimal       ;ExternalName=exchangerate;
+                                                   ExternalType=Decimal;
+                                                   ExternalAccess=Read;
+                                                   CaptionML=[DAN=Exchange Rate;
+                                                              ENU=Exchange Rate];
+                                                   Description=Shows the conversion rate of the record's currency. The exchange rate is used to convert all money fields in the record from the local currency to the system's default currency. }
+  }
+  KEYS
+  {
+    {    ;PriceLevelId                            ;Clustered=Yes }
+    {    ;Name                                     }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Name                                     }
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      Dynamics CRM Version: 7.1.0.2040
+    }
+    END.
+  }
+}
+

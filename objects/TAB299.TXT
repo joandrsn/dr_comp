@@ -1,0 +1,62 @@
+OBJECT Table 299 Reminder Comment Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Rykkerbemærkningslinje;
+               ENU=Reminder Comment Line];
+    LookupPageID=Page443;
+    DrillDownPageID=Page443;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Rykker,Udstedt rykker;
+                                                                    ENU=Reminder,Issued Reminder];
+                                                   OptionString=Reminder,Issued Reminder }
+    { 2   ;   ;No.                 ;Code20        ;TableRelation=IF (Type=CONST(Reminder)) "Reminder Header"
+                                                                 ELSE IF (Type=CONST(Issued Reminder)) "Issued Reminder Header";
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.];
+                                                   NotBlank=Yes }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 4   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 5   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code] }
+    { 6   ;   ;Comment             ;Text80        ;CaptionML=[DAN=Bemærkning;
+                                                              ENU=Comment] }
+  }
+  KEYS
+  {
+    {    ;Type,No.,Line No.                       ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE SetUpNewLine@1();
+    VAR
+      ReminderCommentLine@1000 : Record 299;
+    BEGIN
+      ReminderCommentLine.SETRANGE(Type,Type);
+      ReminderCommentLine.SETRANGE("No.","No.");
+      ReminderCommentLine.SETRANGE(Date,WORKDATE);
+      IF NOT ReminderCommentLine.FINDFIRST THEN
+        Date := WORKDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

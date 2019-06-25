@@ -1,0 +1,92 @@
+OBJECT Table 5830 Availability Calc. Overview
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Tilg.ber.oversigt;
+               ENU=Availability Calc. Overview];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Vare,Fra dato,Lager,Forsyning,Forsyningsforecast,Efterspørgsel;
+                                                                    ENU=Item,As of Date,Inventory,Supply,Supply Forecast,Demand];
+                                                   OptionString=Item,As of Date,Inventory,Supply,Supply Forecast,Demand }
+    { 3   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 4   ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   CaptionML=[DAN=Varenr.;
+                                                              ENU=Item No.] }
+    { 5   ;   ;Location Code       ;Code10        ;TableRelation=Location;
+                                                   CaptionML=[DAN=Lokationskode;
+                                                              ENU=Location Code] }
+    { 6   ;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   CaptionML=[DAN=Variantkode;
+                                                              ENU=Variant Code] }
+    { 7   ;   ;Unit of Measure Code;Code10        ;CaptionML=[DAN=Enhedskode;
+                                                              ENU=Unit of Measure Code] }
+    { 11  ;   ;Attached to Entry No.;Integer      ;TableRelation="Item Ledger Entry";
+                                                   CaptionML=[DAN=Tilknyttet løbenr.;
+                                                              ENU=Attached to Entry No.] }
+    { 13  ;   ;Level               ;Integer       ;CaptionML=[DAN=Niveau;
+                                                              ENU=Level] }
+    { 21  ;   ;Source Type         ;Integer       ;CaptionML=[DAN=Kildetype;
+                                                              ENU=Source Type] }
+    { 22  ;   ;Source Order Status ;Integer       ;CaptionML=[DAN=Kildeordrestatus;
+                                                              ENU=Source Order Status] }
+    { 23  ;   ;Source ID           ;Code20        ;CaptionML=[DAN=Kilde-id;
+                                                              ENU=Source ID] }
+    { 24  ;   ;Source Batch Name   ;Code10        ;CaptionML=[DAN=Kildekladdenavn;
+                                                              ENU=Source Batch Name] }
+    { 25  ;   ;Source Ref. No.     ;Integer       ;CaptionML=[DAN=Kildereferencenr.;
+                                                              ENU=Source Ref. No.] }
+    { 26  ;   ;Source Prod. Order Line;Integer    ;CaptionML=[DAN=Kildeprod.ordrelinje;
+                                                              ENU=Source Prod. Order Line] }
+    { 27  ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 41  ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+                                                              ENU=Quantity];
+                                                   DecimalPlaces=0:5 }
+    { 42  ;   ;Reserved Quantity   ;Decimal       ;CaptionML=[DAN=Reserveret antal;
+                                                              ENU=Reserved Quantity];
+                                                   DecimalPlaces=0:5 }
+    { 45  ;   ;Inventory Running Total;Decimal    ;CaptionML=[DAN=Lager løbende total;
+                                                              ENU=Inventory Running Total];
+                                                   DecimalPlaces=0:5 }
+    { 46  ;   ;Supply Running Total;Decimal       ;CaptionML=[DAN=Forsyning løbende total;
+                                                              ENU=Supply Running Total];
+                                                   DecimalPlaces=0:5 }
+    { 47  ;   ;Demand Running Total;Decimal       ;CaptionML=[DAN=Efterspørgsel løbende total;
+                                                              ENU=Demand Running Total];
+                                                   DecimalPlaces=0:5 }
+    { 48  ;   ;Running Total       ;Decimal       ;CaptionML=[DAN=Løbende total;
+                                                              ENU=Running Total];
+                                                   DecimalPlaces=0:5 }
+    { 50  ;   ;Matches Criteria    ;Boolean       ;CaptionML=[DAN=Stemmer overens med kriterier;
+                                                              ENU=Matches Criteria] }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Item No.,Date,Attached to Entry No.,Type }
+    {    ;Item No.,Variant Code,Location Code      }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

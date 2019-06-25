@@ -1,0 +1,396 @@
+OBJECT Page 1357 Mini Posted Purchase Invoice
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Bogført købsfaktura;
+               ENU=Posted Purchase Invoice];
+    InsertAllowed=No;
+    SourceTable=Table122;
+    PageType=Document;
+    RefreshOnActivate=Yes;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Ret,Navigation;
+                                ENU=New,Process,Report,Correct,Navigation];
+    OnOpenPage=VAR
+                 FileManagement@1000 : Codeunit 419;
+               BEGIN
+                 SetSecurityFilterOnRespCenter;
+
+                 AllowDotNetAddIn := FileManagement.CanRunDotNetOnClient;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 25      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Ret;
+                                 ENU=Correct] }
+      { 23      ;2   ;Action    ;
+                      Name=CorrectInvoice;
+                      CaptionML=[DAN=Ret;
+                                 ENU=Correct];
+                      ToolTipML=[DAN=Tilbagefør denne bogførte faktura, og opret automatisk en ny faktura med de samme oplysninger, som du kan rette, før du bogfører. Denne bogførte faktura bliver annulleret automatisk.;
+                                 ENU=Reverse this posted invoice and automatically create a new invoice with the same information that you can correct before posting. This posted invoice will automatically be canceled.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Undo;
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 CorrectPstdPurchInvYesNo@1000 : Codeunit 1324;
+                               BEGIN
+                                 IF CorrectPstdPurchInvYesNo.CorrectInvoice(Rec) THEN
+                                   CurrPage.CLOSE;
+                               END;
+                                }
+      { 21      ;2   ;Action    ;
+                      Name=CancelInvoice;
+                      CaptionML=[DAN=Annuller;
+                                 ENU=Cancel];
+                      ToolTipML=[DAN=Opret og bogfør en købskreditnota, der tilbagefører denne bogførte købsfaktura. Denne bogførte købsfaktura bliver annulleret.;
+                                 ENU=Create and post a purchase credit memo that reverses this posted purchase invoice. This posted purchase invoice will be canceled.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Cancel;
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 CancelPstdPurchInvYesNo@1000 : Codeunit 1325;
+                               BEGIN
+                                 IF CancelPstdPurchInvYesNo.CancelInvoice(Rec) THEN
+                                   CurrPage.CLOSE;
+                               END;
+                                }
+      { 4       ;2   ;Action    ;
+                      Name=CreateCreditMemo;
+                      CaptionML=[DAN=Opret rettelseskreditnota;
+                                 ENU=Create Corrective Credit Memo];
+                      ToolTipML=[DAN=Opret en kreditnota til denne bogførte faktura, som du udfylder og bogfører manuelt for at tilbageføre den bogførte faktura.;
+                                 ENU=Create a credit memo for this posted invoice that you complete and post manually to reverse the posted invoice.];
+                      Promoted=Yes;
+                      Image=CreateCreditMemo;
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 PurchaseHeader@1001 : Record 38;
+                                 CorrectPostedPurchInvoice@1000 : Codeunit 1313;
+                               BEGIN
+                                 CorrectPostedPurchInvoice.CreateCreditMemoCopyDocument(Rec,PurchaseHeader);
+                                 PAGE.RUN(PAGE::"Mini Purchase Credit Memo",PurchaseHeader);
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+      { 53      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Handlinger;
+                                 ENU=Actions];
+                      Image=Invoice }
+      { 11      ;2   ;Action    ;
+                      Name=Vendor;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=[DAN=Leverandør (Kreditor);
+                                 ENU=Vendor];
+                      ToolTipML=[DAN=Vis eller rediger detaljerede oplysninger om kreditoren i det bogførte købsdokument.;
+                                 ENU=View or edit detailed information about the vendor on the posted purchase document.];
+                      RunObject=Page 1330;
+                      RunPageLink=No.=FIELD(Buy-from Vendor No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Vendor;
+                      PromotedCategory=Category5 }
+      { 19      ;2   ;Action    ;
+                      Name=ShowCreditMemo;
+                      CaptionML=[DAN=Vis rettelseskreditnota;
+                                 ENU=Show Corrective Credit Memo];
+                      ToolTipML=[DAN=Åbn den bogførte købskreditnota, der blev oprettet, da du annullerede den bogførte købsfaktura.;
+                                 ENU=Open the posted purchase credit memo that was created when you canceled the posted purchase invoice.];
+                      RunObject=Page 1371;
+                      RunPageLink=No.=FIELD(Canceled By);
+                      Promoted=Yes;
+                      Enabled=Canceled;
+                      PromotedIsBig=Yes;
+                      Image=CreditMemo;
+                      PromotedCategory=Category5 }
+      { 57      ;2   ;Action    ;
+                      Name=Navigate;
+                      CaptionML=[DAN=N&aviger;
+                                 ENU=&Navigate];
+                      ToolTipML=[DAN=Find alle de poster og bilag, der findes til bilagsnummeret og bogføringsdatoen på det bogførte købsdokument.;
+                                 ENU=Find all entries and documents that exist for the document number and posting date on the posted purchase document.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Navigate;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 Navigate;
+                               END;
+                                }
+      { 8       ;2   ;Action    ;
+                      Name=Dimensions;
+                      AccessByPermission=TableData 348=R;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[DAN=Dimensioner;
+                                 ENU=Dimensions];
+                      ToolTipML=[DAN=Vis eller rediger de dimensionsgrupper, der er oprettet til kreditoren i købsdokumentet.;
+                                 ENU=View or edit the dimension sets that are set up for the vendor on the purchase document.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Dimensions;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 ShowDimensions;
+                               END;
+                                }
+      { 13      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Udskriv;
+                                 ENU=Print] }
+      { 56      ;2   ;Action    ;
+                      Name=Print;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Udskriv;
+                                 ENU=&Print];
+                      Promoted=Yes;
+                      Image=Print;
+                      PromotedCategory=Report;
+                      OnAction=BEGIN
+                                 CurrPage.SETSELECTIONFILTER(PurchInvHeader);
+                                 PurchInvHeader.PrintRecords(NOT AllowDotNetAddIn);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                CaptionML=[DAN=Generelt;
+                           ENU=General] }
+
+    { 3   ;2   ;Group     ;
+                Name=VendorDetails;
+                CaptionML=[DAN=Kreditordetaljer;
+                           ENU=Vendor Details];
+                GroupType=Group }
+
+    { 59  ;3   ;Field     ;
+                CaptionML=[DAN=Kreditornavn;
+                           ENU=Vendor Name];
+                ToolTipML=[DAN=Angiver navnet på den kreditor, der leverede varerne.;
+                           ENU=Specifies the name of the vendor who shipped the items.];
+                SourceExpr="Buy-from Vendor Name";
+                Editable=FALSE }
+
+    { 61  ;3   ;Field     ;
+                CaptionML=[DAN=Adresse;
+                           ENU=Address];
+                ToolTipML=[DAN=Angiver adressen på den kreditor, der leverede varerne.;
+                           ENU=Specifies the address of the vendor who shipped the items.];
+                SourceExpr="Buy-from Address";
+                Editable=FALSE }
+
+    { 63  ;3   ;Field     ;
+                CaptionML=[DAN=Adresse 2;
+                           ENU=Address 2];
+                ToolTipML=[DAN=Indeholder en supplerende del af adressen på den leverandør, der leverede varerne.;
+                           ENU=Contains an additional part of the address of the vendor who shipped the items.];
+                SourceExpr="Buy-from Address 2";
+                Editable=FALSE }
+
+    { 6   ;3   ;Field     ;
+                CaptionML=[DAN=Postnr.;
+                           ENU=Post Code];
+                ToolTipML=[DAN=Angiver postnummeret på kreditorens adresse, hvorfra varerne er købt.;
+                           ENU=Specifies the post code of the vendor's address that items are purchased from.];
+                SourceExpr="Buy-from Post Code";
+                Editable=FALSE }
+
+    { 65  ;3   ;Field     ;
+                CaptionML=[DAN=By;
+                           ENU=City];
+                ToolTipML=[DAN=Angiver by for den kreditor, der leverede varerne.;
+                           ENU=Specifies the city of the vendor who shipped the items.];
+                SourceExpr="Buy-from City";
+                Editable=FALSE }
+
+    { 67  ;3   ;Field     ;
+                CaptionML=[DAN=Kontakt;
+                           ENU=Contact];
+                ToolTipML=[DAN=Angiver navnet på den person, du kan kontakte hos den leverandør, der leverede varerne.;
+                           ENU=Specifies the name of the person to contact at the vendor who shipped the items.];
+                SourceExpr="Buy-from Contact";
+                Editable=FALSE }
+
+    { 2   ;2   ;Group     ;
+                Name=InvoiceDetails;
+                CaptionML=[DAN=Fakturadetaljer;
+                           ENU=Invoice Details];
+                GroupType=Group }
+
+    { 12  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver datoen for bogføring af købshovedet.;
+                           ENU=Specifies the date the purchase header was posted.];
+                SourceExpr="Posting Date";
+                Importance=Promoted;
+                Editable=FALSE }
+
+    { 71  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver den dato, hvor købsdokumentet blev oprettet.;
+                           ENU=Specifies the date on which the purchase document was created.];
+                SourceExpr="Document Date";
+                Editable=FALSE }
+
+    { 50  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver den dato, hvor de fakturerede varer blev forventet modtaget.;
+                           ENU=Specifies the date on which the invoiced items were expected.];
+                SourceExpr="Expected Receipt Date";
+                Importance=Promoted;
+                Editable=FALSE }
+
+    { 14  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver kreditorens eget fakturanummer.;
+                           ENU=Specifies the vendor's own invoice number.];
+                SourceExpr="Vendor Invoice No.";
+                Importance=Promoted;
+                Editable=FALSE }
+
+    { 83  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på købedokumentet, som den bogførte faktura blev oprettet til.;
+                           ENU=Specifies the number of the purchase document that the posted invoice was created for.];
+                SourceExpr="Pre-Assigned No.";
+                Editable=FALSE }
+
+    { 16  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvor mange gange fakturaen er blevet udskrevet.;
+                           ENU=Specifies how many times the invoice has been printed.];
+                SourceExpr="No. Printed";
+                Editable=FALSE }
+
+    { 7   ;2   ;Group     ;
+                Name=PaymentDetails;
+                CaptionML=[DAN=Betalingsdetaljer;
+                           ENU=Payment Details];
+                GroupType=Group }
+
+    { 30  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver koden, der skal bruges til at finde de betalingsbetingelser, som gælder for købshovedet.;
+                           ENU=Specifies the code to use to find the payment terms that apply to the purchase header.];
+                SourceExpr="Payment Terms Code";
+                Importance=Promoted;
+                Editable=FALSE }
+
+    { 32  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvornår fakturaen er forfalden. Datoen beregnes automatisk på baggrund af oplysningerne i felterne Betalingsbeting.kode og Bilagsdato på købshovedet.;
+                           ENU=Specifies when the invoice is due. The program calculates the date using the Payment Terms Code and Document Date fields on the purchase header.];
+                SourceExpr="Due Date";
+                Importance=Promoted;
+                Editable=FALSE }
+
+    { 84  ;3   ;Field     ;
+                ToolTipML=[DAN=Beskriver betalingsformen for betalinger til kreditorer. Koden kopieres automatisk fra feltet Betalingsformskode på købshovedet.;
+                           ENU=Describes the method of payment for payments to vendors. The program has copied the code from the Payment Method Code field on the purchase header.];
+                SourceExpr="Payment Method Code";
+                Editable=FALSE }
+
+    { 9   ;2   ;Group     ;
+                Name=Status;
+                CaptionML=[DAN=Status;
+                           ENU=Status];
+                GroupType=Group }
+
+    { 15  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver, om den bogførte købsfaktura er betalt. Afkrydsningsfeltet Betalt markeres også, hvis en kreditnota for restbeløbet har udlignet den bogførte købsfaktura. I denne situation har du faktisk ikke indbetalt restbeløbet, men købsfakturaen er stadig markeret som Betalt, fordi restbeløbet er nul.;
+                           ENU=Specifies if the posted purchase invoice is paid. The Paid check box will also be selected if a credit memo for the remaining amount has been applied to the posted purchase invoice. In that situation, you have not actually paid the remaining amount, but the purchase invoice is still marked as Paid, because the remaining amount is zero.];
+                SourceExpr=Paid }
+
+    { 17  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver, om den bogførte købsfaktura er blevet rettet eller annulleret.;
+                           ENU=Specifies if the posted purchase invoice has been either corrected or canceled.];
+                SourceExpr=Canceled }
+
+    { 1907468901;2;Group  ;
+                Name=Currency;
+                CaptionML=[DAN=Valuta;
+                           ENU=Currency];
+                GroupType=Group }
+
+    { 87  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver den valutakode, der blev brugt til at beregne beløbet på fakturaen.;
+                           ENU=Specifies the currency code used to calculate the amounts on the invoice.];
+                SourceExpr="Currency Code";
+                Importance=Promoted }
+
+    { 52  ;1   ;Part      ;
+                Name=PurchInvLines;
+                SubPageLink=Document No.=FIELD(No.);
+                PagePartID=Page1358 }
+
+    { 5   ;1   ;Group     ;
+                Name=PayToAndShipToAddresses;
+                CaptionML=[DAN=Adresser på faktureringsleverandører;
+                           ENU=Pay-to Vendor Addresses];
+                GroupType=Group }
+
+    { 20  ;2   ;Field     ;
+                CaptionML=[DAN=Navn;
+                           ENU=Name];
+                ToolTipML=[DAN=Angiver navnet på den kreditor, du har modtaget fakturaen af.;
+                           ENU=Specifies the name of the vendor that you received the invoice from.];
+                SourceExpr="Pay-to Name";
+                Editable=FALSE }
+
+    { 22  ;2   ;Field     ;
+                CaptionML=[DAN=Adresse;
+                           ENU=Address];
+                ToolTipML=[DAN=Angiver adressen på den kreditor, du har modtaget fakturaen af.;
+                           ENU=Specifies the address of the vendor that you received the invoice from.];
+                SourceExpr="Pay-to Address";
+                Editable=FALSE }
+
+    { 24  ;2   ;Field     ;
+                CaptionML=[DAN=Adresse 2;
+                           ENU=Address 2];
+                ToolTipML=[DAN=Indeholder en supplerende adresse på den kreditor, du har modtaget fakturaen.;
+                           ENU=Contains an additional part of the address of the vendor that the invoice was received from.];
+                SourceExpr="Pay-to Address 2";
+                Editable=FALSE }
+
+    { 78  ;2   ;Field     ;
+                CaptionML=[DAN=Postnr.;
+                           ENU=Post Code];
+                ToolTipML=[DAN=Angiver postnummeret for kreditorens adresse, som betalingen sker til.;
+                           ENU=Specifies the post code of the vendor's address that payment is made to.];
+                SourceExpr="Pay-to Post Code";
+                Editable=FALSE }
+
+    { 26  ;2   ;Field     ;
+                CaptionML=[DAN=By;
+                           ENU=City];
+                ToolTipML=[DAN=Angiver byen på den kreditor, du har modtaget fakturaen af.;
+                           ENU=Specifies the city name of the vendor that you received the invoice from.];
+                SourceExpr="Pay-to City";
+                Editable=FALSE }
+
+    { 28  ;2   ;Field     ;
+                CaptionML=[DAN=Kontakt;
+                           ENU=Contact];
+                ToolTipML=[DAN=Angiver navnet på kontaktpersonen hos den kreditor, du har modtaget fakturaen af.;
+                           ENU=Specifies the name of the person you should contact at the vendor that you received the invoice from.];
+                SourceExpr="Pay-to Contact";
+                Editable=FALSE }
+
+  }
+  CODE
+  {
+    VAR
+      PurchInvHeader@1000 : Record 122;
+      AllowDotNetAddIn@1001 : Boolean INDATASET;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,47 @@
+OBJECT Table 2000000114 Document Service
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Dokumenttjeneste;
+               ENU=Document Service];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Service ID          ;Code30        ;CaptionML=[DAN=Tjeneste-id;
+                                                              ENU=Service ID] }
+    { 3   ;   ;Description         ;Text80        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 5   ;   ;Location            ;Text250       ;CaptionML=[DAN=Lokation;
+                                                              ENU=Location] }
+    { 7   ;   ;User Name           ;Text128       ;CaptionML=[DAN=Brugernavn;
+                                                              ENU=User Name] }
+    { 9   ;   ;Password            ;Text128       ;CaptionML=[DAN=Adgangskode;
+                                                              ENU=Password] }
+    { 11  ;   ;Document Repository ;Text250       ;CaptionML=[DAN=Dokumentlager;
+                                                              ENU=Document Repository] }
+    { 13  ;   ;Folder              ;Text250       ;CaptionML=[DAN=Mappe;
+                                                              ENU=Folder] }
+  }
+  KEYS
+  {
+    {    ;Service ID                              ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Service ID,Description                   }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

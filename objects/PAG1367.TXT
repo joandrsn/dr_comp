@@ -1,0 +1,293 @@
+OBJECT Page 1367 Mini Purchase Credit Memos
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Købskreditnotaer;
+               ENU=Purchase Credit Memos];
+    SourceTable=Table38;
+    SourceTableView=WHERE(Document Type=CONST(Credit Memo));
+    PageType=List;
+    CardPageID=Mini Purchase Credit Memo;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Faktura,Bogføring;
+                                ENU=New,Process,Report,Invoice,Posting];
+    OnOpenPage=VAR
+                 FileManagement@1000 : Codeunit 419;
+               BEGIN
+                 SetSecurityFilterOnRespCenter;
+
+                 AllowDotNetAddIn := FileManagement.CanRunDotNetOnClient;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 21      ;0   ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1900000003;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 24      ;1   ;ActionGroup;
+                      Name=Invoice;
+                      CaptionML=[DAN=&Faktura;
+                                 ENU=&Invoice];
+                      Image=Invoice }
+      { 4       ;2   ;Action    ;
+                      Name=<Page Mini Vendor Card>;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=[DAN=Leverandør (Kreditor);
+                                 ENU=Vendor];
+                      ToolTipML=[DAN=Vis eller rediger detaljerede oplysninger om kreditoren i det valgte købsdokument.;
+                                 ENU=View or edit detailed information about the vendor on the selected purchase document.];
+                      RunObject=Page 1330;
+                      RunPageLink=No.=FIELD(Buy-from Vendor No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Vendor;
+                      PromotedCategory=Category4;
+                      Scope=Repeater }
+      { 49      ;1   ;ActionGroup;
+                      Name=Posting;
+                      CaptionML=[DAN=&Bogføring;
+                                 ENU=P&osting];
+                      Image=Post }
+      { 51      ;2   ;Action    ;
+                      Name=Post;
+                      ShortCutKey=F9;
+                      CaptionML=[DAN=&Bogfør;
+                                 ENU=P&ost];
+                      ToolTipML=[DAN=Færdiggør købsdokumentet. Ved bogføring opdateres kontiene med de beløb og mængder, der er angivet i dokumentet.;
+                                 ENU=Finalize the purchase document. Posting updates your books with the document's amounts and quantities.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostOrder;
+                      PromotedCategory=Category5;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 Post(CODEUNIT::"Purch.-Post (Yes/No)");
+                               END;
+                                }
+      { 20      ;2   ;Action    ;
+                      Name=Preview;
+                      CaptionML=[DAN=Vis bogføring;
+                                 ENU=Preview Posting];
+                      Image=ViewPostedOrder;
+                      OnAction=VAR
+                                 PurchPostYesNo@1001 : Codeunit 91;
+                               BEGIN
+                                 PurchPostYesNo.Preview(Rec);
+                               END;
+                                }
+      { 1001    ;2   ;Action    ;
+                      Name=Print;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=U&dskriv;
+                                 ENU=&Print];
+                      ToolTipML=[DAN=Udskriv en kopi af den valgte købskreditnota.;
+                                 ENU=Print a copy of the selected purchase credit memo.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Print;
+                      PromotedCategory=Category5;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 PostAndPrint(CODEUNIT::"Purch.-Post");
+                               END;
+                                }
+      { 19      ;0   ;ActionContainer;
+                      ActionContainerType=Reports }
+      { 18      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Salg;
+                                 ENU=Sales];
+                      Image=Sales }
+      { 17      ;2   ;Action    ;
+                      Name=<Report Vendor - Top 10 List>;
+                      CaptionML=[DAN=Kreditor - top 10-liste;
+                                 ENU=Vendor - Top 10 List];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en liste over, hvilke kreditorer du køber mest hos, eller som du skylder mest til.;
+                                 ENU=View, print, or save a list of the vendors from whom you purchase the most or to whom you owe the most.];
+                      RunObject=Report 111;
+                      Image=Report }
+      { 16      ;2   ;Action    ;
+                      Name=<Report Vendor - Purchase List>;
+                      CaptionML=[DAN=Kreditor - købsoversigt;
+                                 ENU=Vendor - Purchase List];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en liste over dine køb i en periode, f.eks. for at rapportere købsaktiviteter til SKAT.;
+                                 ENU=View, print, or save a list of your purchases in a period, for example, to report purchase activity to customs and tax authorities.];
+                      RunObject=Report 119;
+                      Image=Report }
+      { 15      ;2   ;Action    ;
+                      Name=<Report Puchase Statistics>;
+                      CaptionML=[DAN=Købsstatistik;
+                                 ENU=Purchase Statistics];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over beløb for køb, fakturarabat og kontantrabat i DKK for hver kreditor, f.eks. for at analysere varekøb for en enkelt debitor og tendenser for varekøb.;
+                                 ENU=View, print, or save an overview of amounts for purchases, invoice discount, and payment discount in LCY for each vendor, for example, to analyze item purchases for an individual customer and trends for item purchases.];
+                      RunObject=Report 112;
+                      Image=Report }
+      { 14      ;1   ;ActionGroup;
+                      Name=Finance;
+                      CaptionML=[DAN=Finans;
+                                 ENU=Finance];
+                      Image=Sales }
+      { 13      ;2   ;Action    ;
+                      CaptionML=[DAN=Kontoudtog;
+                                 ENU=Statement];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en liste over dine transaktioner for en kreditor i en valgt periode, f.eks. for at undersøge udgiftstendenser.;
+                                 ENU=View, print, or save a list of your transactions for a vendor for a selected period, for example, to study expenditure trends.];
+                      RunObject=Report 116;
+                      Image=Report }
+      { 12      ;2   ;Action    ;
+                      CaptionML=[DAN=Kreditor - saldo til dato;
+                                 ENU=Vendor - Balance to Date];
+                      ToolTipML=[DAN=Vis, udskriv eller gem kreditorsaldi på en bestemt dato, f.eks. hvis du vil udtrække oplysninger om dine samlede udgifter ved slutningen af en regnskabsperiode eller et regnskabsår.;
+                                 ENU=View, print, or save vendors' balances on a certain date, for example, to extract your total expenses at the close of an accounting period or fiscal year.];
+                      RunObject=Report 121;
+                      Image=Report }
+      { 11      ;2   ;Action    ;
+                      Name=<Report Vendor - Trial Balance;
+                      CaptionML=[DAN=Kreditor - balance;
+                                 ENU=Vendor - Trial Balance];
+                      ToolTipML=[DAN=Vis, udskriv eller gem start- og slutsaldi for kreditorer med poster i en bestemt periode. Rapporten kan bruges til at bekræfte, at saldoen for en kreditorbogføringsgruppe svarer til saldoen på den tilsvarende finanskonto på en bestemt dato.;
+                                 ENU=View, print, or save the beginning and ending balance for vendors with entries within a specified period. The report can be used to verify that the balance for a vendor posting group is equal to the balance on the corresponding general ledger account on a certain date.];
+                      RunObject=Report 129;
+                      Image=Report }
+      { 10      ;2   ;Action    ;
+                      Name=[<Report Vendor - Detail Trial ];
+                      CaptionML=[DAN=Kreditor - detaljeret råbalance;
+                                 ENU=Vendor - Detail. Trial Balance];
+                      ToolTipML=[DAN=Vis, udskriv eller gem saldi for kreditorer med saldi på en bestemt dato, f.eks. ved slutningen af en regnskabsperiode eller i forbindelse med revision.;
+                                 ENU=View, print, or save the balance for vendors with balances on a specified date, for example, at the close of an accounting period or for an audit.];
+                      RunObject=Report 104;
+                      Image=Report }
+      { 9       ;2   ;Action    ;
+                      Name=<Report Vendor - Summary Aging;
+                      CaptionML=[DAN=Kreditor - forfaldsoversigt;
+                                 ENU=Vendor - Summary Aging];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over skyldige beløb til hver kreditor, opdelt i tre tidsperioder. Rapporten kan bruges, når der skal udarbejdes likviditetsanalyser.;
+                                 ENU=View, print, or save a summary of the payables owed to each vendor, divided into three time periods. The report can be used to prepare liquidity analyses.];
+                      RunObject=Report 105;
+                      Image=Report }
+      { 8       ;2   ;Action    ;
+                      Name=<Report Vendor Detailed Aging>;
+                      CaptionML=[DAN=Forfaldne debitorposter;
+                                 ENU=Vendor Detailed Aging];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en detaljeret liste over dine forfaldne betalinger til kreditorer, opdelt i tre tidsperioder.;
+                                 ENU=View, print, or save a detailed list of your due payments to vendors, divided into three time periods.];
+                      RunObject=Report 106;
+                      Image=Report }
+      { 7       ;2   ;Action    ;
+                      Name=<Report Aged Accounts Payables;
+                      CaptionML=[DAN=Aldersfordelt gæld;
+                                 ENU=Aged Accounts Payables];
+                      ToolTipML=[DAN=Vis, udskriv eller gem en oversigt over, hvornår dine skyldige beløb til kreditorer skal betales eller rykkes for, opdelt i fire tidsperioder. Du skal angive den dato, som aldersfordelingen skal beregnes ud fra, og du skal angive den periode, som hver kolonne skal indeholde data for.;
+                                 ENU=View, print, or save an overview of when your payables to vendors are due or overdue, divided into four periods. You must specify the date you want aging calculated from and the length of the period that each column will contain data for.];
+                      RunObject=Report 120;
+                      Image=Report }
+      { 5       ;2   ;Action    ;
+                      Name=<Report Vendor - Payment Recei;
+                      CaptionML=[DAN=Kreditor - betalingskvittering;
+                                 ENU=Vendor - Payment Receipt];
+                      ToolTipML=[DAN=Vis, udskriv eller gem et dokument, der viser, hvilke kreditorposter en betaling er registreret på.;
+                                 ENU=View, print, or save a document showing which vendor ledger entries that a payment has been applied to.];
+                      RunObject=Report 211;
+                      Image=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på købsbilaget. Feltet er kun synligt, hvis du ikke har defineret en nummerserie for denne type købsdokument, eller hvis feltet Manuel nummerering er markeret for nummerserien.;
+                           ENU=Specifies the number of the purchase document. The field is only visible if you have not set up a number series for the type of purchase document, or if the Manual Nos. field is selected for the number series.];
+                SourceExpr="No." }
+
+    { 6   ;2   ;Field     ;
+                CaptionML=[DAN=Kreditornavn;
+                           ENU=Vendor Name];
+                ToolTipML=[DAN=Angiver navnet på den kreditor, der leverer varerne.;
+                           ENU=Specifies the name of the vendor who ships the items.];
+                SourceExpr="Buy-from Vendor Name" }
+
+    { 26  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvornår fakturaen er forfalden. Datoen beregnes automatisk på baggrund af oplysningerne i felterne Betalingsbeting.kode og Bilagsdato.;
+                           ENU=Specifies when the invoice is due. The program calculates the date using the Payment Terms Code and Document Date fields.];
+                SourceExpr="Due Date" }
+
+    { 3   ;2   ;Field     ;
+                ToolTipML=[DAN=Viser summen af de beløb, der er angivet i feltet Beløb på de tilhørende købslinjer.;
+                           ENU=Shows the sum of the amounts in the Amount field on the associated purchase lines.];
+                SourceExpr=Amount }
+
+  }
+  CODE
+  {
+    VAR
+      MiniLinesInstructionMgt@1000 : Codeunit 1320;
+      OpenPostedPurchCrMemoQst@1001 : TextConst 'DAN=Kreditnotaen er blevet bogført og arkiveret.\\Vil du åbne den bogførte kreditnota fra listen Bogført købskreditnota?;ENU=The credit memo has been posted and archived.\\Do you want to open the posted credit memo from the Posted Purchase Credit Memo list?';
+      PostAndPrintQst@1002 : TextConst 'DAN=Vil du bogføre og udskrive kreditnotaen?;ENU=Do you want to post and print the credit memo?';
+      AllowDotNetAddIn@1003 : Boolean INDATASET;
+
+    LOCAL PROCEDURE Post@4(PostingCodeunitID@1000 : Integer);
+    VAR
+      PreAssignedNo@1001 : Code[20];
+    BEGIN
+      MiniLinesInstructionMgt.PurchaseCheckAllLinesHaveQuantityAssigned(Rec);
+      PreAssignedNo := "No.";
+      SendToPosting(PostingCodeunitID);
+      IF "Job Queue Status" = "Job Queue Status"::"Scheduled for Posting" THEN
+        CurrPage.CLOSE
+      ELSE
+        ShowPostedConfirmationMessage(PreAssignedNo);
+    END;
+
+    LOCAL PROCEDURE PostAndPrint@1(PostingCodeunitID@1000 : Integer);
+    VAR
+      PurchCrMemoHdr@1001 : Record 124;
+      DocumentNo@1002 : Code[20];
+      PreAssignedNo@1003 : Code[20];
+    BEGIN
+      MiniLinesInstructionMgt.PurchaseCheckAllLinesHaveQuantityAssigned(Rec);
+
+      IF NOT CONFIRM(PostAndPrintQst,FALSE) THEN
+        EXIT;
+
+      PreAssignedNo := "No.";
+      SendToPosting(PostingCodeunitID);
+
+      IF "Last Posting No." = '' THEN
+        DocumentNo := "No."
+      ELSE
+        DocumentNo := "Last Posting No.";
+
+      IF PurchCrMemoHdr.GET(DocumentNo) THEN BEGIN
+        PurchCrMemoHdr.SETRECFILTER;
+        COMMIT;
+        PurchCrMemoHdr.PrintRecords(NOT AllowDotNetAddIn);
+        ShowPostedConfirmationMessage(PreAssignedNo);
+      END;
+    END;
+
+    LOCAL PROCEDURE ShowPostedConfirmationMessage@7(PreAssignedNo@1001 : Code[20]);
+    VAR
+      PurchCrMemoHdr@1000 : Record 124;
+    BEGIN
+      PurchCrMemoHdr.SETRANGE("Pre-Assigned No.",PreAssignedNo);
+      IF PurchCrMemoHdr.FINDFIRST THEN
+        IF DIALOG.CONFIRM(OpenPostedPurchCrMemoQst,FALSE) THEN
+          PAGE.RUN(PAGE::"Mini Posted Purch. Credit Memo",PurchCrMemoHdr);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

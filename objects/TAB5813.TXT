@@ -1,0 +1,85 @@
+OBJECT Table 5813 Inventory Posting Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Opsætning af varebogføring;
+               ENU=Inventory Posting Setup];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Location Code       ;Code10        ;TableRelation=Location;
+                                                   CaptionML=[DAN=Lokationskode;
+                                                              ENU=Location Code] }
+    { 2   ;   ;Invt. Posting Group Code;Code10    ;TableRelation="Inventory Posting Group";
+                                                   CaptionML=[DAN=Varebogføringsgruppekode;
+                                                              ENU=Invt. Posting Group Code];
+                                                   NotBlank=Yes }
+    { 6   ;   ;Inventory Account   ;Code20        ;TableRelation="G/L Account";
+                                                   OnValidate=BEGIN
+                                                                CheckGLAcc("Inventory Account");
+                                                              END;
+
+                                                   CaptionML=[DAN=Lagerkonto;
+                                                              ENU=Inventory Account] }
+    { 5800;   ;Inventory Account (Interim);Code20 ;TableRelation="G/L Account";
+                                                   OnValidate=BEGIN
+                                                                CheckGLAcc("Inventory Account (Interim)");
+                                                              END;
+
+                                                   CaptionML=[DAN=Lagerkonto (mellemkto.);
+                                                              ENU=Inventory Account (Interim)] }
+    { 99000750;;WIP Account        ;Code20        ;TableRelation="G/L Account";
+                                                   AccessByPermission=TableData 5405=R;
+                                                   CaptionML=[DAN=VIA-konto;
+                                                              ENU=WIP Account] }
+    { 99000753;;Material Variance Account;Code20  ;TableRelation="G/L Account";
+                                                   CaptionML=[DAN=Mat. omk.afvigelseskonto;
+                                                              ENU=Material Variance Account] }
+    { 99000754;;Capacity Variance Account;Code20  ;TableRelation="G/L Account";
+                                                   CaptionML=[DAN=Kap.omk.afvigelseskonto;
+                                                              ENU=Capacity Variance Account] }
+    { 99000755;;Mfg. Overhead Variance Account;Code20;
+                                                   TableRelation="G/L Account";
+                                                   CaptionML=[DAN=Indir. prod. omkostningsafv.konto;
+                                                              ENU=Mfg. Overhead Variance Account] }
+    { 99000756;;Cap. Overhead Variance Account;Code20;
+                                                   TableRelation="G/L Account";
+                                                   CaptionML=[DAN=Indir. kap.kostprisafv.konto;
+                                                              ENU=Cap. Overhead Variance Account] }
+    { 99000757;;Subcontracted Variance Account;Code20;
+                                                   TableRelation="G/L Account";
+                                                   AccessByPermission=TableData 5405=R;
+                                                   CaptionML=[DAN=Underlev.kostafvigelseskonto;
+                                                              ENU=Subcontracted Variance Account] }
+  }
+  KEYS
+  {
+    {    ;Location Code,Invt. Posting Group Code  ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE CheckGLAcc@2(AccNo@1000 : Code[20]);
+    VAR
+      GLAcc@1001 : Record 15;
+    BEGIN
+      IF AccNo <> '' THEN BEGIN
+        GLAcc.GET(AccNo);
+        GLAcc.CheckGLAcc;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

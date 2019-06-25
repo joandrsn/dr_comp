@@ -1,0 +1,40 @@
+OBJECT Table 5719 Nonstock Item Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=05-11-08;
+    Time=12:00:00;
+    Version List=NAVW16.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Katalogvareopsætning;
+               ENU=Nonstock Item Setup];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 2   ;   ;No. Format          ;Option        ;CaptionML=[DAN=Nummerformat;
+                                                              ENU=No. Format];
+                                                   OptionCaptionML=[DAN=Leverandørs varenr.,Prod. + Lev. varenr.,Lev. varenr. + Prod.,Løbenr.;
+                                                                    ENU=Vendor Item No.,Mfr. + Vendor Item No.,Vendor Item No. + Mfr.,Entry No.];
+                                                   OptionString=Vendor Item No.,Mfr. + Vendor Item No.,Vendor Item No. + Mfr.,Entry No. }
+    { 3   ;   ;No. Format Separator;Code1         ;CaptionML=[DAN=Separator i nummerformat;
+                                                              ENU=No. Format Separator] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

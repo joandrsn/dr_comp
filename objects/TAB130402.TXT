@@ -1,0 +1,35 @@
+OBJECT Table 130402 CAL Test Codeunit
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=CAL Test Codeunit;
+               ENU=CAL Test Codeunit];
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;Integer       ;CaptionML=[DAN=ID;
+                                                              ENU=ID] }
+    { 2   ;   ;File                ;Text250       ;CaptionML=[DAN=File;
+                                                              ENU=File] }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

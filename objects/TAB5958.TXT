@@ -1,0 +1,46 @@
+OBJECT Table 5958 Resource Service Zone
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Ressourceservicezone;
+               ENU=Resource Service Zone];
+    LookupPageID=Page6021;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Resource No.        ;Code20        ;TableRelation=Resource;
+                                                   CaptionML=[DAN=Ressourcenr.;
+                                                              ENU=Resource No.];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Service Zone Code   ;Code10        ;TableRelation="Service Zone";
+                                                   CaptionML=[DAN=Servicezonekode;
+                                                              ENU=Service Zone Code];
+                                                   NotBlank=Yes }
+    { 3   ;   ;Starting Date       ;Date          ;CaptionML=[DAN=Startdato;
+                                                              ENU=Starting Date] }
+    { 4   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+  }
+  KEYS
+  {
+    {    ;Resource No.,Service Zone Code,Starting Date;
+                                                   Clustered=Yes }
+    {    ;Service Zone Code,Starting Date,Resource No. }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

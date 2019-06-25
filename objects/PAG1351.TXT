@@ -1,0 +1,141 @@
+OBJECT Page 1351 Mini Inventory Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Lageropsætning;
+               ENU=Inventory Setup];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    SourceTable=Table313;
+    PageType=Card;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Generelt,Bogføring,Kladdetyper;
+                                ENU=New,Process,Report,General,Posting,Journal Templates];
+    OnOpenPage=BEGIN
+                 RESET;
+                 IF NOT GET THEN BEGIN
+                   INIT;
+                   INSERT;
+                 END;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 10      ;    ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 11      ;1   ;Action    ;
+                      CaptionML=[DAN=Lagerperioder;
+                                 ENU=Inventory Periods];
+                      ToolTipML=[DAN=Konfigurer perioder i kombinationer med dine regnskabsperioder, der definerer, hvornår du kan bogføre transaktioner, der påvirker værdien af din varebeholdning. Når du lukker lagerperioden, kan du ikke bogføre ændringer af lagerværdien, hverken den forventede eller faktiske værdi, før lagerperiodens slutdato.;
+                                 ENU=Set up periods in combinations with your accounting periods that define when you can post transactions that affect the value of your item inventory. When you close an inventory period, you cannot post any changes to the inventory value, either expected or actual value, before the ending date of the inventory period.];
+                      RunObject=Page 5828;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Period;
+                      PromotedCategory=Category4 }
+      { 12      ;1   ;Action    ;
+                      CaptionML=[DAN=Enheder;
+                                 ENU=Units of Measure];
+                      ToolTipML=[DAN=Konfigurer de enheder, f.eks. PSC eller TIME, som du kan vælge mellem, i vinduet Enheder, som du har adgang til fra varekortet.;
+                                 ENU=Set up the units of measure, such as PSC or HOUR, that you can select from in the Item Units of Measure window that you access from the item card.];
+                      RunObject=Page 209;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=UnitOfMeasure;
+                      PromotedCategory=Category4 }
+      { 20      ;1   ;Action    ;
+                      CaptionML=[DAN=Varerabatgrupper;
+                                 ENU=Item Discount Groups];
+                      ToolTipML=[DAN=Konfigurer rabatgruppekoder, som du kan bruge som kriterier, når du definerer særlige rabatter på et debitor-, kreditor- eller varekort.;
+                                 ENU=Set up discount group codes that you can use as criteria when you define special discounts on a customer, vendor, or item card.];
+                      RunObject=Page 513;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Discount;
+                      PromotedCategory=Category4 }
+      { 13      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Bogføring;
+                                 ENU=Posting] }
+      { 14      ;2   ;Action    ;
+                      CaptionML=[DAN=Opsætning af varebogføring;
+                                 ENU=Inventory Posting Setup];
+                      ToolTipML=[DAN=Konfigurer links mellem varebogføringsgrupper, lagerlokationer og finanskonti for at definere, hvor transaktioner for lagervarer registreres i finansbogholderiet.;
+                                 ENU=Set up links between inventory posting groups, inventory locations, and general ledger accounts to define where transactions for inventory items are recorded in the general ledger.];
+                      RunObject=Page 5826;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostedInventoryPick;
+                      PromotedCategory=Category5 }
+      { 15      ;2   ;Action    ;
+                      CaptionML=[DAN=Varebogføringsgrupper;
+                                 ENU=Inventory Posting Groups];
+                      ToolTipML=[DAN=Konfigurer de bogføringsgrupper, du tildeler til varekort, for at knytte forretningstransaktioner for varen til en lagerkonto i finansbogholderiet for at gruppere beløb for den pågældende varetype.;
+                                 ENU=Set up the posting groups that you assign to item cards to link business transactions made for the item with an inventory account in the general ledger to group amounts for that item type.];
+                      RunObject=Page 112;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ItemGroup;
+                      PromotedCategory=Category5 }
+      { 16      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Kladdetyper;
+                                 ENU=Journal Templates] }
+      { 17      ;2   ;Action    ;
+                      CaptionML=[DAN=Varekladdetyper;
+                                 ENU=Item Journal Templates];
+                      ToolTipML=[DAN=Konfigurer nummerserier og årsagskoder i de kladder, du bruger til lagerregulering. Ved at bruge de forskellige kladder kan du udforme vinduer med forskelligt layout, og du kan tildele sporingskoder, nummerserier og rapporter til hver kladde.;
+                                 ENU=Set up number series and reason codes in the journals that you use for inventory adjustment. By using different templates you can design windows with different layouts and you can assign trace codes, number series, and reports to each template.];
+                      RunObject=Page 102;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=JournalSetup;
+                      PromotedCategory=Category6 }
+    }
+  }
+  CONTROLS
+  {
+    { 101 ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                CaptionML=[DAN=Konfigurationsfelter;
+                           ENU=Setup Fields];
+                GroupType=Group }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, at funktionen Aut.lagerværdibogføring er anvendt.;
+                           ENU=Specifies that the Automatic Cost Posting function is used.];
+                SourceExpr="Automatic Cost Posting" }
+
+    { 36  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om der automatisk reguleres for eventuelle kostprisændringer, hver gang du bogfører lagertransaktioner. Reguleringsprocessen og følgerne af den er de samme som for kørslen Reguler kostværdi - vareposter.;
+                           ENU=Specifies whether to adjust for any cost changes automatically every time that you post inventory transactions. The adjustment process and its consequences are the same as for the Adjust Cost - Item Entries batch job.];
+                SourceExpr="Automatic Cost Adjustment" }
+
+    { 3   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om du kan bogføre transaktioner, der vil bringe lagerniveauer under nul.;
+                           ENU=Specifies if you can post transactions that will bring inventory levels below zero.];
+                SourceExpr="Prevent Negative Inventory" }
+
+    { 4   ;2   ;Field     ;
+                Lookup=Yes;
+                CaptionML=[DAN=Varenumre;
+                           ENU=Item Numbers];
+                ToolTipML=[DAN=Angiver koden til den nummerserie, der skal bruges ved tildeling af numre til varer. Klik på feltet for at få vist de nummerserier, der er blevet oprettet i tabellen Nummerserie.;
+                           ENU=Specifies the code for the number series that will be used to assign numbers to items. To see the number series that have been set up in the No. Series table, choose the field.];
+                SourceExpr="Item Nos.";
+                TableRelation="No. Series".Code }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

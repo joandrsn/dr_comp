@@ -1,0 +1,196 @@
+OBJECT Page 452 Issued Fin. Charge Memo List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26-11-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.43897,NAVDK9.00.00.43897;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Udstedt rentenota - oversigt;
+               ENU=Issued Fin. Charge Memo List];
+    InsertAllowed=No;
+    ModifyAllowed=No;
+    SourceTable=Table304;
+    DataCaptionFields=Customer No.;
+    PageType=List;
+    CardPageID=Issued Finance Charge Memo;
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 8       ;1   ;ActionGroup;
+                      CaptionML=[DAN=N&ota;
+                                 ENU=&Memo];
+                      Image=Notes }
+      { 11      ;2   ;Action    ;
+                      CaptionML=[DAN=Be&mærkninger;
+                                 ENU=Co&mments];
+                      RunObject=Page 454;
+                      RunPageLink=Type=CONST(Issued Finance Charge Memo),
+                                  No.=FIELD(No.);
+                      Image=ViewComments }
+      { 10      ;2   ;Action    ;
+                      CaptionML=[DAN=&Debitor;
+                                 ENU=C&ustomer];
+                      RunObject=Page 22;
+                      RunPageLink=No.=FIELD(Customer No.);
+                      Image=Customer }
+      { 27      ;2   ;Separator  }
+      { 28      ;2   ;Action    ;
+                      ShortCutKey=F7;
+                      CaptionML=[DAN=Statistik;
+                                 ENU=Statistics];
+                      RunObject=Page 453;
+                      RunPageLink=No.=FIELD(No.);
+                      Promoted=Yes;
+                      Image=Statistics;
+                      PromotedCategory=Process }
+      { 1060000 ;2   ;Separator  }
+      { 1060001 ;2   ;Action    ;
+                      CaptionML=[DAN=Opret elektronisk rentenota;
+                                 ENU=Create Electronic Finance Charge Memo];
+                      Promoted=Yes;
+                      Image=ElectronicDoc;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 IssuedFinChargeMemoHeader@1060000 : Record 304;
+                               BEGIN
+                                 IssuedFinChargeMemoHeader := Rec;
+                                 IssuedFinChargeMemoHeader.SETRECFILTER;
+
+                                 REPORT.RUNMODAL(REPORT::"Create Elec. Fin. Chrg. Memos",TRUE,FALSE,IssuedFinChargeMemoHeader);
+                               END;
+                                }
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 16      ;1   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=U&dskriv;
+                                 ENU=&Print];
+                      Promoted=Yes;
+                      Image=Print;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 IssuedFinChrgMemoHeader@1001 : Record 304;
+                               BEGIN
+                                 CurrPage.SETSELECTIONFILTER(IssuedFinChrgMemoHeader);
+                                 IssuedFinChrgMemoHeader.PrintRecords(TRUE,FALSE,FALSE);
+                               END;
+                                }
+      { 5       ;1   ;Action    ;
+                      CaptionML=[DAN=&Mail;
+                                 ENU=&Email];
+                      Promoted=Yes;
+                      Image=Email;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 IssuedFinChrgMemoHeader@1000 : Record 304;
+                               BEGIN
+                                 IssuedFinChrgMemoHeader := Rec;
+                                 CurrPage.SETSELECTIONFILTER(IssuedFinChrgMemoHeader);
+                                 IssuedFinChrgMemoHeader.PrintRecords(FALSE,TRUE,FALSE);
+                               END;
+                                }
+      { 55      ;1   ;Action    ;
+                      CaptionML=[DAN=&Naviger;
+                                 ENU=&Navigate];
+                      Promoted=Yes;
+                      Image=Navigate;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 Navigate;
+                               END;
+                                }
+      { 1900000006;0 ;ActionContainer;
+                      ActionContainerType=Reports }
+      { 1902355906;1 ;Action    ;
+                      CaptionML=[DAN=Rentenotanumre;
+                                 ENU=Finance Charge Memo Nos.];
+                      RunObject=Report 127;
+                      Promoted=No;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1902299006;1 ;Action    ;
+                      CaptionML=[DAN=Debitor - saldo til dato;
+                                 ENU=Customer - Balance to Date];
+                      RunObject=Report 121;
+                      Promoted=Yes;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1906871306;1 ;Action    ;
+                      CaptionML=[DAN=Debitor - kontokort;
+                                 ENU=Customer - Detail Trial Bal.];
+                      RunObject=Report 104;
+                      Promoted=No;
+                      Image=Report;
+                      PromotedCategory=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr="No." }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr="Customer No." }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr=Name }
+
+    { 17  ;2   ;Field     ;
+                SourceExpr="Currency Code" }
+
+    { 12  ;2   ;Field     ;
+                DrillDown=No;
+                SourceExpr="Interest Amount" }
+
+    { 38  ;2   ;Field     ;
+                SourceExpr="Post Code";
+                Visible=FALSE }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr=City;
+                Visible=FALSE }
+
+    { 46  ;2   ;Field     ;
+                SourceExpr="No. Printed";
+                Visible=FALSE }
+
+    { 22  ;2   ;Field     ;
+                SourceExpr="Shortcut Dimension 1 Code";
+                Visible=FALSE }
+
+    { 24  ;2   ;Field     ;
+                SourceExpr="Shortcut Dimension 2 Code";
+                Visible=FALSE }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=TRUE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

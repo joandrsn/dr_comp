@@ -1,0 +1,42 @@
+OBJECT Table 9800 Table Permission Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Tabeltilladelsesbuffer;
+               ENU=Table Permission Buffer];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Table ID            ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[DAN=Tabel-id;
+                                                              ENU=Table ID] }
+    { 2   ;   ;Session ID          ;Integer       ;CaptionML=[DAN=Sessions-id;
+                                                              ENU=Session ID] }
+    { 3   ;   ;Insert Permission   ;Boolean       ;CaptionML=[DAN=Indsætterettighed;
+                                                              ENU=Insert Permission] }
+    { 4   ;   ;Modify Permission   ;Boolean       ;CaptionML=[DAN=Redigeringsrettighed;
+                                                              ENU=Modify Permission] }
+    { 5   ;   ;Delete Permission   ;Boolean       ;CaptionML=[DAN=Sletterettighed;
+                                                              ENU=Delete Permission] }
+  }
+  KEYS
+  {
+    {    ;Table ID,Session ID                     ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

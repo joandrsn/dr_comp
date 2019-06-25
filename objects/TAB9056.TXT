@@ -1,0 +1,96 @@
+OBJECT Table 9056 Manufacturing Cue
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Produktionskøindikator;
+               ENU=Manufacturing Cue];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 2   ;   ;Planned Prod. Orders - All;Integer ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Production Order" WHERE (Status=CONST(Planned)));
+                                                   CaptionML=[DAN=Planlagte prod.ordrer - alle;
+                                                              ENU=Planned Prod. Orders - All] }
+    { 3   ;   ;Firm Plan. Prod. Orders - All;Integer;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Count("Production Order" WHERE (Status=CONST(Firm Planned)));
+                                                   CaptionML=[DAN=Fastlagte planlagte prod.ordrer - alle;
+                                                              ENU=Firm Plan. Prod. Orders - All] }
+    { 4   ;   ;Released Prod. Orders - All;Integer;FieldClass=FlowField;
+                                                   CalcFormula=Count("Production Order" WHERE (Status=CONST(Released)));
+                                                   CaptionML=[DAN=Frigivne prod.ordrer - alle;
+                                                              ENU=Released Prod. Orders - All] }
+    { 5   ;   ;Prod. BOMs under Development;Integer;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Count("Production BOM Header" WHERE (Status=CONST(Under Development)));
+                                                   CaptionML=[DAN=Prod.styklister under udvikling;
+                                                              ENU=Prod. BOMs under Development] }
+    { 6   ;   ;Routings under Development;Integer ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Routing Header" WHERE (Status=CONST(Under Development)));
+                                                   CaptionML=[DAN=Ruter under udvikling;
+                                                              ENU=Routings under Development] }
+    { 7   ;   ;Purchase Orders     ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Order),
+                                                                                              Assigned User ID=FIELD(User ID Filter)));
+                                                   AccessByPermission=TableData 120=R;
+                                                   CaptionML=[DAN=Købsordrer;
+                                                              ENU=Purchase Orders] }
+    { 8   ;   ;Prod. Orders Routings-in Queue;Integer;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Count("Prod. Order Routing Line" WHERE (Starting Date=FIELD(Date Filter),
+                                                                                                       Routing Status=FILTER(' '|Planned)));
+                                                   CaptionML=[DAN=Produktionsordreruter - i kø;
+                                                              ENU=Prod. Orders Routings-in Queue] }
+    { 9   ;   ;Prod. Orders Routings-in Prog.;Integer;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Count("Prod. Order Routing Line" WHERE (Ending Date=FIELD(Date Filter),
+                                                                                                       Routing Status=FILTER(In Progress)));
+                                                   CaptionML=[DAN=Produktionsordreruter - igangsatte;
+                                                              ENU=Prod. Orders Routings-in Prog.] }
+    { 10  ;   ;Invt. Picks to Production;Integer  ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Warehouse Activity Header" WHERE (Type=CONST(Pick),
+                                                                                                        Source Document=CONST(Prod. Consumption)));
+                                                   CaptionML=[DAN=Pluk til produktion (lager);
+                                                              ENU=Invt. Picks to Production] }
+    { 11  ;   ;Invt. Put-aways from Prod.;Integer ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Warehouse Activity Header" WHERE (Type=CONST(Pick),
+                                                                                                        Source Document=CONST(Prod. Output)));
+                                                   CaptionML=[DAN=Pluk fra produktion (lager);
+                                                              ENU=Invt. Put-aways from Prod.] }
+    { 12  ;   ;Released Prod. Orders - Today;Integer;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Count("Production Order" WHERE (Status=CONST(Released),
+                                                                                               Starting Date=FIELD(Date Filter)));
+                                                   CaptionML=[DAN=Frigivne prod.ordrer - i dag;
+                                                              ENU=Released Prod. Orders - Today] }
+    { 20  ;   ;Date Filter         ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Datofilter;
+                                                              ENU=Date Filter];
+                                                   Editable=No }
+    { 21  ;   ;User ID Filter      ;Code50        ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Bruger-id-filter;
+                                                              ENU=User ID Filter] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

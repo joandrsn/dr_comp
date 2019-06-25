@@ -1,0 +1,38 @@
+OBJECT Table 2000000165 Tenant Permission Set
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Lejerrettighedssæt;
+               ENU=Tenant Permission Set];
+  }
+  FIELDS
+  {
+    { 1   ;   ;App ID              ;GUID          ;CaptionML=[DAN=App-id;
+                                                              ENU=App ID] }
+    { 2   ;   ;Role ID             ;Code20        ;CaptionML=[DAN=Rolle-id;
+                                                              ENU=Role ID] }
+    { 3   ;   ;Name                ;Text30        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+  }
+  KEYS
+  {
+    {    ;App ID,Role ID                          ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,192 @@
+OBJECT Page 9176 My Settings
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-10-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.43402;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Mine indstillinger;
+               ENU=My Settings];
+    PageType=StandardDialog;
+    OnOpenPage=VAR
+                 UserPersonalization@1000 : Record 2000000073;
+               BEGIN
+                 WITH UserPersonalization DO BEGIN
+                   GET(USERSECURITYID);
+                   LanguageID := "Language ID";
+                   LocaleID := "Locale ID";
+                   TimeZoneID := "Time Zone";
+                   VarCompany := Company;
+                   NewWorkdate := WORKDATE;
+                 END;
+               END;
+
+    OnQueryClosePage=VAR
+                       UserPersonalization@1002 : Record 2000000073;
+                     BEGIN
+                       IF CloseAction = ACTION::OK THEN
+                         WITH UserPersonalization DO BEGIN
+                           GET(USERSECURITYID);
+
+                           IF ("Language ID" <> LanguageID) OR
+                              ("Locale ID" <> LocaleID) OR
+                              ("Time Zone" <> TimeZoneID) OR
+                              (Company <> VarCompany)
+                           THEN BEGIN
+                             VALIDATE("Language ID",LanguageID);
+                             VALIDATE("Locale ID",LocaleID);
+                             VALIDATE("Time Zone",TimeZoneID);
+                             VALIDATE(Company,VarCompany);
+                             MODIFY;
+                             MESSAGE(ReSignInMsg);
+                           END;
+                         END;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                CaptionML=[DAN=Generelt;
+                           ENU=General];
+                GroupType=Group }
+
+    { 3   ;2   ;Field     ;
+                Name=Language;
+                CaptionML=[DAN=Sprog;
+                           ENU=Language];
+                ToolTipML=[DAN=Angiver de viste indstillinger for sprog på alle enheder. Hvis du ændrer sproget, træder ændringerne i kraft, når du logger af og logger på igen.;
+                           ENU=Specifies the display language on all devices. Changing the language will take effect once you sign out and sign in again.];
+                SourceExpr=GetLanguage;
+                Importance=Promoted;
+                Editable=FALSE;
+                OnAssistEdit=VAR
+                               LanguageManagement@1000 : Codeunit 43;
+                             BEGIN
+                               LanguageManagement.LookupApplicationLanguage(LanguageID);
+                             END;
+                              }
+
+    { 4   ;2   ;Field     ;
+                Name=Locale;
+                CaptionML=[DAN=Land/område;
+                           ENU=Region];
+                ToolTipML=[DAN=Angiver de viste indstillinger for land/område, f.eks. dato- og numerisk format, på alle enheder. Hvis du ændrer indstillingerne for land/område, træder ændringerne i kraft, når du logger af og logger på igen.;
+                           ENU=Specifies the regional settings, such as date and numeric format, on all devices. Changing the regional settings will take effect once you sign out and sign in again.];
+                SourceExpr=GetLocale;
+                OnAssistEdit=VAR
+                               LanguageManagement@1000 : Codeunit 43;
+                             BEGIN
+                               LanguageManagement.LookupWindowsLocale(LocaleID);
+                             END;
+                              }
+
+    { 5   ;2   ;Field     ;
+                Name=TimeZone;
+                CaptionML=[DAN=Tidszone;
+                           ENU=Time Zone];
+                ToolTipML=[DAN=Vælg indstilling for tidszone, der styrer tid og dato på alle enheder. Hvis du ændrer tidszonen, træder ændringerne i kraft, når du logger af og logger på igen.;
+                           ENU=Select the time zone setting that controls time and date on all devices. Changing the time zone will take effect once you sign out and sign in again.];
+                SourceExpr=GetTimeZone;
+                OnAssistEdit=VAR
+                               TimeZone@1000 : Record 2000000164;
+                             BEGIN
+                               TimeZone.SETCURRENTKEY("Display Name");
+                               TimeZone.ASCENDING(TRUE);
+
+                               IF PAGE.RUNMODAL(PAGE::"Time Zones",TimeZone) = ACTION::LookupOK THEN
+                                 TimeZoneID := TimeZone.ID;
+                             END;
+                              }
+
+    { 6   ;2   ;Field     ;
+                Name=Company;
+                CaptionML=[DAN=Virksomhed;
+                           ENU=Company];
+                ToolTipML=[DAN=Vælg den virksomhed, der skal arbejdes på på alle enheder. Hvis du ændrer virksomheden, træder ændringerne i kraft, når du logger af og logger på igen.;
+                           ENU=Select the company to work in on all devices. Changing the company will take effect once you sign out and sign in again.];
+                SourceExpr=VarCompany;
+                Editable=false;
+                OnAssistEdit=VAR
+                               SelectedCompany@1001 : Record 2000000006;
+                               AllowedCompanies@1000 : Page 9177;
+                             BEGIN
+                               AllowedCompanies.Initialize;
+
+                               IF SelectedCompany.GET(COMPANYNAME) THEN
+                                 AllowedCompanies.SETRECORD(SelectedCompany);
+
+                               AllowedCompanies.LOOKUPMODE(TRUE);
+
+                               IF AllowedCompanies.RUNMODAL = ACTION::LookupOK THEN BEGIN
+                                 AllowedCompanies.GETRECORD(SelectedCompany);
+                                 VarCompany := SelectedCompany.Name;
+                               END;
+                             END;
+                              }
+
+    { 7   ;2   ;Field     ;
+                Name=NewWorkdate;
+                CaptionML=[DAN=Arbejdsdato;
+                           ENU=Work Date];
+                ToolTipML=[DAN=Vælg arbejdsdatoen for transaktioner på alle enheder. Ændringen har kun indflydelse på datoen på nye transaktioner, som du opretter.;
+                           ENU=Select the work date for transactions on all devices. This change only affects the date on new transactions you create.];
+                SourceExpr=NewWorkdate;
+                OnValidate=BEGIN
+                             WORKDATE := NewWorkdate;
+                           END;
+                            }
+
+  }
+  CODE
+  {
+    VAR
+      LanguageID@1001 : Integer;
+      ReSignInMsg@1004 : TextConst '@@@="""sign out"" and ""sign in"" are the same terms as shown in the Dynamics NAV client.";DAN=Ændringerne træder i kraft, når du har logget af og derefter logget på igen.;ENU=You must sign out and then sign in again to have the changes take effect.';
+      LocaleID@1000 : Integer;
+      TimeZoneID@1002 : Text[180];
+      VarCompany@1003 : Text;
+      NewWorkdate@1005 : Date;
+
+    LOCAL PROCEDURE GetLanguage@20() : Text;
+    BEGIN
+      EXIT(GetWindowsLanguageNameFromID(LanguageID));
+    END;
+
+    LOCAL PROCEDURE GetWindowsLanguageNameFromID@12(ID@1000 : Integer) : Text;
+    VAR
+      WindowsLanguage@1001 : Record 2000000045;
+    BEGIN
+      IF WindowsLanguage.GET(ID) THEN
+        EXIT(WindowsLanguage.Name);
+    END;
+
+    LOCAL PROCEDURE GetLocale@1() : Text;
+    BEGIN
+      EXIT(GetWindowsLanguageNameFromID(LocaleID));
+    END;
+
+    LOCAL PROCEDURE GetTimeZone@2() : Text;
+    VAR
+      TimeZone@1000 : Record 2000000164;
+    BEGIN
+      IF TimeZone.GET(TimeZoneID) THEN
+        EXIT(TimeZone."Display Name");
+    END;
+
+    BEGIN
+    {
+      Contains various system-wide settings which are personal to an individual user.
+      Styled as a StandardDialog which is ideal for presenting a single field. Once more fields are added,
+      this page should be converted to a Card page.
+    }
+    END.
+  }
+}
+

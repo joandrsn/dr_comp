@@ -1,0 +1,59 @@
+OBJECT Table 2000000080 Page Data Personalization
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Brugertilpasning af sidedata;
+               ENU=Page Data Personalization];
+  }
+  FIELDS
+  {
+    { 3   ;   ;User SID            ;GUID          ;TableRelation=User."User Security ID";
+                                                   CaptionML=[DAN=Bruger-SID;
+                                                              ENU=User SID] }
+    { 6   ;   ;User ID             ;Code50        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(User."User Name" WHERE (User Security ID=FIELD(User SID)));
+                                                   CaptionML=[DAN=Bruger-id;
+                                                              ENU=User ID] }
+    { 9   ;   ;Object Type         ;Option        ;CaptionML=[DAN=Objekttype;
+                                                              ENU=Object Type];
+                                                   OptionCaptionML=[DAN=,,,Report,,,XMLport,,Page;
+                                                                    ENU=,,,Report,,,XMLport,,Page];
+                                                   OptionString=,,,Report,,,XMLport,,Page }
+    { 12  ;   ;Object ID           ;Integer       ;TableRelation=Object.ID WHERE (Type=FIELD(Object Type));
+                                                   CaptionML=[DAN=Objekt-id;
+                                                              ENU=Object ID] }
+    { 15  ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 18  ;   ;Time                ;Time          ;CaptionML=[DAN=Tidspunkt;
+                                                              ENU=Time] }
+    { 21  ;   ;Personalization ID  ;Code40        ;CaptionML=[DAN=Tilpasnings-id;
+                                                              ENU=Personalization ID] }
+    { 24  ;   ;ValueName           ;Code40        ;CaptionML=[DAN=Værdinavn;
+                                                              ENU=ValueName] }
+    { 27  ;   ;Value               ;BLOB          ;CaptionML=[DAN=Værdi;
+                                                              ENU=Value] }
+  }
+  KEYS
+  {
+    {    ;User SID,Object Type,Object ID,Personalization ID,ValueName;
+                                                   Clustered=Yes }
+    {    ;Date                                     }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

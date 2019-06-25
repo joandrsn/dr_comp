@@ -1,0 +1,131 @@
+OBJECT Table 1021 Job WIP Total
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    OnDelete=VAR
+               JobWIPWarning@1000 : Record 1007;
+             BEGIN
+               JobWIPWarning.DeleteEntries(Rec);
+             END;
+
+    CaptionML=[DAN=Sags-VIA-total;
+               ENU=Job WIP Total];
+    LookupPageID=Page1028;
+    DrillDownPageID=Page1028;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;Job No.             ;Code20        ;TableRelation=Job;
+                                                   CaptionML=[DAN=Sagsnr.;
+                                                              ENU=Job No.];
+                                                   NotBlank=Yes;
+                                                   Editable=No }
+    { 3   ;   ;Job Task No.        ;Code20        ;TableRelation="Job Task"."Job Task No." WHERE (Job No.=FIELD(Job No.));
+                                                   ValidateTableRelation=No;
+                                                   CaptionML=[DAN=Sagsopgavenr.;
+                                                              ENU=Job Task No.];
+                                                   NotBlank=Yes }
+    { 4   ;   ;WIP Method          ;Code20        ;TableRelation="Job WIP Method".Code;
+                                                   CaptionML=[DAN=VIA-metode;
+                                                              ENU=WIP Method];
+                                                   Editable=No }
+    { 5   ;   ;WIP Posting Date    ;Date          ;CaptionML=[DAN=VIA-bogføringsdato;
+                                                              ENU=WIP Posting Date];
+                                                   Editable=No }
+    { 6   ;   ;WIP Posting Date Filter;Text250    ;CaptionML=[DAN=VIA-bogføringsdatofilter;
+                                                              ENU=WIP Posting Date Filter];
+                                                   Editable=No }
+    { 7   ;   ;WIP Planning Date Filter;Text250   ;CaptionML=[DAN=VIA-planlægningsdatofilter;
+                                                              ENU=WIP Planning Date Filter];
+                                                   Editable=No }
+    { 8   ;   ;WIP Warnings        ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("Job WIP Warning" WHERE (Job WIP Total Entry No.=FIELD(Entry No.)));
+                                                   CaptionML=[DAN=VIA-advarsler;
+                                                              ENU=WIP Warnings] }
+    { 9   ;   ;Posted to G/L       ;Boolean       ;CaptionML=[DAN=Bogført til finans;
+                                                              ENU=Posted to G/L] }
+    { 10  ;   ;Schedule (Total Cost);Decimal      ;CaptionML=[DAN=Budget (kostbeløb);
+                                                              ENU=Schedule (Total Cost)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 11  ;   ;Schedule (Total Price);Decimal     ;CaptionML=[DAN=Budget (salgsbeløb);
+                                                              ENU=Schedule (Total Price)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 12  ;   ;Usage (Total Cost)  ;Decimal       ;CaptionML=[DAN=Forbrug (kostbeløb);
+                                                              ENU=Usage (Total Cost)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 13  ;   ;Usage (Total Price) ;Decimal       ;CaptionML=[DAN=Forbrug (salgsbeløb);
+                                                              ENU=Usage (Total Price)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 14  ;   ;Contract (Total Cost);Decimal      ;CaptionML=[DAN=Kontrakt (kostbeløb);
+                                                              ENU=Contract (Total Cost)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 15  ;   ;Contract (Total Price);Decimal     ;CaptionML=[DAN=Kontrakt (salgsbeløb);
+                                                              ENU=Contract (Total Price)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 16  ;   ;Contract (Invoiced Price);Decimal  ;CaptionML=[DAN=Kontrakt (faktureret salg);
+                                                              ENU=Contract (Invoiced Price)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 17  ;   ;Contract (Invoiced Cost);Decimal   ;CaptionML=[DAN=Kontrakt (faktureret omkostning);
+                                                              ENU=Contract (Invoiced Cost)];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 20  ;   ;Calc. Recog. Sales Amount;Decimal  ;CaptionML=[DAN=Ber. reg. salgsbeløb;
+                                                              ENU=Calc. Recog. Sales Amount];
+                                                   Editable=No }
+    { 21  ;   ;Calc. Recog. Costs Amount;Decimal  ;CaptionML=[DAN=Ber. reg. kostbeløb;
+                                                              ENU=Calc. Recog. Costs Amount];
+                                                   Editable=No }
+    { 30  ;   ;Cost Completion %   ;Decimal       ;CaptionML=[DAN=Fuldførelse af omkostning i %;
+                                                              ENU=Cost Completion %];
+                                                   BlankZero=Yes;
+                                                   Editable=No;
+                                                   AutoFormatType=2 }
+    { 31  ;   ;Invoiced %          ;Decimal       ;CaptionML=[DAN=Faktureringspct.;
+                                                              ENU=Invoiced %];
+                                                   BlankZero=Yes;
+                                                   Editable=No;
+                                                   AutoFormatType=2 }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Job No.,Job Task No.                     }
+    {    ;Job No.,Posted to G/L                   ;SumIndexFields=Calc. Recog. Sales Amount,Calc. Recog. Costs Amount }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE DeleteEntriesForJobTask@1(JobTask@1000 : Record 1001);
+    BEGIN
+      SETCURRENTKEY("Job No.","Job Task No.");
+      SETRANGE("Job No.",JobTask."Job No.");
+      SETRANGE("Job Task No.",JobTask."Job Task No.");
+      SETRANGE("Posted to G/L",FALSE);
+      IF NOT ISEMPTY THEN
+        DELETEALL(TRUE);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

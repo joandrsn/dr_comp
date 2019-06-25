@@ -1,0 +1,82 @@
+OBJECT MenuSuite 1030 Dept - Country
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVDK7.00;
+  }
+  PROPERTIES
+  {
+  }
+  MENUNODES
+  {
+    {                ;[{8DFC1044-47E9-4B4C-A64E-31D312DE9D2A}] ;NextNodeID=[{AEC0E104-6484-4D40-810E-773B43CCEFC3}] }
+    {                ;[{11A4A720-58D4-439A-AE11-6B35241A3097}] ;Deleted=Yes }
+    {                ;[{095E15EB-2711-4CA0-8A92-87DC0548C134}] ;Deleted=Yes }
+    {                ;[{50FBBFD5-EBB9-4E30-B727-F4837B6BF077}] ;Deleted=Yes }
+    {                ;[{10976FE9-9946-41F7-8004-863534FDA18C}] ;Deleted=Yes }
+    { MenuGroup      ;[{CDB33CF4-AB6D-4194-8239-4DAF7C6882A4}] ;Name=New Group;
+                                                                CaptionML=[DAN=Periodiske aktiviteter;
+                                                                           ENU=Periodic Activities];
+                                                                MemberOfMenu=[{2DC8C4FE-7346-4124-8C20-383346384C03}];
+                                                                ParentNodeID=[{0DD141CC-3311-4CB7-BE8C-9E20E331DF60}];
+                                                                Visible=Yes;
+                                                                NextNodeID=[{D4407D08-C780-43D3-AA50-A065110A1332}];
+                                                                FirstChild=[{A70FD167-D39C-43DF-8710-63457FD88D30}];
+                                                                IsDepartmentPage=No }
+    { MenuItem       ;[{A70FD167-D39C-43DF-8710-63457FD88D30}] ;Name=Create Electronic Invoices;
+                                                                CaptionML=[DAN=Opret elektroniske fakturaer;
+                                                                           ENU=Create Electronic Invoices];
+                                                                MemberOfMenu=[{2DC8C4FE-7346-4124-8C20-383346384C03}];
+                                                                RunObjectType=Report;
+                                                                RunObjectID=13600;
+                                                                ParentNodeID=[{CDB33CF4-AB6D-4194-8239-4DAF7C6882A4}];
+                                                                Visible=Yes;
+                                                                NextNodeID=[{FECFEBA9-FA67-46F3-8116-BE82A52563C6}];
+                                                                DepartmentCategory=Reports and Analysis }
+    { MenuItem       ;[{FECFEBA9-FA67-46F3-8116-BE82A52563C6}] ;Name=Create Electronic Credit Memos;
+                                                                CaptionML=[DAN=Opret elektroniske kreditnotaer;
+                                                                           ENU=Create Electronic Credit Memos];
+                                                                MemberOfMenu=[{2DC8C4FE-7346-4124-8C20-383346384C03}];
+                                                                RunObjectType=Report;
+                                                                RunObjectID=13601;
+                                                                ParentNodeID=[{CDB33CF4-AB6D-4194-8239-4DAF7C6882A4}];
+                                                                Visible=Yes;
+                                                                NextNodeID=[{00000000-0000-0000-0000-000000000000}];
+                                                                DepartmentCategory=Reports and Analysis }
+    {                ;[{4A2AF598-AA1C-47AE-9D3F-180857BF5A05}] ;NextNodeID=[{CDB33CF4-AB6D-4194-8239-4DAF7C6882A4}] }
+    { MenuItem       ;[{AEC0E104-6484-4D40-810E-773B43CCEFC3}] ;Name=VAT Reconciliation;
+                                                                CaptionML=[DAN=Momsafstemning;
+                                                                           ENU=VAT Reconciliation];
+                                                                MemberOfMenu=[{F8D2429D-034B-4C58-9B5E-81BE962DB1BC}];
+                                                                RunObjectType=Report;
+                                                                RunObjectID=13620;
+                                                                ParentNodeID=[{65FA8D2E-BC92-41D1-AEDD-8AAA46384FC5}];
+                                                                Visible=Yes;
+                                                                NextNodeID=[{65798D3F-30DD-4711-8393-BD0F8217CCD4}];
+                                                                DepartmentCategory=Reports and Analysis }
+    { MenuItem       ;[{0F75DE1B-0237-4346-BAA2-DADC9E61B9D8}] ;Name=Create Elec. Service Invoices;
+                                                                CaptionML=[DAN=Opret elek. servicefakturaer;
+                                                                           ENU=Create Elec. Service Invoices];
+                                                                MemberOfMenu=[{64D31502-DCE9-45A4-BCD9-93881FB8B4E7}];
+                                                                RunObjectType=Report;
+                                                                RunObjectID=13604;
+                                                                ParentNodeID=[{1E0FE346-F10F-4C0F-B363-2CF5F7570519}];
+                                                                Visible=Yes;
+                                                                NextNodeID=[{A884B3E7-B949-4F9D-82AC-C612CB4BCED1}];
+                                                                DepartmentCategory=Reports and Analysis }
+    {                ;[{7C9B97A9-CDEB-4D51-BDC8-0DA5208A0414}] ;NextNodeID=[{0F75DE1B-0237-4346-BAA2-DADC9E61B9D8}] }
+    { MenuItem       ;[{A884B3E7-B949-4F9D-82AC-C612CB4BCED1}] ;Name=Create Elec. Service Cr. Memos;
+                                                                CaptionML=[DAN=Opret elek. servicekreditnotaer;
+                                                                           ENU=Create Elec. Service Cr. Memos];
+                                                                MemberOfMenu=[{64D31502-DCE9-45A4-BCD9-93881FB8B4E7}];
+                                                                RunObjectType=Report;
+                                                                RunObjectID=13605;
+                                                                ParentNodeID=[{1E0FE346-F10F-4C0F-B363-2CF5F7570519}];
+                                                                Visible=Yes;
+                                                                NextNodeID=[{84F5F4F6-EB33-4627-9AD9-F56547623F5B}];
+                                                                DepartmentCategory=Reports and Analysis }
+    {                ;[{37E9CC0A-6570-45E4-93B5-7FC9238D51AE}] ;NextNodeID=[{3079D9E0-4D9E-42A4-A141-FB350F56C687}] }
+  }
+}

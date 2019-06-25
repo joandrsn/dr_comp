@@ -1,0 +1,102 @@
+OBJECT Table 829 DO Payment Trans. Log Entry
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Transaktionslogfilpost for DO-betaling;
+               ENU=DO Payment Trans. Log Entry];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;Document Type       ;Option        ;CaptionML=[DAN=Dokumenttype;
+                                                              ENU=Document Type];
+                                                   OptionCaptionML=[DAN=" ,Ordre,Faktura,Betaling,Refusion";
+                                                                    ENU=" ,Order,Invoice,Payment,Refund"];
+                                                   OptionString=[ ,Order,Invoice,Payment,Refund] }
+    { 3   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Dokumentnr.;
+                                                              ENU=Document No.] }
+    { 4   ;   ;Customer No.        ;Code20        ;TableRelation=Customer;
+                                                   CaptionML=[DAN=Debitornr.;
+                                                              ENU=Customer No.] }
+    { 5   ;   ;Credit Card No.     ;Code20        ;TableRelation="DO Payment Credit Card".No.;
+                                                   CaptionML=[DAN=Kreditkortnr.;
+                                                              ENU=Credit Card No.] }
+    { 6   ;   ;Transaction Type    ;Option        ;CaptionML=[DAN=Transaktionsart;
+                                                              ENU=Transaction Type];
+                                                   OptionCaptionML=[DAN=Godkendelse,Annullering,Registrering,Refusion;
+                                                                    ENU=Authorization,Void,Capture,Refund];
+                                                   OptionString=Authorization,Void,Capture,Refund }
+    { 7   ;   ;Transaction Result  ;Option        ;CaptionML=[DAN=Transaktionsresultat;
+                                                              ENU=Transaction Result];
+                                                   OptionCaptionML=[DAN=Lykkedes,Mislykkedes;
+                                                                    ENU=Success,Failed];
+                                                   OptionString=Success,Failed }
+    { 8   ;   ;Transaction Description;Text250    ;CaptionML=[DAN=Transaktionsbeskrivelse;
+                                                              ENU=Transaction Description] }
+    { 9   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+                                                              ENU=Amount];
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+    { 10  ;   ;Transaction Date-Time;DateTime     ;CaptionML=[DAN=Dato og klokkeslæt for transaktion;
+                                                              ENU=Transaction Date-Time] }
+    { 11  ;   ;Transaction Status  ;Option        ;CaptionML=[DAN=Transaktionsstatus;
+                                                              ENU=Transaction Status];
+                                                   OptionCaptionML=[DAN=" ,Annulleret,Udløbet,Registreret,Refunderet,Bogføringen er ikke færdig";
+                                                                    ENU=" ,Voided,Expired,Captured,Refunded,Posting Not Finished"];
+                                                   OptionString=[ ,Voided,Expired,Captured,Refunded,Posting Not Finished] }
+    { 12  ;   ;Cust. Ledger Entry No.;Integer     ;TableRelation="Cust. Ledger Entry";
+                                                   CaptionML=[DAN=Debitorpostløbenr.;
+                                                              ENU=Cust. Ledger Entry No.] }
+    { 13  ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   CaptionML=[DAN=Valutakode;
+                                                              ENU=Currency Code] }
+    { 14  ;   ;Transaction GUID    ;GUID          ;CaptionML=[DAN=Transaktions-GUID;
+                                                              ENU=Transaction GUID] }
+    { 15  ;   ;Transaction ID      ;Text50        ;CaptionML=[DAN=Transaktions-id;
+                                                              ENU=Transaction ID] }
+    { 16  ;   ;User ID             ;Code50        ;TableRelation=User."User Name";
+                                                   TestTableRelation=No;
+                                                   CaptionML=[DAN=Bruger-id;
+                                                              ENU=User ID] }
+    { 17  ;   ;Parent Entry No.    ;Integer       ;CaptionML=[DAN=Overordnet posteringsnr.;
+                                                              ENU=Parent Entry No.] }
+    { 18  ;   ;Reference GUID      ;GUID          ;CaptionML=[DAN=Reference-GUID;
+                                                              ENU=Reference GUID] }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Document Type,Document No.,Transaction Type,Transaction Result,Transaction Status }
+    {    ;Cust. Ledger Entry No.                   }
+    {    ;Parent Entry No.,Transaction Type,Transaction Result;
+                                                   SumIndexFields=Amount }
+    {    ;Credit Card No.                          }
+    {    ;Document No.,Customer No.,Transaction Status }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE HasTransaction@1(VAR DOPaymentCreditCard@1000 : Record 827) : Boolean;
+    BEGIN
+      SETCURRENTKEY("Credit Card No.");
+      SETRANGE("Credit Card No.",DOPaymentCreditCard."No.");
+      SETFILTER("Transaction Result",'<>%1',"Transaction Result"::Failed);
+      EXIT(FINDFIRST);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

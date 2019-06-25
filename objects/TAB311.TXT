@@ -1,0 +1,288 @@
+OBJECT Table 311 Sales & Receivables Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00,NAVDK9.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Salgsopsætning;
+               ENU=Sales & Receivables Setup];
+    LookupPageID=Page459;
+    DrillDownPageID=Page459;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 2   ;   ;Discount Posting    ;Option        ;CaptionML=[DAN=Bogføring med rabat;
+                                                              ENU=Discount Posting];
+                                                   OptionCaptionML=[DAN=Ingen rabat,Fakturarabat,Linjerabat,Alle rabatter;
+                                                                    ENU=No Discounts,Invoice Discounts,Line Discounts,All Discounts];
+                                                   OptionString=No Discounts,Invoice Discounts,Line Discounts,All Discounts }
+    { 4   ;   ;Credit Warnings     ;Option        ;CaptionML=[DAN=Kreditmeddelelser;
+                                                              ENU=Credit Warnings];
+                                                   OptionCaptionML=[DAN=Begge meddelelser,Kreditmaksimum,Forfaldne beløb,Ingen meddelelse;
+                                                                    ENU=Both Warnings,Credit Limit,Overdue Balance,No Warning];
+                                                   OptionString=Both Warnings,Credit Limit,Overdue Balance,No Warning }
+    { 5   ;   ;Stockout Warning    ;Boolean       ;InitValue=Yes;
+                                                   CaptionML=[DAN=Beholdningsadvarsel;
+                                                              ENU=Stockout Warning] }
+    { 6   ;   ;Shipment on Invoice ;Boolean       ;AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Lev. ved fakturering;
+                                                              ENU=Shipment on Invoice] }
+    { 7   ;   ;Invoice Rounding    ;Boolean       ;CaptionML=[DAN=Fakturaafrunding;
+                                                              ENU=Invoice Rounding] }
+    { 8   ;   ;Ext. Doc. No. Mandatory;Boolean    ;CaptionML=[DAN=Eksternt bilagsnr. obl.;
+                                                              ENU=Ext. Doc. No. Mandatory] }
+    { 9   ;   ;Customer Nos.       ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Debitornumre;
+                                                              ENU=Customer Nos.] }
+    { 10  ;   ;Quote Nos.          ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Tilbudsnumre;
+                                                              ENU=Quote Nos.] }
+    { 11  ;   ;Order Nos.          ;Code10        ;TableRelation="No. Series";
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Ordrenumre;
+                                                              ENU=Order Nos.] }
+    { 12  ;   ;Invoice Nos.        ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Fakturanumre;
+                                                              ENU=Invoice Nos.] }
+    { 13  ;   ;Posted Invoice Nos. ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Bogførte fakturanumre;
+                                                              ENU=Posted Invoice Nos.] }
+    { 14  ;   ;Credit Memo Nos.    ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Kreditnotanumre;
+                                                              ENU=Credit Memo Nos.] }
+    { 15  ;   ;Posted Credit Memo Nos.;Code10     ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Bogf. kreditnotanumre;
+                                                              ENU=Posted Credit Memo Nos.] }
+    { 16  ;   ;Posted Shipment Nos.;Code10        ;TableRelation="No. Series";
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Bogf. salgslev.numre;
+                                                              ENU=Posted Shipment Nos.] }
+    { 17  ;   ;Reminder Nos.       ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Rykkernumre;
+                                                              ENU=Reminder Nos.] }
+    { 18  ;   ;Issued Reminder Nos.;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Udstedte rykkernumre;
+                                                              ENU=Issued Reminder Nos.] }
+    { 19  ;   ;Fin. Chrg. Memo Nos.;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Rentenotanumre;
+                                                              ENU=Fin. Chrg. Memo Nos.] }
+    { 20  ;   ;Issued Fin. Chrg. M. Nos.;Code10   ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Udstedte rentenotanumre;
+                                                              ENU=Issued Fin. Chrg. M. Nos.] }
+    { 21  ;   ;Posted Prepmt. Inv. Nos.;Code10    ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Bogførte forudbetalingsfakturanr.;
+                                                              ENU=Posted Prepmt. Inv. Nos.] }
+    { 22  ;   ;Posted Prepmt. Cr. Memo Nos.;Code10;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Bogførte forudbetalingskreditnotanr.;
+                                                              ENU=Posted Prepmt. Cr. Memo Nos.] }
+    { 23  ;   ;Blanket Order Nos.  ;Code10        ;TableRelation="No. Series";
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Rammeordrenr.;
+                                                              ENU=Blanket Order Nos.] }
+    { 24  ;   ;Calc. Inv. Discount ;Boolean       ;CaptionML=[DAN=Beregn fakturarabat;
+                                                              ENU=Calc. Inv. Discount] }
+    { 25  ;   ;Appln. between Currencies;Option   ;AccessByPermission=TableData 4=R;
+                                                   CaptionML=[DAN=Valutaudligning;
+                                                              ENU=Appln. between Currencies];
+                                                   OptionCaptionML=[DAN=Ingen,ØMU,Alle;
+                                                                    ENU=None,EMU,All];
+                                                   OptionString=None,EMU,All }
+    { 26  ;   ;Copy Comments Blanket to Order;Boolean;
+                                                   InitValue=Yes;
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Kopier bemærk. t. ordre;
+                                                              ENU=Copy Comments Blanket to Order] }
+    { 27  ;   ;Copy Comments Order to Invoice;Boolean;
+                                                   InitValue=Yes;
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Kopier bemærk. t. fakt.;
+                                                              ENU=Copy Comments Order to Invoice] }
+    { 28  ;   ;Copy Comments Order to Shpt.;Boolean;
+                                                   InitValue=Yes;
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Kopier bemærk. til lev.;
+                                                              ENU=Copy Comments Order to Shpt.] }
+    { 29  ;   ;Allow VAT Difference;Boolean       ;CaptionML=[DAN=Tillad momsdifference;
+                                                              ENU=Allow VAT Difference] }
+    { 30  ;   ;Calc. Inv. Disc. per VAT ID;Boolean;CaptionML=[DAN=Beregn fak.rabat pr. moms-id;
+                                                              ENU=Calc. Inv. Disc. per VAT ID] }
+    { 31  ;   ;Logo Position on Documents;Option  ;CaptionML=[DAN=Logoplacering på dokumenter;
+                                                              ENU=Logo Position on Documents];
+                                                   OptionCaptionML=[DAN=Intet logo,Venstrestillet,Centreret,Højrestillet;
+                                                                    ENU=No Logo,Left,Center,Right];
+                                                   OptionString=No Logo,Left,Center,Right }
+    { 32  ;   ;Check Prepmt. when Posting;Boolean ;CaptionML=[DAN=Kontroller forudbetaling ved bogføring;
+                                                              ENU=Check Prepmt. when Posting] }
+    { 35  ;   ;Default Posting Date;Option        ;CaptionML=[DAN=Standardbogføringsdato;
+                                                              ENU=Default Posting Date];
+                                                   OptionCaptionML=[DAN=Arbejdsdato,Ingen dato;
+                                                                    ENU=Work Date,No Date];
+                                                   OptionString=Work Date,No Date }
+    { 36  ;   ;Default Quantity to Ship;Option    ;AccessByPermission=TableData 110=R;
+                                                   CaptionML=[DAN=Standardantal til levering;
+                                                              ENU=Default Quantity to Ship];
+                                                   OptionCaptionML=[DAN=Resterende,Tom;
+                                                                    ENU=Remainder,Blank];
+                                                   OptionString=Remainder,Blank }
+    { 37  ;   ;Archive Quotes and Orders;Boolean  ;CaptionML=[DAN=Arkiver tilbud og ordrer;
+                                                              ENU=Archive Quotes and Orders] }
+    { 38  ;   ;Post with Job Queue ;Boolean       ;CaptionML=[DAN=Bogfør med opgavekøen;
+                                                              ENU=Post with Job Queue] }
+    { 39  ;   ;Job Queue Category Code;Code10     ;TableRelation="Job Queue Category";
+                                                   CaptionML=[DAN=Opgavekøkategorikode;
+                                                              ENU=Job Queue Category Code] }
+    { 40  ;   ;Job Queue Priority for Post;Integer;InitValue=1000;
+                                                   OnValidate=BEGIN
+                                                                IF "Job Queue Priority for Post" < 0 THEN
+                                                                  ERROR(Text001);
+                                                              END;
+
+                                                   CaptionML=[DAN=Opgavekøprioritet for bogføring;
+                                                              ENU=Job Queue Priority for Post];
+                                                   MinValue=0 }
+    { 41  ;   ;Post & Print with Job Queue;Boolean;CaptionML=[DAN=Bogfør & udskriv med opgavekøen;
+                                                              ENU=Post & Print with Job Queue] }
+    { 42  ;   ;Job Q. Prio. for Post & Print;Integer;
+                                                   InitValue=1000;
+                                                   OnValidate=BEGIN
+                                                                IF "Job Queue Priority for Post" < 0 THEN
+                                                                  ERROR(Text001);
+                                                              END;
+
+                                                   CaptionML=[DAN=Opgavekøprioritet for bogføring og udskrivning;
+                                                              ENU=Job Q. Prio. for Post & Print];
+                                                   MinValue=0 }
+    { 43  ;   ;Notify On Success   ;Boolean       ;CaptionML=[DAN=Informer i tilfælde af succes;
+                                                              ENU=Notify On Success] }
+    { 44  ;   ;VAT Bus. Posting Gr. (Price);Code10;TableRelation="VAT Business Posting Group";
+                                                   CaptionML=[DAN=Momsvirks.bogf.gruppe (pris);
+                                                              ENU=VAT Bus. Posting Gr. (Price)] }
+    { 45  ;   ;Direct Debit Mandate Nos.;Code10   ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Direct Debit-betalingsaftalenumre;
+                                                              ENU=Direct Debit Mandate Nos.] }
+    { 5800;   ;Posted Return Receipt Nos.;Code10  ;TableRelation="No. Series";
+                                                   AccessByPermission=TableData 6660=R;
+                                                   CaptionML=[DAN=Bogførte returvaremodt.numre;
+                                                              ENU=Posted Return Receipt Nos.] }
+    { 5801;   ;Copy Cmts Ret.Ord. to Ret.Rcpt;Boolean;
+                                                   InitValue=Yes;
+                                                   AccessByPermission=TableData 6660=R;
+                                                   CaptionML=[DAN=Kopier bem.til returkvit.;
+                                                              ENU=Copy Cmts Ret.Ord. to Ret.Rcpt] }
+    { 5802;   ;Copy Cmts Ret.Ord. to Cr. Memo;Boolean;
+                                                   InitValue=Yes;
+                                                   AccessByPermission=TableData 6660=R;
+                                                   CaptionML=[DAN=Kopier bem. til kreditnota;
+                                                              ENU=Copy Cmts Ret.Ord. to Cr. Memo] }
+    { 6600;   ;Return Order Nos.   ;Code10        ;TableRelation="No. Series";
+                                                   AccessByPermission=TableData 6660=R;
+                                                   CaptionML=[DAN=Returvareordrenumre;
+                                                              ENU=Return Order Nos.] }
+    { 6601;   ;Return Receipt on Credit Memo;Boolean;
+                                                   AccessByPermission=TableData 6660=R;
+                                                   CaptionML=[DAN=Returvarekvit. på kreditnota;
+                                                              ENU=Return Receipt on Credit Memo] }
+    { 6602;   ;Exact Cost Reversing Mandatory;Boolean;
+                                                   CaptionML=[DAN=Obl. beløbstilbageførsel;
+                                                              ENU=Exact Cost Reversing Mandatory] }
+    { 7101;   ;Customer Group Dimension Code;Code20;
+                                                   TableRelation=Dimension;
+                                                   CaptionML=[DAN=Dimensionskode for kundegruppe;
+                                                              ENU=Customer Group Dimension Code] }
+    { 7102;   ;Salesperson Dimension Code;Code20  ;TableRelation=Dimension;
+                                                   CaptionML=[DAN=Dimensionskode for sælger;
+                                                              ENU=Salesperson Dimension Code] }
+    { 13600;  ;OIOUBL Invoice Path ;Text250       ;CaptionML=[DAN=OIOUBL-fakturasti;
+                                                              ENU=OIOUBL Invoice Path] }
+    { 13601;  ;OIOUBL Cr. Memo Path;Text250       ;CaptionML=[DAN=OIOUBL-kreditnotasti;
+                                                              ENU=OIOUBL Cr. Memo Path] }
+    { 13602;  ;OIOUBL Reminder Path;Text250       ;CaptionML=[DAN=OIOUBL-rykkersti;
+                                                              ENU=OIOUBL Reminder Path] }
+    { 13603;  ;OIOUBL Fin. Chrg. Memo Path;Text250;CaptionML=[DAN=OIOUBL-rentenotasti;
+                                                              ENU=OIOUBL Fin. Chrg. Memo Path] }
+    { 13604;  ;Default OIOUBL Profile Code;Code10 ;TableRelation="OIOUBL Profile";
+                                                   OnValidate=VAR
+                                                                OIOUBLProfile@1060000 : Record 13600;
+                                                              BEGIN
+                                                                OIOUBLProfile.UpdateEmptyOIOUBLProfileCodes("Default OIOUBL Profile Code",xRec."Default OIOUBL Profile Code");
+                                                              END;
+
+                                                   CaptionML=[DAN=Standardkoden for OIOUBL-profil;
+                                                              ENU=Default OIOUBL Profile Code] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text001@1000 : TextConst 'DAN=Opgavekøens prioritet skal være nul eller positiv.;ENU=Job Queue Priority must be zero or positive.';
+      SetupOIOUBLQst@1060000 : TextConst 'DAN=OIOUBL-stien til OIOMXL-filen mangler. Vil du opdatere den nu?;ENU=OIOUBL path of the OIOMXL file is missing. Do you want to update it now?';
+      MissingSetupOIOUBLErr@1060001 : TextConst 'DAN=OIOUBL-stien til OIOMXL-filen mangler. Ret den venligst.;ENU=OIOUBL path of the OIOMXL file is missing. Please Correct it.';
+
+    PROCEDURE GetLegalStatement@11() : Text;
+    BEGIN
+      EXIT('');
+    END;
+
+    PROCEDURE JobQueueActive@1() : Boolean;
+    BEGIN
+      GET;
+      EXIT("Post with Job Queue" OR "Post & Print with Job Queue");
+    END;
+
+    LOCAL PROCEDURE IsOIOUBLPathSetupAvailble@1060000("Document Type"@1060000 : 'Quote,Order,Invoice,Credit Memo,Blanket Order,Return Order,Finance Charge,Reminder') : Boolean;
+    VAR
+      SalesSetup@1060001 : Record 311;
+      FileMgt@1060002 : Codeunit 419;
+    BEGIN
+      IF NOT FileMgt.CanRunDotNetOnClient THEN
+        EXIT(TRUE);
+      CASE "Document Type" OF
+        "Document Type"::Order,"Document Type"::Invoice:
+          EXIT("OIOUBL Invoice Path" <> '');
+        "Document Type"::"Return Order","Document Type"::"Credit Memo":
+          EXIT("OIOUBL Cr. Memo Path" <> '');
+        "Document Type"::"Finance Charge":
+          EXIT("OIOUBL Fin. Chrg. Memo Path" <> '');
+        "Document Type"::Reminder:
+          EXIT("OIOUBL Reminder Path" <> '');
+      ELSE
+        EXIT(TRUE);
+      END;
+    END;
+
+    PROCEDURE VerifyAndSetOIOUBLPathSetup@1060002("Document Type"@1060000 : 'Quote,Order,Invoice,Credit Memo,Blanket Order,Return Order,Finance Charge,Reminder');
+    VAR
+      OIOUBLsetupPage@1060001 : Page 13601;
+    BEGIN
+      GET;
+      IF IsOIOUBLPathSetupAvailble("Document Type") THEN
+        EXIT;
+
+      IF CONFIRM(SetupOIOUBLQst,TRUE) THEN BEGIN
+        OIOUBLsetupPage.SETRECORD(Rec);
+        OIOUBLsetupPage.EDITABLE(TRUE);
+        IF OIOUBLsetupPage.RUNMODAL = ACTION::OK THEN
+          OIOUBLsetupPage.GETRECORD(Rec);
+      END;
+
+      IF NOT IsOIOUBLPathSetupAvailble("Document Type") THEN
+        ERROR(MissingSetupOIOUBLErr);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

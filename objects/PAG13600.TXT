@@ -1,0 +1,40 @@
+OBJECT Page 13600 OIOUBL Profile List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVDK7.10;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=OIOUBL-profilliste;
+               ENU=OIOUBL Profile List];
+    SourceTable=Table13600;
+    DataCaptionFields=Code,Profile ID;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1060000;0;Container ;
+                ContainerType=ContentArea }
+
+    { 1060001;1;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1060002;2;Field     ;
+                SourceExpr=Code }
+
+    { 1060003;2;Field     ;
+                SourceExpr="Profile ID" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

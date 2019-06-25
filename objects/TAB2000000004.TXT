@@ -1,0 +1,37 @@
+OBJECT Table 2000000004 Permission Set
+{
+  OBJECT-PROPERTIES
+  {
+    Date=25-05-05;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    DataCaptionFields=Role ID,Name;
+    CaptionML=[DAN=Rettighedssæt;
+               ENU=Permission Set];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Role ID             ;Code20        ;CaptionML=[DAN=Rolle-id;
+                                                              ENU=Role ID] }
+    { 2   ;   ;Name                ;Text30        ;CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+  }
+  KEYS
+  {
+    {    ;Role ID                                 ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

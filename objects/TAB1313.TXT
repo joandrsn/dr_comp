@@ -1,0 +1,94 @@
+OBJECT Table 1313 Mini Activities Cue
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Køindikator for miniaktiviteter;
+               ENU=Mini Activities Cue];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 2   ;   ;Due Date Filter     ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Forfaldsdatofilter;
+                                                              ENU=Due Date Filter];
+                                                   Editable=No }
+    { 3   ;   ;Overdue Date Filter ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Datofilter - forfaldne poster;
+                                                              ENU=Overdue Date Filter] }
+    { 4   ;   ;Ongoing Sales Invoices;Integer     ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Sales Header" WHERE (Document Type=FILTER(Invoice)));
+                                                   CaptionML=[DAN=Igangværende salgsfakturaer;
+                                                              ENU=Ongoing Sales Invoices] }
+    { 5   ;   ;Ongoing Purchase Invoices;Integer  ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=FILTER(Invoice)));
+                                                   CaptionML=[DAN=Igangværende købsfakturaer;
+                                                              ENU=Ongoing Purchase Invoices] }
+    { 6   ;   ;Sales This Month    ;Decimal       ;CaptionML=[DAN=Omsætning denne måned;
+                                                              ENU=Sales This Month];
+                                                   DecimalPlaces=0:0 }
+    { 7   ;   ;Top 10 Customer Sales YTD;Decimal  ;CaptionML=[DAN=Top 10 over debitorsalg året til dato;
+                                                              ENU=Top 10 Customer Sales YTD];
+                                                   AutoFormatType=10;
+                                                   AutoFormatExpr='<Precision,1:1><Standard Format,9>%' }
+    { 8   ;   ;Overdue Purch. Invoice Amount;Decimal;
+                                                   CaptionML=[DAN=Forfaldent købsfakturabeløb;
+                                                              ENU=Overdue Purch. Invoice Amount];
+                                                   DecimalPlaces=0:0 }
+    { 9   ;   ;Overdue Sales Invoice Amount;Decimal;
+                                                   CaptionML=[DAN=Forfaldent salgsfakturabeløb;
+                                                              ENU=Overdue Sales Invoice Amount];
+                                                   DecimalPlaces=0:0 }
+    { 10  ;   ;Average Collection Days;Decimal    ;CaptionML=[DAN=Gnsn. antal kreditdage;
+                                                              ENU=Average Collection Days];
+                                                   DecimalPlaces=1:1 }
+    { 11  ;   ;Ongoing Sales Quotes;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Sales Header" WHERE (Document Type=FILTER(Quote)));
+                                                   CaptionML=[DAN=Igangværende salgstilbud;
+                                                              ENU=Ongoing Sales Quotes] }
+    { 12  ;   ;Requests to Approve ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Approval Entry" WHERE (Approver ID=FIELD(User ID Filter),
+                                                                                             Status=FILTER(Open)));
+                                                   CaptionML=[DAN=Anmodninger til godkendelse;
+                                                              ENU=Requests to Approve] }
+    { 13  ;   ;Sales Inv. - Pending Doc.Exch.;Integer;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Count("Sales Invoice Header" WHERE (Document Exchange Status=FILTER(Sent to Document Exchange Service|Delivery Failed)));
+                                                   CaptionML=[DAN=Salgsfakturaer - afventer dokumentudveksling;
+                                                              ENU=Sales Invoices - Pending Document Exchange];
+                                                   Editable=No }
+    { 14  ;   ;Sales CrM. - Pending Doc.Exch.;Integer;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Count("Sales Cr.Memo Header" WHERE (Document Exchange Status=FILTER(Sent to Document Exchange Service|Delivery Failed)));
+                                                   CaptionML=[DAN=Salgskreditnotaer - afventer dokumentudveksling;
+                                                              ENU=Sales Credit Memos - Pending Document Exchange];
+                                                   Editable=No }
+    { 15  ;   ;User ID Filter      ;Code50        ;FieldClass=FlowFilter;
+                                                   CaptionML=[DAN=Bruger-id-filter;
+                                                              ENU=User ID Filter] }
+    { 20  ;   ;My Incoming Documents;Integer      ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Incoming Document");
+                                                   CaptionML=[DAN=Mine indgående bilag;
+                                                              ENU=My Incoming Documents] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

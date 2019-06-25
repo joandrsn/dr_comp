@@ -1,0 +1,216 @@
+OBJECT Table 5832 Capacity Ledger Entry
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Kapacitetspost;
+               ENU=Capacity Ledger Entry];
+    LookupPageID=Page5832;
+    DrillDownPageID=Page5832;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;No.                 ;Code20        ;TableRelation=IF (Type=CONST(Machine Center)) "Machine Center"
+                                                                 ELSE IF (Type=CONST(Work Center)) "Work Center"
+                                                                 ELSE IF (Type=CONST(Resource)) Resource;
+                                                   CaptionML=[DAN=Nummer;
+                                                              ENU=No.] }
+    { 3   ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+                                                              ENU=Posting Date] }
+    { 4   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Arbejdscenter,Produktionsressource, ,Ressource;
+                                                                    ENU=Work Center,Machine Center, ,Resource];
+                                                   OptionString=Work Center,Machine Center, ,Resource }
+    { 6   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+                                                              ENU=Document No.] }
+    { 7   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 8   ;   ;Operation No.       ;Code10        ;CaptionML=[DAN=Operationsnr.;
+                                                              ENU=Operation No.] }
+    { 9   ;   ;Work Center No.     ;Code20        ;TableRelation="Work Center";
+                                                   CaptionML=[DAN=Arbejdscenternr.;
+                                                              ENU=Work Center No.] }
+    { 10  ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+                                                              ENU=Quantity];
+                                                   DecimalPlaces=0:5 }
+    { 11  ;   ;Setup Time          ;Decimal       ;CaptionML=[DAN=Opstillingstid;
+                                                              ENU=Setup Time];
+                                                   DecimalPlaces=0:5 }
+    { 12  ;   ;Run Time            ;Decimal       ;CaptionML=[DAN=Operationstid;
+                                                              ENU=Run Time];
+                                                   DecimalPlaces=0:5 }
+    { 13  ;   ;Stop Time           ;Decimal       ;CaptionML=[DAN=Stoptid;
+                                                              ENU=Stop Time];
+                                                   DecimalPlaces=0:5 }
+    { 15  ;   ;Invoiced Quantity   ;Decimal       ;CaptionML=[DAN=Faktureret antal;
+                                                              ENU=Invoiced Quantity];
+                                                   DecimalPlaces=0:5 }
+    { 16  ;   ;Output Quantity     ;Decimal       ;CaptionML=[DAN=Afgangsantal;
+                                                              ENU=Output Quantity];
+                                                   DecimalPlaces=0:5 }
+    { 17  ;   ;Scrap Quantity      ;Decimal       ;CaptionML=[DAN=Spildantal;
+                                                              ENU=Scrap Quantity];
+                                                   DecimalPlaces=0:5 }
+    { 19  ;   ;Concurrent Capacity ;Decimal       ;CaptionML=[DAN=Samtidig kapacitet;
+                                                              ENU=Concurrent Capacity] }
+    { 28  ;   ;Cap. Unit of Measure Code;Code10   ;TableRelation="Capacity Unit of Measure";
+                                                   CaptionML=[DAN=Kapacitetsenhedskode;
+                                                              ENU=Cap. Unit of Measure Code] }
+    { 29  ;   ;Qty. per Cap. Unit of Measure;Decimal;
+                                                   CaptionML=[DAN=Antal pr. kapacitetsenhed;
+                                                              ENU=Qty. per Cap. Unit of Measure];
+                                                   DecimalPlaces=0:5 }
+    { 33  ;   ;Global Dimension 1 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+                                                   CaptionML=[DAN=Global dimension 1-kode;
+                                                              ENU=Global Dimension 1 Code];
+                                                   CaptionClass='1,1,1' }
+    { 34  ;   ;Global Dimension 2 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+                                                   CaptionML=[DAN=Global dimension 2-kode;
+                                                              ENU=Global Dimension 2 Code];
+                                                   CaptionClass='1,1,2' }
+    { 39  ;   ;Last Output Line    ;Boolean       ;CaptionML=[DAN=Sidste afgangslinje;
+                                                              ENU=Last Output Line] }
+    { 42  ;   ;Completely Invoiced ;Boolean       ;CaptionML=[DAN=Fuldt faktureret;
+                                                              ENU=Completely Invoiced] }
+    { 43  ;   ;Starting Time       ;Time          ;CaptionML=[DAN=Starttidspunkt;
+                                                              ENU=Starting Time] }
+    { 44  ;   ;Ending Time         ;Time          ;CaptionML=[DAN=Sluttidspunkt;
+                                                              ENU=Ending Time] }
+    { 52  ;   ;Routing No.         ;Code20        ;TableRelation="Routing Header";
+                                                   CaptionML=[DAN=Rutenr.;
+                                                              ENU=Routing No.] }
+    { 53  ;   ;Routing Reference No.;Integer      ;CaptionML=[DAN=Rutereferencenr.;
+                                                              ENU=Routing Reference No.] }
+    { 56  ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   CaptionML=[DAN=Varenr.;
+                                                              ENU=Item No.] }
+    { 57  ;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   CaptionML=[DAN=Variantkode;
+                                                              ENU=Variant Code] }
+    { 58  ;   ;Unit of Measure Code;Code10        ;TableRelation="Item Unit of Measure".Code WHERE (Item No.=FIELD(Item No.));
+                                                   CaptionML=[DAN=Enhedskode;
+                                                              ENU=Unit of Measure Code] }
+    { 59  ;   ;Qty. per Unit of Measure;Decimal   ;CaptionML=[DAN=Antal pr. enhed;
+                                                              ENU=Qty. per Unit of Measure];
+                                                   DecimalPlaces=0:5 }
+    { 60  ;   ;Document Date       ;Date          ;CaptionML=[DAN=Bilagsdato;
+                                                              ENU=Document Date] }
+    { 61  ;   ;External Document No.;Code35       ;CaptionML=[DAN=Eksternt bilagsnr.;
+                                                              ENU=External Document No.] }
+    { 65  ;   ;Stop Code           ;Code10        ;TableRelation=Stop;
+                                                   CaptionML=[DAN=Stopkode;
+                                                              ENU=Stop Code] }
+    { 66  ;   ;Scrap Code          ;Code10        ;TableRelation=Scrap;
+                                                   CaptionML=[DAN=Spildkode;
+                                                              ENU=Scrap Code] }
+    { 68  ;   ;Work Center Group Code;Code10      ;TableRelation="Work Center Group";
+                                                   CaptionML=[DAN=Arbejdscentergruppekode;
+                                                              ENU=Work Center Group Code] }
+    { 69  ;   ;Work Shift Code     ;Code10        ;TableRelation="Work Shift";
+                                                   CaptionML=[DAN=Arbejdsskiftskode;
+                                                              ENU=Work Shift Code] }
+    { 71  ;   ;Direct Cost         ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Value Entry"."Cost Amount (Actual)" WHERE (Capacity Ledger Entry No.=FIELD(Entry No.),
+                                                                                                               Entry Type=CONST(Direct Cost)));
+                                                   CaptionML=[DAN=Købspris;
+                                                              ENU=Direct Cost];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 72  ;   ;Overhead Cost       ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Value Entry"."Cost Amount (Actual)" WHERE (Capacity Ledger Entry No.=FIELD(Entry No.),
+                                                                                                               Entry Type=CONST(Indirect Cost)));
+                                                   CaptionML=[DAN=Faste omkostninger;
+                                                              ENU=Overhead Cost];
+                                                   Editable=No;
+                                                   AutoFormatType=1 }
+    { 76  ;   ;Direct Cost (ACY)   ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Value Entry"."Cost Amount (Actual) (ACY)" WHERE (Capacity Ledger Entry No.=FIELD(Entry No.),
+                                                                                                                     Entry Type=CONST(Direct Cost)));
+                                                   CaptionML=[DAN=Købspris (EV);
+                                                              ENU=Direct Cost (ACY)];
+                                                   Editable=No;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 77  ;   ;Overhead Cost (ACY) ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Value Entry"."Cost Amount (Actual) (ACY)" WHERE (Capacity Ledger Entry No.=FIELD(Entry No.),
+                                                                                                                     Entry Type=CONST(Indirect Cost)));
+                                                   CaptionML=[DAN=Faste omkostninger (EV);
+                                                              ENU=Overhead Cost (ACY)];
+                                                   Editable=No;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr=GetCurrencyCode }
+    { 78  ;   ;Subcontracting      ;Boolean       ;CaptionML=[DAN=Underleverance;
+                                                              ENU=Subcontracting] }
+    { 90  ;   ;Order Type          ;Option        ;CaptionML=[DAN=Ordretype;
+                                                              ENU=Order Type];
+                                                   OptionCaptionML=[DAN=" ,Produktion,Overførsel,Service,Montage";
+                                                                    ENU=" ,Production,Transfer,Service,Assembly"];
+                                                   OptionString=[ ,Production,Transfer,Service,Assembly];
+                                                   Editable=No }
+    { 91  ;   ;Order No.           ;Code20        ;TableRelation=IF (Order Type=CONST(Production)) "Production Order".No. WHERE (Status=FILTER(Released..));
+                                                   CaptionML=[DAN=Ordrenr.;
+                                                              ENU=Order No.];
+                                                   Editable=No }
+    { 92  ;   ;Order Line No.      ;Integer       ;TableRelation=IF (Order Type=CONST(Production)) "Prod. Order Line"."Line No." WHERE (Status=FILTER(Released..),
+                                                                                                                                        Prod. Order No.=FIELD(Order No.));
+                                                   CaptionML=[DAN=Ordrelinjenr.;
+                                                              ENU=Order Line No.];
+                                                   Editable=No }
+    { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   OnLookup=BEGIN
+                                                              ShowDimensions;
+                                                            END;
+
+                                                   CaptionML=[DAN=Dimensionsgruppe-id;
+                                                              ENU=Dimension Set ID];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Document No.,Posting Date                }
+    {    ;Order Type,Order No.,Order Line No.,Routing No.,Routing Reference No.,Operation No.,Last Output Line;
+                                                   SumIndexFields=Quantity,Output Quantity;
+                                                   MaintainSIFTIndex=No }
+    {    ;Work Center No.,Work Shift Code,Posting Date }
+    {    ;Type,No.,Work Shift Code,Item No.,Posting Date }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Entry No.,Description,Type,No.,Posting Date,Document No. }
+  }
+  CODE
+  {
+    VAR
+      GLSetup@1000 : Record 98;
+      GLSetupRead@1001 : Boolean;
+
+    LOCAL PROCEDURE GetCurrencyCode@4() : Code[10];
+    BEGIN
+      IF GLSetupRead THEN BEGIN
+        GLSetup.GET;
+        GLSetupRead := TRUE;
+      END;
+      EXIT(GLSetup."Additional Reporting Currency");
+    END;
+
+    PROCEDURE ShowDimensions@1();
+    VAR
+      DimMgt@1000 : Codeunit 408;
+    BEGIN
+      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2',TABLECAPTION,"Entry No."));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,42 @@
+OBJECT Table 62 Record Export Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26-11-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.43897;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Buffer til eksport af records;
+               ENU=Record Export Buffer];
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[DAN=ID;
+                                                              ENU=ID] }
+    { 2   ;   ;RecordID            ;RecordID      ;CaptionML=[DAN=RecordID;
+                                                              ENU=RecordID] }
+    { 3   ;   ;ServerFilePath      ;Text250       ;CaptionML=[DAN=ServerFilePath;
+                                                              ENU=ServerFilePath] }
+    { 4   ;   ;ClientFileName      ;Text250       ;CaptionML=[DAN=ClientFileName;
+                                                              ENU=ClientFileName] }
+    { 5   ;   ;ZipFileName         ;Text250       ;CaptionML=[DAN=ZipFileName;
+                                                              ENU=ZipFileName] }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

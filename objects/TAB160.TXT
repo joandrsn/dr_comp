@@ -1,0 +1,55 @@
+OBJECT Table 160 Res. Capacity Entry
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Ressourcekapc.post;
+               ENU=Res. Capacity Entry];
+    LookupPageID=Page224;
+    DrillDownPageID=Page224;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+                                                              ENU=Entry No.] }
+    { 2   ;   ;Resource No.        ;Code20        ;TableRelation=Resource;
+                                                   OnValidate=BEGIN
+                                                                Res.GET("Resource No.");
+                                                                "Resource Group No." := Res."Resource Group No.";
+                                                              END;
+
+                                                   CaptionML=[DAN=Ressourcenr.;
+                                                              ENU=Resource No.] }
+    { 3   ;   ;Resource Group No.  ;Code20        ;TableRelation="Resource Group";
+                                                   CaptionML=[DAN=Ressourcegruppenr.;
+                                                              ENU=Resource Group No.] }
+    { 4   ;   ;Date                ;Date          ;CaptionML=[DAN=Dato;
+                                                              ENU=Date] }
+    { 5   ;   ;Capacity            ;Decimal       ;CaptionML=[DAN=Kapacitet;
+                                                              ENU=Capacity];
+                                                   DecimalPlaces=0:5 }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Resource No.,Date                       ;SumIndexFields=Capacity }
+    {    ;Resource Group No.,Date                 ;SumIndexFields=Capacity }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Res@1000 : Record 156;
+
+    BEGIN
+    END.
+  }
+}
+

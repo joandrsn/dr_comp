@@ -1,0 +1,95 @@
+OBJECT Table 9180 Generic Chart Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Konfiguration af generisk diagram;
+               ENU=Generic Chart Setup];
+  }
+  FIELDS
+  {
+    { 2   ;   ;ID                  ;Code20        ;CaptionML=[DAN=Id;
+                                                              ENU=ID];
+                                                   NotBlank=Yes }
+    { 3   ;   ;Source Type         ;Option        ;CaptionML=[DAN=Kildetype;
+                                                              ENU=Source Type];
+                                                   OptionCaptionML=[DAN=" ,Tabel,Forespørgsel";
+                                                                    ENU=" ,Table,Query"];
+                                                   OptionString=[ ,Table,Query] }
+    { 10  ;   ;Name                ;Text50        ;OnValidate=BEGIN
+                                                                Title := Name;
+                                                              END;
+
+                                                   CaptionML=[DAN=Navn;
+                                                              ENU=Name] }
+    { 11  ;   ;Title               ;Text250       ;CaptionML=[DAN=Titel;
+                                                              ENU=Title] }
+    { 12  ;   ;Filter Text         ;Text250       ;CaptionML=[DAN=Filtrer tekst;
+                                                              ENU=Filter Text] }
+    { 15  ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Kolonne,Punkt;
+                                                                    ENU=Column,Point];
+                                                   OptionString=Column,Point }
+    { 16  ;   ;Source ID           ;Integer       ;CaptionML=[DAN=Kilde-id;
+                                                              ENU=Source ID] }
+    { 17  ;   ;Object Name         ;Text30        ;CaptionML=[DAN=Objektnavn;
+                                                              ENU=Object Name];
+                                                   Editable=No }
+    { 20  ;   ;X-Axis Field ID     ;Integer       ;CaptionML=[DAN=Felt-id for x-akse;
+                                                              ENU=X-Axis Field ID] }
+    { 21  ;   ;X-Axis Field Name   ;Text80        ;CaptionML=[DAN=Feltnavn for x-akse;
+                                                              ENU=X-Axis Field Name] }
+    { 22  ;   ;X-Axis Field Caption;Text250       ;CaptionML=[DAN=Felttitel for x-akse;
+                                                              ENU=X-Axis Field Caption] }
+    { 23  ;   ;X-Axis Title        ;Text250       ;CaptionML=[DAN=Titel på x-akse;
+                                                              ENU=X-Axis Title] }
+    { 24  ;   ;X-Axis Show Title   ;Boolean       ;InitValue=Yes;
+                                                   CaptionML=[DAN=Vis titel på x-akse;
+                                                              ENU=X-Axis Show Title] }
+    { 30  ;   ;Y-Axis Fields       ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Generic Chart Y-Axis" WHERE (ID=FIELD(ID)));
+                                                   CaptionML=[DAN=Felter på y-akse;
+                                                              ENU=Y-Axis Fields];
+                                                   Editable=No }
+    { 31  ;   ;Y-Axis Title        ;Text250       ;CaptionML=[DAN=Titel på y-akse;
+                                                              ENU=Y-Axis Title] }
+    { 32  ;   ;Y-Axis Show Title   ;Boolean       ;InitValue=Yes;
+                                                   CaptionML=[DAN=Vis titel på y-akse;
+                                                              ENU=Y-Axis Show Title] }
+    { 34  ;   ;Z-Axis Field ID     ;Integer       ;CaptionML=[DAN=Felt-id for z-akse;
+                                                              ENU=Z-Axis Field ID] }
+    { 35  ;   ;Z-Axis Field Name   ;Text80        ;CaptionML=[DAN=Feltnavn for z-akse;
+                                                              ENU=Z-Axis Field Name] }
+    { 36  ;   ;Z-Axis Field Caption;Text250       ;CaptionML=[DAN=Felttitel for z-akse;
+                                                              ENU=Z-Axis Field Caption] }
+    { 38  ;   ;Z-Axis Title        ;Text250       ;CaptionML=[DAN=Titel på z-akse;
+                                                              ENU=Z-Axis Title] }
+    { 39  ;   ;Z-Axis Show Title   ;Boolean       ;CaptionML=[DAN=Vis titel på z-akse;
+                                                              ENU=Z-Axis Show Title] }
+    { 40  ;   ;Chart Exists        ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist(Chart WHERE (ID=FIELD(ID)));
+                                                   CaptionML=[DAN=Diagram findes;
+                                                              ENU=Chart Exists];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

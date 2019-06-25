@@ -1,0 +1,144 @@
+OBJECT Table 7323 Posted Whse. Shipment Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Bogført lagerlev.linje;
+               ENU=Posted Whse. Shipment Line];
+    LookupPageID=Page7362;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;CaptionML=[DAN=Nummer;
+                                                              ENU=No.];
+                                                   Editable=No }
+    { 2   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.];
+                                                   Editable=No }
+    { 3   ;   ;Source Type         ;Integer       ;CaptionML=[DAN=Kildetype;
+                                                              ENU=Source Type];
+                                                   Editable=No }
+    { 4   ;   ;Source Subtype      ;Option        ;CaptionML=[DAN=Kildeundertype;
+                                                              ENU=Source Subtype];
+                                                   OptionCaptionML=[DAN=0,1,2,3,4,5,6,7,8,9,10;
+                                                                    ENU=0,1,2,3,4,5,6,7,8,9,10];
+                                                   OptionString=0,1,2,3,4,5,6,7,8,9,10;
+                                                   Editable=No }
+    { 6   ;   ;Source No.          ;Code20        ;CaptionML=[DAN=Kildenr.;
+                                                              ENU=Source No.];
+                                                   Editable=No }
+    { 7   ;   ;Source Line No.     ;Integer       ;CaptionML=[DAN=Kildelinjenr.;
+                                                              ENU=Source Line No.];
+                                                   Editable=No }
+    { 9   ;   ;Source Document     ;Option        ;CaptionML=[DAN=Kildedokument;
+                                                              ENU=Source Document];
+                                                   OptionCaptionML=[DAN=,Salgsordre,,,Salgsreturvareordre,Købsordre,,,Købsreturvareordre,,Udgående overfør.,,,,,,,,Serviceordre;
+                                                                    ENU=,Sales Order,,,Sales Return Order,Purchase Order,,,Purchase Return Order,,Outbound Transfer,,,,,,,,Service Order];
+                                                   OptionString=,Sales Order,,,Sales Return Order,Purchase Order,,,Purchase Return Order,,Outbound Transfer,,,,,,,,Service Order;
+                                                   Editable=No }
+    { 10  ;   ;Location Code       ;Code10        ;TableRelation=Location;
+                                                   CaptionML=[DAN=Lokationskode;
+                                                              ENU=Location Code];
+                                                   Editable=No }
+    { 11  ;   ;Shelf No.           ;Code10        ;CaptionML=[DAN=Placeringsnr.;
+                                                              ENU=Shelf No.] }
+    { 12  ;   ;Bin Code            ;Code20        ;TableRelation=IF (Zone Code=FILTER('')) Bin.Code WHERE (Location Code=FIELD(Location Code))
+                                                                 ELSE IF (Zone Code=FILTER(<>'')) Bin.Code WHERE (Location Code=FIELD(Location Code),
+                                                                                                                  Zone Code=FIELD(Zone Code));
+                                                   CaptionML=[DAN=Placeringskode;
+                                                              ENU=Bin Code] }
+    { 13  ;   ;Zone Code           ;Code10        ;TableRelation=Zone.Code WHERE (Location Code=FIELD(Location Code));
+                                                   CaptionML=[DAN=Zonekode;
+                                                              ENU=Zone Code] }
+    { 14  ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   CaptionML=[DAN=Varenr.;
+                                                              ENU=Item No.];
+                                                   Editable=No }
+    { 15  ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+                                                              ENU=Quantity];
+                                                   DecimalPlaces=0:5;
+                                                   Editable=No }
+    { 16  ;   ;Qty. (Base)         ;Decimal       ;CaptionML=[DAN=Antal (basis);
+                                                              ENU=Qty. (Base)];
+                                                   DecimalPlaces=0:5;
+                                                   Editable=No }
+    { 29  ;   ;Unit of Measure Code;Code10        ;TableRelation="Item Unit of Measure".Code WHERE (Item No.=FIELD(Item No.));
+                                                   CaptionML=[DAN=Enhedskode;
+                                                              ENU=Unit of Measure Code];
+                                                   Editable=No }
+    { 30  ;   ;Qty. per Unit of Measure;Decimal   ;InitValue=1;
+                                                   CaptionML=[DAN=Antal pr. enhed;
+                                                              ENU=Qty. per Unit of Measure];
+                                                   DecimalPlaces=0:5;
+                                                   Editable=No }
+    { 31  ;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   CaptionML=[DAN=Variantkode;
+                                                              ENU=Variant Code];
+                                                   Editable=No }
+    { 32  ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description];
+                                                   Editable=No }
+    { 33  ;   ;Description 2       ;Text50        ;CaptionML=[DAN=Beskrivelse 2;
+                                                              ENU=Description 2];
+                                                   Editable=No }
+    { 36  ;   ;Due Date            ;Date          ;CaptionML=[DAN=Forfaldsdato;
+                                                              ENU=Due Date] }
+    { 39  ;   ;Destination Type    ;Option        ;CaptionML=[DAN=Destinationstype;
+                                                              ENU=Destination Type];
+                                                   OptionCaptionML=[DAN=" ,Debitor,Kreditor,Lokation";
+                                                                    ENU=" ,Customer,Vendor,Location"];
+                                                   OptionString=[ ,Customer,Vendor,Location];
+                                                   Editable=No }
+    { 40  ;   ;Destination No.     ;Code20        ;TableRelation=IF (Destination Type=CONST(Customer)) Customer.No.
+                                                                 ELSE IF (Destination Type=CONST(Vendor)) Vendor.No.
+                                                                 ELSE IF (Destination Type=CONST(Location)) Location.Code;
+                                                   CaptionML=[DAN=Destinationsnr.;
+                                                              ENU=Destination No.];
+                                                   Editable=No }
+    { 44  ;   ;Shipping Advice     ;Option        ;CaptionML=[DAN=Afsendelsesadvis;
+                                                              ENU=Shipping Advice];
+                                                   OptionCaptionML=[DAN=Delvis,Komplet;
+                                                                    ENU=Partial,Complete];
+                                                   OptionString=Partial,Complete;
+                                                   Editable=No }
+    { 45  ;   ;Shipment Date       ;Date          ;CaptionML=[DAN=Afsendelsesdato;
+                                                              ENU=Shipment Date] }
+    { 60  ;   ;Posted Source Document;Option      ;CaptionML=[DAN=Bogført kildedokument;
+                                                              ENU=Posted Source Document];
+                                                   OptionCaptionML=[DAN=" ,Bogført købslev.,,Bogført returv.modt.,,Bogført leverance,,Bogført returvareleverance,,,Bogført. købskvittering";
+                                                                    ENU=" ,Posted Receipt,,Posted Return Receipt,,Posted Shipment,,Posted Return Shipment,,,Posted Transfer Shipment"];
+                                                   OptionString=[ ,Posted Receipt,,Posted Return Receipt,,Posted Shipment,,Posted Return Shipment,,,Posted Transfer Shipment] }
+    { 61  ;   ;Posted Source No.   ;Code20        ;CaptionML=[DAN=Bogført kildenr.;
+                                                              ENU=Posted Source No.] }
+    { 62  ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+                                                              ENU=Posting Date] }
+    { 63  ;   ;Whse. Shipment No.  ;Code20        ;CaptionML=[DAN=Lagerleverancenr. (logistik);
+                                                              ENU=Whse. Shipment No.];
+                                                   Editable=No }
+    { 64  ;   ;Whse Shipment Line No.;Integer     ;CaptionML=[DAN=Lagerleverancelinjenr.;
+                                                              ENU=Whse Shipment Line No.];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;No.,Line No.                            ;Clustered=Yes }
+    {    ;Whse. Shipment No.,Whse Shipment Line No. }
+    {    ;Posted Source No.,Posting Date           }
+    {    ;Source Type,Source Subtype,Source No.,Source Line No. }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

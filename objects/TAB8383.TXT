@@ -1,0 +1,39 @@
+OBJECT Table 8383 Dimensions Field Map
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Dimensionsfelttilknytning;
+               ENU=Dimensions Field Map];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Table No.           ;Integer       ;CaptionML=[DAN=Tabelnr.;
+                                                              ENU=Table No.] }
+    { 2   ;   ;Global Dim.1 Field No.;Integer     ;CaptionML=[DAN=Global dim. 1-feltnr.;
+                                                              ENU=Global Dim.1 Field No.] }
+    { 3   ;   ;Global Dim.2 Field No.;Integer     ;CaptionML=[DAN=Global dim. 2-feltnr.;
+                                                              ENU=Global Dim.2 Field No.] }
+    { 4   ;   ;ID Field No.        ;Integer       ;CaptionML=[DAN=Id-feltnr.;
+                                                              ENU=ID Field No.] }
+  }
+  KEYS
+  {
+    {    ;Table No.                               ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

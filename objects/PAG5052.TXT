@@ -1,0 +1,615 @@
+OBJECT Page 5052 Contact List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26-11-15;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.43897;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Kontaktoversigt;
+               ENU=Contact List];
+    SourceTable=Table5050;
+    SourceTableView=SORTING(Company Name,Company No.,Type,Name);
+    DataCaptionFields=Company No.;
+    PageType=List;
+    CardPageID=Contact Card;
+    OnOpenPage=VAR
+                 CRMIntegrationManagement@1000 : Codeunit 5330;
+               BEGIN
+                 CRMIntegrationEnabled := CRMIntegrationManagement.IsCRMIntegrationEnabled;
+               END;
+
+    OnAfterGetRecord=VAR
+                       CRMCouplingManagement@1001 : Codeunit 5331;
+                     BEGIN
+                       EnableFields;
+                       StyleIsStrong := Type = Type::Company;
+
+                       NameIndent := 0;
+                       IF Type <> Type::Company THEN BEGIN
+                         Cont.SETCURRENTKEY("Company Name","Company No.",Type,Name);
+                         IF ("Company No." <> '') AND (NOT HASFILTER) AND (NOT MARKEDONLY) AND (CURRENTKEY = Cont.CURRENTKEY) THEN
+                           NameIndent := 1
+                       END;
+
+                       IF CRMIntegrationEnabled THEN
+                         CRMIsCoupledToRecord := CRMCouplingManagement.IsRecordCoupledToCRM(RECORDID);
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 29      ;1   ;ActionGroup;
+                      CaptionML=[DAN=K&ontakt;
+                                 ENU=C&ontact];
+                      Image=ContactPerson }
+      { 34      ;2   ;ActionGroup;
+                      CaptionML=[DAN=Virksom&hed;
+                                 ENU=Comp&any];
+                      Enabled=CompanyGroupEnabled;
+                      Image=Company }
+      { 35      ;3   ;Action    ;
+                      CaptionML=[DAN=Forretningsrelationer;
+                                 ENU=Business Relations];
+                      RunObject=Page 5061;
+                      RunPageLink=Contact No.=FIELD(Company No.);
+                      Image=BusinessRelation }
+      { 36      ;3   ;Action    ;
+                      CaptionML=[DAN=Brancher;
+                                 ENU=Industry Groups];
+                      RunObject=Page 5067;
+                      RunPageLink=Contact No.=FIELD(Company No.);
+                      Image=IndustryGroups }
+      { 37      ;3   ;Action    ;
+                      CaptionML=[DAN=Webkilder;
+                                 ENU=Web Sources];
+                      RunObject=Page 5070;
+                      RunPageLink=Contact No.=FIELD(Company No.);
+                      Image=Web }
+      { 38      ;2   ;ActionGroup;
+                      CaptionML=[DAN=Kontak&t;
+                                 ENU=P&erson];
+                      Enabled=PersonGroupEnabled;
+                      Image=User }
+      { 39      ;3   ;Action    ;
+                      CaptionML=[DAN=Ansvarsområder;
+                                 ENU=Job Responsibilities];
+                      Image=Job;
+                      OnAction=VAR
+                                 ContJobResp@1001 : Record 5067;
+                               BEGIN
+                                 TESTFIELD(Type,Type::Person);
+                                 ContJobResp.SETRANGE("Contact No.","No.");
+                                 PAGE.RUNMODAL(PAGE::"Contact Job Responsibilities",ContJobResp);
+                               END;
+                                }
+      { 41      ;2   ;Action    ;
+                      CaptionML=[DAN=Pro&filer;
+                                 ENU=Pro&files];
+                      Image=Answers;
+                      OnAction=VAR
+                                 ProfileManagement@1001 : Codeunit 5059;
+                               BEGIN
+                                 ProfileManagement.ShowContactQuestionnaireCard(Rec,'',0);
+                               END;
+                                }
+      { 43      ;2   ;Action    ;
+                      CaptionML=[DAN=&Billede;
+                                 ENU=&Picture];
+                      RunObject=Page 5104;
+                      RunPageLink=No.=FIELD(No.);
+                      Image=Picture }
+      { 44      ;2   ;Action    ;
+                      CaptionML=[DAN=Be&mærkninger;
+                                 ENU=Co&mments];
+                      RunObject=Page 5072;
+                      RunPageLink=Table Name=CONST(Contact),
+                                  No.=FIELD(No.),
+                                  Sub No.=CONST(0);
+                      Image=ViewComments }
+      { 45      ;2   ;ActionGroup;
+                      CaptionML=[DAN=Alternati&v adresse;
+                                 ENU=Alternati&ve Address];
+                      Image=Addresses }
+      { 46      ;3   ;Action    ;
+                      CaptionML=[DAN=Kort;
+                                 ENU=Card];
+                      RunObject=Page 5057;
+                      RunPageLink=Contact No.=FIELD(No.);
+                      Image=EditLines }
+      { 47      ;3   ;Action    ;
+                      CaptionML=[DAN=Datointervaller;
+                                 ENU=Date Ranges];
+                      RunObject=Page 5059;
+                      RunPageLink=Contact No.=FIELD(No.);
+                      Image=DateRange }
+      { 48      ;2   ;Separator ;
+                      CaptionML=[DAN="";
+                                 ENU=""] }
+      { 25      ;1   ;ActionGroup;
+                      Name=ActionGroupCRM;
+                      CaptionML=[DAN=Dynamics CRM;
+                                 ENU=Dynamics CRM];
+                      Visible=CRMIntegrationEnabled }
+      { 23      ;2   ;Action    ;
+                      Name=CRMGotoContact;
+                      CaptionML=[DAN=Kontakt;
+                                 ENU=Contact];
+                      ToolTipML=[DAN=Åbn den sammenkædede Microsoft Dynamics CRM-kontakt.;
+                                 ENU=Open the coupled Microsoft Dynamics CRM contact.];
+                      Enabled=(Type <> Type::Company) AND ("Company No." <> '');
+                      Image=CoupledContactPerson;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.ShowCRMEntityFromRecordID(RECORDID);
+                               END;
+                                }
+      { 27      ;2   ;Action    ;
+                      Name=CRMSynchronizeNow;
+                      AccessByPermission=TableData 5331=IM;
+                      CaptionML=[DAN=Synkroniser nu;
+                                 ENU=Synchronize Now];
+                      ToolTipML=[DAN=Send eller hent opdaterede data til eller fra Microsoft Dynamics CRM.;
+                                 ENU=Send or get updated data to or from Microsoft Dynamics CRM.];
+                      Enabled=(Type <> Type::Company) AND ("Company No." <> '');
+                      Image=Refresh;
+                      OnAction=VAR
+                                 Contact@1000 : Record 5050;
+                                 CRMIntegrationManagement@1001 : Codeunit 5330;
+                                 ContactRecordRef@1002 : RecordRef;
+                               BEGIN
+                                 CurrPage.SETSELECTIONFILTER(Contact);
+                                 Contact.NEXT;
+
+                                 IF Contact.COUNT = 1 THEN
+                                   CRMIntegrationManagement.UpdateOneNow(Contact.RECORDID)
+                                 ELSE BEGIN
+                                   ContactRecordRef.GETTABLE(Contact);
+                                   CRMIntegrationManagement.UpdateMultipleNow(ContactRecordRef);
+                                 END
+                               END;
+                                }
+      { 26      ;2   ;ActionGroup;
+                      Name=Coupling;
+                      CaptionML=[@@@=Coupling is a noun;
+                                 DAN=Sammenkædning;
+                                 ENU=Coupling];
+                      ToolTipML=[DAN=Opret, ret eller slet en sammenkædning mellem Microsoft Dynamics NAV-recorden og en Microsoft Dynamics CRM-post.;
+                                 ENU=Create, change, or delete a coupling between the Microsoft Dynamics NAV record and a Microsoft Dynamics CRM record.];
+                      Enabled=(Type <> Type::Company) AND ("Company No." <> '');
+                      Image=LinkAccount }
+      { 21      ;3   ;Action    ;
+                      Name=ManageCRMCoupling;
+                      AccessByPermission=TableData 5331=IM;
+                      CaptionML=[DAN=Konfigurer sammenkædning;
+                                 ENU=Set Up Coupling];
+                      ToolTipML=[DAN=Opret eller rediger sammenkædningen med en Microsoft Dynamics CRM-kontakt.;
+                                 ENU=Create or modify the coupling to a Microsoft Dynamics CRM contact.];
+                      Image=LinkAccount;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.CreateOrUpdateCoupling(RECORDID);
+                               END;
+                                }
+      { 19      ;3   ;Action    ;
+                      Name=DeleteCRMCoupling;
+                      AccessByPermission=TableData 5331=IM;
+                      CaptionML=[DAN=Slet sammenkædning;
+                                 ENU=Delete Coupling];
+                      ToolTipML=[DAN=Slet sammenkædningen med en Microsoft Dynamics CRM-kontakt.;
+                                 ENU=Delete the coupling to a Microsoft Dynamics CRM contact.];
+                      Enabled=CRMIsCoupledToRecord;
+                      Image=UnLinkAccount;
+                      OnAction=VAR
+                                 CRMCouplingManagement@1000 : Codeunit 5331;
+                               BEGIN
+                                 CRMCouplingManagement.RemoveCoupling(RECORDID);
+                               END;
+                                }
+      { 17      ;2   ;ActionGroup;
+                      Name=Create;
+                      CaptionML=[DAN=Opret;
+                                 ENU=Create];
+                      Image=NewCustomer }
+      { 15      ;3   ;Action    ;
+                      Name=CreateInCRM;
+                      CaptionML=[DAN=Opret kontakt i Dynamics CRM;
+                                 ENU=Create Contact in Dynamics CRM];
+                      Enabled=(Type <> Type::Company) AND ("Company No." <> '');
+                      Image=NewCustomer;
+                      OnAction=VAR
+                                 Contact@1001 : Record 5050;
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                                 ContactRecordRef@1002 : RecordRef;
+                               BEGIN
+                                 CurrPage.SETSELECTIONFILTER(Contact);
+                                 Contact.NEXT;
+
+                                 IF Contact.COUNT = 1 THEN
+                                   CRMIntegrationManagement.CreateNewRecordInCRM(RECORDID,FALSE)
+                                 ELSE BEGIN
+                                   ContactRecordRef.GETTABLE(Contact);
+                                   CRMIntegrationManagement.CreateNewRecordsInCRM(ContactRecordRef);
+                                 END
+                               END;
+                                }
+      { 13      ;3   ;Action    ;
+                      Name=CreateFromCRM;
+                      CaptionML=[DAN=Opret kontakt i Dynamics NAV;
+                                 ENU=Create Contact in Dynamics NAV];
+                      Image=NewCustomer;
+                      OnAction=VAR
+                                 CRMIntegrationManagement@1000 : Codeunit 5330;
+                               BEGIN
+                                 CRMIntegrationManagement.ManageCreateNewRecordFromCRM(DATABASE::Contact);
+                               END;
+                                }
+      { 5       ;1   ;ActionGroup;
+                      CaptionML=[DAN=Relaterede oplysninger;
+                                 ENU=Related Information];
+                      Image=Users }
+      { 33      ;2   ;Action    ;
+                      CaptionML=[DAN=Tilknytte&de kontakter;
+                                 ENU=Relate&d Contacts];
+                      RunObject=Page 5052;
+                      RunPageLink=Company No.=FIELD(Company No.);
+                      Image=Users }
+      { 55      ;2   ;Action    ;
+                      CaptionML=[DAN=Målgr&upper;
+                                 ENU=Segmen&ts];
+                      RunObject=Page 5150;
+                      RunPageView=SORTING(Contact No.,Segment No.);
+                      RunPageLink=Contact Company No.=FIELD(Company No.),
+                                  Contact No.=FILTER(<>''),
+                                  Contact No.=FIELD(FILTER(Lookup Contact No.));
+                      Image=Segment }
+      { 40      ;2   ;Action    ;
+                      CaptionML=[DAN=Mailg&rupper;
+                                 ENU=Mailing &Groups];
+                      RunObject=Page 5064;
+                      RunPageLink=Contact No.=FIELD(No.);
+                      Image=DistributionGroup }
+      { 53      ;2   ;Action    ;
+                      CaptionML=[DAN=D&ebitor/Kreditor/Bankkto.;
+                                 ENU=C&ustomer/Vendor/Bank Acc.];
+                      Image=ContactReference;
+                      OnAction=BEGIN
+                                 ShowCustVendBank;
+                               END;
+                                }
+      { 7       ;1   ;ActionGroup;
+                      CaptionML=[DAN=Opgaver;
+                                 ENU=Tasks];
+                      Image=Task }
+      { 50      ;2   ;Action    ;
+                      CaptionML=[DAN=&Opgaver;
+                                 ENU=T&o-dos];
+                      RunObject=Page 5096;
+                      RunPageView=SORTING(Contact Company No.,Contact No.);
+                      RunPageLink=Contact Company No.=FIELD(Company No.),
+                                  Contact No.=FIELD(FILTER(Lookup Contact No.)),
+                                  System To-do Type=FILTER(Contact Attendee);
+                      Image=TaskList }
+      { 3       ;2   ;Action    ;
+                      CaptionML=[DAN=&Salgsmuligheder;
+                                 ENU=Oppo&rtunities];
+                      RunObject=Page 5123;
+                      RunPageView=SORTING(Contact Company No.,Contact No.);
+                      RunPageLink=Contact Company No.=FIELD(Company No.),
+                                  Contact No.=FILTER(<>''),
+                                  Contact No.=FIELD(FILTER(Lookup Contact No.));
+                      Image=OpportunityList }
+      { 52      ;2   ;Separator ;
+                      CaptionML=[DAN="";
+                                 ENU=""] }
+      { 9       ;1   ;ActionGroup;
+                      CaptionML=[DAN=Dokumenter;
+                                 ENU=Documents];
+                      Image=Documents }
+      { 68      ;2   ;Action    ;
+                      CaptionML=[DAN=S&algstilbud;
+                                 ENU=Sales &Quotes];
+                      RunObject=Page 9300;
+                      RunPageView=SORTING(Document Type,Sell-to Contact No.);
+                      RunPageLink=Sell-to Contact No.=FIELD(No.);
+                      Image=Quote }
+      { 69      ;2   ;Separator  }
+      { 11      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Oversigt;
+                                 ENU=History];
+                      Image=History }
+      { 76      ;2   ;Action    ;
+                      CaptionML=[DAN=Udsatte i&nteraktioner;
+                                 ENU=Postponed &Interactions];
+                      RunObject=Page 5082;
+                      RunPageView=SORTING(Contact Company No.,Contact No.);
+                      RunPageLink=Contact Company No.=FIELD(Company No.),
+                                  Contact No.=FILTER(<>''),
+                                  Contact No.=FIELD(FILTER(Lookup Contact No.));
+                      Image=PostponedInteractions }
+      { 49      ;2   ;Action    ;
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=[DAN=&Interaktionslogposter;
+                                 ENU=Interaction Log E&ntries];
+                      RunObject=Page 5076;
+                      RunPageView=SORTING(Contact Company No.,Contact No.);
+                      RunPageLink=Contact Company No.=FIELD(Company No.),
+                                  Contact No.=FILTER(<>''),
+                                  Contact No.=FIELD(FILTER(Lookup Contact No.));
+                      Image=InteractionLog }
+      { 42      ;2   ;Action    ;
+                      ShortCutKey=F7;
+                      CaptionML=[DAN=Statistik;
+                                 ENU=Statistics];
+                      RunObject=Page 5053;
+                      RunPageLink=No.=FIELD(No.);
+                      Promoted=Yes;
+                      Image=Statistics;
+                      PromotedCategory=Process }
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 30      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Fu&nktion;
+                                 ENU=F&unctions];
+                      Image=Action }
+      { 54      ;2   ;Action    ;
+                      CaptionML=[DAN=Foretag &tlf.opkald;
+                                 ENU=Make &Phone Call];
+                      Image=Calls;
+                      OnAction=VAR
+                                 TAPIManagement@1001 : Codeunit 5053;
+                               BEGIN
+                                 TAPIManagement.DialContCustVendBank(DATABASE::Contact,"No.","Phone No.",'');
+                               END;
+                                }
+      { 56      ;2   ;Action    ;
+                      CaptionML=[DAN=Start &webkilde;
+                                 ENU=Launch &Web Source];
+                      Image=LaunchWeb;
+                      OnAction=VAR
+                                 ContactWebSource@1001 : Record 5060;
+                               BEGIN
+                                 ContactWebSource.SETRANGE("Contact No.","Company No.");
+                                 IF PAGE.RUNMODAL(PAGE::"Web Source Launch",ContactWebSource) = ACTION::LookupOK THEN
+                                   ContactWebSource.Launch;
+                               END;
+                                }
+      { 57      ;2   ;Action    ;
+                      CaptionML=[DAN=&Udskriv følgebrev;
+                                 ENU=Print Cover &Sheet];
+                      Image=PrintCover;
+                      OnAction=VAR
+                                 Cont@1001 : Record 5050;
+                               BEGIN
+                                 Cont := Rec;
+                                 Cont.SETRECFILTER;
+                                 REPORT.RUN(REPORT::"Contact - Cover Sheet",TRUE,FALSE,Cont);
+                               END;
+                                }
+      { 58      ;2   ;ActionGroup;
+                      CaptionML=[DAN=Opret som;
+                                 ENU=Create as];
+                      Image=CustomerContact }
+      { 59      ;3   ;Action    ;
+                      CaptionML=[DAN=Debitor;
+                                 ENU=Customer];
+                      Image=Customer;
+                      OnAction=BEGIN
+                                 CreateCustomer(ChooseCustomerTemplate);
+                               END;
+                                }
+      { 60      ;3   ;Action    ;
+                      Name=Vendor;
+                      CaptionML=[DAN=Kreditor;
+                                 ENU=Vendor];
+                      Image=Vendor;
+                      OnAction=BEGIN
+                                 CreateVendor;
+                               END;
+                                }
+      { 61      ;3   ;Action    ;
+                      AccessByPermission=TableData 270=R;
+                      CaptionML=[DAN=Bank;
+                                 ENU=Bank];
+                      Image=Bank;
+                      OnAction=BEGIN
+                                 CreateBankAccount;
+                               END;
+                                }
+      { 62      ;2   ;ActionGroup;
+                      CaptionML=[DAN=Opret kæde til eksist.;
+                                 ENU=Link with existing];
+                      Image=Links }
+      { 63      ;3   ;Action    ;
+                      CaptionML=[DAN=Debitor;
+                                 ENU=Customer];
+                      Image=Customer;
+                      OnAction=BEGIN
+                                 CreateCustomerLink;
+                               END;
+                                }
+      { 64      ;3   ;Action    ;
+                      CaptionML=[DAN=Kreditor;
+                                 ENU=Vendor];
+                      Image=Vendor;
+                      OnAction=BEGIN
+                                 CreateVendorLink;
+                               END;
+                                }
+      { 65      ;3   ;Action    ;
+                      AccessByPermission=TableData 270=R;
+                      CaptionML=[DAN=Bank;
+                                 ENU=Bank];
+                      Image=Bank;
+                      OnAction=BEGIN
+                                 CreateBankAccountLink;
+                               END;
+                                }
+      { 31      ;1   ;Action    ;
+                      AccessByPermission=TableData 5062=R;
+                      CaptionML=[DAN=O&pret interaktion;
+                                 ENU=Create &Interact];
+                      Promoted=Yes;
+                      Image=CreateInteraction;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CreateInteraction;
+                               END;
+                                }
+      { 1900000005;0 ;ActionContainer;
+                      ActionContainerType=NewDocumentItems }
+      { 1900900305;1 ;Action    ;
+                      CaptionML=[DAN=Nyt salgstilbud;
+                                 ENU=New Sales Quote];
+                      RunObject=Page 41;
+                      RunPageLink=Sell-to Contact No.=FIELD(No.);
+                      Promoted=Yes;
+                      Image=Quote;
+                      PromotedCategory=New;
+                      RunPageMode=Create }
+      { 1900000006;0 ;ActionContainer;
+                      ActionContainerType=Reports }
+      { 1907415106;1 ;Action    ;
+                      CaptionML=[DAN=Kontakt - følgebrev;
+                                 ENU=Contact Cover Sheet];
+                      Promoted=No;
+                      Image=Report;
+                      PromotedCategory=Report;
+                      OnAction=BEGIN
+                                 Cont := Rec;
+                                 Cont.SETRECFILTER;
+                                 REPORT.RUN(REPORT::"Contact - Cover Sheet",TRUE,FALSE,Cont);
+                               END;
+                                }
+      { 1907778706;1 ;Action    ;
+                      CaptionML=[DAN=Virksomhedsoversigt;
+                                 ENU=Contact Company Summary];
+                      RunObject=Report 5051;
+                      Promoted=Yes;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1904205506;1 ;Action    ;
+                      CaptionML=[DAN=Kontakt - etiketter;
+                                 ENU=Contact Labels];
+                      RunObject=Report 5056;
+                      Promoted=No;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1905922906;1 ;Action    ;
+                      CaptionML=[DAN=Spørgeskema - kopi;
+                                 ENU=Questionnaire Handout];
+                      RunObject=Report 5066;
+                      Promoted=No;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1900800206;1 ;Action    ;
+                      CaptionML=[DAN=Salgsprocesanalyse;
+                                 ENU=Sales Cycle Analysis];
+                      RunObject=Report 5062;
+                      Promoted=Yes;
+                      Image=Report;
+                      PromotedCategory=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                IndentationColumnName=NameIndent;
+                IndentationControls=Name;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr="No.";
+                Style=Strong;
+                StyleExpr=StyleIsStrong }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Name;
+                Style=Strong;
+                StyleExpr=StyleIsStrong }
+
+    { 66  ;2   ;Field     ;
+                SourceExpr="Company Name";
+                Visible=FALSE }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr="Post Code";
+                Visible=FALSE }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Country/Region Code";
+                Visible=FALSE }
+
+    { 10  ;2   ;Field     ;
+                SourceExpr="Phone No." }
+
+    { 24  ;2   ;Field     ;
+                SourceExpr="Mobile Phone No.";
+                Visible=FALSE }
+
+    { 12  ;2   ;Field     ;
+                SourceExpr="Fax No.";
+                Visible=FALSE }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr="Salesperson Code" }
+
+    { 16  ;2   ;Field     ;
+                SourceExpr="Territory Code" }
+
+    { 18  ;2   ;Field     ;
+                SourceExpr="Currency Code";
+                Visible=FALSE }
+
+    { 20  ;2   ;Field     ;
+                SourceExpr="Language Code";
+                Visible=FALSE }
+
+    { 22  ;2   ;Field     ;
+                SourceExpr="Search Name" }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=TRUE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=TRUE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      Cont@1000 : Record 5050;
+      StyleIsStrong@1001 : Boolean INDATASET;
+      NameIndent@1002 : Integer INDATASET;
+      CompanyGroupEnabled@1004 : Boolean;
+      PersonGroupEnabled@1003 : Boolean;
+      CRMIntegrationEnabled@1006 : Boolean;
+      CRMIsCoupledToRecord@1005 : Boolean;
+
+    LOCAL PROCEDURE EnableFields@1();
+    BEGIN
+      CompanyGroupEnabled := Type = Type::Company;
+      PersonGroupEnabled := Type = Type::Person;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

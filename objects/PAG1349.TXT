@@ -1,0 +1,164 @@
+OBJECT Page 1349 Mini Purch. & Payables Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Købsopsætning;
+               ENU=Purchases & Payables Setup];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    SourceTable=Table312;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 RESET;
+                 IF NOT GET THEN BEGIN
+                   INIT;
+                   INSERT;
+                 END;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 20      ;    ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 21      ;1   ;Action    ;
+                      CaptionML=[DAN=Kreditorbogføringsgrupper;
+                                 ENU=Vendor Posting Groups];
+                      ToolTipML=[DAN=Konfigurer de bogføringsgrupper, du kan vælge mellem, når du konfigurerer kreditorkort, der skal knytte forretningstransaktioner for kreditoren til den relevante finanskonto.;
+                                 ENU=Set up the posting groups to select from when you set up vendor cards to link business transactions made for the vendor with the appropriate account in the general ledger.];
+                      RunObject=Page 111;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Vendor;
+                      PromotedCategory=Process }
+      { 14      ;1   ;Action    ;
+                      CaptionML=[DAN=Opsætning af indgående bilag;
+                                 ENU=Incoming Documents Setup];
+                      ToolTipML=[DAN=Konfigurer den kladdetype, der skal bruges til at oprette finanskladdelinjer fra elektroniske eksterne dokumenter som f.eks. fakturaer fra kreditorer via mail.;
+                                 ENU=Set up the journal template that will be used to create general journal lines from electronic external documents, such as invoices from your vendors on email.];
+                      RunObject=Page 191;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Documents;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 101 ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                CaptionML=[DAN=Konfigurationsfelter;
+                           ENU=Setup Fields];
+                GroupType=Group }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvilken type købsrabat der bogføres separat.;
+                           ENU=Specifies the type of purchase discounts to post separately.];
+                SourceExpr="Discount Posting" }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, at beløbene afrundes til købsfakturaer.;
+                           ENU=Specifies that amounts are rounded for purchase invoices.];
+                SourceExpr="Invoice Rounding" }
+
+    { 8   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om der altid skal indsættes et eksternt bilagsnummer i de følgende situationer:;
+                           ENU=Specifies whether it is mandatory to enter an external document number in the following situations:];
+                SourceExpr="Ext. Doc. No. Mandatory" }
+
+    { 3   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, at en returneringstransaktion ikke kan bogføres, medmindre feltet Udl.varepostløbenr. købsordrelinjen indeholder en post.;
+                           ENU=Specifies that a return transaction cannot be posted unless the Appl.-to Item Entry field on the purchase order line contains an entry.];
+                SourceExpr="Exact Cost Reversing Mandatory" }
+
+    { 24  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om manuel regulering af momsbeløb i købsdokumenter skal tillades.;
+                           ENU=Specifies whether to allow the manual adjustment of VAT amounts in purchase documents.];
+                SourceExpr="Allow VAT Difference" }
+
+    { 10  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om fakturarabatbeløbet beregnes automatisk med købsdokumenter.;
+                           ENU=Specifies whether the invoice discount amount is automatically calculated with purchase documents.];
+                SourceExpr="Calc. Inv. Discount" }
+
+    { 28  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, at fakturarabatten beregnes i henhold til Moms-id. Hvis du ikke markerer feltet, beregnes fakturarabatten ud fra fakturabeløbet. De to fremgangsmåder medfører en lille difference i det momsbeløb, der beregnes af programmet.;
+                           ENU=Specifies that the invoice discount is calculated according to VAT Identifier. If you choose not to place a check mark here, the invoice discount will be calculated on the invoice total. The two methods may lead to a small difference in the VAT amount calculated by the program.];
+                SourceExpr="Calc. Inv. Disc. per VAT ID" }
+
+    { 22  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, i hvor stor udstrækning posterne skal udlignes i forskellige valutaer i modulet Køb. Du kan vælge én af disse muligheder:;
+                           ENU=Specifies to what extent the application of entries in different currencies is allowed in the Purchases and Payables application area. You can select one of these options:];
+                SourceExpr="Appln. between Currencies" }
+
+    { 59  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvordan feltet Bogføringsdato skal bruges på købsdokumenter.;
+                           ENU=Specifies how to use the Posting Date field on purchase documents.];
+                SourceExpr="Default Posting Date" }
+
+    { 4   ;1   ;Group     ;
+                CaptionML=[DAN=Nummerserie;
+                           ENU=Number Series];
+                GroupType=Group }
+
+    { 12  ;2   ;Field     ;
+                Lookup=Yes;
+                CaptionML=[DAN=Leverandørnumre;
+                           ENU=Vendor Numbers];
+                ToolTipML=[DAN=Angiver koden for den nummerserie, der skal bruges ved tildeling af numre til kreditorer. Klik på feltet for at få vist de nummerserier, der er blevet oprettet i tabellen Nummerserie.;
+                           ENU=Specifies the code for the number series that will be used to assign numbers to vendors. To see the number series that have been set up in the No. Series table, click the field.];
+                SourceExpr="Vendor Nos.";
+                TableRelation="No. Series".Code }
+
+    { 11  ;2   ;Field     ;
+                Lookup=Yes;
+                CaptionML=[DAN=Købsfakturanumre;
+                           ENU=Purchase Invoice Numbers];
+                ToolTipML=[DAN=Angiver koden for den nummerserie, der skal bruges ved tildeling af numre til købsfakturaer. Klik på feltet for at få vist de nummerserier, der er blevet oprettet i tabellen Nummerserie.;
+                           ENU=Specifies the code for the number series that will be used to assign numbers to purchase invoices. To see the number series that have been set up in the No. Series table, click the field.];
+                SourceExpr="Invoice Nos.";
+                TableRelation="No. Series".Code }
+
+    { 9   ;2   ;Field     ;
+                Lookup=Yes;
+                CaptionML=[DAN=Bogførte købsfakturanumre;
+                           ENU=Posted Purchase Invoice Numbers];
+                ToolTipML=[DAN=Angiver koden for de nummerserier, der bruges, når købsforudbetalingsfakturaer tildeles numre i forbindelse med bogføringen. Klik på feltet for at få vist de nummerserier, der er blevet oprettet i tabellen Nummerserie.;
+                           ENU=Specifies the code for the number series that will be used to assign numbers to purchase invoices when they are posted. To see the number series that have been set up in the No. Series table, click the field.];
+                SourceExpr="Posted Invoice Nos.";
+                TableRelation="No. Series".Code }
+
+    { 7   ;2   ;Field     ;
+                Lookup=Yes;
+                CaptionML=[DAN=Købskreditnotanumre;
+                           ENU=Purchase Credit Memo Numbers];
+                ToolTipML=[DAN=Angiver koden for den nummerserie, der skal bruges ved tildeling af numre til købskreditnotaer. Klik på feltet for at få vist de nummerserier, der er blevet oprettet i tabellen Nummerserie.;
+                           ENU=Specifies the code for the number series that will be used to assign numbers to purchase credit memos. To see the number series that have been set up in the No. Series table, click the field.];
+                SourceExpr="Credit Memo Nos.";
+                TableRelation="No. Series".Code }
+
+    { 5   ;2   ;Field     ;
+                Lookup=Yes;
+                CaptionML=[DAN=Bogførte købskreditnotanumre;
+                           ENU=Posted Purchase Credit Memo Numbers];
+                ToolTipML=[DAN=Angiver koden for den nummerserie, der skal bruges, når købskreditnotaer tildeles numre i forbindelse med bogføringen. Klik på feltet for at få vist de nummerserier, der er blevet oprettet i tabellen Nummerserie.;
+                           ENU=Specifies the code for the number series that will be used to assign numbers to purchase credit memos when they are posted. To see the number series that have been set up in the No. Series table, click the field.];
+                SourceExpr="Posted Credit Memo Nos.";
+                TableRelation="No. Series".Code }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

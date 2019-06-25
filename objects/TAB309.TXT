@@ -1,0 +1,93 @@
+OBJECT Table 309 No. Series Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07-09-12;
+    Time=12:00:00;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Nummerserielinje;
+               ENU=No. Series Line];
+    LookupPageID=Page457;
+    DrillDownPageID=Page457;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Series Code         ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Seriekode;
+                                                              ENU=Series Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+                                                              ENU=Line No.] }
+    { 3   ;   ;Starting Date       ;Date          ;CaptionML=[DAN=Startdato;
+                                                              ENU=Starting Date] }
+    { 4   ;   ;Starting No.        ;Code20        ;OnValidate=BEGIN
+                                                                UpdateLine("Starting No.",FIELDCAPTION("Starting No."));
+                                                              END;
+
+                                                   CaptionML=[DAN=Startnr.;
+                                                              ENU=Starting No.] }
+    { 5   ;   ;Ending No.          ;Code20        ;OnValidate=BEGIN
+                                                                IF "Ending No." = '' THEN
+                                                                  "Warning No." := '';
+                                                                UpdateLine("Ending No.",FIELDCAPTION("Ending No."));
+                                                                VALIDATE(Open);
+                                                              END;
+
+                                                   CaptionML=[DAN=Slutnr.;
+                                                              ENU=Ending No.] }
+    { 6   ;   ;Warning No.         ;Code20        ;OnValidate=BEGIN
+                                                                TESTFIELD("Ending No.");
+                                                                UpdateLine("Warning No.",FIELDCAPTION("Warning No."));
+                                                              END;
+
+                                                   CaptionML=[DAN=Advarselsnr.;
+                                                              ENU=Warning No.] }
+    { 7   ;   ;Increment-by No.    ;Integer       ;InitValue=1;
+                                                   CaptionML=[DAN=Forøg med;
+                                                              ENU=Increment-by No.];
+                                                   MinValue=1 }
+    { 8   ;   ;Last No. Used       ;Code20        ;OnValidate=BEGIN
+                                                                UpdateLine("Last No. Used",FIELDCAPTION("Last No. Used"));
+                                                                VALIDATE(Open);
+                                                              END;
+
+                                                   CaptionML=[DAN=Sidst anvendt nr.;
+                                                              ENU=Last No. Used] }
+    { 9   ;   ;Open                ;Boolean       ;InitValue=Yes;
+                                                   OnValidate=BEGIN
+                                                                Open := ("Ending No." = '') OR ("Ending No." <> "Last No. Used");
+                                                              END;
+
+                                                   CaptionML=[DAN=Åben;
+                                                              ENU=Open];
+                                                   Editable=No }
+    { 10  ;   ;Last Date Used      ;Date          ;CaptionML=[DAN=Sidst anvendt dato;
+                                                              ENU=Last Date Used] }
+  }
+  KEYS
+  {
+    {    ;Series Code,Line No.                    ;Clustered=Yes }
+    {    ;Series Code,Starting Date,Starting No.   }
+    {    ;Starting No.                             }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      NoSeriesMgt@1000 : Codeunit 396;
+
+    LOCAL PROCEDURE UpdateLine@1(NewNo@1000 : Code[20];NewFieldName@1001 : Text[100]);
+    BEGIN
+      NoSeriesMgt.UpdateNoSeriesLine(Rec,NewNo,NewFieldName);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

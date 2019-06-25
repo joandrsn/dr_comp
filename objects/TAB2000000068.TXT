@@ -1,0 +1,68 @@
+OBJECT Table 2000000068 Record Link
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-01-16;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Recordlink;
+               ENU=Record Link];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Link ID             ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[DAN=Link-id;
+                                                              ENU=Link ID] }
+    { 2   ;   ;Record ID           ;RecordID      ;CaptionML=[DAN=Record-id;
+                                                              ENU=Record ID] }
+    { 3   ;   ;URL1                ;Text250       ;CaptionML=[DAN=URL1;
+                                                              ENU=URL1] }
+    { 4   ;   ;URL2                ;Text250       ;CaptionML=[DAN=URL2;
+                                                              ENU=URL2] }
+    { 5   ;   ;URL3                ;Text250       ;CaptionML=[DAN=URL3;
+                                                              ENU=URL3] }
+    { 6   ;   ;URL4                ;Text250       ;CaptionML=[DAN=URL4;
+                                                              ENU=URL4] }
+    { 7   ;   ;Description         ;Text250       ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 8   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+                                                              ENU=Type];
+                                                   OptionCaptionML=[DAN=Link,Note;
+                                                                    ENU=Link,Note];
+                                                   OptionString=Link,Note }
+    { 9   ;   ;Note                ;BLOB          ;CaptionML=[DAN=Note;
+                                                              ENU=Note];
+                                                   SubType=Memo }
+    { 10  ;   ;Created             ;DateTime      ;CaptionML=[DAN=Oprettet;
+                                                              ENU=Created] }
+    { 11  ;   ;User ID             ;Text132       ;CaptionML=[DAN=Bruger-id;
+                                                              ENU=User ID] }
+    { 12  ;   ;Company             ;Text30        ;TableRelation=Company.Name;
+                                                   CaptionML=[DAN=Virksomhed;
+                                                              ENU=Company] }
+    { 13  ;   ;Notify              ;Boolean       ;CaptionML=[DAN=Informer;
+                                                              ENU=Notify] }
+    { 14  ;   ;To User ID          ;Text132       ;CaptionML=[DAN=Til bruger-id;
+                                                              ENU=To User ID] }
+  }
+  KEYS
+  {
+    {    ;Link ID                                 ;Clustered=Yes }
+    {    ;Record ID                                }
+    {    ;Company                                  }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

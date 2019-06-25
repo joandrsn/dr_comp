@@ -1,0 +1,80 @@
+OBJECT Table 8623 Config. Package
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23-09-13;
+    Time=12:00:00;
+    Version List=NAVW17.10;
+  }
+  PROPERTIES
+  {
+    OnDelete=VAR
+               ConfigPackageTable@1000 : Record 8613;
+               ConfigLine@1001 : Record 8622;
+             BEGIN
+               ConfigPackageTable.SETRANGE("Package Code",Code);
+               ConfigPackageTable.DELETEALL(TRUE);
+
+               ConfigLine.SETRANGE("Package Code",Code);
+               ConfigLine.MODIFYALL("Package Code",'');
+             END;
+
+    CaptionML=[DAN=Konfig.pakke;
+               ENU=Config. Package];
+    LookupPageID=Page8615;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Package Name        ;Text50        ;CaptionML=[DAN=Pakkenavn;
+                                                              ENU=Package Name] }
+    { 4   ;   ;Language ID         ;Integer       ;TableRelation="Windows Language";
+                                                   CaptionML=[DAN=Sprog-id;
+                                                              ENU=Language ID] }
+    { 5   ;   ;No. of Tables       ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Package Table" WHERE (Package Code=FIELD(Code)));
+                                                   CaptionML=[DAN=Antal tabeller;
+                                                              ENU=No. of Tables];
+                                                   Editable=No }
+    { 6   ;   ;Product Version     ;Text80        ;CaptionML=[DAN=Produktversion;
+                                                              ENU=Product Version] }
+    { 11  ;   ;Exclude Config. Tables;Boolean     ;CaptionML=[DAN=Udeluk konfig.tabeller;
+                                                              ENU=Exclude Config. Tables] }
+    { 12  ;   ;Processing Order    ;Integer       ;OnValidate=VAR
+                                                                ConfigPackageTable@1000 : Record 8613;
+                                                              BEGIN
+                                                                ConfigPackageTable.SETRANGE("Package Code",Code);
+                                                                ConfigPackageTable.MODIFYALL("Package Processing Order","Processing Order");
+                                                              END;
+
+                                                   CaptionML=[DAN=Behandlingsordre;
+                                                              ENU=Processing Order] }
+    { 13  ;   ;No. of Records      ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Package Record" WHERE (Package Code=FIELD(Code)));
+                                                   CaptionML=[DAN=Antal records;
+                                                              ENU=No. of Records];
+                                                   Editable=No }
+    { 16  ;   ;No. of Errors       ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Config. Package Error" WHERE (Package Code=FIELD(Code)));
+                                                   CaptionML=[DAN=Antal fejl;
+                                                              ENU=No. of Errors];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+    {    ;Processing Order                         }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

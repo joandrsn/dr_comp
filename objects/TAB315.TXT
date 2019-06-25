@@ -1,0 +1,53 @@
+OBJECT Table 315 Jobs Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09-09-14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Sagsopsætning;
+               ENU=Jobs Setup];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
+                                                              ENU=Primary Key] }
+    { 2   ;   ;Job Nos.            ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Sagsnumre;
+                                                              ENU=Job Nos.] }
+    { 3   ;   ;Apply Usage Link by Default;Boolean;CaptionML=[DAN=Anvend anvendelseslink som standard;
+                                                              ENU=Apply Usage Link by Default] }
+    { 4   ;   ;Default WIP Method  ;Code20        ;TableRelation="Job WIP Method".Code;
+                                                   CaptionML=[DAN=Standard-VIA-metode;
+                                                              ENU=Default WIP Method] }
+    { 5   ;   ;Default Job Posting Group;Code10   ;TableRelation="Job Posting Group".Code;
+                                                   CaptionML=[DAN=Standardjobbogføringsgruppe;
+                                                              ENU=Default Job Posting Group] }
+    { 6   ;   ;Default WIP Posting Method;Option  ;CaptionML=[DAN=Standard-VIA-bogføringsmetode;
+                                                              ENU=Default WIP Posting Method];
+                                                   OptionCaptionML=[DAN=Pr. sag,Pr. sagspost;
+                                                                    ENU=Per Job,Per Job Ledger Entry];
+                                                   OptionString=Per Job,Per Job Ledger Entry }
+    { 1001;   ;Automatic Update Job Item Cost;Boolean;
+                                                   AccessByPermission=TableData 27=R;
+                                                   CaptionML=[DAN=Opdater varekostpris for sag automatisk;
+                                                              ENU=Automatic Update Job Item Cost] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

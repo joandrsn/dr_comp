@@ -1,0 +1,258 @@
+OBJECT Page 1321 Mini Posted Sales Credit Memos
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15-09-15;
+    Time=12:00:00;
+    Version List=NAVW19.00,NAVDK9.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Bogf. salgskr.notaer;
+               ENU=Posted Sales Credit Memos];
+    SourceTable=Table114;
+    PageType=List;
+    CardPageID=Mini Posted Sales Credit Memo;
+    PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Ret,Kreditnota;
+                                ENU=New,Process,Report,Correct,Credit Memo];
+    OnOpenPage=VAR
+                 FileManagement@1000 : Codeunit 419;
+               BEGIN
+                 SetSecurityFilterOnRespCenter;
+
+                 AllowDotNetAddIn := FileManagement.CanRunDotNetOnClient;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       DocExchStatusStyle := GetDocExchStatusStyle;
+                     END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           DocExchStatusStyle := GetDocExchStatusStyle;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 19      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Kreditnota;
+                                 ENU=Credit Memo];
+                      Image=Invoice }
+      { 3       ;2   ;Action    ;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=[DAN=Kunde (Debitor);
+                                 ENU=Customer];
+                      ToolTipML=[DAN=Vis eller rediger detaljerede oplysninger om debitoren i det valgte bogførte salgsdokument.;
+                                 ENU=View or edit detailed information about the customer on the selected posted sales document.];
+                      RunObject=Page 1300;
+                      RunPageLink=No.=FIELD(Sell-to Customer No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Customer;
+                      PromotedCategory=Category5;
+                      Scope=Repeater }
+      { 25      ;2   ;Action    ;
+                      CaptionML=[DAN=&Naviger;
+                                 ENU=&Navigate];
+                      ToolTipML=[DAN=Find alle de poster og bilag, der findes til bilagsnummeret og bogføringsdatoen på det valgte bogførte salgsdokument.;
+                                 ENU=Find all entries and documents that exist for the document number and posting date on the selected posted sales document.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Navigate;
+                      PromotedCategory=Category5;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 Navigate;
+                               END;
+                                }
+      { 1060000 ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[@@@={Locked};
+                                 DAN=&OIOUBL;
+                                 ENU=&OIOUBL];
+                      Promoted=Yes;
+                      Enabled=EnableXMLFileAction;
+                      PromotedIsBig=Yes;
+                      Image=Export;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 OIOUBLExportSalesCrMemo@1060000 : Codeunit 13610;
+                               BEGIN
+                                 IF CONFIRM(SendAsXMLFileQst) THEN
+                                   OIOUBLExportSalesCrMemo.ExportXML(Rec);
+                               END;
+                                }
+      { 12      ;1   ;ActionGroup;
+                      CaptionML=[DAN=Send;
+                                 ENU=Send] }
+      { 8       ;2   ;Action    ;
+                      Name=SendCustom;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Send;
+                                 ENU=Send];
+                      ToolTipML=[DAN=Send det valgte bogførte salgsdokument.;
+                                 ENU=Send the selected posted sales document.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=SendToMultiple;
+                      PromotedCategory=Process;
+                      Scope=Repeater;
+                      OnAction=VAR
+                                 SalesCrMemoHeader@1000 : Record 114;
+                               BEGIN
+                                 SalesCrMemoHeader := Rec;
+                                 CurrPage.SETSELECTIONFILTER(SalesCrMemoHeader);
+                                 SalesCrMemoHeader.SendRecords;
+                               END;
+                                }
+      { 33      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Udskriv;
+                                 ENU=&Print];
+                      ToolTipML=[DAN=Udskriv det valgte bogførte salgsdokument.;
+                                 ENU=Print the selected posted sales document.];
+                      PromotedIsBig=Yes;
+                      Image=Print;
+                      PromotedCategory=Process;
+                      Scope=Repeater;
+                      OnAction=VAR
+                                 SalesCrMemoHeader@1102 : Record 114;
+                               BEGIN
+                                 SalesCrMemoHeader := Rec;
+                                 CurrPage.SETSELECTIONFILTER(SalesCrMemoHeader);
+                                 SalesCrMemoHeader.PrintRecords(NOT AllowDotNetAddIn);
+                               END;
+                                }
+      { 4       ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=&Mail;
+                                 ENU=&Email];
+                      ToolTipML=[DAN=Vedhæft det valgte bogførte salgsdokument i en mail til debitoren.;
+                                 ENU=Attach the selected posted sales document to an email to the customer.];
+                      PromotedIsBig=Yes;
+                      Image=Email;
+                      PromotedCategory=Process;
+                      Scope=Repeater;
+                      OnAction=VAR
+                                 ReportDistributionManagement@1000 : Codeunit 452;
+                               BEGIN
+                                 ReportDistributionManagement.EmailDocumentReport(Rec);
+                               END;
+                                }
+      { 11      ;1   ;Action    ;
+                      Name=ActivityLog;
+                      CaptionML=[DAN=Aktivitetslogfil;
+                                 ENU=Activity Log];
+                      Image=Log;
+                      OnAction=BEGIN
+                                 ShowActivityLog;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på den bogførte kreditnota.;
+                           ENU=Specifies the posted credit memo number.];
+                SourceExpr="No." }
+
+    { 6   ;2   ;Field     ;
+                CaptionML=[DAN=Debitornavn;
+                           ENU=Customer Name];
+                ToolTipML=[DAN=Angiver navnet på den kunde, som varerne på kreditnotaen blev sendt til.;
+                           ENU=Specifies the name of the customer that you shipped the items on the credit memo to.];
+                SourceExpr="Sell-to Customer Name" }
+
+    { 1102601007;2;Field  ;
+                ToolTipML=[DAN=Angiver den dato, hvor salgsleverancen er forfalden til betaling. Datoen beregnes automatisk på baggrund af oplysningerne i felterne Betalingsbeting.kode og Bogføringsdato på salgshovedet.;
+                           ENU=Specifies the date on which the shipment is due for payment. The program calculates the date using the Payment Terms Code and Posting Date fields on the sales header.];
+                SourceExpr="Due Date" }
+
+    { 13  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver summen af beløbene på kreditnotalinjerne i kreditnotaens valuta. Beløbet omfatter ikke moms.;
+                           ENU=Specifies the total of the amounts on all the credit memo lines, in the currency of the credit memo. The amount does not include VAT.];
+                SourceExpr=Amount;
+                OnDrillDown=BEGIN
+                              SETRANGE("No.");
+                              PAGE.RUNMODAL(PAGE::"Mini Posted Sales Credit Memo",Rec)
+                            END;
+                             }
+
+    { 15  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver summen af beløbene i alle beløbsfelterne på kreditnotaen i kreditnotaens valuta. Beløbet er med moms.;
+                           ENU=Specifies the total of the amounts in all the amount fields on the credit memo, in the currency of the credit memo. The amount includes VAT.];
+                SourceExpr="Amount Including VAT";
+                OnDrillDown=BEGIN
+                              SETRANGE("No.");
+                              PAGE.RUNMODAL(PAGE::"Mini Posted Sales Credit Memo",Rec)
+                            END;
+                             }
+
+    { 7   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver det beløb, der mangler at blive betalt for den bogførte salgsfaktura, der vedrører denne salgskreditnota.;
+                           ENU=Specifies the amount that remains to be paid for the posted sales invoice that relates to this sales credit memo.];
+                SourceExpr="Remaining Amount" }
+
+    { 5   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om den bogførte salgsfaktura, der vedrører denne salgskreditnota, er betalt.;
+                           ENU=Specifies if the posted sales invoice that relates to this sales credit memo is paid.];
+                SourceExpr=Paid }
+
+    { 9   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om den bogførte salgsfaktura, der vedrører denne salgskreditnota, er rettet eller annulleret.;
+                           ENU=Specifies if the posted sales invoice that relates to this sales credit memo has been either corrected or canceled.];
+                SourceExpr=Canceled;
+                Editable=FALSE;
+                LookupPageID=Mini Posted Sales Invoices;
+                DrillDownPageID=Mini Posted Sales Invoices;
+                HideValue=NOT Canceled;
+                Style=Unfavorable;
+                StyleExpr=Canceled;
+                OnDrillDown=VAR
+                              SalesInvoiceHeader@1000 : Record 112;
+                            BEGIN
+                              IF Canceled THEN BEGIN
+                                SalesInvoiceHeader.SETRANGE("No.","Applies-to Doc. No.");
+                                PAGE.RUN(PAGE::"Mini Posted Sales Invoices",SalesInvoiceHeader);
+                              END;
+                            END;
+                             }
+
+    { 10  ;2   ;Field     ;
+                ToolTipML=[DAN=Specifies the status of the document if you are using a document exchange service to send it as an electronic document. The status values are reported by the document exchange service.;
+                           ENU=Specifies the status of the document if you are using a document exchange service to send it as an electronic document. The status values are reported by the document exchange service.];
+                SourceExpr="Document Exchange Status";
+                StyleExpr=DocExchStatusStyle;
+                OnDrillDown=BEGIN
+                              DocExchStatusDrillDown;
+                            END;
+                             }
+
+  }
+  CODE
+  {
+    VAR
+      AllowDotNetAddIn@1000 : Boolean INDATASET;
+      EnableXMLFileAction@1060000 : Boolean;
+      SendAsXMLFileQst@1060001 : TextConst '@@@={Locked};DAN=Export?;ENU=Export?';
+      DocExchStatusStyle@1001 : Text;
+
+    LOCAL PROCEDURE EnableActions@1060000();
+    BEGIN
+      EnableXMLFileAction := "EAN No." <> '';
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
