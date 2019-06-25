@@ -2,9 +2,9 @@ OBJECT Report 5970 Service Contract
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -224,6 +224,14 @@ OBJECT Report 5970 Service Contract
 
     { 78  ;3   ;Column  ;Email_ServContractCaption;
                SourceExpr=Email_ServContractCaptionLbl }
+
+    { 13  ;3   ;Column  ;InvoicePeriod_ServContractML;
+               IncludeCaption=No;
+               SourceExpr=FORMAT("Service Contract Header"."Invoice Period") }
+
+    { 12  ;3   ;Column  ;Status_ServContractML;
+               IncludeCaption=No;
+               SourceExpr=FORMAT("Service Contract Header".Status) }
 
     { 7607;3   ;DataItem;                    ;
                DataItemTable=Table5972;
@@ -656,6 +664,12 @@ OBJECT Report 5970 Service Contract
         <Field Name="Email_ServContractCaption">
           <DataField>Email_ServContractCaption</DataField>
         </Field>
+        <Field Name="InvoicePeriod_ServContractML">
+          <DataField>InvoicePeriod_ServContractML</DataField>
+        </Field>
+        <Field Name="Status_ServContractML">
+          <DataField>Status_ServContractML</DataField>
+        </Field>
         <Field Name="Type_ContractDisc">
           <DataField>Type_ContractDisc</DataField>
         </Field>
@@ -875,7 +889,9 @@ Fields!Status_ServContract.Value+ Chr(177)+
 Fields!PhoneNo_ServContract.Value+ Chr(177)+
 Fields!Email_ServContract.Value+ Chr(177) +
 Fields!BilltoCustNo_ServContract.Value+ Chr(177)+
-Fields!SalesPurchPersonName.Value, 1)</Hidden>
+Fields!SalesPurchPersonName.Value+ Chr(177)+ 
+Fields!InvoicePeriod_ServContractML.Value+ Chr(177) + 
+Fields!Status_ServContractML.Value, 1)</Hidden>
                                             </Visibility>
                                             <Style>
                                               <VerticalAlign>Middle</VerticalAlign>
@@ -4098,10 +4114,11 @@ Fields!SalesPurchPersonName.Value, 1)</Hidden>
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(2))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.7672cm</Top>
-              <Left>5.95238cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(2) = "",true,false)</Hidden>
               </Visibility>
@@ -4112,10 +4129,11 @@ Fields!SalesPurchPersonName.Value, 1)</Hidden>
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(3))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.7672cm</Top>
-              <Left>12.08074cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>1</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(3) = "",true,false)</Hidden>
@@ -4127,10 +4145,10 @@ Fields!SalesPurchPersonName.Value, 1)</Hidden>
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(1))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.7672cm</Top>
-              <Left>0.42328cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(1) = "",true,false)</Hidden>
@@ -4568,7 +4586,7 @@ Fields!SalesPurchPersonName.Value, 1)</Hidden>
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=Code.GetData(21,1)</Value>
+                      <Value>=Code.GetData(27,1)</Value>
                       <Style>
                         <FontSize>9pt</FontSize>
                       </Style>
@@ -4991,7 +5009,7 @@ Fields!SalesPurchPersonName.Value, 1)</Hidden>
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=Code.GetData(18,1)</Value>
+                      <Value>=Code.GetData(26,1)</Value>
                       <Style>
                         <FontSize>9pt</FontSize>
                       </Style>

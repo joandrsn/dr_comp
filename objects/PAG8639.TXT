@@ -2,9 +2,9 @@ OBJECT Page 8639 Copy Company Data
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -34,6 +34,10 @@ OBJECT Page 8639 Copy Company Data
                        NewCompanyName := '';
                  SetCompanyFilter;
                END;
+
+    OnAfterGetRecord=BEGIN
+                       "Company Filter (Source Table)" := NewCompanyName;
+                     END;
 
     ActionList=ACTIONS
     {

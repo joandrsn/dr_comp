@@ -2,9 +2,9 @@ OBJECT Codeunit 5057 VendCont-Update
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -22,7 +22,7 @@ OBJECT Codeunit 5057 VendCont-Update
       NoSeriesMgt@1004 : Codeunit 396;
       ContNo@1005 : Code[20];
       NoSeries@1006 : Code[10];
-      SalespersonCode@1007 : Code[10];
+      SalespersonCode@1007 : Code[20];
 
     PROCEDURE OnInsert@3(VAR Vend@1000 : Record 23);
     BEGIN
@@ -126,6 +126,22 @@ OBJECT Codeunit 5057 VendCont-Update
             MODIFY(TRUE);
             Vend."Primary Contact No." := "No.";
           END
+    END;
+
+    PROCEDURE ContactNameIsBlank@6(VendorNo@1000 : Code[20]) : Boolean;
+    VAR
+      Contact@1001 : Record 5050;
+      ContactBusinessRelation@1002 : Record 5054;
+    BEGIN
+      WITH ContactBusinessRelation DO BEGIN
+        SETCURRENTKEY("Link to Table","No.");
+        SETRANGE("Link to Table","Link to Table"::Vendor);
+        SETRANGE("No.",VendorNo);
+        IF NOT FINDFIRST THEN
+          EXIT(FALSE);
+        Contact.GET("Contact No.");
+        EXIT(Contact.Name = '');
+      END;
     END;
 
     BEGIN

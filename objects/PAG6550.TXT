@@ -2,9 +2,9 @@ OBJECT Page 6550 Whse. Item Tracking Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -459,7 +459,6 @@ OBJECT Page 6550 Whse. Item Tracking Lines
 
     PROCEDURE SetSource@3(WhseWrkshLine@1000 : Record 7326;SourceType@1001 : Integer);
     VAR
-      Controls@1002 : 'Handle,Reclass,Expiration';
       WhseSNRequired@1003 : Boolean;
       WhseLNRequired@1004 : Boolean;
     BEGIN
@@ -470,18 +469,38 @@ OBJECT Page 6550 Whse. Item Tracking Lines
       ItemTrackingMgt.CheckWhseItemTrkgSetup(
         WhseWorksheetLine."Item No.",WhseSNRequired,WhseLNRequired,TRUE);
 
-      IF SourceType = DATABASE::"Warehouse Journal Line" THEN
-        SetControls(Controls::Handle,FALSE)
-      ELSE
-        SetControls(Controls::Handle,TRUE);
-
-      Reclass := IsReclass(SourceType,WhseWorksheetLine."Worksheet Template Name");
-      SetControls(Controls::Reclass,Reclass);
+      SetControlsAsHandle;
+      Reclass := IsReclass(FormSourceType,WhseWorksheetLine."Worksheet Template Name");
+      SetControlsAsReclass;
 
       SetFilters(Rec,FormSourceType);
-      SourceQuantityArray[1] := ABS(WhseWorksheetLine."Qty. (Base)");
-      SourceQuantityArray[2] := ABS(WhseWorksheetLine."Qty. to Handle (Base)");
-      CalculateSums;
+      ItemTrackingMgt.UpdateQuantities(
+        WhseWorksheetLine,TotalWhseItemTrackingLine,SourceQuantityArray,UndefinedQtyArray,FormSourceType);
+      UpdateColorOfQty;
+    END;
+
+    LOCAL PROCEDURE SetControlsAsHandle@122();
+    VAR
+      SetAccess@1002 : Boolean;
+    BEGIN
+      SetAccess := FormSourceType <> DATABASE::"Warehouse Journal Line";
+      Handle1Visible := SetAccess;
+      Handle2Visible := SetAccess;
+      Handle3Visible := SetAccess;
+      "Qty. to Handle (Base)Visible" := SetAccess;
+      "Qty. to Handle (Base)Editable" := SetAccess;
+    END;
+
+    LOCAL PROCEDURE SetControlsAsReclass@126();
+    BEGIN
+      "New Serial No.Visible" := Reclass;
+      "New Serial No.Editable" := Reclass;
+      "New Lot No.Visible" := Reclass;
+      "New Lot No.Editable" := Reclass;
+      "New Expiration DateVisible" := Reclass;
+      "New Expiration DateEditable" := Reclass;
+      ButtonLineReclassVisible := Reclass;
+      ButtonLineVisible := NOT Reclass;
     END;
 
     PROCEDURE SetFilters@12(VAR WhseItemTrkgLine2@1000 : Record 6550;SourceType@1001 : Integer);
@@ -524,31 +543,6 @@ OBJECT Page 6550 Whse. Item Tracking Lines
       END;
     END;
 
-    LOCAL PROCEDURE SetControls@13(Controls@1002 : 'Handle,Reclass';SetAccess@1001 : Boolean);
-    BEGIN
-      CASE Controls OF
-        Controls::Handle:
-          BEGIN
-            Handle1Visible := SetAccess;
-            Handle2Visible := SetAccess;
-            Handle3Visible := SetAccess;
-            "Qty. to Handle (Base)Visible" := SetAccess;
-            "Qty. to Handle (Base)Editable" := SetAccess;
-          END;
-        Controls::Reclass:
-          BEGIN
-            "New Serial No.Visible" := SetAccess;
-            "New Serial No.Editable" := SetAccess;
-            "New Lot No.Visible" := SetAccess;
-            "New Lot No.Editable" := SetAccess;
-            "New Expiration DateVisible" := SetAccess;
-            "New Expiration DateEditable" := SetAccess;
-            ButtonLineReclassVisible := SetAccess;
-            ButtonLineVisible := NOT SetAccess;
-          END;
-      END;
-    END;
-
     LOCAL PROCEDURE UpdateExpDateColor@41();
     BEGIN
       IF BlockExpDate THEN;
@@ -573,62 +567,29 @@ OBJECT Page 6550 Whse. Item Tracking Lines
 
     LOCAL PROCEDURE CalculateSums@2();
     BEGIN
-      WITH TotalWhseItemTrackingLine DO BEGIN
-        SETCURRENTKEY(
-          "Source ID","Source Type","Source Subtype","Source Batch Name",
-          "Source Prod. Order Line","Source Ref. No.");
-        SETRANGE("Source Type",FormSourceType);
-        SETRANGE("Location Code",WhseWorksheetLine."Location Code");
-
-        CASE FormSourceType OF
-          DATABASE::"Posted Whse. Receipt Line",
-          DATABASE::"Warehouse Shipment Line",
-          DATABASE::"Whse. Internal Put-away Line",
-          DATABASE::"Whse. Internal Pick Line",
-          DATABASE::"Assembly Line",
-          DATABASE::"Internal Movement Line":
-            BEGIN
-              SETRANGE("Source ID",WhseWorksheetLine."Whse. Document No.");
-              SETRANGE("Source Ref. No.",WhseWorksheetLine."Whse. Document Line No.");
-            END;
-          DATABASE::"Prod. Order Component":
-            BEGIN
-              SETRANGE("Source Subtype",WhseWorksheetLine."Source Subtype");
-              SETRANGE("Source ID",WhseWorksheetLine."Source No.");
-              SETRANGE("Source Prod. Order Line",WhseWorksheetLine."Source Line No.");
-              SETRANGE("Source Ref. No.",WhseWorksheetLine."Source Subline No.");
-            END;
-          DATABASE::"Whse. Worksheet Line",
-          DATABASE::"Warehouse Journal Line":
-            BEGIN
-              SETRANGE("Source Batch Name",WhseWorksheetLine."Worksheet Template Name");
-              SETRANGE("Source ID",WhseWorksheetLine.Name);
-              SETRANGE("Source Ref. No.",WhseWorksheetLine."Line No.");
-            END;
-        END;
-        CALCSUMS("Quantity (Base)","Qty. to Handle (Base)");
-      END;
-
-      UpdateUndefinedQty;
+      ItemTrackingMgt.CalculateSums(
+        WhseWorksheetLine,TotalWhseItemTrackingLine,
+        SourceQuantityArray,UndefinedQtyArray,FormSourceType);
+      UpdateColorOfQty;
     END;
 
-    LOCAL PROCEDURE UpdateUndefinedQty@5() QtyIsValid@1000 : Boolean;
+    LOCAL PROCEDURE UpdateUndefinedQty@5() QtyIsValid : Boolean;
     BEGIN
-      UndefinedQtyArray[1] := SourceQuantityArray[1] - TotalWhseItemTrackingLine."Quantity (Base)";
-      UndefinedQtyArray[2] := SourceQuantityArray[2] - TotalWhseItemTrackingLine."Qty. to Handle (Base)";
+      QtyIsValid := ItemTrackingMgt.UpdateUndefinedQty(TotalWhseItemTrackingLine,SourceQuantityArray,UndefinedQtyArray);
+      UpdateColorOfQty;
+    END;
 
-      IF ABS(SourceQuantityArray[1]) < ABS(TotalWhseItemTrackingLine."Quantity (Base)") THEN BEGIN
-        ColorOfQuantityArray[1] := 255;
-        QtyIsValid := FALSE;
-      END ELSE BEGIN
-        ColorOfQuantityArray[1] := 0;
-        QtyIsValid := TRUE;
-      END;
+    LOCAL PROCEDURE UpdateColorOfQty@119();
+    BEGIN
+      ColorOfQuantityArray[1] := GetQtyColor(SourceQuantityArray[1],TotalWhseItemTrackingLine."Quantity (Base)");
+      ColorOfQuantityArray[2] := GetQtyColor(SourceQuantityArray[2],TotalWhseItemTrackingLine."Qty. to Handle (Base)");
+    END;
 
-      IF ABS(SourceQuantityArray[2]) < ABS(TotalWhseItemTrackingLine."Qty. to Handle (Base)") THEN
-        ColorOfQuantityArray[2] := 255
-      ELSE
-        ColorOfQuantityArray[2] := 0;
+    LOCAL PROCEDURE GetQtyColor@14(SourceQty@1000 : Decimal;TrackingQty@1001 : Decimal) : Integer;
+    BEGIN
+      IF ABS(SourceQty) < ABS(TrackingQty) THEN
+        EXIT(255);
+      EXIT(0);
     END;
 
     LOCAL PROCEDURE GetItem@4(ItemNo@1000 : Code[20]);

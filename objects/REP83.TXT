@@ -2,9 +2,9 @@ OBJECT Report 83 Change Global Dimensions
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -425,6 +425,7 @@ OBJECT Report 83 Change Global Dimensions
 
     PROCEDURE InitializeRequest@3(NewGlobalDim1CodeFrom@1000 : Code[20];NewGlobalDim2CodeFrom@1001 : Code[20]);
     BEGIN
+      GLSetup.GET;
       NewGlobalDim1Code := NewGlobalDim1CodeFrom;
       NewGlobalDim2Code := NewGlobalDim2CodeFrom;
     END;
@@ -602,7 +603,6 @@ OBJECT Report 83 Change Global Dimensions
       END;
 
       UpdateGeneralInfo(COMPANYNAME,CustLedgEntry.TABLECAPTION,CustLedgEntry.COUNT);
-      DtldCustLedgEntry.SETCURRENTKEY("Cust. Ledger Entry No.");
       WITH CustLedgEntry DO
         IF FIND('-') THEN BEGIN
           REPEAT
@@ -612,19 +612,14 @@ OBJECT Report 83 Change Global Dimensions
               TempRecRef.FIELD(FIELDNO("Global Dimension 1 Code")),TempRecRef.FIELD(FIELDNO("Global Dimension 2 Code")));
             MODIFY;
             DtldCustLedgEntry.SETRANGE("Cust. Ledger Entry No.","Entry No.");
-            IF DtldCustLedgEntry.FIND('-') THEN
-              REPEAT
-                DtldCustLedgEntry."Initial Entry Global Dim. 1" := "Global Dimension 1 Code";
-                DtldCustLedgEntry."Initial Entry Global Dim. 2" := "Global Dimension 2 Code";
-                DtldCustLedgEntry.MODIFY;
-              UNTIL DtldCustLedgEntry.NEXT = 0;
+            DtldCustLedgEntry.MODIFYALL("Initial Entry Global Dim. 1","Global Dimension 1 Code");
+            DtldCustLedgEntry.MODIFYALL("Initial Entry Global Dim. 2","Global Dimension 2 Code");
             CheckedTableRecords := CheckedTableRecords + 1;
             UpdateProgressInfo;
           UNTIL NEXT = 0;
         END;
 
       UpdateGeneralInfo(COMPANYNAME,VendorLedgEntry.TABLECAPTION,VendorLedgEntry.COUNT);
-      DtldVendLedgEntry.SETCURRENTKEY("Vendor Ledger Entry No.");
       WITH VendorLedgEntry DO
         IF FIND('-') THEN BEGIN
           REPEAT
@@ -634,12 +629,8 @@ OBJECT Report 83 Change Global Dimensions
               TempRecRef.FIELD(FIELDNO("Global Dimension 1 Code")),TempRecRef.FIELD(FIELDNO("Global Dimension 2 Code")));
             MODIFY;
             DtldVendLedgEntry.SETRANGE("Vendor Ledger Entry No.","Entry No.");
-            IF DtldVendLedgEntry.FIND('-') THEN
-              REPEAT
-                DtldVendLedgEntry."Initial Entry Global Dim. 1" := "Global Dimension 1 Code";
-                DtldVendLedgEntry."Initial Entry Global Dim. 2" := "Global Dimension 2 Code";
-                DtldVendLedgEntry.MODIFY;
-              UNTIL DtldVendLedgEntry.NEXT = 0;
+            DtldVendLedgEntry.MODIFYALL("Initial Entry Global Dim. 1","Global Dimension 1 Code");
+            DtldVendLedgEntry.MODIFYALL("Initial Entry Global Dim. 2","Global Dimension 2 Code");
             CheckedTableRecords := CheckedTableRecords + 1;
             UpdateProgressInfo;
           UNTIL NEXT = 0;

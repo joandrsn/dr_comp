@@ -2,13 +2,14 @@ OBJECT Codeunit 1215 Data Exch. Type Selector
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
     TableNo=133;
+    Permissions=TableData 1220=imd;
     OnRun=VAR
             BestDataExchCode@1000 : Code[20];
           BEGIN

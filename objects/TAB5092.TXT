@@ -2,9 +2,9 @@ OBJECT Table 5092 Opportunity
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -51,7 +51,7 @@ OBJECT Table 5092 Opportunity
                                                               ENU=No.] }
     { 2   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
-    { 3   ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 3   ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=VAR
                                                                 Todo@1000 : Record 5080;
                                                                 Todo2@1004 : Record 5080;
@@ -503,6 +503,7 @@ OBJECT Table 5092 Opportunity
       Text023@1025 : TextConst 'DAN=Du skal angive den kontakt, der er knyttet til salgsmuligheden.;ENU=You must fill in the contact that is involved in the opportunity.';
       Text024@1024 : TextConst 'DAN=%1 skal være større end 0.;ENU=%1 must be greater than 0.';
       Text025@1023 : TextConst 'DAN=Den anslåede ultimodato skal være efter denne ændring;ENU=The Estimated closing date has to be later than this change';
+      UpdateSalesQuoteWithCustTemplateQst@1006 : TextConst 'DAN=Skal salgstilbuddet opdateres med en debitorskabelon?;ENU=Do you want to update the sales quote with a customer template?';
 
     PROCEDURE CreateOppFromOpp@1(VAR Opp@1007 : Record 5092);
     VAR
@@ -621,7 +622,10 @@ OBJECT Table 5092 Opportunity
     PROCEDURE AssignQuote@6();
     VAR
       Cont@1001 : Record 5050;
+      ContactBusinessRelation@1002 : Record 5054;
       SalesHeader@1000 : Record 36;
+      CustTemplate@1004 : Record 5105;
+      CustTemplateCode@1003 : Code[10];
     BEGIN
       Cont.GET("Contact No.");
 
@@ -630,10 +634,28 @@ OBJECT Table 5092 Opportunity
           Text005,
           Cont.TABLECAPTION,Cont."No.");
 
+      IF Cont.Type = Cont.Type::Person THEN
+        Cont.GET(Cont."Company No.");
+
+      IF Cont.Type = Cont.Type::Company THEN BEGIN
+        ContactBusinessRelation.SETRANGE("Contact No.",Cont."No.");
+        ContactBusinessRelation.SETRANGE("Link to Table",ContactBusinessRelation."Link to Table"::Customer);
+        IF ContactBusinessRelation.ISEMPTY THEN
+          IF GUIALLOWED THEN BEGIN
+            CustTemplateCode := Cont.ChooseCustomerTemplate;
+            IF CustTemplateCode <> '' THEN
+              Cont.CreateCustomer(CustTemplateCode)
+            ELSE
+              IF CONFIRM(UpdateSalesQuoteWithCustTemplateQst) THEN
+                IF PAGE.RUNMODAL(0,CustTemplate) = ACTION::LookupOK THEN
+                  CustTemplateCode := CustTemplate.Code;
+          END;
+      END;
+
       TESTFIELD(Status,Status::"In Progress");
 
       IF NOT SalesHeader.GET(SalesHeader."Document Type"::Quote,"Sales Document No.") THEN BEGIN
-        SalesHeader.SETRANGE("Sell-to Contact No.",Cont."No.");
+        SalesHeader.SETRANGE("Sell-to Contact No.","Contact No.");
         SalesHeader.INIT;
         SalesHeader."Document Type" := SalesHeader."Document Type"::Quote;
         SalesHeader.INSERT(TRUE);
@@ -642,6 +664,8 @@ OBJECT Table 5092 Opportunity
         SalesHeader."Opportunity No." := "No.";
         SalesHeader."Order Date" := GetEstimatedClosingDate;
         SalesHeader."Shipment Date" := SalesHeader."Order Date";
+        IF CustTemplateCode <> '' THEN
+          SalesHeader.VALIDATE("Sell-to Customer Template Code",CustTemplateCode);
         SalesHeader.MODIFY;
         "Sales Document Type" := "Sales Document Type"::Quote;
         "Sales Document No." := SalesHeader."No.";

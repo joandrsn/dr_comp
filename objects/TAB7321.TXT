@@ -2,9 +2,9 @@ OBJECT Table 7321 Warehouse Shipment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49741;
   }
   PROPERTIES
   {
@@ -44,7 +44,6 @@ OBJECT Table 7321 Warehouse Shipment Line
 
     CaptionML=[DAN=Lagerleverancelinje;
                ENU=Warehouse Shipment Line];
-    PasteIsValid=No;
     LookupPageID=Page7341;
     DrillDownPageID=Page7341;
   }
@@ -139,8 +138,8 @@ OBJECT Table 7321 Warehouse Shipment Line
                                                                 IF Quantity < "Qty. Shipped" THEN
                                                                   FIELDERROR(Quantity,STRSUBSTNO(Text001,"Qty. Shipped"));
 
-                                                                InitOutstandingQtys;
                                                                 "Qty. (Base)" := CalcBaseQty(Quantity);
+                                                                InitOutstandingQtys;
                                                                 "Completely Picked" := (Quantity = "Qty. Picked") OR ("Qty. (Base)" = "Qty. Picked (Base)");
 
                                                                 GetLocation("Location Code");
@@ -260,7 +259,11 @@ OBJECT Table 7321 Warehouse Shipment Line
                                                               ENU=Qty. Picked (Base)];
                                                    DecimalPlaces=0:5;
                                                    Editable=No }
-    { 25  ;   ;Qty. Shipped        ;Decimal       ;CaptionML=[DAN=Leveret antal;
+    { 25  ;   ;Qty. Shipped        ;Decimal       ;OnValidate=BEGIN
+                                                                "Qty. Shipped (Base)" := CalcBaseQty("Qty. Shipped");
+                                                              END;
+
+                                                   CaptionML=[DAN=Leveret antal;
                                                               ENU=Qty. Shipped];
                                                    DecimalPlaces=0:5;
                                                    Editable=No }
@@ -638,7 +641,7 @@ OBJECT Table 7321 Warehouse Shipment Line
       GetItem;
       Item.TESTFIELD("Item Tracking Code");
 
-      SecondSourceQtyArray[1] := DATABASE::"Warehouse Receipt Line";
+      SecondSourceQtyArray[1] := DATABASE::"Warehouse Shipment Line";
       SecondSourceQtyArray[2] := "Qty. to Ship (Base)";
       SecondSourceQtyArray[3] := 0;
 
@@ -646,7 +649,7 @@ OBJECT Table 7321 Warehouse Shipment Line
         DATABASE::"Sales Line":
           BEGIN
             IF SalesLine.GET("Source Subtype","Source No.","Source Line No.") THEN
-              ReserveSalesLine.CallItemTracking2(SalesLine,SecondSourceQtyArray);
+              ReserveSalesLine.CallItemTrackingSecondSource(SalesLine,SecondSourceQtyArray,"Assemble to Order");
           END;
         DATABASE::"Service Line":
           BEGIN
@@ -734,6 +737,32 @@ OBJECT Table 7321 Warehouse Shipment Line
       WhseShptLine.SETRANGE("Source No.",SourceNo);
       WhseShptLine.SETRANGE("Source Line No.",SourceLineNo);
       WhseShptLine.FINDFIRST;
+    END;
+
+    PROCEDURE CreateWhseItemTrackingLines@22();
+    VAR
+      WhseWkshLine@1007 : Record 7326;
+      ATOSalesLine@1006 : Record 37;
+      AsmHeader@1005 : Record 900;
+      AsmLineMgt@1004 : Codeunit 905;
+      ItemTrackingMgt@1003 : Codeunit 6500;
+      WhseSNRequired@1002 : Boolean;
+      WhseLNRequired@1001 : Boolean;
+    BEGIN
+      IF "Assemble to Order" THEN BEGIN
+        TESTFIELD("Source Type",DATABASE::"Sales Line");
+        ATOSalesLine.GET("Source Subtype","Source No.","Source Line No.");
+        ATOSalesLine.AsmToOrderExists(AsmHeader);
+        AsmLineMgt.CreateWhseItemTrkgForAsmLines(AsmHeader);
+      END ELSE BEGIN
+        ItemTrackingMgt.CheckWhseItemTrkgSetup("Item No.",WhseSNRequired,WhseLNRequired,FALSE);
+        IF WhseSNRequired OR WhseLNRequired THEN
+          ItemTrackingMgt.InitItemTrkgForTempWkshLine(
+            WhseWkshLine."Whse. Document Type"::Shipment,"No.",
+            "Line No.","Source Type",
+            "Source Subtype","Source No.",
+            "Source Line No.",0);
+      END;
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Codeunit 8618 Config. Excel Exchange
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -48,8 +48,9 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       ExcelFileNameTok@1009 : TextConst '@@@="%1 = String generated from current datetime to make sure file names are unique ";DAN=*%1.xlsx;ENU=*%1.xlsx';
       ExcelFileExtensionTok@1010 : TextConst 'DAN=.xlsx;ENU=.xlsx';
       InvalidDataInSheetMsg@1020 : TextConst '@@@="%1=excel sheet name";DAN=Data på arket ''%1'' kunne ikke importeres, fordi arket har et uventet format.;ENU=Data in sheet ''%1'' could not be imported, because the sheet has an unexpected format.';
+      FileOnServer@1024 : Boolean;
 
-    PROCEDURE ExportExcelFromConfig@19(VAR ConfigLine@1006 : Record 8622);
+    PROCEDURE ExportExcelFromConfig@19(VAR ConfigLine@1006 : Record 8622) : Text;
     VAR
       ConfigPackageTable@1005 : Record 8613;
       ConfigMgt@1000 : Codeunit 8616;
@@ -69,8 +70,8 @@ OBJECT Codeunit 8618 Config. Excel Exchange
             ConfigPackageTable.InitDimensionFields;
         UNTIL ConfigPackageTable.NEXT = 0;
       ConfigPackageTable.SETRANGE("Dimensions as Columns");
-
       ExportExcel(FileName,ConfigPackageTable,TRUE);
+      EXIT(FileName);
     END;
 
     PROCEDURE ExportExcelFromPackage@20(ConfigPackage@1000 : Record 8623) : Boolean;
@@ -181,7 +182,11 @@ OBJECT Codeunit 8618 Config. Excel Exchange
         FileName :=
           STRSUBSTNO(ExcelFileNameTok,FORMAT(CURRENTDATETIME,0,'<Day,2>_<Month,2>_<Year4>_<Hours24>_<Minutes,2>_<Seconds,2>'));
 
-      FileName := FileMgt.BLOBExport(TempBlob,FileName,NOT HideDialog);
+      IF NOT FileOnServer THEN
+        FileName := FileMgt.BLOBExport(TempBlob,FileName,NOT HideDialog)
+      ELSE
+        FileMgt.BLOBExportToServerFile(TempBlob,FileName);
+
       EXIT(FileName <> '');
     END;
 
@@ -229,6 +234,7 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       SheetHeaderRead@1013 : Boolean;
       CurrentRowIndex@1007 : Integer;
       RowChanged@1011 : Boolean;
+      ColumnMappingInitialized@1015 : Boolean;
     BEGIN
       TempBlob.Blob.CREATEINSTREAM(InStream);
       WrkbkReader := WrkbkReader.Open(InStream);
@@ -245,10 +251,10 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       REPEAT
         WrkShtReader := WrkbkReader.GetWorksheetById(FORMAT(WrkSheetId));
         TotalRowsCount := WrkShtReader.RowCount;
-        InitColumnMapping(WrkShtReader,TempXMLBuffer);
+        ColumnMappingInitialized := InitColumnMapping(WrkShtReader,TempXMLBuffer);
 
         // TotalRowsCount > 2 means if it has datarow
-        IF TotalRowsCount > 2 THEN BEGIN
+        IF (TotalRowsCount > 2) AND ColumnMappingInitialized THEN BEGIN
           Enumerator := WrkShtReader.GetEnumerator;
           IF GetDataTable(DataColumnTableId) THEN BEGIN
             DataColumn := DataTable.Columns.Item(1);
@@ -605,6 +611,7 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       CLEAR(ConfigXMLExchange);
       ConfigXMLExchange.SetExcelMode(TRUE);
       ConfigXMLExchange.SetCalledFromCode(TRUE);
+      ConfigXMLExchange.SetPrefixMode(TRUE);
       ConfigXMLExchange.SetExportFromWksht(ExportFromWksht);
       ConfigXMLExchange.ExportPackageXML(ConfigPackageTable,TempSetupDataFileName);
       ConfigXMLExchange.SetExcelMode(FALSE);
@@ -624,6 +631,7 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       ColumnID@1001 : Integer;
     BEGIN
       RecRef.OPEN(ConfigPackageTable."Table ID");
+      ConfigPackageField.SETCURRENTKEY("Package Code","Table ID","Processing Order");
       IF ConfigPackageField.FINDSET THEN BEGIN
         ColumnID := 1;
         REPEAT
@@ -888,7 +896,7 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       DataTable := DataSet.Tables.Item(TableId);
     END;
 
-    LOCAL PROCEDURE InitColumnMapping@8(WrkShtReader@1002 : DotNet "'Microsoft.Dynamics.Nav.OpenXml, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.OpenXml.Spreadsheet.WorksheetReader";VAR TempXMLBuffer@1003 : TEMPORARY Record 1235);
+    LOCAL PROCEDURE InitColumnMapping@8(WrkShtReader@1002 : DotNet "'Microsoft.Dynamics.Nav.OpenXml, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.OpenXml.Spreadsheet.WorksheetReader";VAR TempXMLBuffer@1003 : TEMPORARY Record 1235) : Boolean;
     VAR
       Table@1001 : DotNet "'DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.DocumentFormat.OpenXml.Spreadsheet.Table";
       TableColumn@1004 : DotNet "'DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.DocumentFormat.OpenXml.Spreadsheet.TableColumn";
@@ -900,7 +908,8 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       Index@1016 : Integer;
     BEGIN
       TempXMLBuffer.DELETEALL;
-      FindTableDefinition(WrkShtReader,Table);
+      IF NOT FindTableDefinition(WrkShtReader,Table) THEN
+        EXIT(FALSE);
 
       TableStartColumnIndex := GetTableStartColumnIndex(Table);
       Index := 0;
@@ -916,9 +925,11 @@ OBJECT Codeunit 8618 Config. Excel Exchange
         END;
         Index += 1;
       END;
+
+      EXIT(TRUE);
     END;
 
-    LOCAL PROCEDURE FindTableDefinition@79(WrkShtReader@1002 : DotNet "'Microsoft.Dynamics.Nav.OpenXml, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.OpenXml.Spreadsheet.WorksheetReader";VAR Table@1003 : DotNet "'DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.DocumentFormat.OpenXml.Spreadsheet.Table");
+    LOCAL PROCEDURE FindTableDefinition@79(WrkShtReader@1002 : DotNet "'Microsoft.Dynamics.Nav.OpenXml, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.OpenXml.Spreadsheet.WorksheetReader";VAR Table@1003 : DotNet "'DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.DocumentFormat.OpenXml.Spreadsheet.Table") : Boolean;
     VAR
       TableDefinitionPart@1006 : DotNet "'DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.DocumentFormat.OpenXml.Packaging.TableDefinitionPart";
       Enumerable@1009 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Collections.IEnumerable";
@@ -929,7 +940,11 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       Enumerator.MoveNext;
       TableDefinitionPart := Enumerator.Current;
 
+      IF ISNULL(TableDefinitionPart) THEN
+        EXIT(FALSE);
+
       Table := TableDefinitionPart.Table;
+      EXIT(TRUE);
     END;
 
     LOCAL PROCEDURE GetTableStartColumnIndex@31(Table@1000 : DotNet "'DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.DocumentFormat.OpenXml.Spreadsheet.Table") : Integer;
@@ -949,6 +964,11 @@ OBJECT Codeunit 8618 Config. Excel Exchange
       FOR Index := 0 TO Length DO
         ColumnIndex += (String.Chars(Index) - 64) + Index * 26;
       EXIT(ColumnIndex);
+    END;
+
+    PROCEDURE SetFileOnServer@29(NewFileOnServer@1000 : Boolean);
+    BEGIN
+      FileOnServer := NewFileOnServer;
     END;
 
     LOCAL PROCEDURE InsertXMLBuffer@71(ColumnIndex@1000 : Integer;VAR TempXMLBuffer@1001 : TEMPORARY Record 1235);

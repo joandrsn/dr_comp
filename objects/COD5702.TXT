@@ -2,9 +2,9 @@ OBJECT Codeunit 5702 Dist. Integration
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -70,7 +70,7 @@ OBJECT Codeunit 5702 Dist. Integration
         END;
     END;
 
-    PROCEDURE ICRLookupSalesItem@2(VAR SalesLine2@1000 : Record 37;VAR ReturnedCrossRef@1001 : Record 5717);
+    PROCEDURE ICRLookupSalesItem@2(VAR SalesLine2@1000 : Record 37;VAR ReturnedCrossRef@1001 : Record 5717;ShowDialog@1002 : Boolean);
     BEGIN
       WITH ItemCrossReference DO BEGIN
         SalesLine.COPY(SalesLine2);
@@ -92,12 +92,14 @@ OBJECT Codeunit 5702 Dist. Integration
             IF NEXT <> 0 THEN BEGIN
               SETRANGE("Cross-Reference Type No.",SalesLine."Sell-to Customer No.");
               IF FIND('-') THEN
-                IF NEXT <> 0 THEN BEGIN
-                  SETRANGE("Cross-Reference Type No.");
-                  IF PAGE.RUNMODAL(PAGE::"Cross Reference List",ItemCrossReference) <> ACTION::LookupOK
-                  THEN
-                    ERROR(Text000,TempCrossRefItem);
-                END;
+                IF NEXT <> 0 THEN
+                  IF ShowDialog THEN BEGIN
+                    SETRANGE("Cross-Reference Type No.");
+                    IF PAGE.RUNMODAL(PAGE::"Cross Reference List",ItemCrossReference) <> ACTION::LookupOK
+                    THEN
+                      ERROR(Text000,TempCrossRefItem);
+                  END ELSE
+                    FINDFIRST;
             END;
           END;
           ReturnedCrossRef.COPY(ItemCrossReference);
@@ -150,7 +152,7 @@ OBJECT Codeunit 5702 Dist. Integration
         END;
     END;
 
-    PROCEDURE ICRLookupPurchaseItem@4(VAR PurchLine2@1000 : Record 39;VAR ReturnedCrossRef@1001 : Record 5717);
+    PROCEDURE ICRLookupPurchaseItem@4(VAR PurchLine2@1000 : Record 39;VAR ReturnedCrossRef@1001 : Record 5717;ShowDialog@1002 : Boolean);
     BEGIN
       WITH ItemCrossReference DO BEGIN
         PurchLine.COPY(PurchLine2);
@@ -170,12 +172,14 @@ OBJECT Codeunit 5702 Dist. Integration
             IF NEXT <> 0 THEN BEGIN
               SETRANGE("Cross-Reference Type No.",PurchLine."Buy-from Vendor No.");
               IF FIND('-') THEN
-                IF NEXT <> 0 THEN BEGIN
-                  SETRANGE("Cross-Reference Type No.");
-                  IF PAGE.RUNMODAL(PAGE::"Cross Reference List",ItemCrossReference) <> ACTION::LookupOK
-                  THEN
-                    ERROR(Text000,TempCrossRefItem);
-                END;
+                IF NEXT <> 0 THEN
+                  IF ShowDialog THEN BEGIN
+                    SETRANGE("Cross-Reference Type No.");
+                    IF PAGE.RUNMODAL(PAGE::"Cross Reference List",ItemCrossReference) <> ACTION::LookupOK
+                    THEN
+                      ERROR(Text000,TempCrossRefItem);
+                  END ELSE
+                    FINDFIRST;
             END;
           END;
           ReturnedCrossRef.COPY(ItemCrossReference);
@@ -183,65 +187,62 @@ OBJECT Codeunit 5702 Dist. Integration
       END;
     END;
 
+    LOCAL PROCEDURE FilterItemCrossReferenceByItemVendor@19(VAR ItemCrossReference@1000 : Record 5717;ItemVendor@1001 : Record 99);
+    BEGIN
+      ItemCrossReference.RESET;
+      ItemCrossReference.SETRANGE("Item No.",ItemVendor."Item No.");
+      ItemCrossReference.SETRANGE("Variant Code",ItemVendor."Variant Code");
+      ItemCrossReference.SETRANGE("Cross-Reference Type",ItemCrossReference."Cross-Reference Type"::Vendor);
+      ItemCrossReference.SETRANGE("Cross-Reference Type No.",ItemVendor."Vendor No.");
+      ItemCrossReference.SETRANGE("Cross-Reference No.",ItemVendor."Vendor Item No.");
+    END;
+
+    LOCAL PROCEDURE FillItemCrossReferenceFromItemVendor@26(VAR ItemCrossReference@1001 : Record 5717;ItemVend@1000 : Record 99);
+    BEGIN
+      ItemCrossReference.INIT;
+      ItemCrossReference.VALIDATE("Item No.",ItemVend."Item No.");
+      ItemCrossReference.VALIDATE("Variant Code",ItemVend."Variant Code");
+      ItemCrossReference.VALIDATE("Cross-Reference Type",ItemCrossReference."Cross-Reference Type"::Vendor);
+      ItemCrossReference.VALIDATE("Cross-Reference Type No.",ItemVend."Vendor No.");
+      ItemCrossReference."Cross-Reference No." := ItemVend."Vendor Item No.";
+      IF ItemCrossReference."Unit of Measure" = '' THEN BEGIN
+        Item.GET(ItemVend."Item No.");
+        ItemCrossReference.VALIDATE("Unit of Measure",Item."Base Unit of Measure");
+      END;
+    END;
+
     LOCAL PROCEDURE CreateItemCrossReference@1(ItemVend@1000 : Record 99);
     VAR
-      Item@1002 : Record 27;
-      ItemCrossReference2@1001 : Record 5717;
+      ItemCrossReference@1001 : Record 5717;
     BEGIN
-      ItemCrossReference2.RESET;
-      ItemCrossReference2.SETRANGE("Item No.",ItemVend."Item No.");
-      ItemCrossReference2.SETRANGE("Variant Code",ItemVend."Variant Code");
-      ItemCrossReference2.SETRANGE("Cross-Reference Type",ItemCrossReference2."Cross-Reference Type"::Vendor);
-      ItemCrossReference2.SETRANGE("Cross-Reference Type No.",ItemVend."Vendor No.");
-      ItemCrossReference2.SETRANGE("Cross-Reference No.",ItemVend."Vendor Item No.");
-      IF NOT ItemCrossReference2.FINDFIRST THEN BEGIN
-        ItemCrossReference2.INIT;
-        ItemCrossReference2.VALIDATE("Item No.",ItemVend."Item No.");
-        ItemCrossReference2.VALIDATE("Variant Code",ItemVend."Variant Code");
-        ItemCrossReference2.VALIDATE("Cross-Reference Type",ItemCrossReference2."Cross-Reference Type"::Vendor);
-        ItemCrossReference2.VALIDATE("Cross-Reference Type No.",ItemVend."Vendor No.");
-        ItemCrossReference2."Cross-Reference No." := ItemVend."Vendor Item No.";
-        Item.GET(ItemVend."Item No.");
-        IF ItemCrossReference2."Unit of Measure" = '' THEN
-          ItemCrossReference2.VALIDATE("Unit of Measure",Item."Base Unit of Measure");
-        ItemCrossReference2.INSERT;
-      END;
+      FillItemCrossReferenceFromItemVendor(ItemCrossReference,ItemVend);
+      ItemCrossReference.INSERT;
+    END;
+
+    PROCEDURE InsertItemCrossReference@12(ItemVend@1000 : Record 99);
+    VAR
+      ItemCrossReference@1001 : Record 5717;
+    BEGIN
+      FilterItemCrossReferenceByItemVendor(ItemCrossReference,ItemVend);
+      IF ItemCrossReference.ISEMPTY THEN
+        CreateItemCrossReference(ItemVend);
     END;
 
     PROCEDURE DeleteItemCrossReference@9(ItemVend@1000 : Record 99);
     VAR
-      ItemCrossReference2@1001 : Record 5717;
+      ItemCrossReference@1001 : Record 5717;
     BEGIN
-      ItemCrossReference2.RESET;
-      ItemCrossReference2.SETRANGE("Item No.",ItemVend."Item No.");
-      ItemCrossReference2.SETRANGE("Variant Code",ItemVend."Variant Code");
-      ItemCrossReference2.SETRANGE("Cross-Reference Type",ItemCrossReference2."Cross-Reference Type"::Vendor);
-      ItemCrossReference2.SETRANGE("Cross-Reference Type No.",ItemVend."Vendor No.");
-      ItemCrossReference2.SETRANGE("Cross-Reference No.",ItemVend."Vendor Item No.");
-      IF ItemCrossReference2.FINDFIRST THEN
-        ItemCrossReference2.DELETEALL;
+      FilterItemCrossReferenceByItemVendor(ItemCrossReference,ItemVend);
+      ItemCrossReference.DELETEALL;
     END;
 
     PROCEDURE UpdateItemCrossReference@6(ItemVend@1000 : Record 99;xItemVend@1001 : Record 99);
-    VAR
-      ItemCrossReference2@1003 : Record 5717;
-      ItemCrossReference3@1004 : Record 5717;
     BEGIN
-      ItemCrossReference2.RESET;
-      ItemCrossReference2.SETRANGE("Item No.",xItemVend."Item No.");
-      ItemCrossReference2.SETRANGE("Variant Code",xItemVend."Variant Code");
-      ItemCrossReference2.SETRANGE("Cross-Reference Type",ItemCrossReference2."Cross-Reference Type"::Vendor);
-      ItemCrossReference2.SETRANGE("Cross-Reference Type No.",xItemVend."Vendor No.");
-      ItemCrossReference2.SETRANGE("Cross-Reference No.",xItemVend."Vendor Item No.");
-      IF ItemCrossReference2.FINDSET THEN BEGIN
-        REPEAT
-          ItemCrossReference3 := ItemCrossReference2;
-          ItemCrossReference3."Cross-Reference No." := xItemVend."Vendor Item No.";
-          ItemCrossReference3.DELETE;
-          CreateItemCrossReference(ItemVend);
-        UNTIL ItemCrossReference2.NEXT = 0;
-      END ELSE
-        CreateItemCrossReference(ItemVend);
+      // delete the item cross references
+      DeleteItemCrossReference(xItemVend);
+
+      // insert the updated item cross references - faster then RENAME
+      CreateItemCrossReference(ItemVend);
     END;
 
     PROCEDURE GetSpecialOrders@5(VAR PurchHeader@1000 : Record 38);
@@ -307,6 +308,7 @@ OBJECT Codeunit 5702 Dist. Integration
             PurchLine."Document No." := "No.";
             PurchLine."Line No." := NextLineNo;
             CopyDocMgt.TransfldsFromSalesToPurchLine(SalesLine,PurchLine);
+            PurchLine.GetItemTranslation;
             PurchLine."Special Order" := TRUE;
             PurchLine."Purchasing Code" := SalesLine."Purchasing Code";
             PurchLine."Special Order Sales No." := SalesLine."Document No.";

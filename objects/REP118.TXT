@@ -2,9 +2,9 @@ OBJECT Report 118 Finance Charge Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -8411,9 +8411,8 @@ Cstr(Fields!CompanyInfoEMail.Value)
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
               <Sizing>FitProportional</Sizing>
-              <Top>0.0375in</Top>
-              <Height>40pt</Height>
-              <Width>7.45191cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>40</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.IsEmpty(Fields!CompanyInfo1Picture.Value), true, false)</Hidden>
@@ -8429,10 +8428,9 @@ Cstr(Fields!CompanyInfoEMail.Value)
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
               <Sizing>FitProportional</Sizing>
-              <Top>0.0375in</Top>
-              <Left>2.19638in</Left>
-              <Height>40pt</Height>
-              <Width>7.45191cm</Width>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>41</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.IsEmpty(Fields!CompanyInfo2Picture.Value), true, false)</Hidden>
@@ -8448,10 +8446,9 @@ Cstr(Fields!CompanyInfoEMail.Value)
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
               <Sizing>FitProportional</Sizing>
-              <Top>0.0375in</Top>
-              <Left>4.39574in</Left>
-              <Height>40pt</Height>
-              <Width>7.45191cm</Width>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>42</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.IsEmpty(Fields!CompanyInfo3Picture.Value), true, false)</Hidden>

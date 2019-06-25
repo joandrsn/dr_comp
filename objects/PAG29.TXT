@@ -2,9 +2,9 @@ OBJECT Page 29 Vendor Ledger Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50458,NAVDK9.00.00.50458;
   }
   PROPERTIES
   {
@@ -86,6 +86,7 @@ OBJECT Page 29 Vendor Ledger Entries
                                BEGIN
                                  VendLedgEntry.COPY(Rec);
                                  VendEntryApplyPostEntries.ApplyVendEntryFormEntry(VendLedgEntry);
+                                 VendLedgEntry.GET(VendLedgEntry."Entry No.");
                                  Rec := VendLedgEntry;
                                  CurrPage.UPDATE;
                                END;
@@ -366,22 +367,26 @@ OBJECT Page 29 Vendor Ledger Entries
 
     { 35  ;2   ;Field     ;
                 SourceExpr=Reversed;
-                Visible=FALSE }
+                Visible=FALSE;
+                Editable=FALSE }
 
     { 74  ;2   ;Field     ;
                 SourceExpr="Reversed by Entry No.";
-                Visible=FALSE }
+                Visible=FALSE;
+                Editable=FALSE }
 
     { 76  ;2   ;Field     ;
                 SourceExpr="Reversed Entry No.";
-                Visible=FALSE }
+                Visible=FALSE;
+                Editable=FALSE }
 
     { 30  ;2   ;Field     ;
                 SourceExpr="Entry No.";
                 Editable=FALSE }
 
     { 290 ;2   ;Field     ;
-                SourceExpr="Exported to Payment File" }
+                SourceExpr="Exported to Payment File";
+                Editable=TRUE }
 
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }

@@ -2,9 +2,9 @@ OBJECT Table 5641 FA Buffer Projection
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,17 +13,22 @@ OBJECT Table 5641 FA Buffer Projection
   }
   FIELDS
   {
-    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+    { 1   ;   ;Entry No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
-    { 2   ;   ;FA Posting Date     ;Date          ;CaptionML=[DAN=Bogføringsdato for anlæg;
+    { 2   ;   ;FA Posting Date     ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogføringsdato for anlæg;
                                                               ENU=FA Posting Date] }
-    { 3   ;   ;Depreciation        ;Decimal       ;CaptionML=[DAN=Afskrivning;
+    { 3   ;   ;Depreciation        ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afskrivning;
                                                               ENU=Depreciation];
                                                    AutoFormatType=1 }
-    { 4   ;   ;Custom 1            ;Decimal       ;CaptionML=[DAN=Bruger 1;
+    { 4   ;   ;Custom 1            ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bruger 1;
                                                               ENU=Custom 1];
                                                    AutoFormatType=1 }
-    { 5   ;   ;Code Name           ;Code20        ;CaptionML=[DAN=Kodenavn;
+    { 5   ;   ;Code Name           ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kodenavn;
                                                               ENU=Code Name] }
   }
   KEYS

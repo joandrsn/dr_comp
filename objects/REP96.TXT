@@ -2,9 +2,9 @@ OBJECT Report 96 Copy G/L Budget
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=26-04-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50293;
   }
   PROPERTIES
   {
@@ -112,19 +112,20 @@ OBJECT Report 96 Copy G/L Budget
                        END;
                      FromSource::"G/L Budget Entry":
                        WITH FromGLBudgetEntry DO BEGIN
-                         SETCURRENTKEY("Budget Name","G/L Account No.",Description,Date);
                          SETRANGE("Budget Name",FromGLBudgetName);
                          IF FromGLAccountNo <> '' THEN
                            SETFILTER("G/L Account No.",FromGLAccountNo);
                          IF FromDate <> '' THEN
                            SETFILTER(Date,FromDate);
-                         IF FIND('-') THEN BEGIN
+                         IF FINDLAST THEN
+                           SETFILTER("Entry No.",'<=%1',"Entry No.");
+                         SETCURRENTKEY("Budget Name","G/L Account No.",Description,Date);
+                         IF FINDSET THEN
                            REPEAT
                              ProcessRecord(
                                "G/L Account No.","Business Unit Code",Date,Description,
                                "Dimension Set ID",Amount);
                            UNTIL NEXT = 0;
-                         END;
                        END;
                    END;
                    InsertGLBudgetEntry;
@@ -311,7 +312,7 @@ OBJECT Report 96 Copy G/L Budget
       FromClosingEntryFilter@1025 : 'Include,Exclude';
       ToGLBudgetName@1026 : Code[10];
       ToGLAccountNo@1027 : Code[20];
-      ToBUCode@1028 : Code[10];
+      ToBUCode@1028 : Code[20];
       ToDateCompression@1029 : 'None,Day,Week,Month,Quarter,Year,Period';
       ColumnDim@1030 : Text[250];
       AmountAdjustFactor@1031 : Decimal;
@@ -329,10 +330,10 @@ OBJECT Report 96 Copy G/L Budget
       OldGLAccountNo@1053 : Code[20];
       OldPostingDate@1052 : Date;
       OldPostingDescription@1011 : Text[50];
-      OldBUCode@1050 : Code[10];
+      OldBUCode@1050 : Code[20];
       WindowUpdateDateTime@1048 : DateTime;
 
-    LOCAL PROCEDURE ProcessRecord@3(GLAccNo@1000 : Code[20];BUCode@1001 : Code[10];PostingDate@1002 : Date;PostingDescription@1003 : Text[50];DimSetID@1004 : Integer;Amount@1007 : Decimal);
+    LOCAL PROCEDURE ProcessRecord@3(GLAccNo@1000 : Code[20];BUCode@1001 : Code[20];PostingDate@1002 : Date;PostingDescription@1003 : Text[50];DimSetID@1004 : Integer;Amount@1007 : Decimal);
     VAR
       NewDate@1008 : Date;
       NewDimSetID@1006 : Integer;
@@ -378,7 +379,7 @@ OBJECT Report 96 Copy G/L Budget
       UpdateTempGLBudgetEntry(GLAccNo,NewDate,Amount,PostingDescription,BUCode,NewDimSetID);
     END;
 
-    LOCAL PROCEDURE UpdateTempGLBudgetEntry@6(GLAccNo@1000 : Code[20];PostingDate@1001 : Date;Amount@1002 : Decimal;Description@1003 : Text[50];BUCode@1004 : Code[10];DimSetID@1007 : Integer);
+    LOCAL PROCEDURE UpdateTempGLBudgetEntry@6(GLAccNo@1000 : Code[20];PostingDate@1001 : Date;Amount@1002 : Decimal;Description@1003 : Text[50];BUCode@1004 : Code[20];DimSetID@1007 : Integer);
     BEGIN
       TempGLBudgetEntry.SETRANGE("G/L Account No.",GLAccNo);
       TempGLBudgetEntry.SETRANGE(Date,PostingDate);

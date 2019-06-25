@@ -1,0 +1,68 @@
+OBJECT Page 1750 Field Data Classification
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06-04-18;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.50221;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Klassificering af feltdata;
+               ENU=Field Data Classification];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    LinksAllowed=No;
+    SourceTable=Table2000000041;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                SourceExpr=TableNo }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr="No." }
+
+    { 5   ;2   ;Field     ;
+                SourceExpr=TableName }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr=FieldName }
+
+    { 7   ;2   ;Field     ;
+                SourceExpr=Type }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr=Class }
+
+    { 9   ;2   ;Field     ;
+                SourceExpr="Type Name" }
+
+    { 10  ;2   ;Field     ;
+                SourceExpr=RelationTableNo }
+
+    { 11  ;2   ;Field     ;
+                SourceExpr=OptionString }
+
+    { 12  ;2   ;Field     ;
+                SourceExpr=DataClassification }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

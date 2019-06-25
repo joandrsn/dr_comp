@@ -2,9 +2,9 @@ OBJECT XMLport 1603 Sales Credit Memo - PEPPOL 2.0
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -1445,68 +1445,15 @@ OBJECT XMLport 1603 Sales Credit Memo - PEPPOL 2.0
     END;
 
     LOCAL PROCEDURE FindNextCreditMemoRec@80(Position@1000 : Integer) : Boolean;
-    VAR
-      PEPPOLValidation@1002 : Codeunit 1620;
-      Found@1001 : Boolean;
     BEGIN
-      CASE ProcessedDocType OF
-        ProcessedDocType::Sale:
-          BEGIN
-            IF Position = 1 THEN
-              Found := SalesCrMemoHeader.FIND('-')
-            ELSE
-              Found := SalesCrMemoHeader.NEXT <> 0;
-            IF Found THEN BEGIN
-              SalesHeader.TRANSFERFIELDS(SalesCrMemoHeader);
-              PEPPOLValidation.CheckSalesCreditMemo(SalesCrMemoHeader);
-            END;
-          END;
-        ProcessedDocType::Service:
-          BEGIN
-            IF Position = 1 THEN
-              Found := ServiceCrMemoHeader.FIND('-')
-            ELSE
-              Found := ServiceCrMemoHeader.NEXT <> 0;
-            IF Found THEN BEGIN
-              PEPPOLMgt.TransferHeaderToSalesHeader(ServiceCrMemoHeader,SalesHeader);
-              PEPPOLValidation.CheckServiceCreditMemo(ServiceCrMemoHeader);
-            END;
-          END;
-      END;
-
-      SalesHeader."Document Type" := SalesHeader."Document Type"::"Credit Memo";
-
-      EXIT(Found);
+      EXIT(
+        PEPPOLMgt.FindNextCreditMemoRec(SalesCrMemoHeader,ServiceCrMemoHeader,SalesHeader,ProcessedDocType,Position));
     END;
 
     LOCAL PROCEDURE FindNextCreditMemoLineRec@84(Position@1000 : Integer) : Boolean;
-    VAR
-      Found@1001 : Boolean;
     BEGIN
-      CASE ProcessedDocType OF
-        ProcessedDocType::Sale:
-          BEGIN
-            IF Position = 1 THEN
-              Found := SalesCrMemoLine.FIND('-')
-            ELSE
-              Found := SalesCrMemoLine.NEXT <> 0;
-            IF Found THEN
-              SalesLine.TRANSFERFIELDS(SalesCrMemoLine);
-          END;
-        ProcessedDocType::Service:
-          BEGIN
-            IF Position = 1 THEN
-              Found := ServiceCrMemoLine.FIND('-')
-            ELSE
-              Found := ServiceCrMemoLine.NEXT <> 0;
-            IF Found THEN BEGIN
-              PEPPOLMgt.TransferLineToSalesLine(ServiceCrMemoLine,SalesLine);
-              SalesLine.Type := PEPPOLMgt.MapServiceLineTypeToSalesLineType(ServiceCrMemoLine.Type);
-            END;
-          END;
-      END;
-
-      EXIT(Found);
+      EXIT(
+        PEPPOLMgt.FindNextCreditMemoLineRec(SalesCrMemoLine,ServiceCrMemoLine,SalesLine,ProcessedDocType,Position));
     END;
 
     LOCAL PROCEDURE FindNextVATAmtRec@108(VAR VATAmtLine@1001 : Record 290;Position@1000 : Integer) : Boolean;

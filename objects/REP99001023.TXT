@@ -2,9 +2,9 @@ OBJECT Report 99001023 Get Action Messages
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -331,8 +331,7 @@ OBJECT Report 99001023 Get Action Messages
         IF ReqLine."Ending Date" = 0D THEN
           ReqLine."Ending Date" := ReqLine."Due Date" - 1;
         ReqLine.BlockDynamicTracking(TRUE);
-        InvtProfileOffsetting.GetRouting(ReqLine,1);
-        InvtProfileOffsetting.GetComponents(ReqLine,1,FALSE);
+        GetRoutingAndComponents(ReqLine);
         IF ReqLine."Original Due Date" <> 0D THEN
           IF NOT (ReqLine."Action Message" IN [ReqLine."Action Message"::Reschedule,
                                                ReqLine."Action Message"::"Resched. & Chg. Qty."])
@@ -393,6 +392,15 @@ OBJECT Report 99001023 Get Action Messages
         END;
       ReqLine.TransferFromActionMessage(ActionMsgEntry);
       EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE GetRoutingAndComponents@4(VAR ReqLine@1000 : Record 246);
+    VAR
+      Direction@1001 : 'Forward,Backward';
+    BEGIN
+      InvtProfileOffsetting.GetRouting(ReqLine);
+      InvtProfileOffsetting.GetComponents(ReqLine);
+      InvtProfileOffsetting.Recalculate(ReqLine,Direction::Backward);
     END;
 
     BEGIN

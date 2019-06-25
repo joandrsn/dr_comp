@@ -2,9 +2,9 @@ OBJECT Page 9104 Approval Comments FactBox
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -36,6 +36,13 @@ OBJECT Page 9104 Approval Comments FactBox
   }
   CODE
   {
+
+    PROCEDURE SetRecIDFilter@1(SourceApprovalRecordID@1000 : RecordID) ApprovalCommentsExist : Boolean;
+    BEGIN
+      SETRANGE("Record ID to Approve",SourceApprovalRecordID);
+      ApprovalCommentsExist := NOT ISEMPTY;
+      CurrPage.UPDATE(FALSE);
+    END;
 
     BEGIN
     END.

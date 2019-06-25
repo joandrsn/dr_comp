@@ -2,9 +2,9 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-09-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49326;
   }
   PROPERTIES
   {
@@ -152,8 +152,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       ICOutBoxSalesHeader."IC Partner Code" := OutboxTransaction."IC Partner Code";
       ICOutBoxSalesHeader."IC Transaction No." := OutboxTransaction."Transaction No.";
       ICOutBoxSalesHeader."Transaction Source" := OutboxTransaction."Transaction Source";
-      IF ICOutBoxSalesHeader."Currency Code" = '' THEN
-        ICOutBoxSalesHeader."Currency Code" := GLSetup."LCY Code";
+      AssignCurrencyCodeInOutBoxDoc(ICOutBoxSalesHeader."Currency Code",OutboxTransaction."IC Partner Code");
       DimMgt.CopyDocDimtoICDocDim(DATABASE::"IC Outbox Sales Header",ICOutBoxSalesHeader."IC Transaction No.",
         ICOutBoxSalesHeader."IC Partner Code",ICOutBoxSalesHeader."Transaction Source",0,SalesHeader."Dimension Set ID");
 
@@ -239,8 +238,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       ICOutBoxSalesHeader."IC Partner Code" := OutboxTransaction."IC Partner Code";
       ICOutBoxSalesHeader."IC Transaction No." := OutboxTransaction."Transaction No.";
       ICOutBoxSalesHeader."Transaction Source" := OutboxTransaction."Transaction Source";
-      IF ICOutBoxSalesHeader."Currency Code" = '' THEN
-        ICOutBoxSalesHeader."Currency Code" := GLSetup."LCY Code";
+      AssignCurrencyCodeInOutBoxDoc(ICOutBoxSalesHeader."Currency Code",OutboxTransaction."IC Partner Code");
       ICOutBoxSalesHeader.INSERT;
 
       ICDocDim."Transaction No." := OutboxTransaction."Transaction No.";
@@ -340,8 +338,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       ICOutBoxSalesHeader."IC Partner Code" := OutboxTransaction."IC Partner Code";
       ICOutBoxSalesHeader."IC Transaction No." := OutboxTransaction."Transaction No.";
       ICOutBoxSalesHeader."Transaction Source" := OutboxTransaction."Transaction Source";
-      IF ICOutBoxSalesHeader."Currency Code" = '' THEN
-        ICOutBoxSalesHeader."Currency Code" := GLSetup."LCY Code";
+      AssignCurrencyCodeInOutBoxDoc(ICOutBoxSalesHeader."Currency Code",OutboxTransaction."IC Partner Code");
       ICOutBoxSalesHeader.INSERT;
 
       ICDocDim."Transaction No." := OutboxTransaction."Transaction No.";
@@ -422,8 +419,9 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       ICOutBoxPurchHeader."IC Transaction No." := OutboxTransaction."Transaction No.";
       ICOutBoxPurchHeader."IC Partner Code" := OutboxTransaction."IC Partner Code";
       ICOutBoxPurchHeader."Transaction Source" := OutboxTransaction."Transaction Source";
-      IF ICOutBoxPurchHeader."Currency Code" = '' THEN
-        ICOutBoxPurchHeader."Currency Code" := GLSetup."LCY Code";
+
+      GetCompanyInfo;
+      AssignCurrencyCodeInOutBoxDoc(ICOutBoxPurchHeader."Currency Code",OutboxTransaction."IC Partner Code");
       DimMgt.CopyDocDimtoICDocDim(DATABASE::"IC Outbox Purchase Header",ICOutBoxPurchHeader."IC Transaction No.",
         ICOutBoxPurchHeader."IC Partner Code",ICOutBoxPurchHeader."Transaction Source",0,PurchHeader."Dimension Set ID");
       WITH ICOutBoxPurchLine DO BEGIN
@@ -502,10 +500,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
           OutboxJnlLine.Amount := Amount;
           OutboxJnlLine."VAT Amount" := "VAT Amount";
           OutboxJnlLine.Description := Description;
-          IF "Currency Code" = '' THEN
-            OutboxJnlLine."Currency Code" := GLSetup."LCY Code"
-          ELSE
-            OutboxJnlLine."Currency Code" := "Currency Code";
+          OutboxJnlLine."Currency Code" := "Currency Code";
           OutboxJnlLine."Due Date" := "Due Date";
           OutboxJnlLine."Payment Discount %" := "Payment Discount %";
           OutboxJnlLine."Payment Discount Date" := "Pmt. Discount Date";
@@ -527,10 +522,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
           OutboxJnlLine.Amount := -Amount;
           OutboxJnlLine."VAT Amount" := "Bal. VAT Amount";
           OutboxJnlLine.Description := Description;
-          IF "Currency Code" = '' THEN
-            OutboxJnlLine."Currency Code" := GLSetup."LCY Code"
-          ELSE
-            OutboxJnlLine."Currency Code" := "Currency Code";
+          OutboxJnlLine."Currency Code" := "Currency Code";
           OutboxJnlLine.Quantity := Quantity;
           OutboxJnlLine."Document No." := "Document No.";
           DimMgt.CopyJnlLineDimToICJnlDim(
@@ -651,6 +643,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       ICDocDim2@1009 : Record 442;
       HandledICInboxSalesHeader@1007 : Record 438;
       HandledICInboxSalesLine@1008 : Record 439;
+      DimensionSetIDArr@1003 : ARRAY [10] OF Integer;
     BEGIN
       WITH ICInboxSalesHeader DO BEGIN
         SalesHeader.INIT;
@@ -687,7 +680,11 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
         DimMgt.SetICDocDimFilters(
           ICDocDim,DATABASE::"IC Inbox Sales Header","IC Transaction No.",
           "IC Partner Code","Transaction Source",0);
-        SalesHeader."Dimension Set ID" := DimMgt.CreateDimSetIDFromICDocDim(ICDocDim);
+        DimensionSetIDArr[1] := SalesHeader."Dimension Set ID";
+        DimensionSetIDArr[2] := DimMgt.CreateDimSetIDFromICDocDim(ICDocDim);
+        SalesHeader."Dimension Set ID" :=
+          DimMgt.GetCombinedDimensionSetID(DimensionSetIDArr,
+            SalesHeader."Shortcut Dimension 1 Code",SalesHeader."Shortcut Dimension 2 Code");
         DimMgt.UpdateGlobalDimFromDimSetID(SalesHeader."Dimension Set ID",SalesHeader."Shortcut Dimension 1 Code",
           SalesHeader."Shortcut Dimension 2 Code");
         SalesHeader.MODIFY;
@@ -723,6 +720,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       Currency@1007 : Record 4;
       Precision@1008 : Decimal;
       Precision2@1009 : Decimal;
+      DimensionSetIDArr@1003 : ARRAY [10] OF Integer;
     BEGIN
       WITH ICInboxSalesLine DO BEGIN
         SalesLine.INIT;
@@ -809,8 +807,12 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
 
         DimMgt.SetICDocDimFilters(
           ICDocDim,DATABASE::"IC Inbox Sales Line","IC Transaction No.","IC Partner Code","Transaction Source","Line No.");
+        DimensionSetIDArr[1] := SalesLine."Dimension Set ID";
+        DimensionSetIDArr[2] := DimMgt.CreateDimSetIDFromICDocDim(ICDocDim);
 
-        SalesLine."Dimension Set ID" := DimMgt.CreateDimSetIDFromICDocDim(ICDocDim);
+        SalesLine."Dimension Set ID" :=
+          DimMgt.GetCombinedDimensionSetID(DimensionSetIDArr,
+            SalesLine."Shortcut Dimension 1 Code",SalesLine."Shortcut Dimension 2 Code");
         DimMgt.UpdateGlobalDimFromDimSetID(SalesLine."Dimension Set ID",SalesLine."Shortcut Dimension 1 Code",
           SalesLine."Shortcut Dimension 2 Code");
         SalesLine.MODIFY;
@@ -825,6 +827,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       ICDocDim2@1009 : Record 442;
       HandledICInboxPurchHeader@1008 : Record 440;
       HandledICInboxPurchLine@1007 : Record 441;
+      DimensionSetIDArr@1001 : ARRAY [10] OF Integer;
     BEGIN
       WITH ICInboxPurchHeader DO BEGIN
         PurchHeader.INIT;
@@ -871,7 +874,11 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
           ICDocDim,DATABASE::"IC Inbox Purchase Header","IC Transaction No.","IC Partner Code","Transaction Source",0);
         GLSetup.GET;
 
-        PurchHeader."Dimension Set ID" := DimMgt.CreateDimSetIDFromICDocDim(ICDocDim);
+        DimensionSetIDArr[1] := PurchHeader."Dimension Set ID";
+        DimensionSetIDArr[2] := DimMgt.CreateDimSetIDFromICDocDim(ICDocDim);
+        PurchHeader."Dimension Set ID" :=
+          DimMgt.GetCombinedDimensionSetID(DimensionSetIDArr,
+            PurchHeader."Shortcut Dimension 1 Code",PurchHeader."Shortcut Dimension 2 Code");
         DimMgt.UpdateGlobalDimFromDimSetID(PurchHeader."Dimension Set ID",PurchHeader."Shortcut Dimension 1 Code",
           PurchHeader."Shortcut Dimension 2 Code");
         PurchHeader.MODIFY;
@@ -907,6 +914,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       Currency@1012 : Record 4;
       Precision@1011 : Decimal;
       Precision2@1013 : Decimal;
+      DimensionSetIDArr@1002 : ARRAY [10] OF Integer;
     BEGIN
       WITH ICInboxPurchLine DO BEGIN
         PurchLine.INIT;
@@ -999,7 +1007,11 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
 
         DimMgt.SetICDocDimFilters(
           ICDocDim,DATABASE::"IC Inbox Purchase Line","IC Transaction No.","IC Partner Code","Transaction Source","Line No.");
-        PurchLine."Dimension Set ID" := DimMgt.CreateDimSetIDFromICDocDim(ICDocDim);
+        DimensionSetIDArr[1] := PurchLine."Dimension Set ID";
+        DimensionSetIDArr[2] := DimMgt.CreateDimSetIDFromICDocDim(ICDocDim);
+        PurchLine."Dimension Set ID" :=
+          DimMgt.GetCombinedDimensionSetID(DimensionSetIDArr,
+            PurchLine."Shortcut Dimension 1 Code",PurchLine."Shortcut Dimension 2 Code");
         DimMgt.UpdateGlobalDimFromDimSetID(PurchLine."Dimension Set ID",PurchLine."Shortcut Dimension 1 Code",
           PurchLine."Shortcut Dimension 2 Code");
         PurchLine.MODIFY;
@@ -1600,7 +1612,12 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
       ICInboxTrans."IC Partner G/L Acc. No." := ICOutboxTrans."IC Partner G/L Acc. No.";
       ICInboxTrans."Source Line No." := ICOutboxTrans."Source Line No.";
 
-      ICPartner.GET(FromICPartnerCode);
+      GetCompanyInfo;
+      IF CompanyInfo."IC Partner Code" = ICInboxTrans."IC Partner Code" THEN
+        ICPartner.GET(ICOutboxTrans."IC Partner Code")
+      ELSE
+        ICPartner.GET(ICInboxTrans."IC Partner Code");
+
       IF ICPartner."Inbox Type" = ICPartner."Inbox Type"::Database THEN
         PartnerICInboxTransaction.CHANGECOMPANY(ICPartner."Inbox Details");
       IF PartnerICInboxTransaction.GET(
@@ -1612,7 +1629,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
           ICInboxTrans."IC Partner Code",PartnerICInboxTransaction.TABLECAPTION);
 
       IF ICPartner."Inbox Type" = ICPartner."Inbox Type"::Database THEN
-        PartnerICInboxTransaction.CHANGECOMPANY(ICPartner."Inbox Details");
+        PartnerHandledICInboxTrans.CHANGECOMPANY(ICPartner."Inbox Details");
       IF PartnerHandledICInboxTrans.GET(
            ICInboxTrans."Transaction No.",ICInboxTrans."IC Partner Code",
            ICInboxTrans."Transaction Source",ICInboxTrans."Document Type")
@@ -2228,8 +2245,11 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
         PurchaseLine."Location Code" := PurchRcptLine."Location Code";
         PurchaseLine."Receipt No." := PurchRcptLine."Document No.";
         PurchaseLine."Receipt Line No." := PurchRcptLine."Line No.";
-        IF PurchaseOrderLine.GET(PurchaseOrderLine."Document Type"::Order,OrderDocumentNo,PurchaseLine."Line No.") THEN
-          ItemTrackingMgt.CopyHandledItemTrkgToInvLine2(PurchaseOrderLine,PurchaseLine);
+        IF PurchaseOrderLine.GET(PurchaseOrderLine."Document Type"::Order,OrderDocumentNo,PurchaseLine."Receipt Line No.") THEN
+          ItemTrackingMgt.CopyHandledItemTrkgToPurchLineWithLineQty(PurchaseOrderLine,PurchaseLine);
+      END ELSE BEGIN
+        PurchaseLine."Receipt No." := '';
+        PurchaseLine."Receipt Line No." := 0;
       END;
 
       IF FindShipmentLine(ReturnShptLine,PurchaseLine) THEN BEGIN
@@ -2238,9 +2258,12 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
         PurchaseLine."Return Shipment No." := ReturnShptLine."Document No.";
         PurchaseLine."Return Shipment Line No." := ReturnShptLine."Line No.";
         IF PurchaseOrderLine.GET(
-             PurchaseOrderLine."Document Type"::"Return Order",OrderDocumentNo,PurchaseLine."Line No.")
+             PurchaseOrderLine."Document Type"::"Return Order",OrderDocumentNo,PurchaseLine."Return Shipment Line No.")
         THEN
           ItemTrackingMgt.CopyHandledItemTrkgToInvLine2(PurchaseOrderLine,PurchaseLine);
+      END ELSE BEGIN
+        PurchaseLine."Return Shipment No." := '';
+        PurchaseLine."Return Shipment Line No." := 0;
       END;
     END;
 
@@ -2255,7 +2278,7 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
           "Document Type"::Invoice:
             IF "Shipment No." = '' THEN BEGIN
               "Shipment No." := COPYSTR(ICOutboxSalesHeader."External Document No.",1,MAXSTRLEN("Shipment No."));
-              "Shipment Line No." := "Line No."
+              "Shipment Line No." := "Line No.";
             END ELSE
               IF SalesShipmentHeader.GET("Shipment No.") THEN
                 "Shipment No." := COPYSTR(SalesShipmentHeader."External Document No.",1,MAXSTRLEN("Shipment No."));
@@ -2268,6 +2291,23 @@ OBJECT Codeunit 427 ICInboxOutboxMgt
               IF ReturnReceiptHeader.GET("Return Receipt No.") THEN
                 "Return Receipt No." := COPYSTR(ReturnReceiptHeader."External Document No.",1,MAXSTRLEN("Return Receipt No."));
         END;
+    END;
+
+    LOCAL PROCEDURE AssignCurrencyCodeInOutBoxDoc@47(VAR CurrencyCode@1000 : Code[10];ICPartnerCode@1002 : Code[20]);
+    VAR
+      AnotherCompGLSetup@1001 : Record 98;
+      ICPartner@1003 : Record 413;
+    BEGIN
+      IF CurrencyCode = '' THEN BEGIN
+        ICPartner.GET(ICPartnerCode);
+        IF ICPartner."Inbox Type" = ICPartner."Inbox Type"::Database THEN BEGIN
+          GetGLSetup;
+          AnotherCompGLSetup.CHANGECOMPANY(ICPartner."Inbox Details");
+          AnotherCompGLSetup.GET;
+          IF GLSetup."LCY Code" <> AnotherCompGLSetup."LCY Code" THEN
+            CurrencyCode := GLSetup."LCY Code";
+        END;
+      END;
     END;
 
     BEGIN

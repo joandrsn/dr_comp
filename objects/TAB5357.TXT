@@ -2,16 +2,16 @@ OBJECT Table 5357 CRM Contract
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=contract;
-    CaptionML=[DAN=Contract;
-               ENU=Contract];
+    CaptionML=[DAN=CRM Contract;
+               ENU=CRM Contract];
     Description=Agreement to provide customer service during a specified amount of time or number of cases.;
   }
   FIELDS

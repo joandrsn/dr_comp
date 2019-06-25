@@ -2,9 +2,9 @@ OBJECT Codeunit 453 Job Queue - Enqueue
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -23,7 +23,7 @@ OBJECT Codeunit 453 Job Queue - Enqueue
     BEGIN
       RemoveFailedJobs(JobQueueEntry);
       JobQueueEntry.Status := JobQueueEntry.Status::"On Hold";
-      JobQueueEntry.INSERT(TRUE);
+      IF JobQueueEntry.INSERT(TRUE) THEN;
       IF JobQueueEntry."Run in User Session" THEN
         STARTSESSION(JobQueueEntry."User Session ID",CODEUNIT::"Job Queue User Session",COMPANYNAME,JobQueueEntry);
       JobQueueEntry.Status := JobQueueEntry.Status::Ready;

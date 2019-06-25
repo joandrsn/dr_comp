@@ -2,9 +2,9 @@ OBJECT Page 1007 Job Planning Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -32,7 +32,6 @@ OBJECT Page 1007 Job Planning Lines
              "Planning DateEditable" := TRUE;
 
              "Job Task No.Visible" := TRUE;
-             "Job No.Visible" := TRUE;
            END;
 
     OnOpenPage=VAR
@@ -274,10 +273,6 @@ OBJECT Page 1007 Job Planning Lines
 
     { 1   ;1   ;Group     ;
                 GroupType=Repeater }
-
-    { 30  ;2   ;Field     ;
-                SourceExpr="Job No.";
-                Visible="Job No.Visible" }
 
     { 35  ;2   ;Field     ;
                 SourceExpr="Job Task No.";
@@ -579,7 +574,6 @@ OBJECT Page 1007 Job Planning Lines
       ActiveField@1001 : ' ,Cost,CostLCY,PriceLCY,Price';
       Text001@1002 : TextConst 'DAN=Denne sagsplanlægningslinje er genereret automatisk. Vil du fortsætte?;ENU=This job planning line was automatically generated. Do you want to continue?';
       JobNo@1003 : Code[20];
-      "Job No.Visible"@19020212 : Boolean INDATASET;
       "Job Task No.Visible"@19035147 : Boolean INDATASET;
       "Planning DateEditable"@19058788 : Boolean INDATASET;
       "Currency DateEditable"@19063095 : Boolean INDATASET;
@@ -636,11 +630,6 @@ OBJECT Page 1007 Job Planning Lines
     PROCEDURE SetJobNo@12(No@1000 : Code[20]);
     BEGIN
       JobNo := No;
-    END;
-
-    PROCEDURE SetJobNoVisible@4(JobNoVisible@1000 : Boolean);
-    BEGIN
-      "Job No.Visible" := JobNoVisible;
     END;
 
     PROCEDURE SetJobTaskNoVisible@5(JobTaskNoVisible@1000 : Boolean);

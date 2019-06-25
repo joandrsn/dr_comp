@@ -2,9 +2,9 @@ OBJECT Report 5911 Service - Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.48628,NAVDK9.00.00.48628;
   }
   PROPERTIES
   {
@@ -10402,7 +10402,7 @@ Fields!No_ServiceInvHeader.Value, 1)</Hidden>
         <Height>22.93371cm</Height>
         <Style />
       </Body>
-      <Width>18.07085cm</Width>
+      <Width>18cm</Width>
       <Page>
         <PageHeader>
           <Height>11.00501cm</Height>
@@ -10436,10 +10436,11 @@ Fields!No_ServiceInvHeader.Value, 1)</Hidden>
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Convert.ToBase64String(Fields!CompanyInfo2Picture.Value))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.76719cm</Top>
-              <Left>11.85884cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>1</ZIndex>
               <Visibility>
                 <Hidden>=iif((IsNothing(Fields!CompanyInfo2Picture.Value)) = TRUE,TRUE,FALSE)</Hidden>
@@ -10475,10 +10476,11 @@ Fields!No_ServiceInvHeader.Value, 1)</Hidden>
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Convert.ToBase64String(Fields!CompanyInfo1Picture.Value))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.76719cm</Top>
-              <Left>5.87302cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>3</ZIndex>
               <Visibility>
                 <Hidden>=iif((IsNothing(Fields!CompanyInfo1Picture.Value)) = TRUE,TRUE,FALSE)</Hidden>
@@ -10514,10 +10516,9 @@ Fields!No_ServiceInvHeader.Value, 1)</Hidden>
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Convert.ToBase64String(Fields!CompanyInfoPicture.Value))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.76719cm</Top>
-              <Left>0.41302cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Top>1cm</Top>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>5</ZIndex>
               <Visibility>
                 <Hidden>=iif((IsNothing(Fields!CompanyInfoPicture.Value)) = TRUE,TRUE,FALSE)</Hidden>

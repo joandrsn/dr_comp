@@ -2,9 +2,9 @@ OBJECT Codeunit 99000787 Create Prod. Order Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -267,6 +267,8 @@ OBJECT Codeunit 99000787 Create Prod. Order Lines
       ProdOrderLine3.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
       ProdOrderLine3.SETRANGE("Item No.",ProdOrderLine."Item No.");
       ProdOrderLine3.SETRANGE("Variant Code",ProdOrderLine."Variant Code");
+      ProdOrderLine3.SETRANGE("Location Code",ProdOrderLine."Location Code");
+      ProdOrderLine3.SETRANGE("Planning Level Code",ProdOrderLine."Planning Level Code");
 
       IF (NOT InsertNew) AND ProdOrderLine3.FINDFIRST THEN BEGIN
         CopyProdOrderCompToTemp(ProdOrderLine3);
@@ -295,27 +297,38 @@ OBJECT Codeunit 99000787 Create Prod. Order Lines
 
       IF ProdOrderLine.FINDSET(TRUE) THEN
         REPEAT
+          CalcProdOrder.SetParameter(TRUE);
           IF NOT CalcProdOrder.Calculate(ProdOrderLine,Direction,TRUE,TRUE,TRUE,LetDueDateDecrease) THEN
             ErrorOccured := TRUE;
         UNTIL ProdOrderLine.NEXT = 0;
+      ProdOrder.AdjustStartEndingDate;
+      ProdOrder.MODIFY;
 
       EXIT(NOT ErrorOccured);
     END;
 
     LOCAL PROCEDURE CheckMultiLevelStructure@6(Direction@1000 : 'Forward,Backward';MultiLevel@1001 : Boolean;LetDueDateDecrease@1003 : Boolean);
     VAR
+      Item@1004 : Record 27;
       MultiLevelStructureCreated@1002 : Boolean;
     BEGIN
       ProdOrderComp.SETCURRENTKEY(Status,"Prod. Order No.","Prod. Order Line No.","Item Low-Level Code");
       ProdOrderComp.SETRANGE(Status,ProdOrder.Status);
       ProdOrderComp.SETRANGE("Prod. Order No.",ProdOrder."No.");
-      ProdOrderComp.SETFILTER("Planning Level Code",'>0');
       ProdOrderComp.SETFILTER("Item No.",'<>%1','');
       IF ProdOrderComp.FINDSET(TRUE) THEN
         REPEAT
-          MultiLevelStructureCreated :=
-            MultiLevelStructureCreated OR
-            CheckMakeOrderLine(ProdOrderComp,ProdOrderLine,Direction,MultiLevel,LetDueDateDecrease);
+          IF ProdOrderComp."Planning Level Code" = 0 THEN BEGIN
+            Item.GET(ProdOrderComp."Item No.");
+            IF Item.IsMfgItem AND (Item."Manufacturing Policy" = Item."Manufacturing Policy"::"Make-to-Order") THEN BEGIN
+              ProdOrderComp."Planning Level Code" := 1;
+              ProdOrderComp.MODIFY(TRUE);
+            END;
+          END;
+          IF ProdOrderComp."Planning Level Code" > 0 THEN
+            MultiLevelStructureCreated :=
+              MultiLevelStructureCreated OR
+              CheckMakeOrderLine(ProdOrderComp,ProdOrderLine,Direction,MultiLevel,LetDueDateDecrease);
         UNTIL ProdOrderComp.NEXT = 0;
       IF MultiLevelStructureCreated THEN
         ReserveMultiLevelStructure(ProdOrderComp);
@@ -376,6 +389,7 @@ OBJECT Codeunit 99000787 Create Prod. Order Lines
       ProdOrderLine.UpdateDatetime;
       // this InsertNew is responsible for controlling if same POLine is added up or new POLine is created
       InsertNew := InsertNew AND (ProdOrderComp."Planning Level Code" > 1);
+
       Inserted := InsertProdOrderLine;
       IF MultiLevel THEN
         IF Inserted THEN

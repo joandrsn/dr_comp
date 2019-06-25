@@ -2,9 +2,9 @@ OBJECT Page 7177 Available Credit
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=26-09-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50637;
   }
   PROPERTIES
   {
@@ -49,6 +49,11 @@ OBJECT Page 7177 Available Credit
                 CaptionML=[DAN=Leveret ikke faktureret (RV);
                            ENU=Shipped Not Invd. (LCY)];
                 SourceExpr="Shipped Not Invoiced (LCY)" }
+
+    { 8   ;2   ;Field     ;
+                CaptionML=[DAN=Modtaget retur ufakt. (RV);
+                           ENU=Ret. Rcd. Not Inv. (LCY)];
+                SourceExpr=GetReturnRcdNotInvAmountLCY }
 
     { 2   ;2   ;Field     ;
                 CaptionML=[DAN=Udestående fakturaer (RV);

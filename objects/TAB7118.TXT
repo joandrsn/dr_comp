@@ -2,9 +2,9 @@ OBJECT Table 7118 Analysis Column
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -75,6 +75,7 @@ OBJECT Table 7118 Analysis Column
                                                                 RangeFromInt@1005 : Integer;
                                                                 RangeToInt@1004 : Integer;
                                                               BEGIN
+                                                                "Comparison Period Formula LCID" := GLOBALLANGUAGE;
                                                                 ParsePeriodFormula(
                                                                   "Comparison Period Formula",
                                                                   Steps,Type,RangeFromType,RangeToType,RangeFromInt,RangeToInt);
@@ -124,6 +125,9 @@ OBJECT Table 7118 Analysis Column
                                                    OptionString=[ ,Quantity,Sales Amount,Cost Amount,Non-Invntble Amount,Unit Price,Standard Cost,Indirect Cost,Unit Cost] }
     { 18  ;   ;Invoiced            ;Boolean       ;CaptionML=[DAN=Faktureret;
                                                               ENU=Invoiced] }
+    { 30  ;   ;Comparison Period Formula LCID;Integer;
+                                                   CaptionML=[DAN=LCID-sammenligningsperiodeformel;
+                                                              ENU=Comparison Period Formula LCID] }
   }
   KEYS
   {
@@ -137,14 +141,31 @@ OBJECT Table 7118 Analysis Column
   {
     VAR
       ItemSchedLine@1000 : TEMPORARY Record 7114;
-      Text001@1003 : TextConst 'DAN=%1 er ikke en gyldig periodeformel;ENU=%1 is not a valid Period Formula';
-      Text002@1012 : TextConst '@@@={Locked};DAN=P;ENU=P';
-      Text003@1011 : TextConst '@@@={Locked};DAN=FY;ENU=FY';
-      Text004@1015 : TextConst '@@@={Locked};DAN=CP;ENU=CP';
-      Text005@1014 : TextConst '@@@={Locked};DAN=LP;ENU=LP';
+      PeriodFormulaErr@1003 : TextConst '@@@=%1 - value of Comparison Period Formula field;DAN=%1 er ikke en gyldig periodeformel.;ENU=%1 is not a valid Period Formula.';
+      Text002@1002 : TextConst '@@@=Period;DAN=P;ENU=P';
+      Text003@1001 : TextConst '@@@=Fiscal year;DAN=RÅ;ENU=FY';
+      Text004@1005 : TextConst '@@@=Current Period;DAN=NP;ENU=CP';
+      Text005@1004 : TextConst '@@@=Last period;DAN=FP;ENU=LP';
       AnalysisRepMgmt@1006 : Codeunit 7110;
 
-    PROCEDURE ParsePeriodFormula@26(Formula@1002 : Code[20];VAR Steps@1001 : Integer;VAR Type@1006 : ' ,Period,Fiscal Year';VAR RangeFromType@1009 : 'Int,CP,LP';VAR RangeToType@1008 : 'Int,CP,LP';VAR RangeFromInt@1003 : Integer;VAR RangeToInt@1000 : Integer);
+    PROCEDURE ParsePeriodFormula@26(FormulaExpression@1002 : Code[20];VAR Steps@1001 : Integer;VAR Type@1006 : ' ,Period,Fiscal Year';VAR RangeFromType@1009 : 'Int,CP,LP';VAR RangeToType@1008 : 'Int,CP,LP';VAR RangeFromInt@1003 : Integer;VAR RangeToInt@1000 : Integer);
+    VAR
+      OldLanguageID@1005 : Integer;
+      FormulaParsed@1004 : Boolean;
+    BEGIN
+      IF "Comparison Period Formula LCID" = 0 THEN
+        "Comparison Period Formula LCID" := GLOBALLANGUAGE;
+
+      OldLanguageID := GLOBALLANGUAGE("Comparison Period Formula LCID");
+      FormulaParsed := TryParsePeriodFormula(FormulaExpression,Steps,Type,RangeFromType,RangeToType,RangeFromInt,RangeToInt);
+      GLOBALLANGUAGE(OldLanguageID);
+
+      IF NOT FormulaParsed THEN
+        ERROR(GETLASTERRORTEXT);
+    END;
+
+    [TryFunction]
+    LOCAL PROCEDURE TryParsePeriodFormula@10(FormulaExpression@1002 : Code[20];VAR Steps@1001 : Integer;VAR Type@1006 : ' ,Period,Fiscal Year';VAR RangeFromType@1009 : 'Int,CP,LP';VAR RangeToType@1008 : 'Int,CP,LP';VAR RangeFromInt@1003 : Integer;VAR RangeToInt@1000 : Integer);
     VAR
       OriginalFormula@1004 : Code[20];
     BEGIN
@@ -159,87 +180,87 @@ OBJECT Table 7118 Analysis Column
       // <range2> ::= <index> .. <index> | <index>
       // <index> ::= <positive integer> | CP | LP
 
-      OriginalFormula := Formula;
-      Formula := DELCHR(Formula);
+      OriginalFormula := FormulaExpression;
+      FormulaExpression := DELCHR(FormulaExpression);
 
-      IF NOT ParseFormula(Formula,Steps,Type) THEN
-        ERROR(Text001,OriginalFormula);
+      IF NOT ParseFormula(FormulaExpression,Steps,Type) THEN
+        ERROR(PeriodFormulaErr,OriginalFormula);
 
       IF Type = Type::"Fiscal Year" THEN
-        IF NOT ParseRange(Formula,RangeFromType,RangeFromInt,RangeToType,RangeToInt) THEN
-          ERROR(Text001,OriginalFormula);
+        IF NOT ParseRange(FormulaExpression,RangeFromType,RangeFromInt,RangeToType,RangeToInt) THEN
+          ERROR(PeriodFormulaErr,OriginalFormula);
 
-      IF Formula <> '' THEN
-        ERROR(Text001,OriginalFormula);
+      IF FormulaExpression <> '' THEN
+        ERROR(PeriodFormulaErr,OriginalFormula);
     END;
 
-    LOCAL PROCEDURE ParseFormula@5(VAR Formula@1002 : Code[20];VAR Steps@1001 : Integer;VAR Type@1006 : ' ,Period,Fiscal year,Fiscal Halfyear,Fiscal Quarter') : Boolean;
+    LOCAL PROCEDURE ParseFormula@5(VAR FormulaExpression@1002 : Code[20];VAR Steps@1001 : Integer;VAR Type@1006 : ' ,Period,Fiscal Year') : Boolean;
     BEGIN
       Steps := 0;
       Type := Type::" ";
 
-      IF Formula = '' THEN
+      IF FormulaExpression = '' THEN
         EXIT(TRUE);
 
-      IF NOT ParseSignedInteger(Formula,Steps) THEN
+      IF NOT ParseSignedInteger(FormulaExpression,Steps) THEN
         EXIT(FALSE);
 
-      IF Formula = '' THEN
+      IF FormulaExpression = '' THEN
         EXIT(FALSE);
 
-      IF NOT ParseType(Formula,Type) THEN
+      IF NOT ParseType(FormulaExpression,Type) THEN
         EXIT(FALSE);
 
       EXIT(TRUE);
     END;
 
-    LOCAL PROCEDURE ParseSignedInteger@1(VAR Formula@1000 : Code[20];VAR Int@1001 : Integer) : Boolean;
+    LOCAL PROCEDURE ParseSignedInteger@1(VAR FormulaExpression@1000 : Code[20];VAR Int@1001 : Integer) : Boolean;
     BEGIN
       Int := 0;
 
-      CASE COPYSTR(Formula,1,1) OF
+      CASE COPYSTR(FormulaExpression,1,1) OF
         '-':
           BEGIN
-            Formula := COPYSTR(Formula,2);
-            IF NOT ParseInt(Formula,Int,FALSE) THEN
+            FormulaExpression := COPYSTR(FormulaExpression,2);
+            IF NOT ParseInt(FormulaExpression,Int,FALSE) THEN
               EXIT(FALSE);
             Int := -Int;
           END;
         '+':
           BEGIN
-            Formula := COPYSTR(Formula,2);
-            IF NOT ParseInt(Formula,Int,FALSE) THEN
+            FormulaExpression := COPYSTR(FormulaExpression,2);
+            IF NOT ParseInt(FormulaExpression,Int,FALSE) THEN
               EXIT(FALSE);
           END;
         ELSE
           BEGIN
-          IF NOT ParseInt(Formula,Int,TRUE) THEN
+          IF NOT ParseInt(FormulaExpression,Int,TRUE) THEN
             EXIT(FALSE);
         END;
       END;
       EXIT(TRUE);
     END;
 
-    LOCAL PROCEDURE ParseInt@2(VAR Formula@1001 : Code[20];VAR Int@1000 : Integer;AllowNotInt@1003 : Boolean) : Boolean;
+    LOCAL PROCEDURE ParseInt@2(VAR FormulaExpression@1001 : Code[20];VAR Int@1000 : Integer;AllowNotInt@1003 : Boolean) : Boolean;
     VAR
       IntegerStr@1002 : Code[20];
     BEGIN
-      IF COPYSTR(Formula,1,1) IN ['1'..'9'] THEN
+      IF COPYSTR(FormulaExpression,1,1) IN ['1'..'9'] THEN
         REPEAT
-          IntegerStr := IntegerStr + COPYSTR(Formula,1,1);
-          Formula := COPYSTR(Formula,2);
-          IF Formula = '' THEN
+          IntegerStr := IntegerStr + COPYSTR(FormulaExpression,1,1);
+          FormulaExpression := COPYSTR(FormulaExpression,2);
+          IF FormulaExpression = '' THEN
             EXIT(FALSE);
-        UNTIL NOT (COPYSTR(Formula,1,1) IN ['0'..'9'])
+        UNTIL NOT (COPYSTR(FormulaExpression,1,1) IN ['0'..'9'])
       ELSE
         EXIT(AllowNotInt);
       EVALUATE(Int,IntegerStr);
       EXIT(TRUE);
     END;
 
-    LOCAL PROCEDURE ParseType@3(VAR Formula@1001 : Code[20];VAR Type@1000 : ' ,Period,Fiscal Year') : Boolean;
+    LOCAL PROCEDURE ParseType@3(VAR FormulaExpression@1001 : Code[20];VAR Type@1000 : ' ,Period,Fiscal Year') : Boolean;
     BEGIN
-      CASE ReadToken(Formula) OF
+      CASE ReadToken(FormulaExpression) OF
         Text002:
           Type := Type::Period;
         Text003:
@@ -250,47 +271,47 @@ OBJECT Table 7118 Analysis Column
       EXIT(TRUE);
     END;
 
-    LOCAL PROCEDURE ParseRange@6(VAR Formula@1002 : Code[20];VAR FromType@1001 : 'Int,CP,LP';VAR FromInt@1004 : Integer;VAR ToType@1006 : 'Int,CP,LP';VAR ToInt@1005 : Integer) : Boolean;
+    LOCAL PROCEDURE ParseRange@6(VAR FormulaExpression@1002 : Code[20];VAR FromType@1001 : 'Int,CP,LP';VAR FromInt@1004 : Integer;VAR ToType@1006 : 'Int,CP,LP';VAR ToInt@1005 : Integer) : Boolean;
     BEGIN
       FromType := FromType::CP;
       ToType := ToType::CP;
 
-      IF Formula = '' THEN
+      IF FormulaExpression = '' THEN
         EXIT(TRUE);
 
-      IF NOT ParseToken(Formula,'[') THEN
+      IF NOT ParseToken(FormulaExpression,'[') THEN
         EXIT(FALSE);
 
-      IF NOT ParseIndex(Formula,FromType,FromInt) THEN
+      IF NOT ParseIndex(FormulaExpression,FromType,FromInt) THEN
         EXIT(FALSE);
-      IF Formula = '' THEN
+      IF FormulaExpression = '' THEN
         EXIT(FALSE);
 
-      IF COPYSTR(Formula,1,1) = '.' THEN BEGIN
-        IF NOT ParseToken(Formula,'..') THEN
+      IF COPYSTR(FormulaExpression,1,1) = '.' THEN BEGIN
+        IF NOT ParseToken(FormulaExpression,'..') THEN
           EXIT(FALSE);
-        IF NOT ParseIndex(Formula,ToType,ToInt) THEN
+        IF NOT ParseIndex(FormulaExpression,ToType,ToInt) THEN
           EXIT(FALSE);
       END ELSE BEGIN
         ToType := FromType;
         ToInt := FromInt;
       END;
 
-      IF NOT ParseToken(Formula,']') THEN
+      IF NOT ParseToken(FormulaExpression,']') THEN
         EXIT(FALSE);
 
       EXIT(TRUE);
     END;
 
-    LOCAL PROCEDURE ParseIndex@11(VAR Formula@1002 : Code[20];VAR IndexType@1001 : 'Int,CP,LP';VAR Index@1004 : Integer) : Boolean;
+    LOCAL PROCEDURE ParseIndex@11(VAR FormulaExpression@1002 : Code[20];VAR IndexType@1001 : 'Int,CP,LP';VAR Index@1004 : Integer) : Boolean;
     BEGIN
-      IF Formula = '' THEN
+      IF FormulaExpression = '' THEN
         EXIT(FALSE);
 
-      IF ParseInt(Formula,Index,FALSE) THEN
+      IF ParseInt(FormulaExpression,Index,FALSE) THEN
         IndexType := IndexType::Int
       ELSE
-        CASE ReadToken(Formula) OF
+        CASE ReadToken(FormulaExpression) OF
           Text004:
             IndexType := IndexType::CP;
           Text005:
@@ -302,28 +323,28 @@ OBJECT Table 7118 Analysis Column
       EXIT(TRUE);
     END;
 
-    LOCAL PROCEDURE ParseToken@13(VAR Formula@1000 : Code[20];Token@1001 : Code[20]) : Boolean;
+    LOCAL PROCEDURE ParseToken@13(VAR FormulaExpression@1000 : Code[20];Token@1001 : Code[20]) : Boolean;
     BEGIN
-      IF COPYSTR(Formula,1,STRLEN(Token)) <> Token THEN
+      IF COPYSTR(FormulaExpression,1,STRLEN(Token)) <> Token THEN
         EXIT(FALSE);
-      Formula := COPYSTR(Formula,STRLEN(Token) + 1);
+      FormulaExpression := COPYSTR(FormulaExpression,STRLEN(Token) + 1);
       EXIT(TRUE)
     END;
 
-    LOCAL PROCEDURE ReadToken@7(VAR Formula@1000 : Code[20]) : Code[20];
+    LOCAL PROCEDURE ReadToken@7(VAR FormulaExpression@1000 : Code[20]) : Code[20];
     VAR
       Token@1001 : Code[20];
       p@1002 : Integer;
     BEGIN
-      FOR p := 1 TO STRLEN(Formula) DO BEGIN
-        IF COPYSTR(Formula,p,1) IN ['[',']','.'] THEN BEGIN
-          Formula := COPYSTR(Formula,STRLEN(Token) + 1);
+      FOR p := 1 TO STRLEN(FormulaExpression) DO BEGIN
+        IF COPYSTR(FormulaExpression,p,1) IN ['[',']','.'] THEN BEGIN
+          FormulaExpression := COPYSTR(FormulaExpression,STRLEN(Token) + 1);
           EXIT(Token);
         END;
-        Token := Token + COPYSTR(Formula,p,1);
+        Token := Token + COPYSTR(FormulaExpression,p,1);
       END;
 
-      Formula := '';
+      FormulaExpression := '';
       EXIT(Token);
     END;
 

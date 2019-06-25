@@ -2,9 +2,9 @@ OBJECT Table 7312 Warehouse Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -114,6 +114,7 @@ OBJECT Table 7312 Warehouse Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 5402;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
@@ -166,8 +167,7 @@ OBJECT Table 7312 Warehouse Entry
     { No ;Serial No.,Item No.,Variant Code,Location Code,Bin Code;
                                                    SumIndexFields=Qty. (Base) }
     {    ;Item No.,Bin Code,Location Code,Variant Code,Unit of Measure Code,Lot No.,Serial No.,Entry Type,Dedicated;
-                                                   SumIndexFields=Qty. (Base),Cubage,Weight,Quantity;
-                                                   MaintainSIFTIndex=No }
+                                                   SumIndexFields=Qty. (Base),Cubage,Weight,Quantity }
     {    ;Item No.,Location Code,Variant Code,Bin Type Code,Unit of Measure Code,Lot No.,Serial No.,Dedicated;
                                                    SumIndexFields=Qty. (Base),Cubage,Weight }
     {    ;Bin Code,Location Code,Item No.         ;SumIndexFields=Cubage,Weight,Qty. (Base) }

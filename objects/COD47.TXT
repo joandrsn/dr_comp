@@ -2,9 +2,9 @@ OBJECT Codeunit 47 StringConversionManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -224,27 +224,24 @@ OBJECT Codeunit 47 StringConversionManagement
       EXIT(c);
     END;
 
-    PROCEDURE GetPaddedString@24(StringToModify@1000 : Text[250];PadLength@1001 : Integer;PadCharacter@1002 : Text[1]) FinalString : Text[250];
+    PROCEDURE GetPaddedString@24(StringToModify@1000 : Text[250];PadLength@1001 : Integer;PadCharacter@1002 : Text[1]) : Text[250];
     BEGIN
       IF PadLength < STRLEN(StringToModify) THEN
         EXIT(StringToModify);
-      FinalString := PADSTR('',PadLength - STRLEN(StringToModify),PadCharacter) + StringToModify;
-
-      EXIT(FinalString);
+      EXIT(PADSTR('',PadLength - STRLEN(StringToModify),PadCharacter) + StringToModify);
     END;
 
     PROCEDURE RemoveDecimalFromString@25(StringToModify@1002 : Text[250];PadLength@1001 : Integer;PadCharacter@1000 : Text[1]) FinalString : Text[250];
     VAR
-      TempNumeric@1004 : Decimal;
-      TempInteger@1005 : Integer;
+      TempDecimal@1004 : Decimal;
+      StringToRemove@1003 : Text;
     BEGIN
-      IF PadLength < STRLEN(StringToModify) THEN
+      IF PadLength < STRLEN(StringToModify) - 1 THEN
         EXIT(StringToModify);
-
-      EVALUATE(TempNumeric,StringToModify);
-      TempNumeric := TempNumeric * 100;
-      TempInteger := TempNumeric;
-      FinalString := GetPaddedString(FORMAT(TempInteger),PadLength,PadCharacter);
+      IF NOT EVALUATE(TempDecimal,StringToModify) THEN
+        EXIT(StringToModify);
+      StringToRemove := DELCHR(StringToModify,'=','0123456789');
+      FinalString := GetPaddedString(DELCHR(StringToModify,'=',StringToRemove),PadLength,PadCharacter);
       EXIT(FinalString);
     END;
 

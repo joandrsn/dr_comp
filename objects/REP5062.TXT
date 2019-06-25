@@ -2,9 +2,9 @@ OBJECT Report 5062 Sales Cycle - Analysis
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -2242,6 +2242,7 @@ Fields!SalesFilter.Value, 1)</Hidden>
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -2259,9 +2260,9 @@ Fields!SalesFilter.Value, 1)</Hidden>
                 </Paragraph>
               </Paragraphs>
               <Top>0.846cm</Top>
-              <Left>14.9cm</Left>
+              <Left>12.9cm</Left>
               <Height>0.42384cm</Height>
-              <Width>3.25cm</Width>
+              <Width>5.25cm</Width>
               <ZIndex>4</ZIndex>
               <Visibility>
                 <Hidden>=IIF(Fields!CurrReportPageNoCaption.Value= "",TRUE,FALSE)</Hidden>

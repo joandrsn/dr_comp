@@ -2,9 +2,9 @@ OBJECT Report 215 Archived Sales Quote
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=25-02-19;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.51103;
   }
   PROPERTIES
   {
@@ -479,6 +479,9 @@ OBJECT Report 215 Archived Sales Quote
                SourceExpr=FORMAT("Sales Line Archive"."Allow Invoice Disc.") }
 
     { 168 ;4   ;Column  ;SalesLineNo         ;
+               SourceExpr="Sales Line Archive"."Line No." }
+
+    { 172 ;4   ;Column  ;SalesLineNoText     ;
                SourceExpr=FORMAT("Sales Line Archive"."Line No.") }
 
     { 169 ;4   ;Column  ;RoundLoopBody4Visibility;
@@ -493,7 +496,7 @@ OBJECT Report 215 Archived Sales Quote
                AutoFormatExpr="Sales Header Archive"."Currency Code" }
 
     { 86  ;4   ;Column  ;SalesLineArchTmp__Inv__Discount_Amount_;
-               SourceExpr=-SalesLineArchTmp."Inv. Discount Amount";
+               SourceExpr=SalesLineArchTmp."Inv. Discount Amount";
                AutoFormatType=1;
                AutoFormatExpr="Sales Header Archive"."Currency Code" }
 
@@ -1381,6 +1384,9 @@ OBJECT Report 215 Archived Sales Quote
         </Field>
         <Field Name="SalesLineNo">
           <DataField>SalesLineNo</DataField>
+        </Field>
+        <Field Name="SalesLineNoText">
+          <DataField>SalesLineNoText</DataField>
         </Field>
         <Field Name="RoundLoopBody4Visibility">
           <DataField>RoundLoopBody4Visibility</DataField>
@@ -5579,7 +5585,7 @@ OBJECT Report 215 Archived Sales Quote
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=SUM(Fields!SalesLineArchTmp__Inv__Discount_Amount_.Value)</Value>
+                                                    <Value>=-SUM(Fields!SalesLineArchTmp__Inv__Discount_Amount_.Value)</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <Format>=Fields!SalesLineArchTmp__Inv__Discount_Amount_Format.Value</Format>
@@ -6546,7 +6552,7 @@ OBJECT Report 215 Archived Sales Quote
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=sum(Fields!VATAmount.Value)</Value>
+                                                    <Value>=Fields!VATAmount.Value</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <Format>=Fields!VATAmountFormat.Value</Format>
@@ -6768,7 +6774,7 @@ OBJECT Report 215 Archived Sales Quote
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=(SUM(Fields!SalesLineArchTmp__Line_Amount_.Value)-SUM(Fields!SalesLineArchTmp__Inv__Discount_Amount_.Value))+sum(Fields!VATAmount.Value)</Value>
+                                                    <Value>=Fields!TotalAmountInclVAT.Value</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <FontWeight>Bold</FontWeight>
@@ -7214,7 +7220,7 @@ OBJECT Report 215 Archived Sales Quote
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=Fields!TotalAmountInclVAT.Value</Value>
+                                                    <Value>=Fields!TotalAmountInclVAT.Value-SUM(Fields!SalesLineArchTmp__Inv__Discount_Amount_.Value)</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <FontWeight>Bold</FontWeight>
@@ -7656,7 +7662,7 @@ OBJECT Report 215 Archived Sales Quote
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=sum(Fields!VATAmount.Value)</Value>
+                                                    <Value>=last(Fields!VATAmount.Value)</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <Format>=Fields!VATAmountFormat.Value</Format>
@@ -7878,7 +7884,7 @@ OBJECT Report 215 Archived Sales Quote
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=sum(Fields!VATBaseAmount.Value)</Value>
+                                                    <Value>=last(Fields!VATBaseAmount.Value)</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <Format>=Fields!VATBaseAmountFormat.Value</Format>
@@ -8138,7 +8144,7 @@ OBJECT Report 215 Archived Sales Quote
                               <DataSetName>DataSet_Result</DataSetName>
                               <Filters>
                                 <Filter>
-                                  <FilterExpression>=Fields!SalesLineNo.Value</FilterExpression>
+                                  <FilterExpression>=Fields!SalesLineNoText.Value</FilterExpression>
                                   <Operator>GreaterThan</Operator>
                                   <FilterValues>
                                     <FilterValue>""</FilterValue>
@@ -9682,10 +9688,11 @@ OBJECT Report 215 Archived Sales Quote
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(2))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>1.00529cm</Top>
-              <Left>5.71429cm</Left>
-              <Height>3.88889cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(2) = "",true,false)</Hidden>
@@ -9697,10 +9704,11 @@ OBJECT Report 215 Archived Sales Quote
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(3))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>1.00529cm</Top>
-              <Left>11.85185cm</Left>
-              <Height>3.88889cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>1</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(3) = "",true,false)</Hidden>
@@ -9712,10 +9720,10 @@ OBJECT Report 215 Archived Sales Quote
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(1))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>1.00529cm</Top>
-              <Left>0.25429cm</Left>
-              <Height>3.88889cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(1) = "",true,false)</Hidden>
               </Visibility>

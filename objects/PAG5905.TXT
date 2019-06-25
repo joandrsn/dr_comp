@@ -2,9 +2,9 @@ OBJECT Page 5905 Service Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.46290,NAVDK9.00.00.46290;
   }
   PROPERTIES
   {
@@ -71,6 +71,11 @@ OBJECT Page 5905 Service Lines
                       VALIDATE("Service Item Line No.",0);
                   END;
                 END;
+
+    OnInsertRecord=BEGIN
+                     IF NOT AddExtendedText THEN
+                       "Line No." := GetNextLineNo(xRec,BelowxRec);
+                   END;
 
     OnDeleteRecord=VAR
                      ReserveServLine@1000 : Codeunit 99000842;
@@ -925,6 +930,7 @@ OBJECT Page 5905 Service Lines
       IPSalesLineDiscEnable@19032437 : Boolean INDATASET;
       IPSalesLineDiscTextboxEnable@19057438 : Boolean INDATASET;
       Text012@1000 : TextConst 'DAN=Vil du oprette servicelinjer ud fra timesedler?;ENU=Do you want to create service lines from time sheets?';
+      AddExtendedText@1003 : Boolean;
 
     PROCEDURE CalcInvDisc@3(VAR ServLine@1000 : Record 5902);
     BEGIN
@@ -954,7 +960,9 @@ OBJECT Page 5905 Service Lines
       TransferExtendedText@1001 : Codeunit 378;
     BEGIN
       IF TransferExtendedText.ServCheckIfAnyExtText(Rec,Unconditionally) THEN BEGIN
+        AddExtendedText := TRUE;
         CurrPage.SAVERECORD;
+        AddExtendedText := FALSE;
         TransferExtendedText.InsertServExtText(Rec);
       END;
       IF TransferExtendedText.MakeUpdate THEN

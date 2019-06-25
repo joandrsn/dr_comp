@@ -2,9 +2,9 @@ OBJECT Table 336 Tracking Specification
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -491,14 +491,16 @@ OBJECT Table 336 Tracking Specification
         IF NOT (LotsToHandleUndefined OR LotsToInvoiceUndefined) THEN
           EXIT;
       END;
-      IF NOT ReservationEntry.FIND('-') THEN
+      IF NOT ReservationEntry.FINDLAST THEN
         EXIT;
-      REPEAT
-        IF Handle THEN
-          HandleQtyBase += ReservationEntry."Qty. to Handle (Base)";
-        IF Invoice THEN
-          InvoiceQtyBase += ReservationEntry."Qty. to Invoice (Base)";
-      UNTIL ReservationEntry.NEXT = 0;
+      IF Handle THEN BEGIN
+        ReservationEntry.CALCSUMS("Qty. to Handle (Base)");
+        HandleQtyBase += ReservationEntry."Qty. to Handle (Base)";
+      END;
+      IF Invoice THEN BEGIN
+        ReservationEntry.CALCSUMS("Qty. to Invoice (Base)");
+        InvoiceQtyBase += ReservationEntry."Qty. to Invoice (Base)";
+      END;
       TrackingSpecification.TRANSFERFIELDS(ReservationEntry);
       IF Handle THEN
         IF ABS(HandleQtyBase) > ABS(QtyToHandleBase) THEN

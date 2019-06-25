@@ -2,9 +2,9 @@ OBJECT Page 98 Purch. Cr. Memo Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -19,6 +19,7 @@ OBJECT Page 98 Purch. Cr. Memo Subform
     AutoSplitKey=Yes;
     OnAfterGetRecord=BEGIN
                        ShowShortcutDimCode(ShortcutDimCode);
+                       CLEAR(DocumentTotals);
                      END;
 
     OnNewRecord=BEGIN
@@ -41,7 +42,8 @@ OBJECT Page 98 Purch. Cr. Memo Subform
                            TypeChosen := HasTypeToFillMandatotyFields;
                            IF PurchHeader.GET("Document Type","Document No.") THEN;
 
-                           DocumentTotals.PurchaseUpdateTotalsControls(Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
+                           DocumentTotals.PurchaseUpdateTotalsControls(
+                             Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
                              TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,VATAmount);
                          END;
 
@@ -641,7 +643,9 @@ OBJECT Page 98 Purch. Cr. Memo Subform
                 Editable=FALSE;
                 OnDrillDown=BEGIN
                               DocumentTotals.PurchaseRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalPurchaseLine);
-                              CurrPage.UPDATE(FALSE);
+                              DocumentTotals.PurchaseUpdateTotalsControls(
+                                Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
+                                TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,VATAmount);
                             END;
 
                 ShowCaption=No }

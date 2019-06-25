@@ -2,9 +2,9 @@ OBJECT Page 7117 Sales Analysis Report
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -208,12 +208,13 @@ OBJECT Page 7117 Sales Analysis Report
                 SourceExpr=CurrentReportName;
                 OnValidate=BEGIN
                              AnalysisReportMgt.CheckReportName(CurrentReportName,Rec);
-                             CurrentReportNameOnAfterValida;
+                             CurrentReportNameOnAfterValidate;
                            END;
 
                 OnLookup=BEGIN
                            IF AnalysisReportMgt.LookupReportName(GETRANGEMAX("Analysis Area"),CurrentReportName) THEN BEGIN
                              Text := CurrentReportName;
+                             CurrentReportNameOnAfterValidate;
                              EXIT(TRUE);
                            END;
                          END;
@@ -225,7 +226,7 @@ OBJECT Page 7117 Sales Analysis Report
                 SourceExpr=CurrentLineTemplate;
                 OnValidate=BEGIN
                              AnalysisReportMgt.CheckAnalysisLineTemplName(CurrentLineTemplate,Rec);
-                             CurrentLineTemplateOnAfterVali;
+                             CurrentLineTemplateOnAfterValidate;
                            END;
 
                 OnLookup=BEGIN
@@ -242,12 +243,13 @@ OBJECT Page 7117 Sales Analysis Report
                 SourceExpr=CurrentColumnTemplate;
                 OnValidate=BEGIN
                              AnalysisReportMgt.GetColumnTemplate(GETRANGEMAX("Analysis Area"),CurrentColumnTemplate);
-                             CurrentColumnTemplateOnAfterVa;
+                             CurrentColumnTemplateOnAfterValidate;
                            END;
 
                 OnLookup=BEGIN
                            IF AnalysisReportMgt.LookupColumnName(GETRANGEMAX("Analysis Area"),CurrentColumnTemplate) THEN BEGIN
                              Text := CurrentColumnTemplate;
+                             CurrentColumnTemplateOnAfterValidate;
                              EXIT(TRUE);
                            END;
                          END;
@@ -267,7 +269,7 @@ OBJECT Page 7117 Sales Analysis Report
                              SETRANGE("Source Type Filter",CurrentSourceTypeFilter);
                              CurrentSourceTypeNoFilter := '';
                              AnalysisReportMgt.SetSourceNo(Rec,CurrentSourceTypeNoFilter);
-                             CurrentSourceTypeFilterOnAfter;
+                             CurrentSourceTypeFilterOnAfterValidate;
                            END;
                             }
 
@@ -276,7 +278,7 @@ OBJECT Page 7117 Sales Analysis Report
                            ENU=Source No. Filter];
                 SourceExpr=CurrentSourceTypeNoFilter;
                 OnValidate=BEGIN
-                             CurrentSourceTypeNoFilterOnAft;
+                             CurrentSourceTypeNoFilterOnAfterValidate;
                            END;
 
                 OnLookup=BEGIN
@@ -499,7 +501,7 @@ OBJECT Page 7117 Sales Analysis Report
       NewCurrentReportName := NewReportName;
     END;
 
-    LOCAL PROCEDURE CurrentReportNameOnAfterValida@19043622();
+    LOCAL PROCEDURE CurrentReportNameOnAfterValidate@19043622();
     BEGIN
       CurrPage.SAVERECORD;
       ValidateReportName;
@@ -511,7 +513,7 @@ OBJECT Page 7117 Sales Analysis Report
       SetPointsAnalysisColumn;
     END;
 
-    LOCAL PROCEDURE CurrentLineTemplateOnAfterVali@19002239();
+    LOCAL PROCEDURE CurrentLineTemplateOnAfterValidate@19002239();
     BEGIN
       CurrPage.SAVERECORD;
       AnalysisReportMgt.SetAnalysisLineTemplName(CurrentLineTemplate,Rec);
@@ -519,7 +521,7 @@ OBJECT Page 7117 Sales Analysis Report
       CurrPage.UPDATE(FALSE);
     END;
 
-    LOCAL PROCEDURE CurrentColumnTemplateOnAfterVa@19007060();
+    LOCAL PROCEDURE CurrentColumnTemplateOnAfterValidate@19007060();
     BEGIN
       AnalysisReportMgt.CopyColumnsToTemp(Rec,CurrentColumnTemplate,AnalysisColumn);
       CurrPage.UPDATE(FALSE);
@@ -527,13 +529,13 @@ OBJECT Page 7117 Sales Analysis Report
       SetPointsAnalysisColumn;
     END;
 
-    LOCAL PROCEDURE CurrentSourceTypeNoFilterOnAft@19027013();
+    LOCAL PROCEDURE CurrentSourceTypeNoFilterOnAfterValidate@19027013();
     BEGIN
       AnalysisReportMgt.SetSourceNo(Rec,CurrentSourceTypeNoFilter);
       CurrPage.UPDATE(FALSE);
     END;
 
-    LOCAL PROCEDURE CurrentSourceTypeFilterOnAfter@19072332();
+    LOCAL PROCEDURE CurrentSourceTypeFilterOnAfterValidate@19072332();
     BEGIN
       CurrPage.UPDATE(FALSE);
     END;

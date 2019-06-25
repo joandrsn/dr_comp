@@ -2,9 +2,9 @@ OBJECT Codeunit 1201 Process Data Exch.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -123,10 +123,25 @@ OBJECT Codeunit 1201 Process Data Exch.
           END ELSE
             IF DataExchColumnDef."Negative-Sign Identifier" = DataExchField.Value THEN
               SaveNegativeSignForField(DataExchFieldMapping."Field ID",TempFieldIdsToNegate);
+        'Option':
+          SetOptionField(TransformedValue,FieldRef);
         ELSE
           ERROR(DataTypeNotSupportedErr,DataExchColumnDef.Description,DataExchFieldMapping."Data Exch. Def Code",FieldRef.TYPE);
       END;
       FieldRef.VALIDATE;
+    END;
+
+    LOCAL PROCEDURE SetOptionField@13(ValueText@1000 : Text;FieldRef@1001 : FieldRef);
+    VAR
+      OptionValue@1002 : Integer;
+    BEGIN
+      WHILE TRUE DO BEGIN
+        OptionValue += 1;
+        IF UPPERCASE(ValueText) = UPPERCASE(SELECTSTR(OptionValue,FieldRef.OPTIONCAPTION)) THEN BEGIN
+          FieldRef.VALUE := OptionValue - 1;
+          EXIT;
+        END;
+      END;
     END;
 
     LOCAL PROCEDURE SetAndMergeTextCodeField@10(Value@1000 : Text;VAR FieldRef@1001 : FieldRef);

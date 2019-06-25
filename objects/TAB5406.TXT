@@ -2,9 +2,9 @@ OBJECT Table 5406 Prod. Order Line
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -69,7 +69,6 @@ OBJECT Table 5406 Prod. Order Line
 
     CaptionML=[DAN=Prod.ordrelinje;
                ENU=Prod. Order Line];
-    PasteIsValid=No;
     LookupPageID=Page5406;
     DrillDownPageID=Page5406;
   }
@@ -451,10 +450,6 @@ OBJECT Table 5406 Prod. Order Line
 
                                                                 "Unit Cost" :=
                                                                   ROUND(Item."Unit Cost" * "Qty. per Unit of Measure",
-                                                                    GLSetup."Unit-Amount Rounding Precision");
-                                                                "Overhead Rate" :=
-                                                                  ROUND(
-                                                                    Item."Overhead Rate" * "Qty. per Unit of Measure",
                                                                     GLSetup."Unit-Amount Rounding Precision");
 
                                                                 VALIDATE(Quantity);
@@ -904,8 +899,11 @@ OBJECT Table 5406 Prod. Order Line
 
       "Bin Code" := '';
       IF ("Location Code" <> '') AND ("Item No." <> '') THEN BEGIN
+        "Bin Code" := WMSManagement.GetLastOperationFromBinCode("Routing No.","Routing Version Code","Location Code",FALSE,0);
         GetLocation("Location Code");
-        IF Location."Bin Mandatory" AND NOT Location."Directed Put-away and Pick" THEN
+        IF "Bin Code" = '' THEN
+          "Bin Code" := Location."From-Production Bin Code";
+        IF ("Bin Code" = '') AND Location."Bin Mandatory" AND NOT Location."Directed Put-away and Pick" THEN
           WMSManagement.GetDefaultBin("Item No.","Variant Code","Location Code","Bin Code");
       END;
       VALIDATE("Bin Code");

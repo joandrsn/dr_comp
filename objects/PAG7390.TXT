@@ -2,16 +2,17 @@ OBJECT Page 7390 Posted Invt. Put-away
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
-    Editable=No;
     CaptionML=[DAN=Bogført læg-på-lager (lager);
                ENU=Posted Invt. Put-away];
     SaveValues=Yes;
+    InsertAllowed=No;
+    ModifyAllowed=No;
     SourceTable=Table7340;
     PageType=Document;
     RefreshOnActivate=Yes;

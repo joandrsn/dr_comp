@@ -2,9 +2,9 @@ OBJECT Codeunit 1200 Import Bank Statement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -12,18 +12,18 @@ OBJECT Codeunit 1200 Import Bank Statement
     Permissions=TableData 1221=rimd;
     OnRun=VAR
             DataExchLineDef@1003 : Record 1227;
-            XMLDocument@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
+            XMLDOMManagement@1000 : Codeunit 6224;
+            XmlNode@1005 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
             XMLStream@1001 : InStream;
             LineNo@1002 : Integer;
           BEGIN
-            XMLDocument := XMLDocument.XmlDocument;
             "File Content".CREATEINSTREAM(XMLStream);
-            XMLDocument.Load(XMLStream);
+            XMLDOMManagement.LoadXMLNodeFromInStream(XMLStream,XmlNode);
 
             DataExchLineDef.GET("Data Exch. Def Code","Data Exch. Line Def Code");
 
             ProgressWindow.OPEN(ProgressMsg);
-            Parse(DataExchLineDef,"Entry No.",XMLDocument.DocumentElement,'','',LineNo,LineNo);
+            Parse(DataExchLineDef,"Entry No.",XmlNode,'','',LineNo,LineNo);
             ProgressWindow.CLOSE;
           END;
 

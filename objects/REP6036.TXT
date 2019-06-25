@@ -2,9 +2,9 @@ OBJECT Report 6036 Create Contract Service Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -171,6 +171,7 @@ OBJECT Report 6036 Create Contract Service Orders
       Cust@1010 : Record 18;
       ServItem@1021 : Record 5940;
       RepairStatus@1022 : Record 5927;
+      Salesperson@1913 : Record 13;
       ContrServOrdersTest@1005 : Report 5988;
       ServOrderCreated@1011 : Integer;
       RecordNo@1012 : Integer;
@@ -203,7 +204,7 @@ OBJECT Report 6036 Create Contract Service Orders
         ServHeader.VALIDATE("Ship-to Code","Service Contract Header"."Ship-to Code");
         ServHeader."Service Order Type" := "Service Contract Header"."Service Order Type";
         ServHeader.VALIDATE("Currency Code","Service Contract Header"."Currency Code");
-        ServHeader."Salesperson Code" := "Service Contract Header"."Salesperson Code";
+        SetSalespersonCode("Service Contract Header"."Salesperson Code",ServHeader."Salesperson Code");
         ServHeader."Max. Labor Unit Price" := "Service Contract Header"."Max. Labor Unit Price";
         ServHeader."Your Reference" := "Service Contract Header"."Your Reference";
         ServHeader."Service Zone Code" := "Service Contract Header"."Service Zone Code";
@@ -269,16 +270,26 @@ OBJECT Report 6036 Create Contract Service Orders
       CreateServOrders := CreateServOrdersFrom;
     END;
 
+    LOCAL PROCEDURE SetSalespersonCode@218(SalesPersonCodeToCheck@1000 : Code[20];VAR SalesPersonCodeToAssign@1001 : Code[20]);
+    BEGIN
+      IF SalesPersonCodeToCheck <> '' THEN
+        IF Salesperson.GET(SalesPersonCodeToCheck) THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN
+            SalesPersonCodeToAssign := ''
+          ELSE
+            SalesPersonCodeToAssign := SalesPersonCodeToCheck;
+    END;
+
     LOCAL PROCEDURE VerifyServiceContractHeader@1();
     VAR
       ShipToAddress@1000 : Record 222;
     BEGIN
       WITH "Service Contract Header" DO
-        IF "Ship-to Code" <> '' THEN BEGIN
-          IF NOT ShipToAddress.GET("Customer No.","Ship-to Code") THEN
+        IF "Ship-to Code" <> '' THEN
+          IF NOT ShipToAddress.GET("Customer No.","Ship-to Code") THEN BEGIN
             MESSAGE(Text005,"Contract No.","Customer No.","Ship-to Code");
-          CurrReport.SKIP;
-        END;
+            CurrReport.SKIP;
+          END;
     END;
 
     BEGIN

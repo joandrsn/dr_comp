@@ -2,9 +2,9 @@ OBJECT Codeunit 7301 Whse. Jnl.-Register Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -161,6 +161,7 @@ OBJECT Codeunit 7301 Whse. Jnl.-Register Line
       WhseEntry2@1002 : Record 7312;
       WhseSNRequired@1102601001 : Boolean;
       WhseLNRequired@1102601000 : Boolean;
+      Sign@1003 : Integer;
     BEGIN
       WITH WhseEntry DO BEGIN
         FromBinContent.GET(
@@ -200,19 +201,19 @@ OBJECT Codeunit 7301 Whse. Jnl.-Register Line
                (NOT FromBinContent.Fixed)
             THEN
               FromBinContent.DELETE;
-        END ELSE
-          IF FromBinContent."Quantity (Base)" + "Qty. (Base)" < 0 THEN BEGIN
-            FromBinContent.CALCFIELDS(Quantity);
-            IF FromBinContent.Quantity + Quantity = 0 THEN
-              "Qty. (Base)" := FromBinContent."Quantity (Base)" // rounding issue- qty is same, but not qty (base)
-            ELSE
+        END ELSE BEGIN
+          FromBinContent.CALCFIELDS(Quantity);
+          IF FromBinContent.Quantity + Quantity = 0 THEN BEGIN
+            "Qty. (Base)" := -FromBinContent."Quantity (Base)";
+            Sign := WhseJnlLine."Qty. (Base)" / WhseJnlLine."Qty. (Absolute, Base)";
+            WhseJnlLine."Qty. (Base)" := "Qty. (Base)" * Sign;
+            WhseJnlLine."Qty. (Absolute, Base)" := ABS("Qty. (Base)");
+          END ELSE
+            IF FromBinContent."Quantity (Base)" + "Qty. (Base)" < 0 THEN
               FromBinContent.FIELDERROR(
                 "Quantity (Base)",
-                STRSUBSTNO(
-                  Text000,
-                  FromBinContent."Quantity (Base)",
-                  -(FromBinContent."Quantity (Base)" + "Qty. (Base)")));
-          END;
+                STRSUBSTNO(Text000,FromBinContent."Quantity (Base)",-(FromBinContent."Quantity (Base)" + "Qty. (Base)")));
+        END;
       END;
     END;
 
@@ -319,11 +320,7 @@ OBJECT Codeunit 7301 Whse. Jnl.-Register Line
         BinContent."Variant Code" := "Variant Code";
         BinContent."Unit of Measure Code" := "Unit of Measure Code";
         BinContent."Qty. per Unit of Measure" := "Qty. per Unit of Measure";
-        IF WhseIntegrationMgt.IsOpenShopFloorBin("Location Code","Bin Code") THEN BEGIN
-          BinContent.Fixed := TRUE;
-          BinContent."Max. Qty." := Quantity;
-        END ELSE
-          BinContent.Fixed := FALSE;
+        BinContent.Fixed := WhseIntegrationMgt.IsOpenShopFloorBin("Location Code","Bin Code");
         IF NOT Location."Directed Put-away and Pick" THEN BEGIN
           IF WMSMgt.CheckDefaultBin("Item No.","Variant Code","Location Code","Bin Code") THEN BEGIN
             IF Location."Default Bin Selection" = Location."Default Bin Selection"::"Last-Used Bin" THEN BEGIN

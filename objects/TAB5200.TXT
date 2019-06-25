@@ -2,9 +2,9 @@ OBJECT Table 5200 Employee
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -65,8 +65,7 @@ OBJECT Table 5200 Employee
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Name;
-                                                   OnValidate=BEGIN
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   HumanResSetup.GET;
                                                                   NoSeriesMgt.TestManual(HumanResSetup."Employee Nos.");
@@ -74,6 +73,7 @@ OBJECT Table 5200 Employee
                                                                 END;
                                                               END;
 
+                                                   AltSearchField=Search Name;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 2   ;   ;First Name          ;Text30        ;CaptionML=[DAN=Fornavn;
@@ -259,13 +259,15 @@ OBJECT Table 5200 Employee
                                                               ENU=Company E-Mail] }
     { 51  ;   ;Title               ;Text30        ;CaptionML=[DAN=Titel;
                                                               ENU=Title] }
-    { 52  ;   ;Salespers./Purch. Code;Code10      ;TableRelation=Salesperson/Purchaser;
+    { 52  ;   ;Salespers./Purch. Code;Code20      ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælger/indkøberkode;
                                                               ENU=Salespers./Purch. Code] }
     { 53  ;   ;No. Series          ;Code10        ;TableRelation="No. Series";
                                                    CaptionML=[DAN=Nummerserie;
                                                               ENU=No. Series];
                                                    Editable=No }
+    { 150 ;   ;Privacy Blocked     ;Boolean       ;CaptionML=[DAN=Beskyttelse af personlige oplysninger spærret;
+                                                              ENU=Privacy Blocked] }
     { 1100;   ;Cost Center Code    ;Code20        ;TableRelation="Cost Center";
                                                    CaptionML=[DAN=Omkostningsstedskode;
                                                               ENU=Cost Center Code] }
@@ -305,6 +307,8 @@ OBJECT Table 5200 Employee
       EmployeeSalespersonUpdate@1014 : Codeunit 5201;
       DimMgt@1015 : Codeunit 408;
       Text000@1016 : TextConst 'DAN=Vinduet Opsætning af Online Map skal udfyldes, før du kan bruge Online Map.\Se Opsætning af Online Map i Hjælp.;ENU=Before you can use Online Map, you must fill in the Online Map Setup window.\See Setting Up Online Map in Help.';
+      BlockedEmplForJnrlErr@1018 : TextConst '@@@="%1 = employee no.";DAN=Du kan ikke oprette dette bilag, fordi medarbejderen %1 er blokeret på grund af beskyttelse af personlige oplysninger.;ENU=You cannot create this document because employee %1 is blocked due to privacy.';
+      BlockedEmplForJnrlPostingErr@1017 : TextConst '@@@="%1 = employee no.";DAN=Du kan ikke bogføre dette bilag, fordi medarbejderen %1 er blokeret på grund af beskyttelse af personlige oplysninger.;ENU=You cannot post this document because employee %1 is blocked due to privacy.';
 
     PROCEDURE AssistEdit@2(OldEmployee@1000 : Record 5200) : Boolean;
     BEGIN
@@ -335,6 +339,15 @@ OBJECT Table 5200 Employee
       DimMgt.ValidateDimValueCode(FieldNumber,ShortcutDimCode);
       DimMgt.SaveDefaultDim(DATABASE::Employee,"No.",FieldNumber,ShortcutDimCode);
       MODIFY;
+    END;
+
+    PROCEDURE CheckBlockedEmployeeOnJnls@8(IsPosting@1000 : Boolean);
+    BEGIN
+      IF "Privacy Blocked" THEN BEGIN
+        IF IsPosting THEN
+          ERROR(BlockedEmplForJnrlPostingErr,"No.");
+        ERROR(BlockedEmplForJnrlErr,"No.")
+      END;
     END;
 
     PROCEDURE DisplayMap@7();

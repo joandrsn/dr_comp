@@ -2,9 +2,9 @@ OBJECT Table 5996 Standard Service Code
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -29,7 +29,6 @@ OBJECT Table 5996 Standard Service Code
 
     CaptionML=[DAN=Standardservicekode;
                ENU=Standard Service Code];
-    PasteIsValid=No;
     LookupPageID=Page5958;
   }
   FIELDS

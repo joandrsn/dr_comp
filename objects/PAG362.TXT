@@ -2,9 +2,9 @@ OBJECT Page 362 Res. Gr. Availability Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.51418;
   }
   PROPERTIES
   {
@@ -80,7 +80,7 @@ OBJECT Page 362 Res. Gr. Availability Lines
                 SourceExpr=CapacityAfterOrders }
 
     { 10  ;2   ;Field     ;
-                CaptionML=[DAN=Antal i tilbud;
+                CaptionML=[DAN=Allokering af sagstilbud;
                            ENU=Job Quotes Allocation];
                 DecimalPlaces=0:5;
                 SourceExpr=ResGr."Qty. Quoted (Job)" }

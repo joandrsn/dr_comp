@@ -2,9 +2,9 @@ OBJECT Report 5186 Remove Contacts
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -64,7 +64,7 @@ OBJECT Report 5186 Remove Contacts
                OnAfterGetRecord=BEGIN
                                   RecordNo := RecordNo + 1;
                                   IF RecordNo = 1 THEN BEGIN
-                                    OldTime := TIME;
+                                    OldDateTime := CURRENTDATETIME;
                                     CASE MainReportNo OF
                                       REPORT::"Remove Contacts - Reduce":
                                         Window.OPEN(Text000);
@@ -73,14 +73,14 @@ OBJECT Report 5186 Remove Contacts
                                     END;
                                     NoOfRecords := COUNT;
                                   END;
-                                  NewTime := TIME;
-                                  IF (NewTime - OldTime > 100) OR (NewTime < OldTime) THEN BEGIN
+                                  NewDateTime := CURRENTDATETIME;
+                                  IF (NewDateTime - OldDateTime > 100) OR (NewDateTime < OldDateTime) THEN BEGIN
                                     NewProgress := ROUND(RecordNo / NoOfRecords * 100,1);
                                     IF NewProgress <> OldProgress THEN BEGIN
                                       Window.UPDATE(1,NewProgress * 100);
                                       OldProgress := NewProgress;
                                     END;
-                                    OldTime := TIME;
+                                    OldDateTime := CURRENTDATETIME;
                                   END;
                                 END;
 
@@ -304,8 +304,8 @@ OBJECT Report 5186 Remove Contacts
       Window@1014 : Dialog;
       NoOfRecords@1015 : Integer;
       RecordNo@1016 : Integer;
-      OldTime@1017 : Time;
-      NewTime@1018 : Time;
+      OldDateTime@1017 : DateTime;
+      NewDateTime@1018 : DateTime;
       OldProgress@1019 : Integer;
       NewProgress@1020 : Integer;
 

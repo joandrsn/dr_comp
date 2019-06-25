@@ -2,9 +2,9 @@ OBJECT Table 170 Standard Sales Code
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -17,7 +17,6 @@ OBJECT Table 170 Standard Sales Code
 
     CaptionML=[DAN=Standardsalgskode;
                ENU=Standard Sales Code];
-    PasteIsValid=No;
     LookupPageID=Page172;
   }
   FIELDS

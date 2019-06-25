@@ -2,9 +2,9 @@ OBJECT Table 5405 Production Order
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -93,7 +93,6 @@ OBJECT Table 5405 Production Order
                                                                     ENU=Simulated,Planned,Firm Planned,Released,Finished];
                                                    OptionString=Simulated,Planned,Firm Planned,Released,Finished }
     { 2   ;   ;No.                 ;Code20        ;TableRelation="Production Order".No. WHERE (Status=FIELD(Status));
-                                                   AltSearchField=Search Description;
                                                    OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   MfgSetup.GET;
@@ -103,6 +102,7 @@ OBJECT Table 5405 Production Order
                                                               END;
 
                                                    ValidateTableRelation=No;
+                                                   AltSearchField=Search Description;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 3   ;   ;Description         ;Text50        ;OnValidate=BEGIN
@@ -583,6 +583,7 @@ OBJECT Table 5405 Production Order
                                                    CaptionML=[DAN=Fuldt plukket;
                                                               ENU=Completely Picked] }
     { 9000;   ;Assigned User ID    ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
   }
@@ -623,7 +624,6 @@ OBJECT Table 5405 Production Order
       Text006@1016 : TextConst 'DAN=Du kan ikke ændre en færdig produktionsordre.;ENU=A Finished Production Order cannot be modified.';
       Text007@1017 : TextConst 'DAN=%1 %2 %3 kan ikke oprettes, fordi %4 %2 %3 allerede findes.;ENU=%1 %2 %3 cannot be created, because a %4 %2 %3 already exists.';
       ItemTrackingMgt@1020 : Codeunit 6500;
-      CalendarMgt@1025 : Codeunit 99000755;
       HideValidationDialog@1018 : Boolean;
       Text008@1019 : TextConst 'DAN=Der er intet at håndtere.;ENU=Nothing to handle.';
       Text009@1022 : TextConst 'DAN=%1 %2 %3 har varesporing. Vil du slette den alligevel?;ENU=The %1 %2 %3 has item tracking. Do you want to delete it anyway?';
@@ -831,36 +831,29 @@ OBJECT Table 5405 Production Order
       END;
     END;
 
-    LOCAL PROCEDURE AdjustStartEndingDate@1();
+    PROCEDURE AdjustStartEndingDate@1();
+    VAR
+      EarliestLatestProdOrderLine@1000 : Record 5406;
     BEGIN
-      ProdOrderLine.RESET;
-      ProdOrderLine.SETRANGE(Status,Status);
-      ProdOrderLine.SETRANGE("Prod. Order No.","No.");
-
-      IF NOT ProdOrderLine.FIND('-') THEN
+      EarliestLatestProdOrderLine.SETRANGE(Status,Status);
+      EarliestLatestProdOrderLine.SETRANGE("Prod. Order No.","No.");
+      IF EarliestLatestProdOrderLine.ISEMPTY THEN
         EXIT;
 
-      "Starting Date" := CalendarMgt.GetMaxDate;
-      "Starting Time" := 235959T;
-      "Ending Date" := 0D;
-      "Ending Time" := 000000T;
+      EarliestLatestProdOrderLine.SETCURRENTKEY("Starting Date-Time");
+      EarliestLatestProdOrderLine.FINDFIRST;
+      "Starting Date" := EarliestLatestProdOrderLine."Starting Date";
+      "Starting Time" := EarliestLatestProdOrderLine."Starting Time";
 
-      REPEAT
-        IF (ProdOrderLine."Starting Date" < "Starting Date") OR
-           ((ProdOrderLine."Starting Date" = "Starting Date") AND
-            (ProdOrderLine."Starting Time" < "Starting Time"))
-        THEN BEGIN
-          "Starting Time" := ProdOrderLine."Starting Time";
-          "Starting Date" := ProdOrderLine."Starting Date";
-        END;
-        IF (ProdOrderLine."Ending Date" > "Ending Date") OR
-           ((ProdOrderLine."Ending Date" = "Ending Date") AND
-            (ProdOrderLine."Ending Time" > "Ending Time"))
-        THEN BEGIN
-          "Ending Time" := ProdOrderLine."Ending Time";
-          "Ending Date" := ProdOrderLine."Ending Date";
-        END;
-      UNTIL ProdOrderLine.NEXT = 0;
+      EarliestLatestProdOrderLine.SETCURRENTKEY("Ending Date-Time");
+      EarliestLatestProdOrderLine.FINDLAST;
+      "Ending Date" := EarliestLatestProdOrderLine."Ending Date";
+      "Ending Time" := EarliestLatestProdOrderLine."Ending Time";
+
+      EarliestLatestProdOrderLine.SETCURRENTKEY("Due Date");
+      EarliestLatestProdOrderLine.FINDLAST;
+      "Due Date" := EarliestLatestProdOrderLine."Due Date";
+
       UpdateDatetime;
     END;
 

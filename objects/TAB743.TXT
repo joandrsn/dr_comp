@@ -2,9 +2,9 @@ OBJECT Table 743 VAT Report Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-04-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51333;
   }
   PROPERTIES
   {
@@ -21,6 +21,73 @@ OBJECT Table 743 VAT Report Setup
                                                               ENU=No. Series] }
     { 3   ;   ;Modify Submitted Reports;Boolean   ;CaptionML=[DAN=Modificer sendte rapporter;
                                                               ENU=Modify Submitted Reports] }
+    { 4   ;   ;VAT Return No. Series;Code10       ;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Momsangivelsesnr.serie;
+                                                              ENU=VAT Return No. Series] }
+    { 20  ;   ;VAT Return Period No. Series;Code10;TableRelation="No. Series";
+                                                   CaptionML=[DAN=Momsangivelsesnummerserie;
+                                                              ENU=VAT Return Period No. Series] }
+    { 21  ;   ;Report Version      ;Code10        ;TableRelation="VAT Reports Configuration"."VAT Report Version" WHERE (VAT Report Type=CONST(VAT Return));
+                                                   CaptionML=[DAN=Rapportversion;
+                                                              ENU=Report Version] }
+    { 22  ;   ;Period Reminder Time;Integer       ;CaptionML=[DAN=Tidspunkt for periodepåmindelse;
+                                                              ENU=Period Reminder Time];
+                                                   MinValue=0 }
+    { 23  ;   ;Update Period Job Frequency;Option ;OnValidate=VAR
+                                                                VATReportMgt@1000 : Codeunit 737;
+                                                              BEGIN
+                                                                VATReportMgt.CreateAndStartAutoUpdateVATReturnPeriodJob(Rec);
+                                                              END;
+
+                                                   CaptionML=[DAN=Opdater frekvens for periodisk job;
+                                                              ENU=Update Period Job Frequency];
+                                                   OptionCaptionML=[DAN=Aldrig,Dagligt,Ugentligt;
+                                                                    ENU=Never,Daily,Weekly];
+                                                   OptionString=Never,Daily,Weekly }
+    { 24  ;   ;Manual Receive Period CU ID;Integer;TableRelation="CodeUnit Metadata".ID;
+                                                   CaptionML=[DAN=Manuel modtagelsesperiode CU-ID;
+                                                              ENU=Manual Receive Period CU ID] }
+    { 25  ;   ;Manual Receive Period CU Cap;Text250;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Codeunit),
+                                                                                                                Object ID=FIELD(Manual Receive Period CU ID)));
+                                                   CaptionML=[DAN=Manuel modtagelsesperiode CU-billedtekst;
+                                                              ENU=Manual Receive Period CU Cap];
+                                                   Editable=No }
+    { 26  ;   ;Auto Receive Period CU ID;Integer  ;TableRelation="CodeUnit Metadata".ID;
+                                                   OnValidate=VAR
+                                                                VATReportMgt@1000 : Codeunit 737;
+                                                              BEGIN
+                                                                VATReportMgt.CreateAndStartAutoUpdateVATReturnPeriodJob(Rec);
+                                                              END;
+
+                                                   CaptionML=[DAN=Automatisk modtagelsesperiode CU-ID;
+                                                              ENU=Auto Receive Period CU ID] }
+    { 27  ;   ;Auto Receive Period CU Cap;Text250 ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Codeunit),
+                                                                                                                Object ID=FIELD(Auto Receive Period CU ID)));
+                                                   CaptionML=[DAN=Automatisk modtagelsesperiode CU-billedtekst;
+                                                              ENU=Auto Receive Period CU Cap];
+                                                   Editable=No }
+    { 28  ;   ;Receive Submitted Return CU ID;Integer;
+                                                   TableRelation="CodeUnit Metadata".ID;
+                                                   CaptionML=[DAN=Modtag sendt angivelse CU ID;
+                                                              ENU=Receive Submitted Return CU ID] }
+    { 29  ;   ;Receive Submitted Return CUCap;Text250;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Codeunit),
+                                                                                                                Object ID=FIELD(Receive Submitted Return CU ID)));
+                                                   CaptionML=[DAN=Modtag sendt angivelse CU-billedtekst;
+                                                              ENU=Receive Submitted Return CUCap];
+                                                   Editable=No }
+    { 30  ;   ;Period Reminder Calculation;DateFormula;
+                                                   OnValidate=BEGIN
+                                                                IF NOT CheckPositivePeriodReminderCalculation THEN
+                                                                  ERROR(PositivePeriodReminderCalcErr);
+                                                              END;
+
+                                                   CaptionML=[DAN=Beregning af periodepåmindelse;
+                                                              ENU=Period Reminder Calculation] }
   }
   KEYS
   {
@@ -31,6 +98,23 @@ OBJECT Table 743 VAT Report Setup
   }
   CODE
   {
+    VAR
+      PositivePeriodReminderCalcErr@1000 : TextConst 'DAN=Beregningen af periodepåmindelse skal være en positiv formel. F.eks, skal "1M" bruges i stedet for "-1M".;ENU=The Period Reminder Calculation should be a positive formula. For example, "1M" should be used instead of "-1M".';
+
+    PROCEDURE IsPeriodReminderCalculation@1() : Boolean;
+    VAR
+      DummyDateFormula@1000 : DateFormula;
+    BEGIN
+      EXIT("Period Reminder Calculation" <> DummyDateFormula);
+    END;
+
+    LOCAL PROCEDURE CheckPositivePeriodReminderCalculation@2() : Boolean;
+    BEGIN
+      IF NOT IsPeriodReminderCalculation THEN
+        EXIT(TRUE);
+
+      EXIT(CALCDATE("Period Reminder Calculation",WORKDATE) - WORKDATE >= 0);
+    END;
 
     BEGIN
     END.

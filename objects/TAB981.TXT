@@ -2,9 +2,9 @@ OBJECT Table 981 Payment Registration Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,24 +13,32 @@ OBJECT Table 981 Payment Registration Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Ledger Entry No.    ;Integer       ;CaptionML=[DAN=Posteringsløbenr.;
+    { 1   ;   ;Ledger Entry No.    ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Posteringsløbenr.;
                                                               ENU=Ledger Entry No.] }
-    { 2   ;   ;Source No.          ;Code20        ;CaptionML=[DAN=Kildenr.;
+    { 2   ;   ;Source No.          ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildenr.;
                                                               ENU=Source No.] }
-    { 3   ;   ;Document Type       ;Option        ;CaptionML=[DAN=Bilagstype;
+    { 3   ;   ;Document Type       ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bilagstype;
                                                               ENU=Document Type];
                                                    OptionCaptionML=[DAN=" ,Betaling,Faktura,Kreditnota,Rentenota,Rykker,Refusion";
                                                                     ENU=" ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund"];
                                                    OptionString=[ ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund] }
-    { 4   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+    { 4   ;   ;Document No.        ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bilagsnr.;
                                                               ENU=Document No.] }
-    { 5   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+    { 5   ;   ;Description         ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
-    { 6   ;   ;Due Date            ;Date          ;CaptionML=[DAN=Forfaldsdato;
+    { 6   ;   ;Due Date            ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Forfaldsdato;
                                                               ENU=Due Date] }
-    { 7   ;   ;Name                ;Text50        ;CaptionML=[DAN=Navn;
+    { 7   ;   ;Name                ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Navn;
                                                               ENU=Name] }
-    { 8   ;   ;Remaining Amount    ;Decimal       ;CaptionML=[DAN=Restbeløb;
+    { 8   ;   ;Remaining Amount    ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Restbeløb;
                                                               ENU=Remaining Amount] }
     { 9   ;   ;Payment Made        ;Boolean       ;OnValidate=BEGIN
                                                                 IF NOT "Payment Made" THEN BEGIN
@@ -46,6 +54,7 @@ OBJECT Table 981 Payment Registration Buffer
                                                                 UpdateRemainingAmount;
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Betaling foretaget;
                                                               ENU=Payment Made] }
     { 10  ;   ;Date Received       ;Date          ;OnValidate=BEGIN
@@ -53,6 +62,7 @@ OBJECT Table 981 Payment Registration Buffer
                                                                   VALIDATE("Payment Made",TRUE);
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Dato for modtaget;
                                                               ENU=Date Received] }
     { 11  ;   ;Amount Received     ;Decimal       ;OnValidate=BEGIN
@@ -61,17 +71,21 @@ OBJECT Table 981 Payment Registration Buffer
                                                                 UpdateRemainingAmount;
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Beløb modtaget;
                                                               ENU=Amount Received] }
-    { 12  ;   ;Original Remaining Amount;Decimal  ;CaptionML=[DAN=Oprindeligt resterende beløb;
+    { 12  ;   ;Original Remaining Amount;Decimal  ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Oprindeligt resterende beløb;
                                                               ENU=Original Remaining Amount] }
-    { 13  ;   ;Rem. Amt. after Discount;Decimal   ;CaptionML=[DAN=Rest. bel. efter rabat;
+    { 13  ;   ;Rem. Amt. after Discount;Decimal   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Rest. bel. efter rabat;
                                                               ENU=Rem. Amt. after Discount] }
     { 14  ;   ;Pmt. Discount Date  ;Date          ;OnValidate=BEGIN
                                                                 IF "Pmt. Discount Date" <> 0D THEN
                                                                   VALIDATE("Payment Made",TRUE);
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Kont.rabatdato;
                                                               ENU=Pmt. Discount Date] }
   }

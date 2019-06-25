@@ -2,9 +2,9 @@ OBJECT Table 134 Posted Docs. With No Inc. Buf.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,24 +13,31 @@ OBJECT Table 134 Posted Docs. With No Inc. Buf.
   }
   FIELDS
   {
-    { 1   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+    { 1   ;   ;Line No.            ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Linjenr.;
                                                               ENU=Line No.] }
-    { 2   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+    { 2   ;   ;Document No.        ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bilagsnr.;
                                                               ENU=Document No.] }
-    { 3   ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+    { 3   ;   ;Posting Date        ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogføringsdato;
                                                               ENU=Posting Date] }
-    { 4   ;   ;First Posting Description;Text50   ;CaptionML=[DAN=Beskrivelse af første bogføring;
+    { 4   ;   ;First Posting Description;Text50   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beskrivelse af første bogføring;
                                                               ENU=First Posting Description] }
     { 5   ;   ;Incoming Document No.;Integer      ;FieldClass=FlowField;
                                                    CalcFormula=Lookup("Incoming Document"."Entry No." WHERE (Document No.=FIELD(Document No.),
                                                                                                              Posting Date=FIELD(Posting Date)));
                                                    CaptionML=[DAN=Indgående bilagsnr.;
                                                               ENU=Incoming Document No.] }
-    { 8   ;   ;External Document No.;Code35       ;CaptionML=[DAN=Eksternt bilagsnr.;
+    { 8   ;   ;External Document No.;Code35       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Eksternt bilagsnr.;
                                                               ENU=External Document No.] }
-    { 9   ;   ;Debit Amount        ;Decimal       ;CaptionML=[DAN=Debetbeløb;
+    { 9   ;   ;Debit Amount        ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Debetbeløb;
                                                               ENU=Debit Amount] }
-    { 10  ;   ;Credit Amount       ;Decimal       ;CaptionML=[DAN=Kreditbeløb;
+    { 10  ;   ;Credit Amount       ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kreditbeløb;
                                                               ENU=Credit Amount] }
     { 11  ;   ;G/L Account No. Filter;Code20      ;FieldClass=FlowFilter;
                                                    CaptionML=[DAN=Filter for finanskontonr.;

@@ -2,9 +2,9 @@ OBJECT Table 246 Requisition Line
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -147,15 +147,7 @@ OBJECT Table 246 Requisition Line
                                                                       "Accept Action Message" := TRUE;
                                                                       "Product Group Code" := Item."Product Group Code";
                                                                       GetDirectCost(FIELDNO("No."));
-                                                                      IF ("Location Code" <> '') AND ("No." <> '') THEN BEGIN
-                                                                        IF ("Bin Code" = '') AND ("Ref. Order Type" = "Ref. Order Type"::"Prod. Order") THEN
-                                                                          "Bin Code" := WMSManagement.GetLastOperationFromBinCode("Routing No.","Routing Version Code","Location Code",FALSE,0);
-                                                                        GetLocation("Location Code");
-                                                                        IF ("Bin Code" = '') AND ("Ref. Order Type" = "Ref. Order Type"::"Prod. Order") THEN
-                                                                          "Bin Code" := Location.GetBinCode(FALSE,0);
-                                                                        IF ("Bin Code" = '') AND Location."Bin Mandatory" AND NOT Location."Directed Put-away and Pick" THEN
-                                                                          WMSManagement.GetDefaultBin("No.","Variant Code","Location Code","Bin Code")
-                                                                      END;
+                                                                      SetFromBinCode;
                                                                     END;
                                                                 END;
 
@@ -211,6 +203,13 @@ OBJECT Table 246 Requisition Line
                                                                 CheckActionMessageNew;
                                                                 IF "Vendor No." <> '' THEN
                                                                   IF Vend.GET("Vendor No.") THEN BEGIN
+                                                                    IF Vend."Privacy Blocked" THEN BEGIN
+                                                                      IF PlanningResiliency THEN
+                                                                        TempPlanningErrorLog.SetError(
+                                                                          STRSUBSTNO(Text031,Vend.TABLECAPTION,Vend."No."),
+                                                                          DATABASE::Vendor,Vend.GETPOSITION);
+                                                                      Vend.VendPrivacyBlockedErrorMessage(Vend,FALSE);
+                                                                    END;
                                                                     IF Vend.Blocked = Vend.Blocked::All THEN BEGIN
                                                                       IF PlanningResiliency THEN
                                                                         TempPlanningErrorLog.SetError(
@@ -240,8 +239,9 @@ OBJECT Table 246 Requisition Line
                                                                     "Vendor Item No." := ItemVend."Vendor Item No.";
                                                                     UpdateOrderReceiptDate(ItemVend."Lead Time Calculation");
                                                                   END ELSE BEGIN
-                                                                    IF "Vendor No." = Item."Vendor No." THEN
-                                                                      "Vendor Item No." := Item."Vendor Item No."
+                                                                    GetPlanningParameters.AtSKU(SKU,"No.","Variant Code","Location Code");
+                                                                    IF "Vendor No." = SKU."Vendor No." THEN
+                                                                      "Vendor Item No." := SKU."Vendor Item No."
                                                                     ELSE
                                                                       "Vendor Item No." := '';
                                                                   END;
@@ -337,7 +337,7 @@ OBJECT Table 246 Requisition Line
                                                                     SKU."Replenishment System" := SKU."Replenishment System"::"Prod. Order";
                                                                   VALIDATE("Replenishment System",SKU."Replenishment System");
                                                                   IF "Location Code" <> xRec."Location Code" THEN BEGIN
-                                                                    IF ("Location Code" <> '') AND ("No." <> '') THEN BEGIN
+                                                                    IF ("Location Code" <> '') AND ("No." <> '') AND NOT IsDropShipment THEN BEGIN
                                                                       GetLocation("Location Code");
                                                                       IF Location."Bin Mandatory" AND NOT Location."Directed Put-away and Pick" THEN
                                                                         WMSManagement.GetDefaultBin("No.","Variant Code","Location Code","Bin Code");
@@ -564,7 +564,6 @@ OBJECT Table 246 Requisition Line
                                                                   IF "Unit of Measure Code" <> '' THEN BEGIN
                                                                     "Qty. per Unit of Measure" := UOMMgt.GetQtyPerUnitOfMeasure(Item,"Unit of Measure Code");
                                                                     "Unit Cost" := ROUND(Item."Unit Cost" * "Qty. per Unit of Measure",0.00001);
-                                                                    "Overhead Rate" := ROUND(Item."Overhead Rate" * "Qty. per Unit of Measure",0.00001);
                                                                   END ELSE
                                                                     "Qty. per Unit of Measure" := 1;
                                                                 END ELSE
@@ -603,7 +602,7 @@ OBJECT Table 246 Requisition Line
                                                               ENU=Reserved Qty. (Base)];
                                                    DecimalPlaces=0:5;
                                                    Editable=No }
-    { 5520;   ;Demand Type         ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 5520;   ;Demand Type         ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    CaptionML=[DAN=Behovstype;
                                                               ENU=Demand Type];
                                                    Editable=No }
@@ -720,6 +719,7 @@ OBJECT Table 246 Requisition Line
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    Editable=No }
@@ -773,6 +773,8 @@ OBJECT Table 246 Requisition Line
                                                                   RtngDate := "Starting Date"
                                                                 ELSE
                                                                   RtngDate := "Ending Date";
+                                                                IF RtngDate = 0D THEN
+                                                                  RtngDate := "Order Date";
 
                                                                 VALIDATE("Routing Version Code",VersionMgt.GetRtngVersion("Routing No.",RtngDate,TRUE));
                                                                 IF "Routing Version Code" = '' THEN BEGIN
@@ -1122,17 +1124,6 @@ OBJECT Table 246 Requisition Line
                                                                       VALIDATE("Vendor No.",'');
 
                                                                       IF NOT Subcontracting THEN BEGIN
-                                                                        IF PlanningResiliency AND
-                                                                           ProdBOMHeader.GET(Item."Production BOM No.") AND
-                                                                           (ProdBOMHeader.Status <> ProdBOMHeader.Status::Certified)
-                                                                        THEN BEGIN
-                                                                          TempPlanningErrorLog.SetError(
-                                                                            STRSUBSTNO(
-                                                                              Text033,ProdBOMHeader.TABLECAPTION,
-                                                                              ProdBOMHeader.FIELDCAPTION("No."),ProdBOMHeader."No."),
-                                                                            DATABASE::"Production BOM Header",ProdBOMHeader.GETPOSITION);
-                                                                          ProdBOMHeader.TESTFIELD(Status,ProdBOMHeader.Status::Certified);
-                                                                        END;
                                                                         VALIDATE("Production BOM No.",Item."Production BOM No.");
                                                                         VALIDATE("Routing No.",Item."Routing No.");
                                                                       END ELSE BEGIN
@@ -1555,10 +1546,10 @@ OBJECT Table 246 Requisition Line
       EXIT(PAGE.RUNMODAL(0,Location) = ACTION::LookupOK);
     END;
 
-    LOCAL PROCEDURE UpdateDescription@8();
+    PROCEDURE UpdateDescription@8();
     VAR
-      ItemVend@1000 : Record 99;
       ItemCrossRef@1001 : Record 5717;
+      SalesLine@1000 : Record 37;
     BEGIN
       IF (Type <> Type::Item) OR ("No." = '') THEN
         EXIT;
@@ -1571,28 +1562,32 @@ OBJECT Table 246 Requisition Line
         Description := ItemVariant.Description;
         "Description 2" := ItemVariant."Description 2";
       END;
-      IF "Vendor No." <> '' THEN BEGIN
-        Vend.GET("Vendor No.");
-        IF Vend."Language Code" <> '' THEN
-          IF ItemTranslation.GET("No.","Variant Code",Vend."Language Code") THEN BEGIN
-            Description := ItemTranslation.Description;
-            "Description 2" := ItemTranslation."Description 2";
-          END;
+
+      IF SalesLine.GET(SalesLine."Document Type"::Order,"Sales Order No.","Sales Order Line No.") THEN BEGIN
+        Description := SalesLine.Description;
+        "Description 2" := SalesLine."Description 2";
       END;
+
+      IF "Vendor No." <> '' THEN
+        IF ItemCrossRef.GetItemDescription(
+             Description,"No.","Variant Code","Unit of Measure Code",ItemCrossRef."Cross-Reference Type"::Vendor,"Vendor No.")
+        THEN
+          "Description 2" := ''
+        ELSE BEGIN
+          Vend.GET("Vendor No.");
+          IF Vend."Language Code" <> '' THEN
+            IF ItemTranslation.GET("No.","Variant Code",Vend."Language Code") THEN BEGIN
+              Description := ItemTranslation.Description;
+              "Description 2" := ItemTranslation."Description 2";
+            END;
+        END;
 
       IF (CurrFieldNo <> 0) AND (CurrFieldNo <> FIELDNO("Location Code")) AND
          ("Planning Line Origin" = "Planning Line Origin"::" ")
       THEN
-        IF "Vendor No." <> '' THEN BEGIN
-          "Location Code" := Vend."Location Code";
-          IF ItemVend.GET("Vendor No.","No.","Variant Code") THEN
-            IF ItemCrossRef.GET(
-                 "No.","Variant Code","Unit of Measure Code",
-                 ItemCrossRef."Cross-Reference Type"::Vendor,
-                 "Vendor No.",ItemVend."Vendor Item No.")
-            THEN
-              Description := ItemCrossRef.Description;
-        END ELSE
+        IF ("Vendor No." <> '') AND NOT IsDropShipment THEN
+          "Location Code" := Vend."Location Code"
+        ELSE
           "Location Code" := '';
     END;
 
@@ -1875,6 +1870,15 @@ OBJECT Table 246 Requisition Line
     BEGIN
       GetActionMsgReport.SetTemplAndWorksheet("Worksheet Template Name","Journal Batch Name");
       GetActionMsgReport.RUNMODAL;
+    END;
+
+    PROCEDURE SetRefFilter@62(RefOrderType@1000 : Option;RefOrderStatus@1001 : Option;RefOrderNo@1002 : Code[20];RefLineNo@1003 : Integer);
+    BEGIN
+      SETCURRENTKEY("Ref. Order Type","Ref. Order Status","Ref. Order No.","Ref. Line No.");
+      SETRANGE("Ref. Order Type",RefOrderType);
+      SETRANGE("Ref. Order Status",RefOrderStatus);
+      SETRANGE("Ref. Order No.",RefOrderNo);
+      SETRANGE("Ref. Line No.",RefLineNo);
     END;
 
     PROCEDURE TransferFromProdOrderLine@18(VAR ProdOrderLine@1000 : Record 5406);
@@ -2348,12 +2352,6 @@ OBJECT Table 246 Requisition Line
       "Demand Order No." := UnplannedDemand."Demand Order No.";
       "Demand Line No." := UnplannedDemand."Demand Line No.";
       "Demand Ref. No." := UnplannedDemand."Demand Ref. No.";
-      IF UnplannedDemand."Special Order" THEN BEGIN
-        "Sales Order No." := UnplannedDemand."Demand Order No.";
-        "Sales Order Line No." := UnplannedDemand."Demand Line No.";
-        "Sell-to Customer No." := UnplannedDemand."Sell-to Customer No.";
-        "Purchasing Code" := UnplannedDemand."Purchasing Code";
-      END;
 
       Status := UnplannedDemand.Status;
 
@@ -2663,9 +2661,43 @@ OBJECT Table 246 Requisition Line
       EXIT(CalcBaseQty("Original Quantity"));
     END;
 
+    LOCAL PROCEDURE SetFromBinCode@61();
+    BEGIN
+      IF ("Location Code" <> '') AND ("No." <> '') THEN BEGIN
+        GetLocation("Location Code");
+        CASE "Ref. Order Type" OF
+          "Ref. Order Type"::"Prod. Order":
+            BEGIN
+              IF "Bin Code" = '' THEN
+                "Bin Code" := WMSManagement.GetLastOperationFromBinCode("Routing No.","Routing Version Code","Location Code",FALSE,0);
+              IF "Bin Code" = '' THEN
+                "Bin Code" := Location."From-Production Bin Code";
+            END;
+          "Ref. Order Type"::Assembly:
+            IF "Bin Code" = '' THEN
+              "Bin Code" := Location."From-Assembly Bin Code";
+        END;
+        IF ("Bin Code" = '') AND Location."Bin Mandatory" AND NOT Location."Directed Put-away and Pick" THEN
+          WMSManagement.GetDefaultBin("No.","Variant Code","Location Code","Bin Code")
+      END;
+    END;
+
     PROCEDURE SetDropShipment@58(NewDropShipment@1000 : Boolean);
     BEGIN
       SourceDropShipment := NewDropShipment;
+    END;
+
+    LOCAL PROCEDURE IsDropShipment@59() : Boolean;
+    VAR
+      SalesLine@1000 : Record 37;
+    BEGIN
+      IF SourceDropShipment THEN
+        EXIT(TRUE);
+
+      IF "Replenishment System" = "Replenishment System"::Purchase THEN
+        IF SalesLine.GET(SalesLine."Document Type"::Order,"Sales Order No.","Sales Order Line No.") THEN
+          EXIT(SalesLine."Drop Shipment");
+      EXIT(FALSE);
     END;
 
     LOCAL PROCEDURE GetWorkCenter@71();

@@ -2,9 +2,9 @@ OBJECT Codeunit 5790 Available to Promise
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -15,6 +15,8 @@ OBJECT Codeunit 5790 Available to Promise
   CODE
   {
     VAR
+      ChangedSalesLine@1001 : Record 37;
+      ChangedAssemblyLine@1002 : Record 901;
       OldRecordExists@1000 : Boolean;
       ReqShipDate@1006 : Date;
 
@@ -99,8 +101,6 @@ OBJECT Codeunit 5790 Available to Promise
         CALCFIELDS(
           "Scheduled Receipt (Qty.)",
           "Planned Order Receipt (Qty.)",
-          "Planning Worksheet (Qty.)",
-          "Purch. Req. Receipt (Qty.)",
           "Qty. on Purch. Order",
           "Trans. Ord. Receipt (Qty.)",
           "Qty. in Transit",
@@ -110,12 +110,10 @@ OBJECT Codeunit 5790 Available to Promise
         EXIT(
           "Scheduled Receipt (Qty.)" +
           "Planned Order Receipt (Qty.)" +
-          "Purch. Req. Receipt (Qty.)" +
           "Qty. on Purch. Order" +
           "Trans. Ord. Receipt (Qty.)" +
           "Qty. in Transit" +
           "Qty. on Assembly Order" +
-          "Planning Worksheet (Qty.)" +
           "Qty. on Sales Return");
       END;
     END;
@@ -124,14 +122,12 @@ OBJECT Codeunit 5790 Available to Promise
     BEGIN
       WITH Item DO BEGIN
         CALCFIELDS("Reserved Qty. on Prod. Order",
-          "Res. Qty. on Req. Line",
           "Reserved Qty. on Purch. Orders",
           "Res. Qty. on Inbound Transfer",
           "Res. Qty. on Assembly Order",
           "Res. Qty. on Sales Returns");
 
         EXIT("Reserved Qty. on Prod. Order" +
-          "Res. Qty. on Req. Line" +
           "Reserved Qty. on Purch. Orders" +
           "Res. Qty. on Inbound Transfer" +
           "Res. Qty. on Assembly Order" +
@@ -388,6 +384,16 @@ OBJECT Codeunit 5790 Available to Promise
       ReqShipDate := OrderPromisingLine."Requested Shipment Date";
     END;
 
+    PROCEDURE SetChangedSalesLine@27(SalesLine@1000 : Record 37);
+    BEGIN
+      ChangedSalesLine := SalesLine;
+    END;
+
+    PROCEDURE SetChangedAsmLine@20(AssemblyLine@1000 : Record 901);
+    BEGIN
+      ChangedAssemblyLine := AssemblyLine;
+    END;
+
     LOCAL PROCEDURE CalcReqShipDate@10(SalesLine@1000 : Record 37) : Date;
     BEGIN
       IF SalesLine."Requested Delivery Date" = 0D THEN
@@ -489,7 +495,9 @@ OBJECT Codeunit 5790 Available to Promise
       WITH SalesLine DO BEGIN
         IF FindLinesWithItemToPlan(Item,"Document Type"::Order) THEN
           REPEAT
-            IF (ReqShipDate = 0D) OR (CalcReqShipDate(SalesLine) <= ReqShipDate) THEN BEGIN
+            IF NOT IsSalesLineChanged(SalesLine) AND
+               ((ReqShipDate = 0D) OR (CalcReqShipDate(SalesLine) <= ReqShipDate))
+            THEN BEGIN
               CALCFIELDS("Reserved Qty. (Base)");
               UpdateGrossRequirement(AvailabilityAtDate,"Shipment Date","Outstanding Qty. (Base)" - "Reserved Qty. (Base)")
             END
@@ -558,9 +566,26 @@ OBJECT Codeunit 5790 Available to Promise
       WITH AsmLine DO
         IF FindLinesWithItemToPlan(Item,"Document Type"::Order) THEN
           REPEAT
-            CALCFIELDS("Reserved Qty. (Base)");
-            UpdateGrossRequirement(AvailabilityAtDate,"Due Date","Remaining Quantity (Base)" - "Reserved Qty. (Base)");
+            IF NOT IsAsmLineChanged(AsmLine) THEN BEGIN
+              CALCFIELDS("Reserved Qty. (Base)");
+              UpdateGrossRequirement(AvailabilityAtDate,"Due Date","Remaining Quantity (Base)" - "Reserved Qty. (Base)");
+            END;
           UNTIL NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE IsSalesLineChanged@39(SalesLine@1000 : Record 37) : Boolean;
+    BEGIN
+      EXIT((ChangedSalesLine."Document Type" = SalesLine."Document Type") AND
+        (ChangedSalesLine."Document No." = SalesLine."Document No.") AND
+        (ChangedSalesLine."Line No." = SalesLine."Line No."));
+    END;
+
+    LOCAL PROCEDURE IsAsmLineChanged@36(AssemblyLine@1000 : Record 901) : Boolean;
+    BEGIN
+      EXIT(
+        (ChangedAssemblyLine."Document Type" = AssemblyLine."Document Type") AND
+        (ChangedAssemblyLine."Document No." = AssemblyLine."Document No.") AND
+        (ChangedAssemblyLine."Line No." = AssemblyLine."Line No."));
     END;
 
     BEGIN

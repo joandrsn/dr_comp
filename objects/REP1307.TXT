@@ -2,9 +2,9 @@ OBJECT Report 1307 Mini Sales - Credit Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -8800,8 +8800,8 @@ OBJECT Report 1307 Mini Sales - Credit Memo
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=1,false,true)</Hidden>
                   </Visibility>
@@ -8841,9 +8841,8 @@ OBJECT Report 1307 Mini Sales - Credit Memo
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Left>0.4cm</Left>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=3,false,true)</Hidden>
                   </Visibility>
@@ -8885,8 +8884,8 @@ OBJECT Report 1307 Mini Sales - Credit Memo
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=2,false,true)</Hidden>
                   </Visibility>

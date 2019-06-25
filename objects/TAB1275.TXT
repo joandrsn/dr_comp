@@ -2,9 +2,9 @@ OBJECT Table 1275 Doc. Exch. Service Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -55,10 +55,12 @@ OBJECT Table 1275 Doc. Exch. Service Setup
     { 10  ;   ;Token Secret        ;GUID          ;CaptionML=[DAN=Tokenhemmelighed;
                                                               ENU=Token Secret];
                                                    Editable=No }
-    { 11  ;   ;Doc. Exch. Tenant ID;GUID          ;CaptionML=[DAN=Lejer-id for dok.udv.;
+    { 11  ;   ;Doc. Exch. Tenant ID;GUID          ;DataClassification=OrganizationIdentifiableInformation;
+                                                   CaptionML=[DAN=Lejer-id for dok.udv.;
                                                               ENU=Doc. Exch. Tenant ID];
                                                    Editable=No }
-    { 12  ;   ;User Agent          ;Text30        ;CaptionML=[DAN=Brugeragent;
+    { 12  ;   ;User Agent          ;Text30        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Brugeragent;
                                                               ENU=User Agent];
                                                    NotBlank=Yes }
     { 20  ;   ;Enabled             ;Boolean       ;OnValidate=BEGIN

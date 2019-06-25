@@ -2,9 +2,9 @@ OBJECT Report 1305 Mini Sales - Order Conf.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -118,7 +118,10 @@ OBJECT Report 1305 Mini Sales - Order Conf.
                                     IF ShipToAddr[i] <> CustAddr[i] THEN
                                       ShowShippingAddr := TRUE;
 
-                                  IF NOT CurrReport.PREVIEW AND ArchiveDocument THEN
+                                  IF NOT CurrReport.PREVIEW AND
+                                     (ShowRequestPage AND ArchiveDocument OR
+                                      NOT ShowRequestPage AND SalesSetup."Archive Quotes and Orders")
+                                  THEN
                                     ArchiveManagement.StoreSalesDocument(Header,LogInteraction);
 
                                   IF LogInteraction AND NOT CurrReport.PREVIEW THEN BEGIN
@@ -878,6 +881,7 @@ OBJECT Report 1305 Mini Sales - Order Conf.
       OnOpenPage=BEGIN
                    InitLogInteraction;
                    LogInteractionEnable := LogInteraction;
+                   ShowRequestPage := TRUE;
                  END;
 
     }
@@ -1007,6 +1011,7 @@ OBJECT Report 1305 Mini Sales - Order Conf.
       TotalVATAmountLCY@1047 : Decimal;
       PrevLineAmount@1033 : Decimal;
       NoFilterSetErr@1054 : TextConst 'DAN=Du skal angive et eller flere filtre for at undgå at udskrive alle dokumenter ved et uheld.;ENU=You must specify one or more filters to avoid accidently printing all documents.';
+      ShowRequestPage@1055 : Boolean;
 
     LOCAL PROCEDURE InitLogInteraction@1();
     BEGIN
@@ -8632,8 +8637,8 @@ OBJECT Report 1305 Mini Sales - Order Conf.
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=1,false,true)</Hidden>
                   </Visibility>
@@ -8673,9 +8678,8 @@ OBJECT Report 1305 Mini Sales - Order Conf.
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Left>0.4cm</Left>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=3,false,true)</Hidden>
                   </Visibility>
@@ -8717,8 +8721,8 @@ OBJECT Report 1305 Mini Sales - Order Conf.
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=2,false,true)</Hidden>
                   </Visibility>

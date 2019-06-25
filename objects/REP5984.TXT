@@ -2,9 +2,9 @@ OBJECT Report 5984 Contract Invoicing
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -58,7 +58,6 @@ OBJECT Report 5984 Contract Invoicing
                OnAfterGetRecord=BEGIN
                                   IF "Starting Date" = 0D THEN
                                     CurrReport.SKIP;
-                                  AccumulatedAmount := 0;
                                   InvoiceSum := 0;
                                   Indicator := 1;
                                   CALCFIELDS(Name);
@@ -242,7 +241,6 @@ OBJECT Report 5984 Contract Invoicing
       ServLedgEntryTEMP@1102 : TEMPORARY Record 5907;
       EntryNo@1103 : Integer;
       DateSep@1106 : Text[10];
-      AccumulatedAmount@1107 : Decimal;
       InvoiceSum@1108 : Decimal;
       Indicator@1102601000 : Integer;
       ContractInvoicingTestCaptionLbl@4304 : TextConst 'DAN=Kontraktfakturering - kontrol;ENU=Contract Invoicing - Test';
@@ -274,15 +272,7 @@ OBJECT Report 5984 Contract Invoicing
       ServLedgEntryTEMP.DELETEALL;
       DateFormula := ServContractMgt.GetInvoicePeriodText(ServContrHeader."Invoice Period");
       EntryNo := 0;
-      IF DATE2DMY(ServContrHeader."Starting Date",1) > 1 THEN BEGIN
-        IF ServContrHeader."Expiration Date" <> 0D THEN
-          InvoiceTo := FirstDate(CALCDATE('<CM>',ServContrHeader."Starting Date"),ServContrHeader."Expiration Date")
-        ELSE
-          InvoiceTo := CALCDATE('<CM>',ServContrHeader."Starting Date");
-        InsertServLedgEntry(ServContrHeader."Starting Date",InvoiceTo);
-        InvoiceFrom := CALCDATE('<1D>',InvoiceTo);
-      END ELSE
-        InvoiceFrom := ServContrHeader."Starting Date";
+      InvoiceFrom := ServContrHeader."Next Invoice Date";
       InvoiceTo := CALCDATE(DateFormula,InvoiceFrom);
       InvoiceTo := CALCDATE('<-CM-1D>',InvoiceTo);
       IF ServContrHeader."Expiration Date" <> 0D THEN
@@ -317,16 +307,7 @@ OBJECT Report 5984 Contract Invoicing
       ServLedgEntryTEMP."Entry No." := EntryNo;
       ServLedgEntryTEMP."Posting Date" := DateFrom;
       ServLedgEntryTEMP."Contract Invoice Period" := FORMAT(DateFrom) + DateSep + FORMAT(DateTo);
-      IF DateTo = "Service Contract Header"."Expiration Date" THEN BEGIN
-        IF ServContractMgt.YearContract("Service Contract Header"."Contract Type","Service Contract Header"."Contract No.")
-        THEN
-          ServLedgEntryTEMP.Amount := "Service Contract Header"."Annual Amount" - AccumulatedAmount
-        ELSE
-          ServLedgEntryTEMP.Amount := CalcContrAmt("Service Contract Header",DateFrom,DateTo);
-      END ELSE BEGIN
-        ServLedgEntryTEMP.Amount := CalcContrAmt("Service Contract Header",DateFrom,DateTo);
-        AccumulatedAmount := AccumulatedAmount + ServLedgEntryTEMP.Amount;
-      END;
+      ServLedgEntryTEMP.Amount := CalcContrAmt("Service Contract Header",DateFrom,DateTo);
       IF DateFrom >= "Service Contract Header"."Next Invoice Date" THEN
         InvoiceSum := InvoiceSum + ServLedgEntryTEMP.Amount;
       ServLedgEntryTEMP.INSERT;
@@ -2204,6 +2185,7 @@ OBJECT Report 5984 Contract Invoicing
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

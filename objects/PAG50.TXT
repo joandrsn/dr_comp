@@ -2,9 +2,9 @@ OBJECT Page 50 Purchase Order
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974,NAVDK9.00.00.44974;
+    Version List=NAVW19.00.00.50868,NAVDK9.00.00.50868;
   }
   PROPERTIES
   {
@@ -45,6 +45,8 @@ OBJECT Page 50 Purchase Order
 
     OnAfterGetCurrRecord=BEGIN
                            CurrPage.IncomingDocAttachFactBox.PAGE.LoadDataFromRecord(Rec);
+                           CurrPage.ApprovalFactBox.PAGE.RefreshPage(RECORDID);
+
                            ShowWorkflowStatus := CurrPage.WorkflowStatus.PAGE.SetFilterOnWorkflowRecord(RECORDID);
                          END;
 
@@ -57,6 +59,7 @@ OBJECT Page 50 Purchase Order
                                  ENU=O&rder];
                       Image=Order }
       { 129     ;2   ;Action    ;
+                      Name=Dimensions;
                       AccessByPermission=TableData 348=R;
                       ShortCutKey=Shift+Ctrl+D;
                       CaptionML=[DAN=Dimensioner;
@@ -132,7 +135,7 @@ OBJECT Page 50 Purchase Order
                       PromotedIsBig=No;
                       Image=Invoice }
       { 205     ;2   ;Action    ;
-                      Name=PostedrepaymentInvoices;
+                      Name=PostedPrepaymentInvoices;
                       CaptionML=[DAN=For&udbetalingsfakturaer;
                                  ENU=Prepa&yment Invoices];
                       RunObject=Page 146;
@@ -140,6 +143,7 @@ OBJECT Page 50 Purchase Order
                       RunPageLink=Prepayment Order No.=FIELD(No.);
                       Image=PrepaymentInvoice }
       { 206     ;2   ;Action    ;
+                      Name=PostedPrepaymentCrMemos;
                       CaptionML=[DAN=Forudbetalingskredi&tnotaer;
                                  ENU=Prepayment Credi&t Memos];
                       RunObject=Page 147;
@@ -174,6 +178,7 @@ OBJECT Page 50 Purchase Order
                                  ENU=Dr&op Shipment];
                       Image=Delivery }
       { 226     ;3   ;Action    ;
+                      Name=Warehouse_GetSalesOrder;
                       CaptionML=[DAN=Hent &salgsordre;
                                  ENU=Get &Sales Order];
                       RunObject=Codeunit 76;
@@ -249,14 +254,16 @@ OBJECT Page 50 Purchase Order
                       Name=Comment;
                       CaptionML=[DAN=Bemærkninger;
                                  ENU=Comments];
-                      RunObject=Page 660;
-                      RunPageLink=Table ID=CONST(38),
-                                  Document Type=FIELD(Document Type),
-                                  Document No.=FIELD(No.);
                       Promoted=Yes;
                       Visible=OpenApprovalEntriesExistForCurrUser;
                       Image=ViewComments;
-                      PromotedCategory=Category4 }
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1000 : Codeunit 1535;
+                               BEGIN
+                                 ApprovalsMgmt.GetApprovalComment(Rec);
+                               END;
+                                }
       { 13      ;1   ;ActionGroup;
                       CaptionML=[DAN=Frigiv;
                                  ENU=Release];
@@ -349,6 +356,7 @@ OBJECT Page 50 Purchase Order
                                  ENU=Dr&op Shipment];
                       Image=Delivery }
       { 184     ;3   ;Action    ;
+                      Name=Functions_GetSalesOrder;
                       CaptionML=[DAN=Hent &salgsordre;
                                  ENU=Get &Sales Order];
                       RunObject=Codeunit 76;
@@ -731,7 +739,11 @@ OBJECT Page 50 Purchase Order
                 Importance=Additional }
 
     { 12  ;2   ;Field     ;
-                SourceExpr="Posting Date" }
+                SourceExpr="Posting Date";
+                OnValidate=BEGIN
+                             SaveInvoiceDiscountAmount;
+                           END;
+                            }
 
     { 14  ;2   ;Field     ;
                 SourceExpr="Order Date";
@@ -957,7 +969,7 @@ OBJECT Page 50 Purchase Order
                                  ChangeExchangeRate.SetParameter("Currency Code","Currency Factor",WORKDATE);
                                IF ChangeExchangeRate.RUNMODAL = ACTION::OK THEN BEGIN
                                  VALIDATE("Currency Factor",ChangeExchangeRate.GetParameter);
-                                 CurrPage.UPDATE;
+                                 SaveInvoiceDiscountAmount;
                                END;
                                CLEAR(ChangeExchangeRate);
                              END;
@@ -1016,9 +1028,7 @@ OBJECT Page 50 Purchase Order
                 PartType=Page }
 
     { 1906354007;1;Part   ;
-                SubPageLink=Table ID=CONST(38),
-                            Document Type=FIELD(Document Type),
-                            Document No.=FIELD(No.);
+                Name=ApprovalFactBox;
                 PagePartID=Page9092;
                 Visible=FALSE;
                 PartType=Page }
@@ -1112,6 +1122,15 @@ OBJECT Page 50 Purchase Order
     LOCAL PROCEDURE ApproveCalcInvDisc@1();
     BEGIN
       CurrPage.PurchLines.PAGE.ApproveCalcInvDisc;
+    END;
+
+    LOCAL PROCEDURE SaveInvoiceDiscountAmount@14();
+    VAR
+      DocumentTotals@1000 : Codeunit 57;
+    BEGIN
+      CurrPage.SAVERECORD;
+      DocumentTotals.PurchaseRedistributeInvoiceDiscountAmountsOnDocument(Rec);
+      CurrPage.UPDATE(FALSE);
     END;
 
     LOCAL PROCEDURE BuyfromVendorNoOnAfterValidate@19032492();

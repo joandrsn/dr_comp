@@ -2,9 +2,9 @@ OBJECT Table 5065 Interaction Log Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -66,6 +66,7 @@ OBJECT Table 5065 Interaction Log Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 12  ;   ;Interaction Group Code;Code10      ;TableRelation="Interaction Group";
@@ -99,7 +100,7 @@ OBJECT Table 5065 Interaction Log Entry
     { 23  ;   ;To-do No.           ;Code20        ;TableRelation=To-do;
                                                    CaptionML=[DAN=Opgavenr.;
                                                               ENU=To-do No.] }
-    { 24  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 24  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 25  ;   ;Delivery Status     ;Option        ;CaptionML=[DAN=Afsendelsesstatus;
@@ -213,15 +214,29 @@ OBJECT Table 5065 Interaction Log Entry
 
     PROCEDURE CreateInteraction@10();
     VAR
+      Contact@1001 : Record 5050;
       SegLine@1000 : TEMPORARY Record 5077;
     BEGIN
+      IF "Contact No." <> '' THEN
+        IF Contact.GET("Contact No.") THEN
+          Contact.CheckIfPrivacyBlockedGeneric;
+      IF "Contact Company No." <> '' THEN
+        IF Contact.GET("Contact Company No.") THEN
+          Contact.CheckIfPrivacyBlockedGeneric;
       SegLine.CreateInteractionFromIntLogEnt(Rec);
     END;
 
     PROCEDURE CreateTodo@8();
     VAR
+      Contact@1001 : Record 5050;
       TempTodo@1000 : TEMPORARY Record 5080;
     BEGIN
+      IF "Contact No." <> '' THEN
+        IF Contact.GET("Contact No.") THEN
+          Contact.CheckIfPrivacyBlockedGeneric;
+      IF "Contact Company No." <> '' THEN
+        IF Contact.GET("Contact Company No.") THEN
+          Contact.CheckIfPrivacyBlockedGeneric;
       TempTodo.CreateToDoFromInteractLogEntry(Rec)
     END;
 
@@ -245,7 +260,7 @@ OBJECT Table 5065 Interaction Log Entry
         SegLine.Description := Description;
         SegLine.Subject := Subject;
         SegLine."Language Code" := "Interaction Language Code";
-        Attachment.ShowAttachment(SegLine,FORMAT("Entry No.") + ' ' + Description,FALSE);
+        Attachment.ShowAttachment(SegLine,FORMAT("Entry No.") + ' ' + Description,FALSE,FALSE);
       END ELSE
         Attachment.DisplayInOutlook;
     END;
@@ -529,33 +544,33 @@ OBJECT Table 5065 Interaction Log Entry
 
     PROCEDURE ResumeInteraction@11();
     VAR
-      SegLine@1000 : TEMPORARY Record 5077;
-      Cont@1006 : Record 5050;
-      Salesperson@1005 : Record 13;
-      Campaign@1004 : Record 5071;
-      Todo@1003 : Record 5080;
-      Opportunity@1002 : Record 5092;
+      TempSegLine@1000 : TEMPORARY Record 5077;
       SegManagement@1001 : Codeunit 5051;
     BEGIN
-      SegLine.DELETEALL;
-      SegLine.INIT;
-      SegManagement.CopyFieldsFromInteractLogEntry(SegLine,Rec);
-      SegLine.VALIDATE(Date,WORKDATE);
+      TempSegLine.DELETEALL;
+      TempSegLine.INIT;
+      SegManagement.CopyFieldsFromInteractLogEntry(TempSegLine,Rec);
+      TempSegLine.VALIDATE(Date,WORKDATE);
 
-      IF Todo.GET(GETFILTER("To-do No.")) THEN
-        SegLine.SETRANGE("To-do No.",Todo."No.");
-      IF Cont.GET(GETFILTER("Contact Company No.")) THEN
-        SegLine.SETRANGE("Contact Company No.",Cont."No.");
-      IF Cont.GET(GETFILTER("Contact No.")) THEN
-        SegLine.SETRANGE("Contact No.",Cont."No.");
-      IF Salesperson.GET(GETFILTER("Salesperson Code")) THEN
-        SegLine.SETRANGE("Salesperson Code",Salesperson.Code);
-      IF Campaign.GET(GETFILTER("Campaign No.")) THEN
-        SegLine.SETRANGE("Campaign No.",Campaign."No.");
-      IF Opportunity.GET(GETFILTER("Opportunity No.")) THEN
-        SegLine.SETRANGE("Opportunity No.",Opportunity."No.");
+      IF TempSegLine."To-do No." <> '' THEN
+        TempSegLine.SETRANGE("To-do No.",TempSegLine."To-do No.");
 
-      SegLine.StartWizard;
+      IF TempSegLine."Contact Company No." <> '' THEN
+        TempSegLine.SETRANGE("Contact Company No.",TempSegLine."Contact Company No.");
+
+      IF TempSegLine."Contact No." <> '' THEN
+        TempSegLine.SETRANGE("Contact No.",TempSegLine."Contact No.");
+
+      IF TempSegLine."Salesperson Code" <> '' THEN
+        TempSegLine.SETRANGE("Salesperson Code",TempSegLine."Salesperson Code");
+
+      IF TempSegLine."Campaign No." <> '' THEN
+        TempSegLine.SETRANGE("Campaign No.",TempSegLine."Campaign No.");
+
+      IF TempSegLine."Opportunity No." <> '' THEN
+        TempSegLine.SETRANGE("Opportunity No.",TempSegLine."Opportunity No.");
+
+      TempSegLine.StartWizard;
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Page 5805 Item Charge Assignment (Purch)
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -457,7 +457,7 @@ OBJECT Page 5805 Item Charge Assignment (Purch)
 
     LOCAL PROCEDURE QtytoAssignOnAfterValidate@19000177();
     BEGIN
-      CurrPage.UPDATE(TRUE);
+      CurrPage.UPDATE(FALSE);
       UpdateQtyAssgnt;
     END;
 

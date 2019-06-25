@@ -2,9 +2,9 @@ OBJECT Page 507 Blanket Sales Order
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402,NAVDK9.00.00.43402;
+    Version List=NAVW19.00.00.50682,NAVDK9.00.00.50682;
   }
   PROPERTIES
   {
@@ -34,6 +34,10 @@ OBJECT Page 507 Blanket Sales Order
                   "Responsibility Center" := UserMgt.GetSalesFilter;
                 END;
 
+    OnInsertRecord=BEGIN
+                     CheckCreditMaxBeforeInsert;
+                   END;
+
     OnDeleteRecord=BEGIN
                      CurrPage.SAVERECORD;
                      EXIT(ConfirmDeletion);
@@ -41,6 +45,7 @@ OBJECT Page 507 Blanket Sales Order
 
     OnAfterGetCurrRecord=BEGIN
                            ShowWorkflowStatus := CurrPage.WorkflowStatus.PAGE.SetFilterOnWorkflowRecord(RECORDID);
+                           CurrPage.ApprovalFactBox.PAGE.RefreshPage(RECORDID);
                          END;
 
     ActionList=ACTIONS
@@ -153,14 +158,16 @@ OBJECT Page 507 Blanket Sales Order
                       Name=Comment;
                       CaptionML=[DAN=Bemærkninger;
                                  ENU=Comments];
-                      RunObject=Page 660;
-                      RunPageLink=Table ID=CONST(36),
-                                  Document Type=FIELD(Document Type),
-                                  Document No.=FIELD(No.);
                       Promoted=Yes;
                       Visible=OpenApprovalEntriesExistForCurrUser;
                       Image=ViewComments;
-                      PromotedCategory=Category4 }
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1000 : Codeunit 1535;
+                               BEGIN
+                                 ApprovalsMgmt.GetApprovalComment(Rec);
+                               END;
+                                }
       { 66      ;1   ;ActionGroup;
                       CaptionML=[DAN=Fu&nktion;
                                  ENU=F&unctions];
@@ -215,7 +222,7 @@ OBJECT Page 507 Blanket Sales Order
                                 }
       { 73      ;1   ;Action    ;
                       Name=MakeOrder;
-                      CaptionML=[DAN=Lav &ordre;
+                      CaptionML=[DAN=Opret &ordre;
                                  ENU=Make &Order];
                       Promoted=Yes;
                       Image=MakeOrder;
@@ -546,10 +553,7 @@ OBJECT Page 507 Blanket Sales Order
                 PartType=Page }
 
     { 1906354007;1;Part   ;
-                SubPageLink=Table ID=CONST(36),
-                            Document Type=FIELD(Document Type),
-                            Document No.=FIELD(No.),
-                            Status=CONST(Open);
+                Name=ApprovalFactBox;
                 PagePartID=Page9092;
                 Visible=FALSE;
                 PartType=Page }

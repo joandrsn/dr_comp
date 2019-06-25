@@ -2,9 +2,9 @@ OBJECT Report 703 Item Register - Quantity
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -1354,6 +1354,7 @@ OBJECT Report 703 Item Register - Quantity
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -1371,9 +1372,9 @@ OBJECT Report 703 Item Register - Quantity
                 </Paragraph>
               </Paragraphs>
               <Top>0.846cm</Top>
-              <Left>14.9cm</Left>
+              <Left>12.9cm</Left>
               <Height>0.423cm</Height>
-              <Width>3.25cm</Width>
+              <Width>5.25cm</Width>
               <ZIndex>4</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>

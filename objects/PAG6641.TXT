@@ -2,9 +2,9 @@ OBJECT Page 6641 Purchase Return Order Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -19,6 +19,7 @@ OBJECT Page 6641 Purchase Return Order Subform
     AutoSplitKey=Yes;
     OnAfterGetRecord=BEGIN
                        ShowShortcutDimCode(ShortcutDimCode);
+                       CLEAR(DocumentTotals);
                      END;
 
     OnNewRecord=BEGIN
@@ -40,7 +41,8 @@ OBJECT Page 6641 Purchase Return Order Subform
     OnAfterGetCurrRecord=BEGIN
                            IF PurchHeader.GET("Document Type","Document No.") THEN;
 
-                           DocumentTotals.PurchaseUpdateTotalsControls(Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
+                           DocumentTotals.PurchaseUpdateTotalsControls(
+                             Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
                              TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,VATAmount);
                          END;
 
@@ -637,7 +639,9 @@ OBJECT Page 6641 Purchase Return Order Subform
                 Editable=FALSE;
                 OnDrillDown=BEGIN
                               DocumentTotals.PurchaseRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalPurchaseLine);
-                              CurrPage.UPDATE(FALSE);
+                              DocumentTotals.PurchaseUpdateTotalsControls(
+                                Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
+                                TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,VATAmount);
                             END;
 
                 ShowCaption=No }

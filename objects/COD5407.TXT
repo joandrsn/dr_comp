@@ -2,9 +2,9 @@ OBJECT Codeunit 5407 Prod. Order Status Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -35,7 +35,6 @@ OBJECT Codeunit 5407 Prod. Order Status Management
       Text004@1004 : TextConst 'DAN=%1 %2 er ikke færdig. Der mangler stadig afgang. Vil du færdiggøre ordren?;ENU=%1 %2 has not been finished. Some output is still missing. Do you still want to finish the order?';
       Text005@1005 : TextConst 'DAN=Opdateringen er afbrudt på grund af advarslen.;ENU=The update has been interrupted to respect the warning.';
       Text006@1006 : TextConst 'DAN=%1 %2 er ikke færdig. Der mangler stadig forbrug. Vil du færdiggøre ordren?;ENU=%1 %2 has not been finished. Some consumption is still missing. Do you still want to finish the order?';
-      Text007@1007 : TextConst 'DAN=Status for ordren %1 kan ikke ændres, da den er knyttet til planlægningslinje %2 i kladde %3 %4.;ENU=The status of order %1 cannot be changed as it is related to planning line %2 in worksheet %3 %4.';
       ToProdOrder@1018 : Record 5405;
       SourceCodeSetup@1009 : Record 242;
       Item@1030 : Record 27;
@@ -61,7 +60,6 @@ OBJECT Codeunit 5407 Prod. Order Status Management
     PROCEDURE ChangeStatusOnProdOrder@10(ProdOrder@1000 : Record 5405;NewStatus@1003 : 'Quote,Planned,Firm Planned,Released,Finished';NewPostingDate@1004 : Date;NewUpdateUnitCost@1005 : Boolean);
     BEGIN
       SetPostingInfo(NewStatus,NewPostingDate,NewUpdateUnitCost);
-      ErrorIfInPlanningWksh(ProdOrder);
       IF NewStatus = NewStatus::Finished THEN BEGIN
         CheckBeforeFinishProdOrder(ProdOrder);
         FlushProdOrder(ProdOrder,NewStatus,NewPostingDate);
@@ -161,7 +159,10 @@ OBJECT Codeunit 5407 Prod. Order Status Management
             ToProdOrderLine."Prod. Order No." := ToProdOrder."No.";
             ToProdOrderLine.INSERT;
             IF NewStatus = NewStatus::Finished THEN BEGIN
-              IF NOT InvtAdjmtEntryOrder.GET(InvtAdjmtEntryOrder."Order Type"::Production,"Prod. Order No.","Line No.") THEN
+              IF InvtAdjmtEntryOrder.GET(InvtAdjmtEntryOrder."Order Type"::Production,"Prod. Order No.","Line No.") THEN BEGIN
+                InvtAdjmtEntryOrder."Routing No." := ToProdOrderLine."Routing No.";
+                InvtAdjmtEntryOrder.MODIFY;
+              END ELSE
                 InvtAdjmtEntryOrder.SetProdOrderLine(FromProdOrderLine);
               InvtAdjmtEntryOrder."Cost is Adjusted" := FALSE;
               InvtAdjmtEntryOrder."Is Finished" := TRUE;
@@ -503,31 +504,13 @@ OBJECT Codeunit 5407 Prod. Order Status Management
               ItemJnlLine.VALIDATE("Routing No.",ProdOrderRtngLine."Routing No.");
               ItemJnlLine.VALIDATE("Variant Code",ProdOrderLine."Variant Code");
               ItemJnlLine."Location Code" := ProdOrderLine."Location Code";
+              ItemJnlLine.VALIDATE("Bin Code",ProdOrderLine."Bin Code");
               IF ItemJnlLine."Unit of Measure Code" <> ProdOrderLine."Unit of Measure Code" THEN
                 ItemJnlLine.VALIDATE("Unit of Measure Code",ProdOrderLine."Unit of Measure Code");
               ItemJnlLine.VALIDATE("Operation No.",ProdOrderRtngLine."Operation No.");
               IF ProdOrderRtngLine."Concurrent Capacities" = 0 THEN
                 ProdOrderRtngLine."Concurrent Capacities" := 1;
-              ItemJnlLine.VALIDATE(
-                "Setup Time",
-                ROUND(
-                  ProdOrderRtngLine."Setup Time" *
-                  ProdOrderRtngLine."Concurrent Capacities" *
-                  CalendarMgt.QtyperTimeUnitofMeasure(
-                    ProdOrderRtngLine."Work Center No.",
-                    ProdOrderRtngLine."Setup Time Unit of Meas. Code"),
-                  0.00001));
-              ItemJnlLine.VALIDATE(
-                "Run Time",
-                CostCalcMgt.CalcCostTime(
-                  OutputQtyBase,
-                  ProdOrderRtngLine."Setup Time",ProdOrderRtngLine."Setup Time Unit of Meas. Code",
-                  ProdOrderRtngLine."Run Time",ProdOrderRtngLine."Run Time Unit of Meas. Code",
-                  ProdOrderRtngLine."Lot Size",
-                  ProdOrderRtngLine."Scrap Factor % (Accumulated)",ProdOrderRtngLine."Fixed Scrap Qty. (Accum.)",
-                  ProdOrderRtngLine."Work Center No.",0,FALSE,0));
-              ItemJnlLine.VALIDATE("Output Quantity",OutputQty);
-
+              SetTimeAndQuantityOmItemJnlLine(ItemJnlLine,ProdOrderRtngLine,OutputQtyBase,OutputQty);
               ItemJnlLine."Source Code" := SourceCodeSetup.Flushing;
               IF NOT (ItemJnlLine.TimeIsEmpty AND (ItemJnlLine."Output Quantity" = 0)) THEN BEGIN
                 DimMgt.UpdateGlobalDimFromDimSetID(ItemJnlLine."Dimension Set ID",ItemJnlLine."Shortcut Dimension 1 Code",
@@ -711,19 +694,6 @@ OBJECT Codeunit 5407 Prod. Order Status Management
       SourceCodeSetupRead := TRUE;
     END;
 
-    LOCAL PROCEDURE ErrorIfInPlanningWksh@5(VAR ProdOrder@1000 : Record 5405);
-    VAR
-      ReqLine@1001 : Record 246;
-    BEGIN
-      ReqLine.SETCURRENTKEY("Ref. Order Type","Ref. Order Status","Ref. Order No.","Ref. Line No.");
-      ReqLine.SETRANGE("Ref. Order Type",ReqLine."Ref. Order Type"::"Prod. Order");
-      ReqLine.SETRANGE("Ref. Order Status",ProdOrder.Status);
-      ReqLine.SETRANGE("Ref. Order No.",ProdOrder."No.");
-      IF ReqLine.FINDFIRST THEN
-        ERROR(Text007,
-          ProdOrder."No.",ReqLine."Line No.",ReqLine."Worksheet Template Name",ReqLine."Journal Batch Name");
-    END;
-
     PROCEDURE SetPostingInfo@2(Status@1002 : 'Quote,Planned,Firm Planned,Released,Finished';PostingDate@1001 : Date;UpdateUnitCost@1000 : Boolean);
     BEGIN
       NewStatus := Status;
@@ -781,6 +751,37 @@ OBJECT Codeunit 5407 Prod. Order Status Management
       CapLedgEntry.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
       CapLedgEntry.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
       EXIT(CapLedgEntry.FINDFIRST);
+    END;
+
+    LOCAL PROCEDURE SetTimeAndQuantityOmItemJnlLine@8(VAR ItemJnlLine@1000 : Record 83;ProdOrderRtngLine@1001 : Record 5409;OutputQtyBase@1003 : Decimal;OutputQty@1004 : Decimal);
+    VAR
+      CostCalculationManagement@1002 : Codeunit 5836;
+    BEGIN
+      IF ItemJnlLine.SubcontractingWorkCenterUsed THEN BEGIN
+        ItemJnlLine.VALIDATE("Output Quantity",0);
+        ItemJnlLine.VALIDATE("Run Time",0);
+        ItemJnlLine.VALIDATE("Setup Time",0)
+      END ELSE BEGIN
+        ItemJnlLine.VALIDATE(
+          "Setup Time",
+          ROUND(
+            ProdOrderRtngLine."Setup Time" *
+            ProdOrderRtngLine."Concurrent Capacities" *
+            CalendarMgt.QtyperTimeUnitofMeasure(
+              ProdOrderRtngLine."Work Center No.",
+              ProdOrderRtngLine."Setup Time Unit of Meas. Code"),
+            0.00001));
+        ItemJnlLine.VALIDATE(
+          "Run Time",
+          CostCalculationManagement.CalcCostTime(
+            OutputQtyBase,
+            ProdOrderRtngLine."Setup Time",ProdOrderRtngLine."Setup Time Unit of Meas. Code",
+            ProdOrderRtngLine."Run Time",ProdOrderRtngLine."Run Time Unit of Meas. Code",
+            ProdOrderRtngLine."Lot Size",
+            ProdOrderRtngLine."Scrap Factor % (Accumulated)",ProdOrderRtngLine."Fixed Scrap Qty. (Accum.)",
+            ProdOrderRtngLine."Work Center No.",0,FALSE,0));
+        ItemJnlLine.VALIDATE("Output Quantity",OutputQty);
+      END;
     END;
 
     BEGIN

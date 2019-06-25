@@ -2,9 +2,9 @@ OBJECT Codeunit 414 Release Sales Document
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -98,8 +98,8 @@ OBJECT Codeunit 414 Release Sales Document
       WhseSalesRelease@1004 : Codeunit 5771;
       Text002@1005 : TextConst 'DAN=Dette dokument kan kun frigives, når godkendelsesprocessen er fuldført.;ENU=This document can only be released when the approval process is complete.';
       Text003@1003 : TextConst 'DAN=Godkendelsesprocessen skal annulleres eller fuldføres, inden dette dokument kan åbnes igen.;ENU=The approval process must be cancelled or completed to reopen this document.';
-      Text004@1007 : TextConst 'DAN=Der er ikke-bogførte forudbetalingsbeløb på dokumentet af typen %1 med nummer %2.;ENU=There are unposted prepayment amounts on the document of type %1 with the number %2.';
       Text005@1006 : TextConst 'DAN=Der er ubetalte forudbetalingsfakturaer, der er knyttet til dokumentet af typen %1 med nummer %2.;ENU=There are unpaid prepayment invoices that are related to the document of type %1 with the number %2.';
+      UnpostedPrepaymentAmountsErr@1007 : TextConst '@@@="%1 - Document Type; %2 - Document No.";DAN=Der er ikke-bogførte forudbetalingsbeløb på dokumentet af typen %1 med nummer %2.;ENU=There are unposted prepayment amounts on the document of type %1 with the number %2.';
 
     PROCEDURE Reopen@1(VAR SalesHeader@1000 : Record 36);
     BEGIN
@@ -124,11 +124,19 @@ OBJECT Codeunit 414 Release Sales Document
     PROCEDURE PerformManualRelease@2(VAR SalesHeader@1002 : Record 36);
     VAR
       PrepaymentMgt@1001 : Codeunit 441;
+    BEGIN
+      IF PrepaymentMgt.TestSalesPrepayment(SalesHeader) THEN
+        ERROR(UnpostedPrepaymentAmountsErr,SalesHeader."Document Type",SalesHeader."No.");
+
+      PerformManualCheckAndRelease(SalesHeader);
+    END;
+
+    PROCEDURE PerformManualCheckAndRelease@10(VAR SalesHeader@1002 : Record 36);
+    VAR
+      PrepaymentMgt@1001 : Codeunit 441;
       ApprovalsMgmt@1000 : Codeunit 1535;
     BEGIN
-      WITH SalesHeader DO BEGIN
-        IF PrepaymentMgt.TestSalesPrepayment(SalesHeader) THEN
-          ERROR(STRSUBSTNO(Text004,"Document Type","No."));
+      WITH SalesHeader DO
         IF ("Document Type" = "Document Type"::Order) AND PrepaymentMgt.TestSalesPayment(SalesHeader) THEN BEGIN
           IF Status <> Status::"Pending Prepayment" THEN BEGIN
             Status := Status::"Pending Prepayment";
@@ -137,7 +145,6 @@ OBJECT Codeunit 414 Release Sales Document
           END;
           ERROR(STRSUBSTNO(Text005,"Document Type","No."));
         END;
-      END;
 
       IF ApprovalsMgmt.IsSalesApprovalsWorkflowEnabled(SalesHeader) AND (SalesHeader.Status = SalesHeader.Status::Open) THEN
         ERROR(Text002);

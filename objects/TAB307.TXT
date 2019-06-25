@@ -2,9 +2,9 @@ OBJECT Table 307 Inventory Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -14,25 +14,33 @@ OBJECT Table 307 Inventory Buffer
   FIELDS
   {
     { 1   ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Varenr.;
                                                               ENU=Item No.] }
     { 4   ;   ;Location Code       ;Code10        ;TableRelation=Location;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code] }
-    { 5   ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+    { 5   ;   ;Quantity            ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Antal;
                                                               ENU=Quantity];
                                                    DecimalPlaces=0:5 }
-    { 6   ;   ;Dimension Entry No. ;Integer       ;CaptionML=[DAN=Dimensionsløbenr.;
+    { 6   ;   ;Dimension Entry No. ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dimensionsløbenr.;
                                                               ENU=Dimension Entry No.] }
     { 5400;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Variantkode;
                                                               ENU=Variant Code] }
     { 5401;   ;Bin Code            ;Code20        ;TableRelation=Bin.Code WHERE (Location Code=FIELD(Location Code));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Placeringskode;
                                                               ENU=Bin Code] }
-    { 6500;   ;Serial No.          ;Code20        ;CaptionML=[DAN=Serienr.;
+    { 6500;   ;Serial No.          ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Serienr.;
                                                               ENU=Serial No.] }
-    { 6501;   ;Lot No.             ;Code20        ;CaptionML=[DAN=Lotnr.;
+    { 6501;   ;Lot No.             ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lotnr.;
                                                               ENU=Lot No.] }
   }
   KEYS

@@ -2,9 +2,9 @@ OBJECT Page 658 Approval Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -18,6 +18,7 @@ OBJECT Page 658 Approval Entries
     OnOpenPage=BEGIN
                  IF Usersetup.GET(USERID) THEN
                    SETCURRENTKEY("Table ID","Document Type","Document No.");
+                 ApproverSenderFiltering;
                END;
 
     OnAfterGetRecord=BEGIN
@@ -243,6 +244,25 @@ OBJECT Page 658 Approval Entries
     PROCEDURE CalledFrom@3();
     BEGIN
       Overdue := Overdue::" ";
+    END;
+
+    LOCAL PROCEDURE ApproverSenderFiltering@4();
+    BEGIN
+      IF Usersetup.GET(USERID) AND Usersetup."Approval Administrator" THEN
+        EXIT;
+      FILTERGROUP(-1);
+      SETRANGE("Approver ID",USERID);
+      SETRANGE("Sender ID",USERID);
+      MarkAll;
+      MARKEDONLY(TRUE);
+    END;
+
+    LOCAL PROCEDURE MarkAll@5();
+    BEGIN
+      IF FINDSET THEN
+        REPEAT
+          MARK(TRUE);
+        UNTIL NEXT = 0;
     END;
 
     BEGIN

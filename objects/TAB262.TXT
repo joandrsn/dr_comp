@@ -2,9 +2,9 @@ OBJECT Table 262 Intrastat Jnl. Batch
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -87,6 +87,20 @@ OBJECT Table 262 Intrastat Jnl. Batch
       IntraJnlTemplate@1002 : Record 261;
       IntrastatJnlLine@1003 : Record 263;
       Month@1004 : Integer;
+
+    PROCEDURE GetStatisticsStartDate@1() : Date;
+    VAR
+      Century@1000 : Integer;
+      Year@1001 : Integer;
+      Month@1002 : Integer;
+    BEGIN
+      TESTFIELD("Statistics Period");
+      Century := DATE2DMY(WORKDATE,3) DIV 100;
+      EVALUATE(Year,COPYSTR("Statistics Period",1,2));
+      Year := Year + Century * 100;
+      EVALUATE(Month,COPYSTR("Statistics Period",3,2));
+      EXIT(DMY2DATE(1,Month,Year));
+    END;
 
     BEGIN
     END.

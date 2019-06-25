@@ -2,9 +2,9 @@ OBJECT Table 5805 Item Charge Assignment (Purch)
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -14,7 +14,6 @@ OBJECT Table 5805 Item Charge Assignment (Purch)
 
     CaptionML=[DAN=Varegebyrtildeling (køb);
                ENU=Item Charge Assignment (Purch)];
-    PasteIsValid=No;
   }
   FIELDS
   {
@@ -65,11 +64,14 @@ OBJECT Table 5805 Item Charge Assignment (Purch)
                                                    CaptionML=[DAN=Kostpris;
                                                               ENU=Unit Cost];
                                                    AutoFormatType=2 }
-    { 11  ;   ;Amount to Assign    ;Decimal       ;OnValidate=BEGIN
+    { 11  ;   ;Amount to Assign    ;Decimal       ;OnValidate=VAR
+                                                                ItemChargeAssgntPurch@1000 : Codeunit 5805;
+                                                              BEGIN
                                                                 PurchLine.GET("Document Type","Document No.","Document Line No.");
                                                                 IF NOT Currency.GET(PurchLine."Currency Code") THEN
                                                                   Currency.InitRoundingPrecision;
                                                                 "Amount to Assign" := ROUND("Qty. to Assign" * "Unit Cost",Currency."Amount Rounding Precision");
+                                                                ItemChargeAssgntPurch.SuggestAssgntFromLine(Rec);
                                                               END;
 
                                                    CaptionML=[DAN=Beløb der skal tildeles;

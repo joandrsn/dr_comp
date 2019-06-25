@@ -2,9 +2,9 @@ OBJECT Codeunit 1290 SOAP Web Service Request Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -130,10 +130,10 @@ OBJECT Codeunit 1290 SOAP Web Service Request Mgt.
 
     LOCAL PROCEDURE AddBodyToEnvelope@12(VAR BodyXmlNode@1005 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";BodyInStream@1000 : InStream);
     VAR
+      XMLDOMManagement@1001 : Codeunit 6224;
       BodyContentXmlDoc@1003 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
     BEGIN
-      BodyContentXmlDoc := BodyContentXmlDoc.XmlDocument;
-      BodyContentXmlDoc.Load(BodyInStream);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(BodyInStream,BodyContentXmlDoc);
       TraceLogXmlDocToTempFile(BodyContentXmlDoc,'RequestBodyContent');
 
       BodyXmlNode.AppendChild(BodyXmlNode.OwnerDocument.ImportNode(BodyContentXmlDoc.DocumentElement,TRUE));
@@ -142,17 +142,16 @@ OBJECT Codeunit 1290 SOAP Web Service Request Mgt.
     LOCAL PROCEDURE ExtractContentFromResponse@4(ResponseInStream@1000 : InStream;VAR BodyTempBlob@1002 : Record 99008535);
     VAR
       XMLDOMMgt@1005 : Codeunit 6224;
-      ResponseXmlDoc@1003 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
       ResponseBodyXMLDoc@1004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
       ResponseBodyXmlNode@1006 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
+      XmlNode@1008 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
       BodyOutStream@1007 : OutStream;
       Found@1001 : Boolean;
     BEGIN
       TraceLogStreamToTempFile(ResponseInStream,'FullResponse',TempDebugLogTempBlob);
-      ResponseXmlDoc := ResponseXmlDoc.XmlDocument;
-      ResponseXmlDoc.Load(ResponseInStream);
+      XMLDOMMgt.LoadXMLNodeFromInStream(ResponseInStream,XmlNode);
 
-      Found := XMLDOMMgt.FindNodeWithNamespace(ResponseXmlDoc.DocumentElement,BodyPathTxt,'soap',SoapNamespaceTxt,ResponseBodyXmlNode);
+      Found := XMLDOMMgt.FindNodeWithNamespace(XmlNode,BodyPathTxt,'soap',SoapNamespaceTxt,ResponseBodyXmlNode);
       IF NOT Found THEN
         ERROR(ExpectedResponseNotReceivedErr);
 
@@ -174,7 +173,7 @@ OBJECT Codeunit 1290 SOAP Web Service Request Mgt.
       WebRequestHelper@1002 : Codeunit 1299;
       XMLDOMMgt@1006 : Codeunit 6224;
       WebException@1005 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.WebException";
-      XmlDoc@1003 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
+      XmlNode@1004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
       ResponseInputStream@1000 : InStream;
       ErrorText@1009 : Text;
       ServiceURL@1010 : Text;
@@ -188,10 +187,9 @@ OBJECT Codeunit 1290 SOAP Web Service Request Mgt.
       IF TraceLogEnabled THEN
         Trace.LogStreamToTempFile(ResponseInputStream,'WebExceptionResponse',TempDebugLogTempBlob);
 
-      XmlDoc := XmlDoc.XmlDocument;
-      XmlDoc.Load(ResponseInputStream);
+      XMLDOMMgt.LoadXMLNodeFromInStream(ResponseInputStream,XmlNode);
 
-      ErrorText := XMLDOMMgt.FindNodeTextWithNamespace(XmlDoc.DocumentElement,FaultStringXmlPathTxt,'soap',SoapNamespaceTxt);
+      ErrorText := XMLDOMMgt.FindNodeTextWithNamespace(XmlNode,FaultStringXmlPathTxt,'soap',SoapNamespaceTxt);
       IF ErrorText = '' THEN
         ErrorText := WebException.Message;
       ErrorText := InternalErr + ErrorText + ServiceURL;

@@ -2,9 +2,9 @@ OBJECT Codeunit 7302 WMS Management
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=27-09-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.49326;
   }
   PROPERTIES
   {
@@ -537,10 +537,10 @@ OBJECT Codeunit 7302 WMS Management
         Location.TESTFIELD("Adjustment Bin Code");
         CASE "Entry Type" OF
           "Entry Type"::"Positive Adjmt.":
-            IF "From Bin Code" <> Location."Adjustment Bin Code" THEN
+            IF ("From Bin Code" <> '') AND ("From Bin Code" <> Location."Adjustment Bin Code") THEN
               FieldCapTxt := FIELDCAPTION("From Bin Code");
           "Entry Type"::"Negative Adjmt.":
-            IF "To Bin Code" <> Location."Adjustment Bin Code" THEN
+            IF ("To Bin Code" <> '') AND ("To Bin Code" <> Location."Adjustment Bin Code") THEN
               FieldCapTxt := FIELDCAPTION("To Bin Code");
         END;
         IF FieldCapTxt <> '' THEN
@@ -555,11 +555,21 @@ OBJECT Codeunit 7302 WMS Management
 
     PROCEDURE CheckItemJnlLineFieldChange@54(ItemJnlLine@1000 : Record 83;xItemJnlLine@1001 : Record 83;CurrFieldCaption@1005 : Text[30]);
     VAR
+      ProdOrderLine@1004 : Record 5406;
+      ProdOrderComponent@1006 : Record 5407;
       WhseItemJnl@1002 : Page 7324;
       WhsePhysInvJnl@1003 : Page 7326;
+      BinIsEligible@1007 : Boolean;
     BEGIN
       WITH ItemJnlLine DO BEGIN
-        ShowError := CheckBinCodeChange("Location Code","Bin Code",xItemJnlLine."Bin Code");
+        IF ("Order Type" = "Order Type"::Production) AND ("Entry Type" = "Entry Type"::Output) THEN
+          IF ProdOrderLine.GET(ProdOrderLine.Status::Released,"Order No.","Order Line No.") THEN
+            BinIsEligible := ("Location Code" = ProdOrderLine."Location Code") AND ("Bin Code" = ProdOrderLine."Bin Code");
+        IF ("Order Type" = "Order Type"::Production) AND ("Entry Type" = "Entry Type"::Consumption) THEN
+          IF ProdOrderComponent.GET(ProdOrderComponent.Status::Released,"Order No.","Order Line No.","Prod. Order Comp. Line No.") THEN
+            BinIsEligible := ("Location Code" = ProdOrderComponent."Location Code") AND ("Bin Code" = ProdOrderComponent."Bin Code");
+
+        ShowError := CheckBinCodeChange("Location Code","Bin Code",xItemJnlLine."Bin Code") AND NOT BinIsEligible;
         IF NOT ShowError THEN
           ShowError := CheckBinCodeChange("New Location Code","New Bin Code",xItemJnlLine."New Bin Code");
 
@@ -695,7 +705,7 @@ OBJECT Codeunit 7302 WMS Management
 
     LOCAL PROCEDURE CheckBinCodeChange@6(LocationCode@1002 : Code[10];BinCode@1000 : Code[20];xRecBinCode@1001 : Code[20]) : Boolean;
     BEGIN
-      IF BinCode <> xRecBinCode THEN BEGIN
+      IF (BinCode <> xRecBinCode) AND (BinCode <> '') THEN BEGIN
         GetLocation(LocationCode);
         EXIT(Location."Directed Put-away and Pick");
       END;
@@ -1157,6 +1167,7 @@ OBJECT Codeunit 7302 WMS Management
       TransLine@1003 : Record 5741;
       ProdOrderComp@1005 : Record 5407;
       AssemblyLine@1000 : Record 901;
+      ServiceLine@1006 : Record 5902;
       SalesLinesLookup@1007 : Page 516;
       PurchLinesLookup@1008 : Page 518;
       TransLinesLookup@1009 : Page 5749;
@@ -1206,6 +1217,13 @@ OBJECT Codeunit 7302 WMS Management
             AssemblyLine.SETRANGE("Document No.",SourceNo);
             AssemblyLine.SETRANGE("Line No.",SourceLineNo);
             PAGE.RUN(PAGE::"Assembly Lines",AssemblyLine);
+          END;
+        DATABASE::"Service Line":
+          BEGIN
+            ServiceLine.SETRANGE("Document Type",SourceSubType);
+            ServiceLine.SETRANGE("Document No.",SourceNo);
+            ServiceLine.SETRANGE("Line No.",SourceLineNo);
+            PAGE.RUN(PAGE::"Service Line List",ServiceLine);
           END;
       END;
     END;
@@ -1523,7 +1541,7 @@ OBJECT Codeunit 7302 WMS Management
       BinContent.FINDFIRST;
     END;
 
-    PROCEDURE CalcLineReservedQtyNotonInvt@52(SourceType@1000 : Integer;SourceSubType@1004 : Option;SourceNo@1001 : Code[20];SourceLineNo@1002 : Integer;SourceSubLineNo@1003 : Integer;CompleteShipment@1007 : Boolean) : Decimal;
+    PROCEDURE CalcLineReservedQtyNotonInvt@52(SourceType@1000 : Integer;SourceSubType@1004 : Option;SourceNo@1001 : Code[20];SourceLineNo@1002 : Integer;SourceSubLineNo@1003 : Integer) : Decimal;
     VAR
       ReservEntry@1005 : Record 337;
       ReservQtyNotonInvt@1006 : Decimal;
@@ -1547,8 +1565,7 @@ OBJECT Codeunit 7302 WMS Management
       ReservEntry.SETFILTER("Shipment Date",'<>%1',0D);
       IF ReservEntry.FIND('-') THEN
         REPEAT
-          IF NOT CompleteShipment THEN
-            ReservQtyNotonInvt := ReservQtyNotonInvt + ABS(ReservEntry."Quantity (Base)");
+          ReservQtyNotonInvt := ReservQtyNotonInvt + ABS(ReservEntry."Quantity (Base)");
         UNTIL ReservEntry.NEXT = 0;
       EXIT(ReservQtyNotonInvt);
     END;
@@ -1785,6 +1802,18 @@ OBJECT Codeunit 7302 WMS Management
       EXIT(AdjBinCode);
     END;
 
+    PROCEDURE GetLastOperationLocationCode@70(RoutingNo@1000 : Code[20];RoutingVersionCode@1001 : Code[20]) : Code[10];
+    VAR
+      RoutingLine@1003 : Record 99000764;
+    BEGIN
+      WITH RoutingLine DO BEGIN
+        SETRANGE("Routing No.",RoutingNo);
+        SETRANGE("Version Code",RoutingVersionCode);
+        IF FINDLAST THEN
+          EXIT(GetProdCenterLocationCode(Type,"No."));
+      END;
+    END;
+
     PROCEDURE GetLastOperationFromBinCode@26(RoutingNo@1000 : Code[20];RoutingVersionCode@1001 : Code[20];LocationCode@1002 : Code[10];UseFlushingMethod@1006 : Boolean;FlushingMethod@1007 : 'Manual,Forward,Backward,Pick + Forward,Pick + Backward') : Code[20];
     VAR
       RoutingLine@1003 : Record 99000764;
@@ -1821,6 +1850,25 @@ OBJECT Codeunit 7302 WMS Management
         SETRANGE("Worksheet Line No.",WkshLineNo);
         IF FINDLAST THEN
           EXIT(GetProdCenterBinCode(Type,"No.",LocationCode,FALSE,0));
+      END;
+    END;
+
+    PROCEDURE GetProdCenterLocationCode@72(Type@1004 : 'Work Center,Machine Center';No@1003 : Code[20]) : Code[10];
+    VAR
+      WorkCenter@1000 : Record 99000754;
+      MachineCenter@1001 : Record 99000758;
+    BEGIN
+      CASE Type OF
+        Type::"Work Center":
+          BEGIN
+            WorkCenter.GET(No);
+            EXIT(WorkCenter."Location Code");
+          END;
+        Type::"Machine Center":
+          BEGIN
+            MachineCenter.GET(No);
+            EXIT(MachineCenter."Location Code");
+          END;
       END;
     END;
 

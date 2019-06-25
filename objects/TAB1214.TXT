@@ -2,9 +2,9 @@ OBJECT Table 1214 Intermediate Data Import
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -20,7 +20,7 @@ OBJECT Table 1214 Intermediate Data Import
                                                    CaptionML=[DAN=Dataudvekslingsnr.;
                                                               ENU=Data Exch. No.];
                                                    NotBlank=Yes }
-    { 3   ;   ;Table ID            ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 3   ;   ;Table ID            ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    CaptionML=[DAN=Tabel-id;
                                                               ENU=Table ID];
                                                    NotBlank=Yes }

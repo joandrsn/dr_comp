@@ -2,9 +2,9 @@ OBJECT Table 85 Acc. Schedule Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -98,7 +98,7 @@ OBJECT Table 85 Acc. Schedule Line
                                                    TableRelation="G/L Budget Name";
                                                    CaptionML=[DAN=Finansbudgetfilter;
                                                               ENU=G/L Budget Filter] }
-    { 15  ;   ;Business Unit Filter;Code10        ;FieldClass=FlowFilter;
+    { 15  ;   ;Business Unit Filter;Code20        ;FieldClass=FlowFilter;
                                                    TableRelation="Business Unit";
                                                    CaptionML=[DAN=Koncernvirk.filter;
                                                               ENU=Business Unit Filter] }

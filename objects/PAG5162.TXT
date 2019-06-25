@@ -2,15 +2,16 @@ OBJECT Page 5162 Sales Quote Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
     Editable=No;
     CaptionML=[DAN=Salgstilbudsarkiv;
                ENU=Sales Quote Archive];
+    DeleteAllowed=No;
     SourceTable=Table5107;
     SourceTableView=WHERE(Document Type=CONST(Quote));
     PageType=Document;

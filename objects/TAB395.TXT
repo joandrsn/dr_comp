@@ -2,9 +2,9 @@ OBJECT Table 395 XBRL Taxonomy Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -101,7 +101,7 @@ OBJECT Table 395 XBRL Taxonomy Line
                                                    CaptionML=[DAN=Noter;
                                                               ENU=Notes];
                                                    Editable=No }
-    { 15  ;   ;Business Unit Filter;Code10        ;FieldClass=FlowFilter;
+    { 15  ;   ;Business Unit Filter;Code20        ;FieldClass=FlowFilter;
                                                    TableRelation="Business Unit";
                                                    CaptionML=[DAN=Koncernvirk.filter;
                                                               ENU=Business Unit Filter] }

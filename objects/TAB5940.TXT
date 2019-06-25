@@ -2,9 +2,9 @@ OBJECT Table 5940 Service Item
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -67,8 +67,7 @@ OBJECT Table 5940 Service Item
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Description;
-                                                   OnValidate=BEGIN
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   ServMgtSetup.GET;
                                                                   NoSeriesMgt.TestManual(ServMgtSetup."Service Item Nos.");
@@ -76,6 +75,7 @@ OBJECT Table 5940 Service Item
                                                                 END;
                                                               END;
 
+                                                   AltSearchField=Search Description;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 2   ;   ;Serial No.          ;Code20        ;OnValidate=BEGIN
@@ -185,7 +185,7 @@ OBJECT Table 5940 Service Item
                                                                     ERROR(
                                                                       Text004,
                                                                       FIELDCAPTION("Customer No."),"Customer No.",TABLECAPTION,"No.");
-                                                                  ErrMessageIfServItemLinesExist(FIELDCAPTION("Customer No."));
+                                                                  ServItemLinesExistErr(FIELDCAPTION("Customer No."));
                                                                   IF ServLedgEntryExist THEN
                                                                     IF NOT CONFIRM(
                                                                          Text017,
@@ -214,7 +214,7 @@ OBJECT Table 5940 Service Item
                                                                     ERROR(
                                                                       Text004,
                                                                       FIELDCAPTION("Ship-to Code"),"Ship-to Code",TABLECAPTION,"No.");
-                                                                  ErrMessageIfServItemLinesExist(FIELDCAPTION("Ship-to Code"));
+                                                                  ServItemLinesExistErr(FIELDCAPTION("Ship-to Code"));
                                                                   IF ServLedgEntryExist THEN
                                                                     IF NOT CONFIRM(
                                                                          Text017,
@@ -858,11 +858,11 @@ OBJECT Table 5940 Service Item
       ServLogMgt@1028 : Codeunit 5906;
       MoveEntries@1032 : Codeunit 361;
       ResSkillMgt@1033 : Codeunit 5931;
-      Text016@1029 : TextConst 'DAN=%1 kan ikke ændres, fordi der er udestående serviceordrer/tilbud tilknyttet.;ENU=You cannot change the %1 because there are outstanding service orders/quotes attached to it.';
       Text017@1030 : TextConst 'DAN=Der findes serviceposter til %1\\ Vil du ændre %2?;ENU=Service ledger entries exist for this %1\\ Do you want to change the %2?';
       DimMgt@1039 : Codeunit 408;
       CancelResSkillChanges@1035 : Boolean;
       CancelResSkillAssignment@1036 : Boolean;
+      ChgCustomerErr@1010 : TextConst '@@@="%1 - Field Caption; %2 - Service Order No.;%3 - Serice Line No.;%4 - Service Item No.;%5 - Serial No.;%6 - Customer No.;%7 - Ship to Code.";DAN=Du kan ikke ændre %1 i serviceartiklen på grund af følgende udestående serviceordrelinje:\\ Ordre %2, linje %3, serviceartikelnummer %4, serienummer %5, debitor %6, leveringskode %7.;ENU=You cannot change the %1 in the service item because of the following outstanding service order line:\\ Order %2, line %3, service item number %4, serial number %5, customer %6, ship-to code %7.';
 
     PROCEDURE AssistEdit@3(OldServItem@1000 : Record 5940) : Boolean;
     BEGIN
@@ -902,12 +902,14 @@ OBJECT Table 5940 Service Item
       ServItemComponent.DELETEALL;
     END;
 
-    LOCAL PROCEDURE ErrMessageIfServItemLinesExist@7(ChangedFieldName@1000 : Text[100]);
+    LOCAL PROCEDURE ServItemLinesExistErr@7(ChangedFieldName@1000 : Text[100]);
     BEGIN
       IF ServItemLinesExist THEN
         ERROR(
-          Text016,
-          ChangedFieldName);
+          ChgCustomerErr,
+          ChangedFieldName,
+          ServItemLine."Document No.",ServItemLine."Line No.",ServItemLine."Service Item No.",
+          ServItemLine."Serial No.",ServItemLine."Customer No.",ServItemLine."Ship-to Code");
     END;
 
     LOCAL PROCEDURE ServLedgEntryExist@1() : Boolean;

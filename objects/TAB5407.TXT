@@ -2,9 +2,9 @@ OBJECT Table 5407 Prod. Order Component
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -57,7 +57,7 @@ OBJECT Table 5407 Prod. Order Component
                IF "Supplied-by Line No." > 0 THEN
                  IF ProdOrderLine.GET(Status,"Prod. Order No.","Supplied-by Line No.") THEN BEGIN
                    NewQuantity := ProdOrderLine.Quantity - "Expected Quantity";
-                   IF NewQuantity = 0 THEN BEGIN
+                   IF (NewQuantity = 0) OR IsLineRequiredForSingleDemand(ProdOrderLine,"Prod. Order Line No.") THEN BEGIN
                      ProdOrderLine.SetCalledFromComponent(TRUE);
                      ProdOrderLine.DELETE(TRUE);
                    END ELSE BEGIN
@@ -86,7 +86,6 @@ OBJECT Table 5407 Prod. Order Component
 
     CaptionML=[DAN=Prod.ordrekomponent;
                ENU=Prod. Order Component];
-    PasteIsValid=No;
     LookupPageID=Page5407;
     DrillDownPageID=Page5407;
   }
@@ -248,7 +247,7 @@ OBJECT Table 5407 Prod. Order Component
                                                                 THEN
                                                                   CALCFIELDS("Act. Consumption (Qty)");
                                                                 "Remaining Quantity" := "Expected Quantity" - "Act. Consumption (Qty)" / "Qty. per Unit of Measure";
-                                                                IF ("Remaining Quantity" * "Expected Quantity") < 0 THEN
+                                                                IF ("Remaining Quantity" * "Expected Quantity") <= 0 THEN
                                                                   "Remaining Quantity" := 0;
                                                                 "Remaining Qty. (Base)" := ROUND("Remaining Quantity" * "Qty. per Unit of Measure",0.00001);
                                                                 "Completely Picked" := "Qty. Picked" >= "Expected Quantity";
@@ -492,8 +491,13 @@ OBJECT Table 5407 Prod. Order Component
                                                                 CheckDateConflict@1000 : Codeunit 99000815;
                                                               BEGIN
                                                                 WhseValidateSourceLine.ProdComponentVerifyChange(Rec,xRec);
-                                                                IF NOT Blocked THEN
-                                                                  CheckDateConflict.ProdOrderComponentCheck(Rec,TRUE);
+                                                                IF NOT Blocked THEN BEGIN
+                                                                  IF CurrFieldNo <> 0 THEN
+                                                                    CheckDateConflict.ProdOrderComponentCheck(Rec,TRUE,TRUE)
+                                                                  ELSE
+                                                                    IF CheckDateConflict.ProdOrderComponentCheck(Rec,NOT WarningRaised,FALSE) THEN
+                                                                      WarningRaised := TRUE;
+                                                                END;
                                                                 UpdateDatetime;
                                                               END;
 
@@ -720,6 +724,7 @@ OBJECT Table 5407 Prod. Order Component
       Text99000009@1013 : TextConst 'DAN=Automatisk reservation er ikke mulig.\Vil du reservere varerne manuelt?;ENU=Automatic reservation is not possible.\Do you want to reserve items manually?';
       IgnoreErrors@1026 : Boolean;
       ErrorOccured@1032 : Boolean;
+      WarningRaised@1004 : Boolean;
 
     PROCEDURE Caption@4() : Text[100];
     VAR
@@ -745,6 +750,8 @@ OBJECT Table 5407 Prod. Order Component
       ProdOrderLine.GET(Status,"Prod. Order No.","Prod. Order Line No.");
 
       "Due Date" := ProdOrderLine."Starting Date";
+      "Due Time" := ProdOrderLine."Starting Time";
+      UpdateDatetime;
 
       ProdOrderRtngLine.RESET;
       ProdOrderRtngLine.SETRANGE(Status,Status);
@@ -1214,6 +1221,17 @@ OBJECT Table 5407 Prod. Order Component
       SETCURRENTKEY(Status,"Prod. Order No.","Prod. Order Line No.","Item No.","Line No.");
       SETRANGE(Status,Status::Released);
       SETRANGE("Prod. Order No.",OrderNo);
+    END;
+
+    LOCAL PROCEDURE IsLineRequiredForSingleDemand@27(ProdOrderLine@1001 : Record 5406;DemandLineNo@1002 : Integer) : Boolean;
+    VAR
+      ProdOrderComponent@1000 : Record 5407;
+    BEGIN
+      ProdOrderComponent.SETRANGE(Status,ProdOrderLine.Status);
+      ProdOrderComponent.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
+      ProdOrderComponent.SETFILTER("Prod. Order Line No.",'<>%1',DemandLineNo);
+      ProdOrderComponent.SETRANGE("Supplied-by Line No.",ProdOrderLine."Line No.");
+      EXIT(ProdOrderComponent.ISEMPTY);
     END;
 
     BEGIN

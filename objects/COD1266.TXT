@@ -2,9 +2,9 @@ OBJECT Codeunit 1266 Encryption Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -66,11 +66,6 @@ OBJECT Codeunit 1266 Encryption Management
       StdPasswordDialog@1002 : Page 9815;
       TempKeyFilePath@1000 : Text;
     BEGIN
-      IF ENCRYPTIONENABLED THEN BEGIN
-        ChangeKey;
-        EXIT;
-      END;
-
       TempKeyFilePath := UploadFile;
 
       // TempKeyFilePath is '' if the used cancelled the Upload file dialog.
@@ -79,8 +74,14 @@ OBJECT Codeunit 1266 Encryption Management
 
       StdPasswordDialog.EnableGetPasswordMode(FALSE);
       StdPasswordDialog.DisablePasswordConfirmation;
-      IF StdPasswordDialog.RUNMODAL = ACTION::OK THEN
-        ImportKeyAndEncryptData(TempKeyFilePath,StdPasswordDialog.GetPasswordValue);
+      IF StdPasswordDialog.RUNMODAL = ACTION::OK THEN BEGIN
+        IF ENCRYPTIONENABLED THEN
+          // Encryption is already enabled so we're just importing the key. If the imported
+          // key does not match the already enabled encryption key the process will fail.
+          ImportKeyWithoutEncryptingData(TempKeyFilePath,StdPasswordDialog.GetPasswordValue)
+        ELSE
+          ImportKeyAndEncryptData(TempKeyFilePath,StdPasswordDialog.GetPasswordValue);
+      END;
 
       FileManagement.DeleteServerFile(TempKeyFilePath);
     END;
@@ -279,6 +280,12 @@ OBJECT Codeunit 1266 Encryption Management
         DELETEENCRYPTIONKEY;
         ERROR(GETLASTERRORTEXT);
       END;
+      MESSAGE(EncryptionKeyImportedMsg);
+    END;
+
+    LOCAL PROCEDURE ImportKeyWithoutEncryptingData@25(KeyFilePath@1001 : Text;Password@1000 : Text);
+    BEGIN
+      IMPORTENCRYPTIONKEY(KeyFilePath,Password);
       MESSAGE(EncryptionKeyImportedMsg);
     END;
 

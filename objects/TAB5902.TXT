@@ -2,9 +2,9 @@ OBJECT Table 5902 Service Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-03-19;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.51234,NAVDK9.00.00.51234;
   }
   PROPERTIES
   {
@@ -18,6 +18,8 @@ OBJECT Table 5902 Service Line
                IF Type = Type::Item THEN
                  IF ServHeader.InventoryPickConflict("Document Type","Document No.",ServHeader."Shipping Advice") THEN
                    DisplayConflictError(ServHeader.InvPickConflictResolutionTxt);
+
+               IsCustCrLimitChecked := FALSE;
              END;
 
     OnModify=BEGIN
@@ -35,6 +37,7 @@ OBJECT Table 5902 Service Line
                END;
 
                UpdateServiceLedgerEntry;
+               IsCustCrLimitChecked := FALSE;
              END;
 
     OnDelete=VAR
@@ -84,7 +87,6 @@ OBJECT Table 5902 Service Line
 
     CaptionML=[DAN=Servicelinje;
                ENU=Service Line];
-    PasteIsValid=No;
     LookupPageID=Page5904;
     DrillDownPageID=Page5904;
   }
@@ -161,10 +163,12 @@ OBJECT Table 5902 Service Line
                                                                 TESTFIELD("Quantity Shipped",0);
                                                                 TESTFIELD("Shipment No.",'');
                                                                 CheckItemAvailable(FIELDNO("No."));
-                                                                UpdateReservation(FIELDNO("No."));
                                                                 TestStatusOpen;
 
                                                                 Clearfields;
+
+                                                                UpdateReservation(FIELDNO("No."));
+
                                                                 IF "No." = '' THEN
                                                                   EXIT;
 
@@ -432,10 +436,11 @@ OBJECT Table 5902 Service Line
 
                                                                 GetDefaultBin;
 
-                                                                CreateDim(
-                                                                  DimMgt.TypeToTableID5(Type),"No.",
-                                                                  DATABASE::Job,"Job No.",
-                                                                  DATABASE::"Responsibility Center","Responsibility Center");
+                                                                IF NOT ISTEMPORARY THEN
+                                                                  CreateDim(
+                                                                    DimMgt.TypeToTableID5(Type),"No.",
+                                                                    DATABASE::Job,"Job No.",
+                                                                    DATABASE::"Responsibility Center","Responsibility Center");
 
                                                                 IF ServiceLine.GET("Document Type","Document No.","Line No.") THEN
                                                                   MODIFY;
@@ -584,8 +589,15 @@ OBJECT Table 5902 Service Line
                                                                     Text001,
                                                                     MaxQtyToInvoiceBase);
                                                                 "VAT Difference" := 0;
-                                                                CalcInvDiscToInvoice;
-                                                                UpdateAmounts;
+
+                                                                IF (xRec."Qty. to Consume" <> "Qty. to Consume") OR
+                                                                   (xRec."Qty. to Consume (Base)" <> "Qty. to Consume (Base)")
+                                                                THEN
+                                                                  VALIDATE("Line Discount %")
+                                                                ELSE BEGIN
+                                                                  CalcInvDiscToInvoice;
+                                                                  UpdateAmounts
+                                                                END;
                                                               END;
 
                                                    CaptionML=[DAN=Fakturer (antal);
@@ -731,14 +743,7 @@ OBJECT Table 5902 Service Line
                                                                 GetServHeader;
                                                                 TESTFIELD(Quantity);
                                                                 IF "Line Discount Amount" <> xRec."Line Discount Amount" THEN
-                                                                  IF ROUND(CalcChargeableQty * "Unit Price",Currency."Amount Rounding Precision") <> 0 THEN
-                                                                    "Line Discount %" :=
-                                                                      ROUND(
-                                                                        "Line Discount Amount" /
-                                                                        ROUND(CalcChargeableQty * "Unit Price",
-                                                                          Currency."Amount Rounding Precision") * 100,0.00001)
-                                                                  ELSE
-                                                                    "Line Discount %" := 0;
+                                                                  UpdateLineDiscPct;
                                                                 "Inv. Discount Amount" := 0;
                                                                 "Inv. Disc. Amount to Invoice" := 0;
                                                                 VALIDATE("Line Discount %");
@@ -886,7 +891,8 @@ OBJECT Table 5902 Service Line
                                                    AccessByPermission=TableData 27=R;
                                                    CaptionML=[DAN=Udl.varepostløbenr.;
                                                               ENU=Appl.-to Item Entry] }
-    { 40  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+    { 40  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(1,"Shortcut Dimension 1 Code");
                                                               END;
@@ -894,7 +900,8 @@ OBJECT Table 5902 Service Line
                                                    CaptionML=[DAN=Genvejsdimension 1-kode;
                                                               ENU=Shortcut Dimension 1 Code];
                                                    CaptionClass='1,2,1' }
-    { 41  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+    { 41  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(2,"Shortcut Dimension 2 Code");
                                                               END;
@@ -1882,7 +1889,10 @@ OBJECT Table 5902 Service Line
                                                                     TESTFIELD("Needed by Date");
                                                                 IF "Needed by Date" <> 0D THEN
                                                                   CheckItemAvailable(FIELDNO("Needed by Date"));
-                                                                UpdateReservation(FIELDNO("Needed by Date"));
+                                                                IF CurrFieldNo = FIELDNO("Planned Delivery Date") THEN
+                                                                  UpdateReservation(CurrFieldNo)
+                                                                ELSE
+                                                                  UpdateReservation(FIELDNO("Needed by Date"));
                                                                 "Planned Delivery Date" := "Needed by Date";
                                                               END;
 
@@ -2460,6 +2470,9 @@ OBJECT Table 5902 Service Line
       Text13600@1060000 : TextConst 'DAN=Du kan ikke angive %1, hvis %2 er "%3".;ENU=You cannot enter %1 if %2 is "%3".';
       Text052@1108 : TextConst 'DAN=Du kan ikke slette feltet %1, da der findes en eller flere serviceposter for denne linje.;ENU=You cannot change the %1 field because one or more service entries exist for this line.';
       Text053@1020 : TextConst 'DAN=Du kan ikke ændre denne servicelinje, da der findes en eller flere serviceposter for denne linje.;ENU=You cannot modify the service line because one or more service entries exist for this line.';
+      IsCustCrLimitChecked@1049 : Boolean;
+      LocationChangedMsg@1055 : TextConst '@@@="%1 = Item No., %2 = Item serial No., %3 = Location code";DAN=Varen %1 med serienummeret %2 opbevares på placeringen %3. Feltet Lokationskode på servicelinjen vil blive opdateret.;ENU=Item %1 with serial number %2 is stored on location %3. The Location Code field on the service line will be updated.';
+      LineDiscountPctErr@1200 : TextConst 'DAN=Værdien i feltet Linjerabat % skal være mellem 0 og 100.;ENU=The value in the Line Discount % field must be between 0 and 100.';
 
     LOCAL PROCEDURE CheckItemAvailable@3(CalledByFieldNo@1000 : Integer);
     BEGIN
@@ -2541,10 +2554,10 @@ OBJECT Table 5902 Service Line
 
     LOCAL PROCEDURE ReplaceServItem@8() : Boolean;
     VAR
-      ItemTrackingCode@1003 : Record 6502;
       ServItemReplacement@1000 : Page 5985;
       SerialNo@1001 : Code[20];
       VariantCode@1002 : Code[10];
+      LocationCode@1004 : Code[10];
     BEGIN
       ErrorIfAlreadySelectedSI("Service Item Line No.");
       CLEAR(ServItemReplacement);
@@ -2552,13 +2565,15 @@ OBJECT Table 5902 Service Line
       COMMIT;
       IF ServItemReplacement.RUNMODAL = ACTION::OK THEN BEGIN
         SerialNo := ServItemReplacement.ReturnSerialNo;
-        IF SerialNo = '' THEN
-          IF Item."Item Tracking Code" <> '' THEN BEGIN
-            ItemTrackingCode.GET(Item."Item Tracking Code");
-            IF ItemTrackingCode."SN Specific Tracking" THEN
-              ERROR(Text023);
-          END;
         VariantCode := ServItemReplacement.ReturnVariantCode;
+        IF SerialNo = '' THEN
+          CheckItemTrackingCode(Item)
+        ELSE
+          IF FindSerialNoStorageLocation(LocationCode,Item."No.",SerialNo,VariantCode) AND (LocationCode <> "Location Code") THEN BEGIN
+            VALIDATE("Location Code",LocationCode);
+            MESSAGE(STRSUBSTNO(LocationChangedMsg,Item."No.",SerialNo,LocationCode));
+          END;
+
         "Variant Code" := VariantCode;
         VALIDATE(Quantity,1);
         TempTrackingSpecification.DELETEALL;
@@ -2580,6 +2595,33 @@ OBJECT Table 5902 Service Line
       Clearfields;
       VALIDATE("No.",'');
       EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE FindSerialNoStorageLocation@86(VAR LocationCode@1004 : Code[10];ItemNo@1000 : Code[20];SerialNo@1001 : Code[20];VariantCode@1003 : Code[10]) : Boolean;
+    VAR
+      ItemLedgerEntry@1002 : Record 32;
+    BEGIN
+      ItemLedgerEntry.SETRANGE("Item No.",ItemNo);
+      ItemLedgerEntry.SETRANGE("Serial No.",SerialNo);
+      ItemLedgerEntry.SETRANGE("Variant Code",VariantCode);
+      ItemLedgerEntry.SETRANGE(Open,TRUE);
+      IF NOT ItemLedgerEntry.FINDLAST THEN
+        EXIT(FALSE);
+
+      LocationCode := ItemLedgerEntry."Location Code";
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE CheckItemTrackingCode@87(ReplacementItem@1001 : Record 27);
+    VAR
+      ItemTrackingCode@1000 : Record 6502;
+    BEGIN
+      IF ReplacementItem."Item Tracking Code" = '' THEN
+        EXIT;
+
+      ItemTrackingCode.GET(ReplacementItem."Item Tracking Code");
+      IF ItemTrackingCode."SN Specific Tracking" THEN
+        ERROR(Text023);
     END;
 
     LOCAL PROCEDURE ErrorIfAlreadySelectedSI@107(ServItemLineNo@1000 : Integer);
@@ -2625,7 +2667,10 @@ OBJECT Table 5902 Service Line
       END;
 
       IF "Exclude Contract Discount" THEN
-        Discounts[2] := "Line Discount %"
+        IF CurrFieldNo = FIELDNO("Fault Reason Code") THEN
+          Discounts[2] := "Line Discount %"
+        ELSE
+          Discounts[2] := 0
       ELSE
         Discounts[2] := "Contract Disc. %";
 
@@ -2651,6 +2696,8 @@ OBJECT Table 5902 Service Line
     END;
 
     PROCEDURE UpdateAmounts@13();
+    VAR
+      CustCheckCrLimit@1000 : Codeunit 312;
     BEGIN
       IF GUIALLOWED AND (CurrFieldNo <> 0) THEN
         ConfirmAdjPriceLineChange;
@@ -2672,6 +2719,10 @@ OBJECT Table 5902 Service Line
       UpdateVATAmounts;
 
       InitOutstandingAmount;
+      IF NOT IsCustCrLimitChecked AND (CurrFieldNo <> 0) THEN BEGIN
+        IsCustCrLimitChecked := TRUE;
+        CustCheckCrLimit.ServiceLineCheck(Rec);
+      END;
       UpdateRemainingCostsAndAmounts;
     END;
 
@@ -4095,7 +4146,7 @@ OBJECT Table 5902 Service Line
         EXIT;
 
       CASE CalledByFieldNo OF
-        FIELDNO("Needed by Date"):
+        FIELDNO("Needed by Date"),FIELDNO("Planned Delivery Date"):
           IF (xRec."Needed by Date" <> "Needed by Date") AND
              (Quantity <> 0) AND
              (Reserve <> Reserve::Never)
@@ -4512,6 +4563,21 @@ OBJECT Table 5902 Service Line
         TableID[LastAddedTableID] := NewTableID;
         No[LastAddedTableID] := NewNo;
       END;
+    END;
+
+    LOCAL PROCEDURE UpdateLineDiscPct@97();
+    VAR
+      LineDiscountPct@1000 : Decimal;
+    BEGIN
+      IF ROUND(CalcChargeableQty * "Unit Price",Currency."Amount Rounding Precision") <> 0 THEN BEGIN
+        LineDiscountPct := ROUND(
+            "Line Discount Amount" / ROUND(CalcChargeableQty * "Unit Price",Currency."Amount Rounding Precision") * 100,
+            0.00001);
+        IF NOT (LineDiscountPct IN [0..100]) THEN
+          ERROR(LineDiscountPctErr);
+        "Line Discount %" := LineDiscountPct;
+      END ELSE
+        "Line Discount %" := 0;
     END;
 
     BEGIN

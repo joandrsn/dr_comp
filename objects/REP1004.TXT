@@ -2,9 +2,9 @@ OBJECT Report 1004 Close Inventory Period - Test
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -168,6 +168,7 @@ OBJECT Report 1004 Close Inventory Period - Test
 
     { 20  ;3   ;DataItem;ItemErrorLoop       ;
                DataItemTable=Table2000000026;
+               DataItemTableView=SORTING(Number);
                OnPreDataItem=BEGIN
                                TempItemErrorBuffer.SETRANGE("Source No.",Item."No.");
                                TempItemErrorBuffer.SETRANGE("Source Table",DATABASE::"Avg. Cost Adjmt. Entry Point");
@@ -3660,6 +3661,7 @@ OBJECT Report 1004 Close Inventory Period - Test
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

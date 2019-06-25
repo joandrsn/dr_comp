@@ -2,9 +2,9 @@ OBJECT Page 46 Sales Order Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50458,NAVDK9.00.00.50458;
   }
   PROPERTIES
   {
@@ -19,6 +19,7 @@ OBJECT Page 46 Sales Order Subform
     AutoSplitKey=Yes;
     OnAfterGetRecord=BEGIN
                        ShowShortcutDimCode(ShortcutDimCode);
+                       CLEAR(DocumentTotals);
                      END;
 
     OnNewRecord=BEGIN
@@ -40,7 +41,8 @@ OBJECT Page 46 Sales Order Subform
     OnAfterGetCurrRecord=BEGIN
                            IF SalesHeader.GET("Document Type","Document No.") THEN;
 
-                           DocumentTotals.SalesUpdateTotalsControls(Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
+                           DocumentTotals.SalesUpdateTotalsControls(
+                             Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
                              TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,CurrPage.EDITABLE,VATAmount);
 
                            TypeChosen := HasTypeToFillMandatotyFields;
@@ -130,6 +132,7 @@ OBJECT Page 46 Sales Order Subform
                                END;
                                 }
       { 1902085804;2 ;Action    ;
+                      Name=Dimensions;
                       AccessByPermission=TableData 348=R;
                       ShortCutKey=Shift+Ctrl+D;
                       CaptionML=[DAN=Dimensioner;
@@ -630,18 +633,34 @@ OBJECT Page 46 Sales Order Subform
 
     { 82  ;2   ;Field     ;
                 SourceExpr="Requested Delivery Date";
-                Visible=FALSE }
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             UpdateForm(TRUE);
+                           END;
+                            }
 
     { 84  ;2   ;Field     ;
                 SourceExpr="Promised Delivery Date";
-                Visible=FALSE }
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             UpdateForm(TRUE);
+                           END;
+                            }
 
     { 86  ;2   ;Field     ;
                 SourceExpr="Planned Delivery Date";
+                OnValidate=BEGIN
+                             UpdateForm(TRUE);
+                           END;
+
                 QuickEntry=FALSE }
 
     { 88  ;2   ;Field     ;
-                SourceExpr="Planned Shipment Date" }
+                SourceExpr="Planned Shipment Date";
+                OnValidate=BEGIN
+                             UpdateForm(TRUE);
+                           END;
+                            }
 
     { 100 ;2   ;Field     ;
                 SourceExpr="Shipment Date";
@@ -842,6 +861,10 @@ OBJECT Page 46 Sales Order Subform
                              SalesHeader@1000 : Record 36;
                            BEGIN
                              SalesHeader.GET("Document Type","Document No.");
+                             IF SalesHeader.InvoicedLineExists THEN
+                               IF NOT CONFIRM(UpdateInvDiscountQst,FALSE) THEN
+                                 EXIT;
+
                              SalesCalcDiscByType.ApplyInvDiscBasedOnAmt(TotalSalesLine."Inv. Discount Amount",SalesHeader);
                              CurrPage.UPDATE(FALSE);
                            END;
@@ -905,7 +928,9 @@ OBJECT Page 46 Sales Order Subform
                 Editable=FALSE;
                 OnDrillDown=BEGIN
                               DocumentTotals.SalesRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalSalesLine);
-                              CurrPage.UPDATE(FALSE);
+                              DocumentTotals.SalesUpdateTotalsControls(
+                                Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
+                                TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,CurrPage.EDITABLE,VATAmount);
                             END;
 
                 ShowCaption=No }
@@ -932,6 +957,7 @@ OBJECT Page 46 Sales Order Subform
       TotalAmountStyle@1013 : Text;
       RefreshMessageEnabled@1012 : Boolean;
       RefreshMessageText@1011 : Text;
+      UpdateInvDiscountQst@1010 : TextConst 'DAN=Én eller flere linjer er blevet faktureret. Rabatten på de fakturerede linjer medregnes ikke.\\Vil du opdatere fakturarabatten?;ENU=One or more lines have been invoiced. The discount distributed to invoiced lines will not be taken into account.\\Do you want to update the invoice discount?';
 
     PROCEDURE ApproveCalcInvDisc@1();
     BEGIN
@@ -1156,7 +1182,8 @@ OBJECT Page 46 Sales Order Subform
         CurrPage.SAVERECORD;
         AutoReserve;
         CurrPage.UPDATE(FALSE);
-      END;
+      END ELSE
+        CurrPage.UPDATE(TRUE);
     END;
 
     LOCAL PROCEDURE SaveAndAutoAsmToOrder@20();

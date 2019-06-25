@@ -2,7 +2,7 @@ OBJECT Table 2000000111 Session Event
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=30-05-19;
     Time=12:00:00;
     Version List=;
   }
@@ -46,11 +46,14 @@ OBJECT Table 2000000111 Session Event
                                                               ENU=User ID] }
     { 10  ;   ;Comment             ;Text132       ;CaptionML=[DAN=Bemærkning;
                                                               ENU=Comment] }
+    { 11  ;   ;Session Unique ID   ;GUID          ;CaptionML=[DAN=Entydigt sessions-id;
+                                                              ENU=Session Unique ID] }
   }
   KEYS
   {
     {    ;User SID,Server Instance ID,Session ID,Event Datetime,Event Type;
                                                    Clustered=Yes }
+    {    ;Session Unique ID                        }
     {    ;Event Datetime                           }
   }
   FIELDGROUPS

@@ -2,9 +2,9 @@ OBJECT Page 21 Customer Card
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897,NAVDK9.00.00.43897;
+    Version List=NAVW19.00.00.50458,NAVDK9.00.00.50458;
   }
   PROPERTIES
   {
@@ -428,6 +428,7 @@ OBJECT Page 21 Customer Card
       { 1900000005;0 ;ActionContainer;
                       ActionContainerType=NewDocumentItems }
       { 1902575205;1 ;Action    ;
+                      Name=NewBlanketSalesOrder;
                       CaptionML=[DAN=Rammesalgsordre;
                                  ENU=Blanket Sales Order];
                       RunObject=Page 507;
@@ -437,6 +438,7 @@ OBJECT Page 21 Customer Card
                       PromotedCategory=New;
                       RunPageMode=Create }
       { 1900246505;1 ;Action    ;
+                      Name=NewSalesQuote;
                       CaptionML=[DAN=Salgstilbud;
                                  ENU=Sales Quote];
                       RunObject=Page 41;
@@ -446,6 +448,7 @@ OBJECT Page 21 Customer Card
                       PromotedCategory=New;
                       RunPageMode=Create }
       { 1906384905;1 ;Action    ;
+                      Name=NewSalesInvoice;
                       CaptionML=[DAN=Salgsfaktura;
                                  ENU=Sales Invoice];
                       RunObject=Page 43;
@@ -455,6 +458,7 @@ OBJECT Page 21 Customer Card
                       PromotedCategory=New;
                       RunPageMode=Create }
       { 1904747105;1 ;Action    ;
+                      Name=NewSalesOrder;
                       CaptionML=[DAN=Salgsordre;
                                  ENU=Sales Order];
                       RunObject=Page 42;
@@ -464,6 +468,7 @@ OBJECT Page 21 Customer Card
                       PromotedCategory=New;
                       RunPageMode=Create }
       { 1902583505;1 ;Action    ;
+                      Name=NewSalesCreditMemo;
                       CaptionML=[DAN=Salgskreditnota;
                                  ENU=Sales Credit Memo];
                       RunObject=Page 44;
@@ -473,6 +478,7 @@ OBJECT Page 21 Customer Card
                       PromotedCategory=New;
                       RunPageMode=Create }
       { 1905163705;1 ;Action    ;
+                      Name=NewSalesReturnOrder;
                       CaptionML=[DAN=Salgsreturvareordre;
                                  ENU=Sales Return Order];
                       RunObject=Page 6630;
@@ -622,6 +628,7 @@ OBJECT Page 21 Customer Card
                                  ENU=F&unctions];
                       Image=Action }
       { 167     ;2   ;Action    ;
+                      Name=ApplyTemplate;
                       Ellipsis=Yes;
                       CaptionML=[DAN=Anvend skabelon;
                                  ENU=Apply Template];
@@ -634,6 +641,7 @@ OBJECT Page 21 Customer Card
                                BEGIN
                                  RecRef.GETTABLE(Rec);
                                  ConfigTemplateMgt.UpdateFromTemplateSelection(RecRef);
+                                 RecRef.SETTABLE(Rec);
                                END;
                                 }
       { 1900839804;1 ;Action    ;
@@ -766,6 +774,12 @@ OBJECT Page 21 Customer Card
 
     { 26  ;2   ;Field     ;
                 SourceExpr=Blocked }
+
+    { 200 ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om adgangen til data skal begrænses for dataemnet i den daglige drift. Dette er eksempelvis nyttigt, når du vil beskytte data mod ændringer, mens det kontrolleres, om de indeholder personlige oplysninger.;
+                           ENU=Specifies whether to limit access to data for the data subject during daily operations. This is useful, for example, when protecting data from changes while it is under privacy review.];
+                SourceExpr="Privacy Blocked";
+                Importance=Additional }
 
     { 28  ;2   ;Field     ;
                 SourceExpr="Last Date Modified" }

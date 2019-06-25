@@ -2,9 +2,9 @@ OBJECT Table 9059 Administration Cue
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -15,11 +15,12 @@ OBJECT Table 9059 Administration Cue
   {
     { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
                                                               ENU=Primary Key] }
-    { 2   ;   ;Job Queue Entries - Today;Integer  ;FieldClass=FlowField;
+    { 2   ;   ;Job Queue Entries Until Today;Integer;
+                                                   FieldClass=FlowField;
                                                    CalcFormula=Count("Job Queue Entry" WHERE (Earliest Start Date/Time=FIELD(Date Filter2),
                                                                                               Expiration Date/Time=FIELD(Date Filter3)));
-                                                   CaptionML=[DAN=Opgavekøposter - i dag;
-                                                              ENU=Job Queue Entries - Today] }
+                                                   CaptionML=[DAN=Opgavekøposter indtil i dag;
+                                                              ENU=Job Queue Entries Until Today] }
     { 3   ;   ;User Posting Period ;Integer       ;FieldClass=FlowField;
                                                    CalcFormula=Count("User Setup" WHERE (Allow Posting To=FIELD(Date Filter)));
                                                    CaptionML=[DAN=Bogføringsperiode for bruger;

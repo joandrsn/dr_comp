@@ -2,9 +2,9 @@ OBJECT Table 5970 Filed Service Contract Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -74,7 +74,7 @@ OBJECT Table 5970 Filed Service Contract Header
                                                               ENU=Contact Name] }
     { 14  ;   ;Your Reference      ;Text35        ;CaptionML=[DAN=Reference;
                                                               ENU=Your Reference] }
-    { 15  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 15  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 16  ;   ;Bill-to Customer No.;Code20        ;TableRelation=Customer;
@@ -294,6 +294,7 @@ OBJECT Table 5970 Filed Service Contract Header
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Arkiveret af;
                                                               ENU=Filed By] }
     { 104 ;   ;Reason for Filing   ;Option        ;CaptionML=[DAN=Arkiveringsårsag;

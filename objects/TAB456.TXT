@@ -2,9 +2,9 @@ OBJECT Table 456 Posted Approval Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -44,6 +44,7 @@ OBJECT Table 456 Posted Approval Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Godkender-id;
                                                               ENU=Approver ID] }
     { 9   ;   ;Status              ;Option        ;CaptionML=[DAN=Status;
@@ -95,7 +96,8 @@ OBJECT Table 456 Posted Approval Entry
     { 20  ;   ;Available Credit Limit (LCY);Decimal;
                                                    CaptionML=[DAN=Tilgængelig kreditgrænse (RV);
                                                               ENU=Available Credit Limit (LCY)] }
-    { 22  ;   ;Posted Record ID    ;RecordID      ;CaptionML=[DAN=Bogført record-id;
+    { 22  ;   ;Posted Record ID    ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogført record-id;
                                                               ENU=Posted Record ID] }
     { 23  ;   ;Delegation Date Formula;DateFormula;CaptionML=[DAN=Uddelegeringsdatoformel;
                                                               ENU=Delegation Date Formula] }

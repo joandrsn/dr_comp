@@ -2,9 +2,9 @@ OBJECT Codeunit 99000830 Create Reserv. Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -27,6 +27,7 @@ OBJECT Codeunit 99000830 Create Reserv. Entry
       Inbound@1009 : Boolean;
       UseQtyToInvoice@1010 : Boolean;
       QtyToHandleAndInvoiceIsSet@1024 : Boolean;
+      LastProcessedSourceID@1007 : Text;
 
     PROCEDURE CreateEntry@5(ItemNo@1000 : Code[20];VariantCode@1001 : Code[10];LocationCode@1002 : Code[10];Description@1004 : Text[50];ExpectedReceiptDate@1005 : Date;ShipmentDate@1006 : Date;TransferredFromEntryNo@1007 : Integer;Status@1008 : 'Reservation,Tracking,Surplus,Prospect');
     VAR
@@ -415,6 +416,8 @@ OBJECT Codeunit 99000830 Create Reserv. Entry
         IF NewReservEntry.MODIFY THEN ;
       END;
 
+      SynchronizeTransferOutboundToInboundItemTracking(NewReservEntry."Entry No.");
+
       xTransferQty -= TransferQty;
       EXIT(xTransferQty * CurrSignFactor);
     END;
@@ -553,7 +556,9 @@ OBJECT Codeunit 99000830 Create Reserv. Entry
         TempTrkgSpec1.INIT;
         TempTrkgSpec1.TRANSFERFIELDS(ReservEntry);
         TempTrkgSpec1.VALIDATE("Quantity (Base)",NonReleasedQty);
-        IF TempTrkgSpec1."Source Type" <> DATABASE::"Item Ledger Entry" THEN BEGIN
+        IF (TempTrkgSpec1."Source Type" <> DATABASE::"Item Ledger Entry") AND
+           (ReservEntry."Reservation Status" <> ReservEntry."Reservation Status"::Reservation)
+        THEN BEGIN
           TempTrkgSpec1."Serial No." := '';
           TempTrkgSpec1."Lot No." := '';
         END;
@@ -573,7 +578,9 @@ OBJECT Codeunit 99000830 Create Reserv. Entry
         TempTrkgSpec2.INIT;
         TempTrkgSpec2.TRANSFERFIELDS(ReservEntry2);
         TempTrkgSpec2.VALIDATE("Quantity (Base)",NonReleasedQty);
-        IF TempTrkgSpec2."Source Type" <> DATABASE::"Item Ledger Entry" THEN BEGIN
+        IF (TempTrkgSpec2."Source Type" <> DATABASE::"Item Ledger Entry") AND
+           (ReservEntry2."Reservation Status" <> ReservEntry2."Reservation Status"::Reservation)
+        THEN BEGIN
           TempTrkgSpec2."Serial No." := '';
           TempTrkgSpec2."Lot No." := '';
         END;
@@ -873,6 +880,41 @@ OBJECT Codeunit 99000830 Create Reserv. Entry
             END;
           END;
         UNTIL ReservEntryFrom.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE SynchronizeTransferOutboundToInboundItemTracking@28(ReservationEntryNo@1001 : Integer);
+    VAR
+      FromReservationEntry@1002 : Record 337;
+      ToReservationEntry@1003 : Record 337;
+      ItemTrackingManagement@1000 : Codeunit 6500;
+    BEGIN
+      IF FromReservationEntry.GET(ReservationEntryNo,FALSE) THEN
+        IF (FromReservationEntry."Source Type" = DATABASE::"Transfer Line") AND
+           (FromReservationEntry."Source Subtype" = 0) AND
+           FromReservationEntry.TrackingExists AND
+           NeedSynchronizeItemTrackingToOutboundTransfer(FromReservationEntry)
+        THEN BEGIN
+          ToReservationEntry := FromReservationEntry;
+          ToReservationEntry."Source Subtype" := 1;
+          ItemTrackingManagement.SynchronizeItemTrackingByPtrs(FromReservationEntry,ToReservationEntry);
+        END;
+    END;
+
+    LOCAL PROCEDURE NeedSynchronizeItemTrackingToOutboundTransfer@32(ReservationEntry@1000 : Record 337) : Boolean;
+    VAR
+      ItemTrackingMgt@1001 : Codeunit 6500;
+      CurrSourceID@1002 : Text;
+    BEGIN
+      WITH ReservationEntry DO
+        CurrSourceID :=
+          ItemTrackingMgt.ComposeRowID(
+            "Source Type","Source Subtype","Source ID","Source Batch Name","Source Prod. Order Line","Source Ref. No.");
+
+      IF LastProcessedSourceID = CurrSourceID THEN
+        EXIT(FALSE);
+
+      LastProcessedSourceID := CurrSourceID;
+      EXIT(TRUE);
     END;
 
     BEGIN

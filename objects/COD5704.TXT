@@ -2,9 +2,9 @@ OBJECT Codeunit 5704 TransferOrder-Post Shipment
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -205,7 +205,7 @@ OBJECT Codeunit 5704 TransferOrder-Post Shipment
                   IF TransLine."Qty. to Ship" > 0 THEN BEGIN
                     OriginalQuantity := TransLine."Qty. to Ship";
                     OriginalQuantityBase := TransLine."Qty. to Ship (Base)";
-                    PostItemJnlLine(TransLine,TransShptHeader,TransShptLine);
+                    PostItem(TransLine,TransShptHeader,TransShptLine,WhseShip,WhseShptHeader);
                     TransShptLine."Item Shpt. Entry No." := InsertShptEntryRelation(TransShptLine);
                     IF WhseShip THEN BEGIN
                       WhseShptLine.SETCURRENTKEY(
@@ -352,54 +352,68 @@ OBJECT Codeunit 5704 TransferOrder-Post Shipment
       Text008@11042 : TextConst 'DAN=Denne ordre skal være en fuld leverance.;ENU=This order must be a complete shipment.';
       Text009@1042 : TextConst 'DAN=Vare %1 er ikke på lager.;ENU=Item %1 is not in inventory.';
 
-    LOCAL PROCEDURE PostItemJnlLine@2(VAR TransLine3@1000 : Record 5741;TransShptHeader2@1001 : Record 5744;TransShptLine2@1002 : Record 5745);
+    LOCAL PROCEDURE PostItem@24(VAR TransferLine@1002 : Record 5741;TransShptHeader2@1001 : Record 5744;TransShptLine2@1000 : Record 5745;WhseShip@1003 : Boolean;WhseShptHeader2@1004 : Record 7320);
     BEGIN
-      ItemJnlLine.INIT;
-      ItemJnlLine."Posting Date" := TransShptHeader2."Posting Date";
-      ItemJnlLine."Document Date" := TransShptHeader2."Posting Date";
-      ItemJnlLine."Document No." := TransShptHeader2."No.";
-      ItemJnlLine."Document Type" := ItemJnlLine."Document Type"::"Transfer Shipment";
-      ItemJnlLine."Document Line No." := TransShptLine2."Line No.";
-      ItemJnlLine."Order Type" := ItemJnlLine."Order Type"::Transfer;
-      ItemJnlLine."Order No." := TransShptHeader2."Transfer Order No.";
-      ItemJnlLine."Order Line No." := TransLine3."Line No.";
-      ItemJnlLine."External Document No." := TransShptHeader2."External Document No.";
-      ItemJnlLine."Entry Type" := ItemJnlLine."Entry Type"::Transfer;
-      ItemJnlLine."Item No." := TransShptLine2."Item No.";
-      ItemJnlLine.Description := TransShptLine2.Description;
-      ItemJnlLine."Shortcut Dimension 1 Code" := TransShptLine2."Shortcut Dimension 1 Code";
-      ItemJnlLine."New Shortcut Dimension 1 Code" := TransShptLine2."Shortcut Dimension 1 Code";
-      ItemJnlLine."Shortcut Dimension 2 Code" := TransShptLine2."Shortcut Dimension 2 Code";
-      ItemJnlLine."New Shortcut Dimension 2 Code" := TransShptLine2."Shortcut Dimension 2 Code";
-      ItemJnlLine."Dimension Set ID" := TransShptLine2."Dimension Set ID";
-      ItemJnlLine."New Dimension Set ID" := TransShptLine2."Dimension Set ID";
-      ItemJnlLine."Location Code" := TransShptHeader2."Transfer-from Code";
-      ItemJnlLine."New Location Code" := TransHeader."In-Transit Code";
-      ItemJnlLine.Quantity := TransShptLine2.Quantity;
-      ItemJnlLine."Invoiced Quantity" := TransShptLine2.Quantity;
-      ItemJnlLine."Quantity (Base)" := TransShptLine2."Quantity (Base)";
-      ItemJnlLine."Invoiced Qty. (Base)" := TransShptLine2."Quantity (Base)";
-      ItemJnlLine."Source Code" := SourceCode;
-      ItemJnlLine."Gen. Prod. Posting Group" := TransShptLine2."Gen. Prod. Posting Group";
-      ItemJnlLine."Inventory Posting Group" := TransShptLine2."Inventory Posting Group";
-      ItemJnlLine."Unit of Measure Code" := TransShptLine2."Unit of Measure Code";
-      ItemJnlLine."Qty. per Unit of Measure" := TransShptLine2."Qty. per Unit of Measure";
-      ItemJnlLine."Variant Code" := TransShptLine2."Variant Code";
-      ItemJnlLine."Bin Code" := TransLine."Transfer-from Bin Code";
-      ItemJnlLine."Country/Region Code" := TransShptHeader2."Trsf.-from Country/Region Code";
-      ItemJnlLine."Transaction Type" := TransShptHeader2."Transaction Type";
-      ItemJnlLine."Transport Method" := TransShptHeader2."Transport Method";
-      ItemJnlLine."Entry/Exit Point" := TransShptHeader2."Entry/Exit Point";
-      ItemJnlLine.Area := TransShptHeader2.Area;
-      ItemJnlLine."Transaction Specification" := TransShptHeader2."Transaction Specification";
-      ItemJnlLine."Product Group Code" := TransLine."Product Group Code";
-      ItemJnlLine."Item Category Code" := TransLine."Item Category Code";
-      ItemJnlLine."Applies-to Entry" := TransLine."Appl.-to Item Entry";
-
-      ReserveTransLine.TransferTransferToItemJnlLine(TransLine3,
-        ItemJnlLine,ItemJnlLine."Quantity (Base)",0);
-
+      CreateItemJnlLine(ItemJnlLine,TransferLine,TransShptHeader2,TransShptLine2);
+      ReserveItemJnlLine(ItemJnlLine,TransferLine,WhseShip,WhseShptHeader2);
       ItemJnlPostLine.RunWithCheck(ItemJnlLine);
+    END;
+
+    LOCAL PROCEDURE CreateItemJnlLine@20(VAR ItemJnlLine@1003 : Record 83;TransferLine@1002 : Record 5741;TransShptHeader2@1001 : Record 5744;TransShptLine2@1000 : Record 5745);
+    BEGIN
+      WITH ItemJnlLine DO BEGIN
+        INIT;
+        "Document Type" := "Document Type"::"Transfer Shipment";
+        "Document No." := TransShptHeader2."No.";
+        "External Document No." := TransShptHeader2."External Document No.";
+        "Source Code" := SourceCode;
+        "Posting Date" := TransShptHeader2."Posting Date";
+        "Document Date" := TransShptHeader2."Posting Date";
+        "Document Line No." := TransShptLine2."Line No.";
+        "Order Type" := "Order Type"::Transfer;
+        "Order No." := TransShptHeader2."Transfer Order No.";
+        "Order Line No." := TransferLine."Line No.";
+        "Entry Type" := "Entry Type"::Transfer;
+        "Item No." := TransShptLine2."Item No.";
+        "Variant Code" := TransShptLine2."Variant Code";
+        Description := TransShptLine2.Description;
+        "Location Code" := TransShptHeader2."Transfer-from Code";
+        "New Location Code" := TransHeader."In-Transit Code";
+        "Bin Code" := TransLine."Transfer-from Bin Code";
+        "Shortcut Dimension 1 Code" := TransShptLine2."Shortcut Dimension 1 Code";
+        "New Shortcut Dimension 1 Code" := TransShptLine2."Shortcut Dimension 1 Code";
+        "Shortcut Dimension 2 Code" := TransShptLine2."Shortcut Dimension 2 Code";
+        "New Shortcut Dimension 2 Code" := TransShptLine2."Shortcut Dimension 2 Code";
+        "Dimension Set ID" := TransShptLine2."Dimension Set ID";
+        "New Dimension Set ID" := TransShptLine2."Dimension Set ID";
+        Quantity := TransShptLine2.Quantity;
+        "Invoiced Quantity" := TransShptLine2.Quantity;
+        "Quantity (Base)" := TransShptLine2."Quantity (Base)";
+        "Invoiced Qty. (Base)" := TransShptLine2."Quantity (Base)";
+        "Gen. Prod. Posting Group" := TransShptLine2."Gen. Prod. Posting Group";
+        "Inventory Posting Group" := TransShptLine2."Inventory Posting Group";
+        "Unit of Measure Code" := TransShptLine2."Unit of Measure Code";
+        "Qty. per Unit of Measure" := TransShptLine2."Qty. per Unit of Measure";
+        "Country/Region Code" := TransShptHeader2."Trsf.-from Country/Region Code";
+        "Transaction Type" := TransShptHeader2."Transaction Type";
+        "Transport Method" := TransShptHeader2."Transport Method";
+        "Entry/Exit Point" := TransShptHeader2."Entry/Exit Point";
+        Area := TransShptHeader2.Area;
+        "Transaction Specification" := TransShptHeader2."Transaction Specification";
+        "Product Group Code" := TransferLine."Product Group Code";
+        "Item Category Code" := TransferLine."Item Category Code";
+        "Applies-to Entry" := TransferLine."Appl.-to Item Entry";
+      END;
+    END;
+
+    LOCAL PROCEDURE ReserveItemJnlLine@21(VAR ItemJnlLine@1001 : Record 83;VAR TransferLine@1000 : Record 5741;WhseShip@1003 : Boolean;WhseShptHeader2@1002 : Record 7320);
+    BEGIN
+      IF WhseShip AND (WhseShptHeader2."Document Status" = WhseShptHeader2."Document Status"::"Partially Picked") THEN
+        ReserveTransLine.TransferWhseShipmentToItemJnlLine(
+          TransferLine,ItemJnlLine,WhseShptHeader2,ItemJnlLine."Quantity (Base)")
+      ELSE
+        ReserveTransLine.TransferTransferToItemJnlLine(
+          TransferLine,ItemJnlLine,ItemJnlLine."Quantity (Base)",0);
     END;
 
     LOCAL PROCEDURE CopyCommentLines@22(FromDocumentType@1000 : Integer;ToDocumentType@1001 : Integer;FromNumber@1002 : Code[20];ToNumber@1003 : Code[20]);

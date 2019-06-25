@@ -2,9 +2,9 @@ OBJECT Page 5783 Cross-Dock Opportunities
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -321,6 +321,7 @@ OBJECT Page 5783 Cross-Dock Opportunities
       Dummy@1000 : Decimal;
     BEGIN
       CrossDockMgt.CalcCrossDockedItems(ItemNo2,VariantCode2,'',LocationCode2,Dummy,QtyOnCrossDockBase);
+      QtyOnCrossDockBase += CrossDockMgt.CalcCrossDockReceivedNotCrossDocked(LocationCode2,ItemNo2,VariantCode2);
 
       IF TemplateName2 = '' THEN BEGIN
         ReceiptLine.GET(NameNo2,LineNo2);

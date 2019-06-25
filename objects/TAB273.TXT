@@ -2,28 +2,37 @@ OBJECT Table 273 Bank Acc. Reconciliation
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.47838,NAVDK9.00.00.47838;
   }
   PROPERTIES
   {
     Permissions=TableData 1220=rimd;
     DataCaptionFields=Bank Account No.,Statement No.;
     OnInsert=BEGIN
-               TESTFIELD("Bank Account No.");
                TESTFIELD("Statement No.");
+               TESTFIELD("Bank Account No.");
                BankAccRecon.RESET;
                BankAccRecon.SETRANGE("Statement Type",BankAccRecon."Statement Type");
                BankAccRecon.SETRANGE("Bank Account No.","Bank Account No.");
+               BankAcc.GET("Bank Account No.");
                CASE "Statement Type" OF
                  "Statement Type"::"Bank Reconciliation":
-                   IF PostedBankAccStmt.GET("Bank Account No.","Statement No.") THEN
-                     ERROR(Text000,"Statement No.");
+                   BEGIN
+                     IF PostedBankAccStmt.GET("Bank Account No.","Statement No.") THEN
+                       ERROR(Text000,"Statement No.");
+                     BankAcc."Last Statement No." := "Statement No.";
+                   END;
                  "Statement Type"::"Payment Application":
-                   IF PostedPaymentReconHdr.GET("Bank Account No.","Statement No.") THEN
-                     ERROR(Text000,"Statement No.");
+                   BEGIN
+                     IF PostedPaymentReconHdr.GET("Bank Account No.","Statement No.") THEN
+                       ERROR(Text000,"Statement No.");
+                     BankAcc."Last Payment Statement No." := "Statement No.";
+                   END;
                END;
+
+               BankAcc.MODIFY;
              END;
 
     OnDelete=BEGIN
@@ -44,21 +53,17 @@ OBJECT Table 273 Bank Acc. Reconciliation
     { 1   ;   ;Bank Account No.    ;Code20        ;TableRelation="Bank Account";
                                                    OnValidate=BEGIN
                                                                 IF "Statement No." = '' THEN BEGIN
-                                                                  BankAcc.LOCKTABLE;
                                                                   BankAcc.GET("Bank Account No.");
 
                                                                   IF "Statement Type" = "Statement Type"::"Payment Application" THEN BEGIN
                                                                     SetLastPaymentStatementNo(BankAcc);
                                                                     "Statement No." := INCSTR(BankAcc."Last Payment Statement No.");
-                                                                    BankAcc."Last Payment Statement No." := "Statement No.";
                                                                   END ELSE BEGIN
                                                                     SetLastStatementNo(BankAcc);
                                                                     "Statement No." := INCSTR(BankAcc."Last Statement No.");
-                                                                    BankAcc."Last Statement No." := "Statement No.";
                                                                   END;
 
                                                                   "Balance Last Statement" := BankAcc."Balance Last Statement";
-                                                                  BankAcc.MODIFY;
                                                                 END;
 
                                                                 CreateDim(DATABASE::"Bank Account",BankAcc."No.");
@@ -69,17 +74,12 @@ OBJECT Table 273 Bank Acc. Reconciliation
                                                    NotBlank=Yes }
     { 2   ;   ;Statement No.       ;Code20        ;OnValidate=BEGIN
                                                                 TESTFIELD("Bank Account No.");
-                                                                IF "Statement Type" = "Statement Type"::"Bank Reconciliation" THEN BEGIN
-                                                                  BankAcc.LOCKTABLE;
-                                                                  BankAcc.GET("Bank Account No.");
-                                                                  BankAcc."Last Statement No." := "Statement No.";
-                                                                  BankAcc.MODIFY;
-                                                                END;
                                                               END;
 
                                                    CaptionML=[DAN=Kontoudtogsnr.;
                                                               ENU=Statement No.];
-                                                   NotBlank=Yes }
+                                                   NotBlank=Yes;
+                                                   Editable=No }
     { 3   ;   ;Statement Ending Balance;Decimal   ;CaptionML=[DAN=Kontoudtogs slutsaldo;
                                                               ENU=Statement Ending Balance];
                                                    AutoFormatType=1;

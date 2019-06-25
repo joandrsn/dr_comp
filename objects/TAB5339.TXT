@@ -2,9 +2,9 @@ OBJECT Table 5339 Integration Synch. Job Errors
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -19,9 +19,11 @@ OBJECT Table 5339 Integration Synch. Job Errors
     { 2   ;   ;Integration Synch. Job ID;GUID     ;TableRelation="Integration Synch. Job".ID;
                                                    CaptionML=[DAN=Id for integrationssynk.job;
                                                               ENU=Integration Synch. Job ID] }
-    { 3   ;   ;Source Record ID    ;RecordID      ;CaptionML=[DAN=Kilderecord-id;
+    { 3   ;   ;Source Record ID    ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kilderecord-id;
                                                               ENU=Source Record ID] }
-    { 4   ;   ;Destination Record ID;RecordID     ;CaptionML=[DAN=Destinationspost-id;
+    { 4   ;   ;Destination Record ID;RecordID     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Destinationspost-id;
                                                               ENU=Destination Record ID] }
     { 5   ;   ;Message             ;Text250       ;CaptionML=[DAN=Meddelelse;
                                                               ENU=Message] }

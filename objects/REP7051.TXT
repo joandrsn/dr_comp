@@ -2,9 +2,9 @@ OBJECT Report 7051 Suggest Item Price on Wksh.
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -63,7 +63,9 @@ OBJECT Report 7051 Suggest Item Price on Wksh.
                                Window.OPEN(Text000);
                              END;
 
-               OnAfterGetRecord=BEGIN
+               OnAfterGetRecord=VAR
+                                  CurrentUnitPrice@1000 : Decimal;
+                                BEGIN
                                   Window.UPDATE(1,"No.");
                                   WITH SalesPriceWksh DO BEGIN
                                     INIT;
@@ -74,7 +76,7 @@ OBJECT Report 7051 Suggest Item Price on Wksh.
                                         CurrReport.SKIP;
 
                                     VALIDATE("Unit of Measure Code",ToUnitofMeasure.Code);
-                                    "Current Unit Price" :=
+                                    CurrentUnitPrice :=
                                       ROUND(
                                         CurrExchRate.ExchangeAmtLCYToFCY(
                                           WORKDATE,ToCurrency.Code,
@@ -84,8 +86,8 @@ OBJECT Report 7051 Suggest Item Price on Wksh.
                                         UOMMgt.GetQtyPerUnitOfMeasure(Item,"Unit of Measure Code"),
                                         ToCurrency."Unit-Amount Rounding Precision");
 
-                                    IF "Current Unit Price" > PriceLowerLimit THEN
-                                      "New Unit Price" := "Current Unit Price" * UnitPriceFactor;
+                                    IF CurrentUnitPrice > PriceLowerLimit THEN
+                                      "New Unit Price" := CurrentUnitPrice * UnitPriceFactor;
 
                                     IF RoundingMethod.Code <> '' THEN BEGIN
                                       RoundingMethod."Minimum Amount" := "New Unit Price";
@@ -102,8 +104,10 @@ OBJECT Report 7051 Suggest Item Price on Wksh.
 
                                     CalcCurrentPrice(PriceAlreadyExists);
 
-                                    IF NOT PriceAlreadyExists THEN
+                                    IF NOT PriceAlreadyExists THEN BEGIN
+                                      "Current Unit Price" := CurrentUnitPrice;
                                       "VAT Bus. Posting Gr. (Price)" := Item."VAT Bus. Posting Gr. (Price)";
+                                    END;
 
                                     IF PriceAlreadyExists OR CreateNewPrices THEN BEGIN
                                       SalesPriceWksh2 := SalesPriceWksh;

@@ -2,9 +2,9 @@ OBJECT Codeunit 76 Purch.-Get Drop Shpt.
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -89,8 +89,7 @@ OBJECT Codeunit 76 Purch.-Get Drop Shpt.
             PurchLine."Document No." := "No.";
             PurchLine."Line No." := NextLineNo;
             CopyDocMgt.TransfldsFromSalesToPurchLine(SalesLine,PurchLine);
-            PurchLine.Description := SalesLine.Description;
-            PurchLine."Description 2" := SalesLine."Description 2";
+            GetDescription(PurchLine,SalesLine);
             PurchLine."Sales Order No." := SalesLine."Document No.";
             PurchLine."Sales Order Line No." := SalesLine."Line No.";
             PurchLine."Drop Shipment" := TRUE;
@@ -125,6 +124,87 @@ OBJECT Codeunit 76 Purch.-Get Drop Shpt.
         MODIFY; // Only version check
         SalesHeader.MODIFY; // Only version check
       END;
+    END;
+
+    LOCAL PROCEDURE GetDescription@2(VAR PurchaseLine@1007 : Record 39;SalesLine@1006 : Record 37);
+    VAR
+      Item@1000 : Record 27;
+    BEGIN
+      IF (SalesLine.Type <> SalesLine.Type::Item) OR (SalesLine."No." = '') THEN
+        EXIT;
+      Item.GET(SalesLine."No.");
+
+      IF GetDescriptionFromItemCrossReference(PurchaseLine,SalesLine,Item) THEN
+        EXIT;
+      IF GetDescriptionFromItemTranslation(PurchaseLine,SalesLine) THEN
+        EXIT;
+      IF GetDescriptionFromSalesLine(PurchaseLine,SalesLine) THEN
+        EXIT;
+      IF GetDescriptionFromItemVariant(PurchaseLine,SalesLine,Item) THEN
+        EXIT;
+      GetDescriptionFromItem(PurchaseLine,Item);
+    END;
+
+    LOCAL PROCEDURE GetDescriptionFromItemCrossReference@7(VAR PurchaseLine@1001 : Record 39;SalesLine@1000 : Record 37;Item@1004 : Record 27) : Boolean;
+    VAR
+      ItemCrossRef@1002 : Record 5717;
+    BEGIN
+      IF PurchHeader."Buy-from Vendor No." <> '' THEN
+        IF ItemCrossRef.GetItemDescription(
+             PurchaseLine.Description,Item."No.",SalesLine."Variant Code",SalesLine."Unit of Measure Code",
+             ItemCrossRef."Cross-Reference Type"::Vendor,PurchHeader."Buy-from Vendor No.")
+        THEN BEGIN
+          PurchaseLine."Description 2" := '';
+          EXIT(TRUE);
+        END;
+
+      EXIT(FALSE)
+    END;
+
+    LOCAL PROCEDURE GetDescriptionFromItemTranslation@8(VAR PurchaseLine@1001 : Record 39;SalesLine@1000 : Record 37) : Boolean;
+    VAR
+      Vend@1003 : Record 23;
+      ItemTranslation@1002 : Record 30;
+    BEGIN
+      IF PurchHeader."Buy-from Vendor No." <> '' THEN BEGIN
+        Vend.GET(PurchHeader."Buy-from Vendor No.");
+        IF Vend."Language Code" <> '' THEN
+          IF ItemTranslation.GET(SalesLine."No.",SalesLine."Variant Code",Vend."Language Code") THEN BEGIN
+            PurchaseLine.Description := ItemTranslation.Description;
+            PurchaseLine."Description 2" := ItemTranslation."Description 2";
+            EXIT(TRUE);
+          END;
+      END;
+      EXIT(FALSE)
+    END;
+
+    LOCAL PROCEDURE GetDescriptionFromItemVariant@9(VAR PurchaseLine@1001 : Record 39;SalesLine@1000 : Record 37;Item@1002 : Record 27) : Boolean;
+    VAR
+      ItemVariant@1003 : Record 5401;
+    BEGIN
+      IF SalesLine."Variant Code" <> '' THEN BEGIN
+        ItemVariant.GET(Item."No.",SalesLine."Variant Code");
+        PurchaseLine.Description := ItemVariant.Description;
+        PurchaseLine."Description 2" := ItemVariant."Description 2";
+        EXIT(TRUE);
+      END;
+      EXIT(FALSE)
+    END;
+
+    LOCAL PROCEDURE GetDescriptionFromItem@11(VAR PurchaseLine@1001 : Record 39;Item@1002 : Record 27);
+    BEGIN
+      PurchaseLine.Description := Item.Description;
+      PurchaseLine."Description 2" := Item."Description 2";
+    END;
+
+    LOCAL PROCEDURE GetDescriptionFromSalesLine@3(VAR PurchaseLine@1001 : Record 39;SalesLine@1000 : Record 37) : Boolean;
+    BEGIN
+      IF (SalesLine.Description <> '') OR (SalesLine."Description 2" <> '') THEN BEGIN
+        PurchaseLine.Description := SalesLine.Description;
+        PurchaseLine."Description 2" := SalesLine."Description 2";
+        EXIT(TRUE);
+      END;
+      EXIT(FALSE);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -30,9 +30,7 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
 
             XSD.CREATEINSTREAM(InStr);
 
-            TaxonomyDocument := TaxonomyDocument.XmlDocument;
-
-            TaxonomyDocument.Load(InStr);
+            XMLDOMManagement.LoadXMLDocumentFromInStream(InStr,TaxonomyDocument);
 
             TaxonomyNode := TaxonomyDocument.DocumentElement;
             IF NOT TaxonomyNode.HasChildNodes THEN
@@ -130,6 +128,7 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
       TempXBRLGLMapLine@1011 : TEMPORARY Record 397;
       XBRLCommentLine@1012 : Record 396;
       TempXBRLCommentLine@1013 : TEMPORARY Record 396;
+      XMLDOMManagement@1021 : Codeunit 6224;
       TaxonomyDocument@1020013 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
       NamespaceMgr@1004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNamespaceManager";
       ProgressBox@1020010 : Dialog;
@@ -537,8 +536,7 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
           ERROR(Text012,TABLECAPTION,"Line No.");
         XML.CREATEINSTREAM(InStr);
       END;
-      LinkbaseDocument := LinkbaseDocument.XmlDocument;
-      LinkbaseDocument.Load(InStr);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(InStr,LinkbaseDocument);
       LinkbaseDocNode := LinkbaseDocument.FirstChild;
       WHILE LOWERCASE(LinkbaseDocNode.NodeType.ToString) IN ['xmldeclaration','processinginstruction','comment'] DO
         LinkbaseDocNode := LinkbaseDocNode.NextSibling;
@@ -842,8 +840,7 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
           ERROR(Text012,TABLECAPTION,"Line No.");
         XML.CREATEINSTREAM(InStr);
       END;
-      LinkbaseDocument := LinkbaseDocument.XmlDocument;
-      LinkbaseDocument.Load(InStr);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(InStr,LinkbaseDocument);
       LinkbaseDocNode := LinkbaseDocument.FirstChild;
       WHILE LOWERCASE(LinkbaseDocNode.NodeType.ToString) IN ['xmldeclaration','processinginstruction','comment'] DO
         LinkbaseDocNode := LinkbaseDocNode.NextSibling;
@@ -1011,8 +1008,7 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
           ERROR(Text012,TABLECAPTION,"Line No.");
         XML.CREATEINSTREAM(InStr);
       END;
-      LinkbaseDocument := LinkbaseDocument.XmlDocument;
-      LinkbaseDocument.Load(InStr);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(InStr,LinkbaseDocument);
       LinkbaseDocNode := LinkbaseDocument.FirstChild;
       WHILE LOWERCASE(LinkbaseDocNode.NodeType.ToString) IN ['xmldeclaration','processinginstruction','comment'] DO
         LinkbaseDocNode := LinkbaseDocNode.NextSibling;
@@ -1259,9 +1255,8 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
       IF FileName = '' THEN
         EXIT('');
 
-      TaxonomyDocument := TaxonomyDocument.XmlDocument;
       TempBlob.Blob.CREATEINSTREAM(BlobInStream);
-      TaxonomyDocument.Load(BlobInStream);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(BlobInStream,TaxonomyDocument);
       TaxonomyNode := TaxonomyDocument.DocumentElement;
       SchemaLocation := FileName;
       EXIT(GetAttribute('targetNamespace',TaxonomyNode));
@@ -1457,8 +1452,7 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
           ERROR(Text012,TABLECAPTION,"Line No.");
         XML.CREATEINSTREAM(InStr);
       END;
-      LinkbaseDocument := LinkbaseDocument.XmlDocument;
-      LinkbaseDocument.Load(InStr);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(InStr,LinkbaseDocument);
     END;
 
     LOCAL PROCEDURE FindLinkbaseDocNode@26(VAR LinkbaseDocument@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";VAR LinkbaseDocNode@1001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode");

@@ -2,9 +2,9 @@ OBJECT Table 1235 XML Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -14,42 +14,56 @@ OBJECT Table 1235 XML Buffer
   FIELDS
   {
     { 1   ;   ;Entry No.           ;Integer       ;AutoIncrement=Yes;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
-    { 2   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+    { 2   ;   ;Type                ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Type;
                                                               ENU=Type];
                                                    OptionCaptionML=[DAN=" ,Element,Attribut";
                                                                     ENU=" ,Element,Attribute"];
                                                    OptionString=[ ,Element,Attribute] }
-    { 3   ;   ;Name                ;Text250       ;CaptionML=[DAN=Navn;
+    { 3   ;   ;Name                ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Navn;
                                                               ENU=Name] }
-    { 4   ;   ;Path                ;Text250       ;CaptionML=[DAN=Sti;
+    { 4   ;   ;Path                ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Sti;
                                                               ENU=Path] }
-    { 5   ;   ;Value               ;Text250       ;CaptionML=[DAN=Værdi;
+    { 5   ;   ;Value               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Værdi;
                                                               ENU=Value] }
-    { 6   ;   ;Depth               ;Integer       ;CaptionML=[DAN=Dybde;
+    { 6   ;   ;Depth               ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dybde;
                                                               ENU=Depth] }
-    { 7   ;   ;Parent Entry No.    ;Integer       ;CaptionML=[DAN=Overordnet posteringsnr.;
+    { 7   ;   ;Parent Entry No.    ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Overordnet posteringsnr.;
                                                               ENU=Parent Entry No.] }
-    { 8   ;   ;Is Parent           ;Boolean       ;CaptionML=[DAN=Er overordnet;
+    { 8   ;   ;Is Parent           ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Er overordnet;
                                                               ENU=Is Parent] }
-    { 9   ;   ;Data Type           ;Option        ;CaptionML=[DAN=Datatype;
+    { 9   ;   ;Data Type           ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Datatype;
                                                               ENU=Data Type];
                                                    OptionCaptionML=[DAN=Tekst,Dato,Decimal,Dato/klokkeslæt;
                                                                     ENU=Text,Date,Decimal,DateTime];
                                                    OptionString=Text,Date,Decimal,DateTime }
-    { 10  ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+    { 10  ;   ;Code                ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kode;
                                                               ENU=Code] }
-    { 11  ;   ;Node Name           ;Text250       ;CaptionML=[DAN=Nodenavn;
+    { 11  ;   ;Node Name           ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Nodenavn;
                                                               ENU=Node Name] }
     { 12  ;   ;Has Attributes      ;Boolean       ;CaptionML=[DAN=Har attributter;
                                                               ENU=Has Attributes];
                                                    Editable=No }
-    { 13  ;   ;Node Number         ;Integer       ;CaptionML=[DAN=Nodenummer;
+    { 13  ;   ;Node Number         ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Nodenummer;
                                                               ENU=Node Number] }
-    { 14  ;   ;Namespace           ;Text250       ;CaptionML=[DAN=Navneområde;
+    { 14  ;   ;Namespace           ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Navneområde;
                                                               ENU=Namespace] }
-    { 15  ;   ;Import ID           ;GUID          ;CaptionML=[DAN=Indlæs id;
+    { 15  ;   ;Import ID           ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Indlæs id;
                                                               ENU=Import ID] }
   }
   KEYS
@@ -265,10 +279,9 @@ OBJECT Table 1235 XML Buffer
       EXIT(Namespace + ':' + Name);
     END;
 
-    [TryFunction]
-    PROCEDURE GetParent@8();
+    PROCEDURE GetParent@8() : Boolean;
     BEGIN
-      GET("Parent Entry No.");
+      EXIT(GET("Parent Entry No."))
     END;
 
     PROCEDURE HasChildNodes@4() ChildNodesExists : Boolean;

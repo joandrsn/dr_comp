@@ -2,9 +2,9 @@ OBJECT Codeunit 5406 Output Jnl.-Expl. Route
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -133,6 +133,8 @@ OBJECT Codeunit 5406 Output Jnl.-Expl. Route
       ItemTrackingMgt@1002 : Codeunit 6500;
 
     LOCAL PROCEDURE InsertOutputJnlLine@2(ItemJnlLine@1000 : Record 83;VAR NextLineNo@1001 : Integer;LineSpacing@1002 : Integer;ProdOrderLineNo@1003 : Integer;ItemNo@1004 : Code[20];VariantCode@1010 : Code[10];LocationCode@1011 : Code[10];BinCode@1012 : Code[20];RoutingNo@1005 : Code[20];RoutingRefNo@1006 : Integer;OperationNo@1007 : Code[10];UnitOfMeasureCode@1008 : Code[10];QtyToPost@1009 : Decimal;LastOperation@1013 : Boolean);
+    VAR
+      DimMgt@1014 : Codeunit 408;
     BEGIN
       NextLineNo := NextLineNo + LineSpacing;
 
@@ -152,7 +154,13 @@ OBJECT Codeunit 5406 Output Jnl.-Expl. Route
       ItemJnlLine.VALIDATE("Run Time",0);
       IF (LocationCode <> '') AND LastOperation THEN
         ItemJnlLine.CheckWhse(LocationCode,QtyToPost);
-      ItemJnlLine.VALIDATE("Output Quantity",QtyToPost);
+      IF ItemJnlLine.SubcontractingWorkCenterUsed THEN
+        ItemJnlLine.VALIDATE("Output Quantity",0)
+      ELSE
+        ItemJnlLine.VALIDATE("Output Quantity",QtyToPost);
+
+      DimMgt.UpdateGlobalDimFromDimSetID(
+        ItemJnlLine."Dimension Set ID",ItemJnlLine."Shortcut Dimension 1 Code",ItemJnlLine."Shortcut Dimension 2 Code");
       ItemJnlLine.INSERT;
 
       LastItemJnlLine := ItemJnlLine;

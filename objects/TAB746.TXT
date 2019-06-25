@@ -1,0 +1,92 @@
+OBJECT Table 746 VAT Reports Configuration
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21-12-18;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.50868;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Konfiguration af momsrapport;
+               ENU=VAT Reports Configuration];
+  }
+  FIELDS
+  {
+    { 1   ;   ;VAT Report Type     ;Option        ;CaptionML=[DAN=Momsrapporttype;
+                                                              ENU=VAT Report Type];
+                                                   OptionCaptionML=[DAN=Oversigt over EU-salg,Momsangivelse,Intrastatrapport;
+                                                                    ENU=EC Sales List,VAT Return,Intrastat Report];
+                                                   OptionString=EC Sales List,VAT Return,Intrastat Report }
+    { 2   ;   ;VAT Report Version  ;Code10        ;CaptionML=[DAN=Momsrapportversion;
+                                                              ENU=VAT Report Version] }
+    { 3   ;   ;Suggest Lines Codeunit ID;Integer  ;TableRelation="CodeUnit Metadata".ID;
+                                                   CaptionML=[DAN=Codeunit-id for Foreslå linjer;
+                                                              ENU=Suggest Lines Codeunit ID] }
+    { 4   ;   ;Suggest Lines Codeunit Caption;Text250;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Codeunit),
+                                                                                                                Object ID=FIELD(Suggest Lines Codeunit ID)));
+                                                   CaptionML=[DAN=Codeunit-tekst for Foreslå linjer;
+                                                              ENU=Suggest Lines Codeunit Caption];
+                                                   Editable=No }
+    { 5   ;   ;Content Codeunit ID ;Integer       ;TableRelation="CodeUnit Metadata".ID;
+                                                   CaptionML=[DAN=Codeunit-id for indhold;
+                                                              ENU=Content Codeunit ID] }
+    { 6   ;   ;Content Codeunit Caption;Text250   ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Codeunit),
+                                                                                                                Object ID=FIELD(Content Codeunit ID)));
+                                                   CaptionML=[DAN=Codeunit-tekst for indhold;
+                                                              ENU=Content Codeunit Caption];
+                                                   Editable=No }
+    { 7   ;   ;Submission Codeunit ID;Integer     ;TableRelation="CodeUnit Metadata".ID;
+                                                   CaptionML=[DAN=Codeunit-id for levering;
+                                                              ENU=Submission Codeunit ID] }
+    { 8   ;   ;Submission Codeunit Caption;Text250;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Codeunit),
+                                                                                                                Object ID=FIELD(Submission Codeunit ID)));
+                                                   CaptionML=[DAN=Codeunit-tekst for levering;
+                                                              ENU=Submission Codeunit Caption];
+                                                   Editable=No }
+    { 9   ;   ;Response Handler Codeunit ID;Integer;
+                                                   TableRelation="CodeUnit Metadata".ID;
+                                                   CaptionML=[DAN=Codeunit-id for svarhandler;
+                                                              ENU=Response Handler Codeunit ID] }
+    { 10  ;   ;Resp. Handler Codeunit Caption;Text250;
+                                                   FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Codeunit),
+                                                                                                                Object ID=FIELD(Response Handler Codeunit ID)));
+                                                   CaptionML=[DAN=Codeunit-tekst for svarhandler;
+                                                              ENU=Resp. Handler Codeunit Caption];
+                                                   Editable=No }
+    { 11  ;   ;Validate Codeunit ID;Integer       ;TableRelation="CodeUnit Metadata".ID;
+                                                   CaptionML=[DAN=Valideringscodeunit-id;
+                                                              ENU=Validate Codeunit ID] }
+    { 12  ;   ;Validate Codeunit Caption;Text250  ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Codeunit),
+                                                                                                                Object ID=FIELD(Validate Codeunit ID)));
+                                                   CaptionML=[DAN=Valideringscodeunit-titel;
+                                                              ENU=Validate Codeunit Caption];
+                                                   Editable=No }
+    { 13  ;   ;VAT Statement Template;Code10      ;TableRelation="VAT Statement Template".Name;
+                                                   CaptionML=[DAN=Momsangivelsestype;
+                                                              ENU=VAT Statement Template] }
+    { 14  ;   ;VAT Statement Name  ;Code10        ;TableRelation="VAT Statement Name".Name;
+                                                   CaptionML=[DAN=Momsangivelsesnavn;
+                                                              ENU=VAT Statement Name] }
+  }
+  KEYS
+  {
+    {    ;VAT Report Type,VAT Report Version      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

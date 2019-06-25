@@ -2,9 +2,9 @@ OBJECT Codeunit 7110 Analysis Report Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -234,16 +234,18 @@ OBJECT Codeunit 7110 Analysis Report Management
     VAR
       AnalysisColumn@1002 : Record 7118;
     BEGIN
+      TempAnalysisColumn.RESET;
       TempAnalysisColumn.DELETEALL;
       AnalysisColumn.SETRANGE(
         "Analysis Area",AnalysisLine.GETRANGEMAX("Analysis Area"));
       AnalysisColumn.SETRANGE("Analysis Column Template",ColumnName);
-      IF AnalysisColumn.FIND('-') THEN
+      IF AnalysisColumn.FINDSET THEN BEGIN
         REPEAT
           TempAnalysisColumn := AnalysisColumn;
           TempAnalysisColumn.INSERT;
         UNTIL AnalysisColumn.NEXT = 0;
-      IF TempAnalysisColumn.FIND('-') THEN;
+        TempAnalysisColumn.FINDFIRST;
+      END;
     END;
 
     PROCEDURE LookupColumnName@11(CurrentAnalysisArea@1001 : Option;VAR CurrentColumnName@1000 : Code[10]) : Boolean;
@@ -1788,7 +1790,7 @@ OBJECT Codeunit 7110 Analysis Report Management
       END;
     END;
 
-    LOCAL PROCEDURE GetSourceNoFilter@80(VAR ItemStatisticsBuf@1001 : Record 5821;VAR AnalysisLine@1002 : Record 7114) : Text[30];
+    LOCAL PROCEDURE GetSourceNoFilter@80(VAR ItemStatisticsBuf@1001 : Record 5821;VAR AnalysisLine@1002 : Record 7114) : Text;
     BEGIN
       CASE FilterToValue(AnalysisLine) OF
         AnalysisLine."Source Type Filter"::Item:

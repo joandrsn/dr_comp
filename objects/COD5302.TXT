@@ -2,9 +2,9 @@ OBJECT Codeunit 5302 Outlook Synch. Type Conv
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -87,15 +87,10 @@ OBJECT Codeunit 5302 Outlook Synch. Type Conv
       TextVar@1023 : Text;
       TextVar1@1024 : Text;
     BEGIN
-      // EVALUATE(Field.Class,FORMAT(FieldRef.CLASS));
-      // IF (Field.Class = Field.Class::FlowField) OR (Field.Class = Field.Class::FlowFilter) THEN
       IF (FORMAT(FieldRef.CLASS) = 'FlowField') OR (FORMAT(FieldRef.CLASS) = 'FlowFilter') THEN
         EXIT(TRUE);
 
-      // EVALUATE(Field.Type,FORMAT(FieldRef.TYPE));
-      // CASE Field.Type OF
       CASE FORMAT(FieldRef.TYPE) OF
-        // Field.Type::Option:
         'Option':
           BEGIN
             IF NOT EVALUATE(IntVar,InputText) THEN
@@ -620,37 +615,25 @@ OBJECT Codeunit 5302 Outlook Synch. Type Conv
       Date@1005 : Date;
       Time@1002 : Time;
       DateTime@1006 : DateTime;
-      Integer@1007 : Integer;
       BigInt@1001 : BigInteger;
       Decimal@1011 : Decimal;
       Bool@1004 : Boolean;
     BEGIN
-      // EVALUATE(Field.Type,FORMAT(FldRef.TYPE));
-      // EVALUATE(Field.Class,FORMAT(FldRef.CLASS));
-
-      // IF Field.Class = Field.Class::FlowField THEN
       IF FORMAT(FldRef.CLASS) = 'FlowField' THEN
         FldRef.CALCFIELD;
 
       CASE FORMAT(FldRef.TYPE) OF
-        // Field.Type::Option:
-          'Option':
-          BEGIN
-            EVALUATE(Integer,FORMAT(FldRef.VALUE));
-            OutText := FORMAT(Integer);
-          END;
-        // Field.Type::Text,Field.Type::Code:
+        'Option':
+          OutText := FORMAT(FldRef);
         'Text','Code':
           OutText := FORMAT(FldRef.VALUE);
-        // Field.Type::Date:
-         'Date':
+        'Date':
           BEGIN
             EVALUATE(Date,FORMAT(FldRef.VALUE));
             DateTime := CREATEDATETIME(Date,0T);
             Date := DT2DATE(LocalDT2UTC(DateTime));
             OutText := SetDateFormat(Date);
           END;
-        // Field.Type::Time:
         'Time':
           BEGIN
             EVALUATE(Time,FORMAT(FldRef.VALUE));
@@ -658,40 +641,33 @@ OBJECT Codeunit 5302 Outlook Synch. Type Conv
             Time := DT2TIME(LocalDT2UTC(DateTime));
             OutText := SetTimeFormat(Time);
           END;
-        // Field.Type::DateTime:
-          'DateTime':
+        'DateTime':
           BEGIN
             EVALUATE(DateTime,FORMAT(FldRef.VALUE));
             OutText := SetDateTimeFormat(LocalDT2UTC(DateTime));
           END;
-        // Field.Type::Integer,Field.Type::BigInteger:
-          'Integer','BigInteger':
+        'Integer','BigInteger':
           OutText := FORMAT(FldRef.VALUE);
-        // Field.Type::Duration:
-          'Duration':
+        'Duration':
           BEGIN
             BigInt := FldRef.VALUE;
             // Use round to avoid conversion errors due to the conversion from decimal to long.
             BigInt := ROUND(BigInt / 60000,1);
             OutText := FORMAT(BigInt);
           END;
-        // Field.Type::Decimal:
-          'Decimal':
+        'Decimal':
           BEGIN
             EVALUATE(Decimal,FORMAT(FldRef.VALUE));
             OutText := SetDecimalFormat(Decimal);
           END;
-        // Field.Type::DateFormula:
-          'DateFormula':
+        'DateFormula':
           OutText := FORMAT(FldRef.VALUE);
-        // Field.Type::Boolean:
-          'Boolean':
+        'Boolean':
           BEGIN
             EVALUATE(Bool,FORMAT(FldRef.VALUE));
             OutText := SetBoolFormat(Bool);
           END;
-        // Field.Type::GUID:
-          'GUID':
+        'GUID':
           OutText := FORMAT(FldRef.VALUE);
         ELSE BEGIN
           RecID := FldRef.RECORD.RECORDID;
@@ -712,11 +688,7 @@ OBJECT Codeunit 5302 Outlook Synch. Type Conv
       Bool@1003 : Boolean;
       DurationVar@1010 : Duration;
     BEGIN
-      // EVALUATE(Field.Type,FORMAT(FldRef.TYPE));
-
-      // CASE Field.Type OF
       CASE FORMAT(FldRef.TYPE) OF
-        // Field.Type::Text,Field.Type::Code,Field.Type::Option,Field.Type::DateFormula,Field.Type::GUID:
         'Text','Code','Option','DateFormula','GUID':
           OutText := FormattedValue;
         'Date':
@@ -856,6 +828,43 @@ OBJECT Codeunit 5302 Outlook Synch. Type Conv
       OptionFieldRef := OptionRecordRef.FIELD(FieldId);
       OptionCaption := OptionFieldRef.OPTIONCAPTION;
       OptionRecordRef.CLOSE;
+    END;
+
+    PROCEDURE RunningUTC@29() : Boolean;
+    VAR
+      DateTimeNow@1000 : DateTime;
+      EvalUTCTime@1001 : Time;
+      EvalTime@1002 : Time;
+      EvalDateTime@1004 : DateTime;
+      UTCHour@1003 : Text;
+      calculatedHour@1005 : Text;
+      UTCText@1006 : Text;
+      hourNumber@1007 : Integer;
+      UTChourNumber@1008 : Integer;
+    BEGIN
+      DateTimeNow := CURRENTDATETIME;
+
+      // Documented format 9 is: 2003-04-05T03:35:55.553Z
+      // We only want the Time, so we need to get rid of Date and the ending Z
+      UTCText := FORMAT(DateTimeNow,0,9);
+      UTCText := COPYSTR(UTCText,STRPOS(UTCText,'T') + 1);
+      UTCText := DELCHR(UTCText,'=','Z');
+
+      // Get only the current hour
+      EVALUATE(EvalUTCTime,UTCText);
+      UTCHour := FORMAT(EvalUTCTime);
+      UTCHour := COPYSTR(UTCHour,1,STRPOS(UTCHour,':') - 1);
+      EVALUATE(UTChourNumber,UTCHour);
+
+      // Documented format 0 is: 05-04-03 4.35 (But this changes with settings)
+      // Get the Time only
+      EVALUATE(EvalDateTime,FORMAT(DateTimeNow,0,0));
+      EvalTime := DT2TIME(EvalDateTime);
+      calculatedHour := FORMAT(EvalTime);
+      calculatedHour := COPYSTR(calculatedHour,1,STRPOS(calculatedHour,':') - 1);
+      EVALUATE(hourNumber,calculatedHour);
+
+      EXIT(hourNumber = UTChourNumber);
     END;
 
     BEGIN

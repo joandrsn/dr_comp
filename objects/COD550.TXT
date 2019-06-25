@@ -2,9 +2,9 @@ OBJECT Codeunit 550 VAT Rate Change Conversion
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -1108,6 +1108,7 @@ OBJECT Codeunit 550 VAT Rate Change Conversion
     LOCAL PROCEDURE UpdateService@23();
     VAR
       ServiceHeader@1008 : Record 5900;
+      ServiceHeader2@1011 : Record 5900;
       ServiceLine@1000 : Record 5902;
       ServiceLineOld@1007 : Record 5902;
       VATRateChangeLogEntry@1004 : Record 552;
@@ -1116,6 +1117,7 @@ OBJECT Codeunit 550 VAT Rate Change Conversion
       NewGenProdPostingGroup@1002 : Code[10];
       ConvertVATProdPostingGroup@1006 : Boolean;
       ConvertGenProdPostingGroup@1005 : Boolean;
+      ServiceHeaderStatusChanged@1012 : Boolean;
       RoundingPrecision@1009 : Decimal;
       LastDocNo@1010 : Code[20];
     BEGIN
@@ -1131,14 +1133,22 @@ OBJECT Codeunit 550 VAT Rate Change Conversion
         LastDocNo := '';
         IF FIND('-') THEN
           REPEAT
-            IF LineInScope("Gen. Prod. Posting Group","VAT Prod. Posting Group",ConvertGenProdPostingGroup,ConvertVATProdPostingGroup) THEN BEGIN
+            IF LineInScope("Gen. Prod. Posting Group","VAT Prod. Posting Group",ConvertGenProdPostingGroup,ConvertVATProdPostingGroup) THEN
               IF CanUpdateService(ServiceLine) AND IncludeServiceLine(Type,"No.") THEN BEGIN
-                IF Quantity = "Outstanding Quantity" THEN BEGIN
-                  IF LastDocNo <> ServiceHeader."No." THEN BEGIN
-                    ServiceHeader.GET("Document Type","Document No.");
-                    LastDocNo := ServiceHeader."No.";
+                IF LastDocNo <> "Document No." THEN BEGIN
+                  ServiceHeader.GET("Document Type","Document No.");
+                  LastDocNo := ServiceHeader."No.";
+                END;
+
+                IF VATRateChangeSetup."Ignore Status on Service Docs." THEN
+                  IF ServiceHeader."Release Status" <> ServiceHeader."Release Status"::Open THEN BEGIN
+                    ServiceHeader2 := ServiceHeader;
+                    ServiceHeader."Release Status" := ServiceHeader."Release Status"::Open;
+                    ServiceHeader.MODIFY;
+                    ServiceHeaderStatusChanged := TRUE;
                   END;
 
+                IF Quantity = "Outstanding Quantity" THEN BEGIN
                   IF ServiceHeader."Prices Including VAT" THEN
                     ServiceLineOld := ServiceLine;
 
@@ -1176,8 +1186,13 @@ OBJECT Codeunit 550 VAT Rate Change Conversion
                     VATRateChangeLogEntry."New VAT Prod. Posting Group" := "VAT Prod. Posting Group";
                     WriteLogEntry(VATRateChangeLogEntry);
                   END;
-              END
-            END;
+
+                IF ServiceHeaderStatusChanged THEN BEGIN
+                  ServiceHeader."Release Status" := ServiceHeader2."Release Status";
+                  ServiceHeader.MODIFY;
+                  ServiceHeaderStatusChanged := FALSE;
+                END;
+              END;
           UNTIL NEXT = 0;
       END;
     END;

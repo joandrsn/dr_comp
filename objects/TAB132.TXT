@@ -2,9 +2,9 @@ OBJECT Table 132 Incoming Document Approver
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,7 +13,8 @@ OBJECT Table 132 Incoming Document Approver
   }
   FIELDS
   {
-    { 1   ;   ;User ID             ;GUID          ;CaptionML=[DAN=Bruger-id;
+    { 1   ;   ;User ID             ;GUID          ;DataClassification=EndUserPseudonymousIdentifiers;
+                                                   CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
   }
   KEYS

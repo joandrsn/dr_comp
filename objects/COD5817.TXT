@@ -2,9 +2,9 @@ OBJECT Codeunit 5817 Undo Posting Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -159,7 +159,7 @@ OBJECT Codeunit 5817 Undo Posting Management
           END;
         DATABASE::"Posted Assembly Header":
           BEGIN
-            FindPostedAsmHeader(PostedAsmHeader,SourceID);
+            PostedAsmHeader.GET(UndoID);
             IF NOT PostedAsmHeader.IsAsmToOrder THEN
               TestWarehouseBinContent(SourceType,SourceSubtype,SourceID,SourceRefNo,PostedAsmHeader."Quantity (Base)");
             EXIT(TRUE);
@@ -478,6 +478,8 @@ OBJECT Codeunit 5817 Undo Posting Management
         FIND('-'); // Assertion: will fail if not found.
         ValueEntry.SETCURRENTKEY("Item Ledger Entry No.");
         ItemRec.GET("Item No.");
+        IF ItemRec.Type = ItemRec.Type::Service THEN
+          EXIT;
 
         REPEAT
           IF Positive THEN BEGIN
@@ -508,6 +510,7 @@ OBJECT Codeunit 5817 Undo Posting Management
 
     PROCEDURE PostItemJnlLineAppliedToList@22(ItemJnlLine@1002 : Record 83;VAR TempApplyToEntryList@1000 : TEMPORARY Record 32;UndoQty@1009 : Decimal;UndoQtyBase@1010 : Decimal;VAR TempItemLedgEntry@1011 : TEMPORARY Record 32;VAR TempItemEntryRelation@1008 : TEMPORARY Record 6507) : Integer;
     VAR
+      ItemApplicationEntry@1001 : Record 339;
       ItemTrackingMgt@1006 : Codeunit 6500;
       NonDistrQuantity@1004 : Decimal;
       NonDistrQuantityBase@1005 : Decimal;
@@ -537,6 +540,15 @@ OBJECT Codeunit 5817 Undo Posting Management
         NonDistrQuantityBase := NonDistrQuantityBase - ItemJnlLine."Quantity (Base)";
 
         PostItemJnlLine(ItemJnlLine);
+
+        IF ItemJnlLine."Job No." <> '' THEN BEGIN
+          CLEAR(ItemJnlPostLine);
+          FindItemReceiptApplication(ItemApplicationEntry,TempApplyToEntryList."Entry No.");
+          ItemJnlPostLine.UndoValuePostingWithJob(TempApplyToEntryList."Entry No.",ItemApplicationEntry."Outbound Item Entry No.");
+
+          FindItemShipmentApplication(ItemApplicationEntry,ItemJnlLine."Item Shpt. Entry No.");
+          ItemJnlPostLine.UndoValuePostingWithJob(ItemApplicationEntry."Inbound Item Entry No.",ItemJnlLine."Item Shpt. Entry No.");
+        END;
 
         TempItemEntryRelation."Item Entry No." := ItemJnlLine."Item Shpt. Entry No.";
         TempItemEntryRelation."Serial No." := ItemJnlLine."Serial No.";
@@ -776,13 +788,6 @@ OBJECT Codeunit 5817 Undo Posting Management
       ItemJnlPostLine.RUN(ItemJnlLine);
     END;
 
-    LOCAL PROCEDURE FindPostedAsmHeader@36(VAR PostedAsmHeader@1000 : Record 910;SourceID@1001 : Code[20]);
-    BEGIN
-      PostedAsmHeader.SETCURRENTKEY("Order No.");
-      PostedAsmHeader.SETRANGE("Order No.",SourceID);
-      PostedAsmHeader.FINDFIRST;
-    END;
-
     LOCAL PROCEDURE TrackingIsATO@32(TrackingSpecification@1003 : Record 336) : Boolean;
     VAR
       ATOLink@1001 : Record 904;
@@ -828,12 +833,25 @@ OBJECT Codeunit 5817 Undo Posting Management
       ItemLedgEntry@1000 : Record 32;
     BEGIN
       // Purchase receipt and job consumption are reapplied with with fixed cost application
-      ItemApplnEntry.SETRANGE("Inbound Item Entry No.",ItemRcptEntryNo);
-      ItemApplnEntry.SETFILTER("Item Ledger Entry No.",'<>%1',ItemRcptEntryNo);
-      ItemApplnEntry.FINDFIRST;
+      FindItemReceiptApplication(ItemApplnEntry,ItemRcptEntryNo);
       ItemJnlPostLine.UnApply(ItemApplnEntry);
       ItemLedgEntry.GET(ItemApplnEntry."Inbound Item Entry No.");
       ItemJnlPostLine.ReApply(ItemLedgEntry,ItemApplnEntry."Outbound Item Entry No.");
+    END;
+
+    PROCEDURE FindItemReceiptApplication@37(VAR ItemApplnEntry@1000 : Record 339;ItemRcptEntryNo@1001 : Integer);
+    BEGIN
+      ItemApplnEntry.RESET;
+      ItemApplnEntry.SETRANGE("Inbound Item Entry No.",ItemRcptEntryNo);
+      ItemApplnEntry.SETFILTER("Item Ledger Entry No.",'<>%1',ItemRcptEntryNo);
+      ItemApplnEntry.FINDFIRST;
+    END;
+
+    PROCEDURE FindItemShipmentApplication@42(VAR ItemApplnEntry@1001 : Record 339;ItemShipmentEntryNo@1000 : Integer);
+    BEGIN
+      ItemApplnEntry.RESET;
+      ItemApplnEntry.SETRANGE("Item Ledger Entry No.",ItemShipmentEntryNo);
+      ItemApplnEntry.FINDFIRST;
     END;
 
     BEGIN

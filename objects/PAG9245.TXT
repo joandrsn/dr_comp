@@ -2,9 +2,9 @@ OBJECT Page 9245 Production Forecast Matrix
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -798,7 +798,6 @@ OBJECT Page 9245 Production Forecast Matrix
     VAR
       ProdForecastEntry@1002 : Record 99000852;
       ProdForecastEntry2@1001 : Record 99000852;
-      LocationCode@1000 : Code[10];
     BEGIN
       IF ForecastType = ForecastType::Both THEN
         ERROR(Text000);
@@ -827,13 +826,25 @@ OBJECT Page 9245 Production Forecast Matrix
         "Production Forecast Name","Item No.","Location Code","Forecast Date","Component Forecast");
       IF GETFILTER("Location Filter") = '' THEN BEGIN
         ProdForecastEntry2.COPYFILTERS(ProdForecastEntry);
-        ProdForecastEntry2.SETRANGE("Location Code");
-        IF ProdForecastEntry2.FINDFIRST THEN BEGIN
-          LocationCode := ProdForecastEntry2."Location Code";
-          ProdForecastEntry2.FINDLAST;
-          IF ProdForecastEntry2."Location Code" <> LocationCode THEN
-            ERROR(Text003);
-        END;
+        ProdForecastEntry2.SETFILTER("Location Code",'>%1','');
+        IF ProdForecastEntry2.FINDSET THEN
+          REPEAT
+            IF ProdForecastByLocationQtyBase(ProdForecastEntry2) <> 0 THEN
+              ERROR(Text003);
+            ProdForecastEntry2.SETFILTER("Location Code",'>%1',ProdForecastEntry2."Location Code");
+          UNTIL ProdForecastEntry2.NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE ProdForecastByLocationQtyBase@12(VAR SourceProdForecastEntry@1000 : Record 99000852) : Decimal;
+    VAR
+      ProductionForecastEntry@1001 : Record 99000852;
+    BEGIN
+      WITH ProductionForecastEntry DO BEGIN
+        COPYFILTERS(SourceProdForecastEntry);
+        SETRANGE("Location Code",SourceProdForecastEntry."Location Code");
+        CALCSUMS("Forecast Quantity (Base)");
+        EXIT("Forecast Quantity (Base)");
       END;
     END;
 

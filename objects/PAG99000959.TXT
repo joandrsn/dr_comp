@@ -2,9 +2,9 @@ OBJECT Page 99000959 Order Promising Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -15,6 +15,7 @@ OBJECT Page 99000959 Order Promising Lines
     DataCaptionExpr=AvailabilityMgt.GetCaption;
     SourceTableView=SORTING(Requested Shipment Date);
     PageType=Worksheet;
+    SourceTableTemporary=Yes;
     RefreshOnActivate=Yes;
     OnInit=BEGIN
              AcceptButtonEnable := TRUE;

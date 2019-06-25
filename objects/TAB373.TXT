@@ -2,9 +2,9 @@ OBJECT Table 373 Dimension Entry Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,9 +13,11 @@ OBJECT Table 373 Dimension Entry Buffer
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Integer       ;CaptionML=[DAN=Nummer;
+    { 1   ;   ;No.                 ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
-    { 2   ;   ;Dimension Entry No. ;Integer       ;CaptionML=[DAN=Dimensionsløbenr.;
+    { 2   ;   ;Dimension Entry No. ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dimensionsløbenr.;
                                                               ENU=Dimension Entry No.] }
   }
   KEYS

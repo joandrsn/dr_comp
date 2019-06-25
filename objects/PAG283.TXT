@@ -2,9 +2,9 @@ OBJECT Page 283 Recurring General Journal
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
@@ -122,6 +122,7 @@ OBJECT Page 283 Recurring General Journal
                                END;
                                 }
       { 46      ;2   ;Action    ;
+                      Name=Post;
                       ShortCutKey=F9;
                       CaptionML=[DAN=&Bogfør;
                                  ENU=P&ost];
@@ -131,6 +132,8 @@ OBJECT Page 283 Recurring General Journal
                       PromotedCategory=Process;
                       OnAction=BEGIN
                                  CODEUNIT.RUN(CODEUNIT::"Gen. Jnl.-Post",Rec);
+                                 CurrentJnlBatchName := GETRANGEMAX("Journal Batch Name");
+                                 CurrPage.UPDATE(FALSE);
                                END;
                                 }
       { 5       ;2   ;Action    ;

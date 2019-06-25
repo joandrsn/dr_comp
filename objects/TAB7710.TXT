@@ -2,9 +2,9 @@ OBJECT Table 7710 ADCS User
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -25,7 +25,8 @@ OBJECT Table 7710 ADCS User
   }
   FIELDS
   {
-    { 1   ;   ;Name                ;Code50        ;CaptionML=[DAN=Navn;
+    { 1   ;   ;Name                ;Code50        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Navn;
                                                               ENU=Name];
                                                    NotBlank=Yes }
     { 2   ;   ;Password            ;Text250       ;OnValidate=BEGIN

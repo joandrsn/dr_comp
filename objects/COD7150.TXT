@@ -2,9 +2,9 @@ OBJECT Codeunit 7150 Update Item Analysis View
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -70,20 +70,13 @@ OBJECT Codeunit 7150 Update Item Analysis View
       ItemBudgetEntry.RESET;
       IF LastEntryNoIsInitialized THEN
         EXIT;
-      LastEntryNoIsInitialized := TRUE;
-      COMMIT;
-      WITH ValueEntry DO BEGIN
-        LOCKTABLE;
+      WITH ValueEntry DO
         IF FINDLAST THEN
           LastValueEntryNo := "Entry No.";
-      END;
-      COMMIT;
-      WITH ItemBudgetEntry DO BEGIN
-        LOCKTABLE;
+      WITH ItemBudgetEntry DO
         IF FINDLAST THEN
           LastItemBudgetEntryNo := "Entry No.";
-      END;
-      COMMIT;
+      LastEntryNoIsInitialized := TRUE;
     END;
 
     PROCEDURE UpdateAll@15(Which@1000 : 'Ledger Entries,Budget Entries,Both';DirectlyFromPosting@1001 : Boolean);
@@ -143,6 +136,7 @@ OBJECT Codeunit 7150 Update Item Analysis View
           IF ShowProgressWindow THEN
             UpdateWindowHeader(DATABASE::"Item Analysis View Budg. Entry",ItemBudgetEntry."Entry No.");
           ItemBudgetEntry.RESET;
+          ItemBudgetEntry.SETRANGE("Analysis Area",ItemAnalysisView."Analysis Area");
           ItemBudgetEntry.SETRANGE("Entry No.",ItemAnalysisView."Last Budget Entry No." + 1,LastItemBudgetEntryNo);
           UpdateBudgetEntries(ItemAnalysisView."Last Budget Entry No." + 1);
           ItemAnalysisView."Last Budget Entry No." := LastItemBudgetEntryNo;
@@ -399,7 +393,6 @@ OBJECT Codeunit 7150 Update Item Analysis View
 
               AddValue(ItemAnalysisViewEntry."Sales Amount (Expected)",TempItemAnalysisViewEntry."Sales Amount (Expected)");
               AddValue(ItemAnalysisViewEntry."Cost Amount (Expected)",TempItemAnalysisViewEntry."Cost Amount (Expected)");
-              AddValue(ItemAnalysisViewEntry."Cost Amount (Non-Invtbl.)",TempItemAnalysisViewEntry."Cost Amount (Non-Invtbl.)");
 
               ItemAnalysisViewEntry.MODIFY;
             END;

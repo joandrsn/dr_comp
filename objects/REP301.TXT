@@ -2,9 +2,9 @@ OBJECT Report 301 Vendor - List
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -3450,6 +3450,7 @@ OBJECT Report 301 Vendor - List
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

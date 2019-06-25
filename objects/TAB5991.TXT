@@ -2,9 +2,9 @@ OBJECT Table 5991 Service Shipment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -12,7 +12,6 @@ OBJECT Table 5991 Service Shipment Line
                 TableData 5802=r;
     CaptionML=[DAN=Serviceleverancelinje;
                ENU=Service Shipment Line];
-    PasteIsValid=No;
     LookupPageID=Page5949;
   }
   FIELDS
@@ -497,6 +496,7 @@ OBJECT Table 5991 Service Shipment Line
         ServiceLine."Shortcut Dimension 1 Code" := ServiceOrderLine."Shortcut Dimension 1 Code";
         ServiceLine."Shortcut Dimension 2 Code" := ServiceOrderLine."Shortcut Dimension 2 Code";
         ServiceLine."Dimension Set ID" := ServiceOrderLine."Dimension Set ID";
+        ServiceLine.VALIDATE("Posting Date",ServiceInvHeader."Posting Date");
         ServiceLine.INSERT;
 
         IF (ServiceLine."Contract No." <> '') AND (ServiceLine.Type <> ServiceLine.Type::" ") THEN

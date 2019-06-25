@@ -2,9 +2,9 @@ OBJECT Report 99001017 Calculate Plan - Plan. Wksh.
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -55,6 +55,7 @@ OBJECT Report 99001017 Calculate Plan - Plan. Wksh.
                                     CalcItemPlan.RUN(Item);
                                     CounterOK := CounterOK + 1;
                                   END ELSE BEGIN
+                                    CalcItemPlan.ClearInvtProfileOffsetting;
                                     CalcItemPlan.SetResiliencyOn;
                                     IF CalcItemPlan.RUN(Item) THEN
                                       CounterOK := CounterOK + 1

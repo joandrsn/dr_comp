@@ -2,9 +2,9 @@ OBJECT Report 3 G/L Register
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=26-07-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50528;
   }
   PROPERTIES
   {
@@ -334,7 +334,7 @@ OBJECT Report 3 G/L Register
                   <Width>0.7874in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.31496in</Width>
+                  <Width>0.64652in</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>0.59055in</Width>
@@ -346,7 +346,7 @@ OBJECT Report 3 G/L Register
                   <Width>0.88583in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.77008in</Width>
+                  <Width>0.64787in</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>0.92282in</Width>
@@ -361,7 +361,7 @@ OBJECT Report 3 G/L Register
                   <Width>0.41246in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.88582in</Width>
+                  <Width>0.76361in</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>0.52222in</Width>
@@ -2863,7 +2863,7 @@ OBJECT Report 3 G/L Register
             <DataSetName>DataSet_Result</DataSetName>
             <Top>1.269cm</Top>
             <Height>4.3341cm</Height>
-            <Width>18.785cm</Width>
+            <Width>19.00633cm</Width>
             <Style />
           </Tablix>
           <Textbox Name="GLRegFilter">
@@ -3027,6 +3027,7 @@ OBJECT Report 3 G/L Register
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -3044,9 +3045,9 @@ OBJECT Report 3 G/L Register
                 </Paragraph>
               </Paragraphs>
               <Top>0.846cm</Top>
-              <Left>15.535cm</Left>
+              <Left>13.535cm</Left>
               <Height>0.423cm</Height>
-              <Width>3.25cm</Width>
+              <Width>5.25cm</Width>
               <ZIndex>4</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>

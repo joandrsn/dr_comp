@@ -2,9 +2,9 @@ OBJECT Codeunit 5813 Undo Purchase Receipt Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -159,6 +159,8 @@ OBJECT Codeunit 5813 Undo Purchase Receipt Line
       PurchRcptLine2@1007 : Record 121;
       SourceCodeSetup@1001 : Record 242;
       TempApplyToEntryList@1008 : TEMPORARY Record 32;
+      ItemApplicationEntry@1010 : Record 339;
+      ItemJnlPostLine@1011 : Codeunit 22;
       LineSpacing@1006 : Integer;
     BEGIN
       WITH PurchRcptLine DO BEGIN
@@ -222,8 +224,15 @@ OBJECT Codeunit 5813 Undo Purchase Receipt Line
           IF "Job No." <> '' THEN
             UndoPostingMgt.TransferSourceValues(ItemJnlLine,"Item Rcpt. Entry No.");
           UndoPostingMgt.PostItemJnlLine(ItemJnlLine);
-          IF "Job No." <> '' THEN
+          IF "Job No." <> '' THEN BEGIN
+            UndoPostingMgt.FindItemReceiptApplication(ItemApplicationEntry,"Item Rcpt. Entry No.");
+            ItemJnlPostLine.UndoValuePostingWithJob("Item Rcpt. Entry No.",ItemApplicationEntry."Outbound Item Entry No.");
+
+            UndoPostingMgt.FindItemShipmentApplication(ItemApplicationEntry,ItemJnlLine."Item Shpt. Entry No.");
+            ItemJnlPostLine.UndoValuePostingWithJob(ItemApplicationEntry."Inbound Item Entry No.",ItemJnlLine."Item Shpt. Entry No.");
+
             UndoPostingMgt.ReapplyJobConsumption("Item Rcpt. Entry No.");
+          END;
 
           EXIT(ItemJnlLine."Item Shpt. Entry No.");
         END;

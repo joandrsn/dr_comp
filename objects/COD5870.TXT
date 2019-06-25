@@ -2,9 +2,9 @@ OBJECT Codeunit 5870 Calculate BOM Tree
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -129,10 +129,9 @@ OBJECT Codeunit 5870 Calculate BOM Tree
           BOMBuffer.SetLocationVariantFiltersFrom(ItemFilter);
           BOMBuffer.TransferFromItem(EntryNo,ParentItem,DemandDate);
           GenerateItemSubTree("No.",BOMBuffer);
+          CalculateTreeType(BOMBuffer,ShowTotalAvailability,TreeType);
         END;
       END;
-
-      CalculateTreeType(BOMBuffer,ShowTotalAvailability,TreeType);
     END;
 
     PROCEDURE GenerateTreeForAsm@3(AsmHeader@1000 : Record 900;VAR BOMBuffer@1001 : Record 5870;TreeType@1002 : Option);
@@ -252,6 +251,7 @@ OBJECT Codeunit 5870 Calculate BOM Tree
       ParentBOMBuffer@1007 : Record 5870;
       UOMMgt@1003 : Codeunit 5402;
       VersionMgt@1008 : Codeunit 99000756;
+      CostCalculationMgt@1010 : Codeunit 5836;
       LotSize@1001 : Decimal;
       BomQtyPerUom@1009 : Decimal;
     BEGIN
@@ -268,11 +268,10 @@ OBJECT Codeunit 5870 Calculate BOM Tree
                 Type::Item:
                   BEGIN
                     BOMBuffer.SetLocationVariantFiltersFrom(ItemFilter);
-                    IF ParentItem."Production BOM No." = ParentBOMBuffer."Production BOM No." THEN
-                      BomQtyPerUom := GetBOMHeaderQtyPerUOM(ParentItem)
-                    ELSE
-                      BomQtyPerUom := 1;
-
+                    BomQtyPerUom :=
+                      GetQtyPerBOMHeaderUnitOfMeasure(
+                        ParentItem,ParentBOMBuffer."Production BOM No.",
+                        VersionMgt.GetBOMVersion(ParentBOMBuffer."Production BOM No.",WORKDATE,TRUE));
                     BOMBuffer.TransferFromProdComp(
                       EntryNo,ProdBOMLine,ParentBOMBuffer.Indentation + 1,
                       ROUND(
@@ -287,9 +286,8 @@ OBJECT Codeunit 5870 Calculate BOM Tree
                       ParentItem,BomQtyPerUom);
 
                     IF ParentItem."Production BOM No." <> ParentBOMBuffer."Production BOM No." THEN BEGIN
-                      BOMBuffer."Qty. per Parent" :=
-                        BOMBuffer."Qty. per Parent" * ParentBOMBuffer."Qty. per Parent" /
-                        UOMMgt.GetQtyPerUnitOfMeasure(ParentItem,ParentBOMBuffer."BOM Unit of Measure Code");
+                      BOMBuffer."Qty. per Parent" := BOMBuffer."Qty. per Parent" * ParentBOMBuffer."Qty. per Parent";
+                      BOMBuffer."Scrap Qty. per Parent" := BOMBuffer."Scrap Qty. per Parent" * ParentBOMBuffer."Qty. per Parent";
 
                       BOMBuffer."Qty. per BOM Line" := BOMBuffer."Qty. per BOM Line" * ParentBOMBuffer."Qty. per Parent";
                     END;
@@ -301,10 +299,14 @@ OBJECT Codeunit 5870 Calculate BOM Tree
                     ParentItem."Routing No." := '';
                     ParentItem."Production BOM No." := "No.";
                     BOMBuffer := ParentBOMBuffer;
-                    BOMBuffer."Qty. per Top Item" :=
-                      ROUND(BOMBuffer."Qty. per Top Item" * "Quantity per" /
-                        GetBOMHeaderQtyPerUOM(ParentItem),0.00001);
-                    BOMBuffer."Qty. per Parent" := "Quantity per";
+                    BOMBuffer."Qty. per Top Item" := ROUND(BOMBuffer."Qty. per Top Item" * "Quantity per",0.00001);
+                    BOMBuffer."Qty. per Parent" := BOMBuffer."Qty. per Parent" * "Quantity per";
+                    BOMBuffer."Scrap %" := CombineScrapFactors(BOMBuffer."Scrap %","Scrap %");
+                    IF CostCalculationMgt.FindRountingLine(RoutingLine,ProdBOMLine,WORKDATE,CopyOfParentItem."Routing No.") THEN
+                      BOMBuffer."Scrap %" := CombineScrapFactors(BOMBuffer."Scrap %",RoutingLine."Scrap Factor % (Accumulated)" * 100);
+
+                    BOMBuffer."Scrap %" := ROUND(BOMBuffer."Scrap %",0.00001);
+
                     GenerateProdCompSubTree(ParentItem,BOMBuffer);
                     ParentItem := CopyOfParentItem;
                   END;
@@ -897,6 +899,35 @@ OBJECT Codeunit 5870 Calculate BOM Tree
     PROCEDURE SetItemFilter@34(VAR Item@1000 : Record 27);
     BEGIN
       ItemFilter.COPYFILTERS(Item);
+    END;
+
+    LOCAL PROCEDURE GetBOMUnitOfMeasure@36(ProdBOMNo@1000 : Code[20];ProdBOMVersionNo@1002 : Code[20]) : Code[10];
+    VAR
+      ProdBOMHeader@1001 : Record 99000771;
+      ProdBOMVersion@1003 : Record 99000779;
+    BEGIN
+      IF ProdBOMVersionNo <> '' THEN BEGIN
+        ProdBOMVersion.GET(ProdBOMNo,ProdBOMVersionNo);
+        EXIT(ProdBOMVersion."Unit of Measure Code");
+      END;
+
+      ProdBOMHeader.GET(ProdBOMNo);
+      EXIT(ProdBOMHeader."Unit of Measure Code");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerBOMHeaderUnitOfMeasure@35(Item@1002 : Record 27;ProdBOMNo@1001 : Code[20];ProdBOMVersionNo@1000 : Code[20]) : Decimal;
+    VAR
+      UOMMgt@1003 : Codeunit 5402;
+    BEGIN
+      IF ProdBOMNo = '' THEN
+        EXIT(1);
+
+      EXIT(UOMMgt.GetQtyPerUnitOfMeasure(Item,GetBOMUnitOfMeasure(ProdBOMNo,ProdBOMVersionNo)));
+    END;
+
+    LOCAL PROCEDURE CombineScrapFactors@38(LowLevelScrapPct@1000 : Decimal;HighLevelScrapPct@1001 : Decimal) : Decimal;
+    BEGIN
+      EXIT(LowLevelScrapPct + HighLevelScrapPct + LowLevelScrapPct * HighLevelScrapPct / 100);
     END;
 
     BEGIN

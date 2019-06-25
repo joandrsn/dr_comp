@@ -2,9 +2,9 @@ OBJECT Codeunit 5987 Serv-Posting Journals Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -22,6 +22,7 @@ OBJECT Codeunit 5987 Serv-Posting Journals Mgt.
       Currency@1018 : Record 4;
       CurrExchRate@1012 : Record 330;
       SalesSetup@1013 : Record 311;
+      TempValueEntryRelation@1011 : TEMPORARY Record 6508;
       ServITRMgt@1001 : Codeunit 5985;
       GenJnlPostLine@1004 : Codeunit 12;
       ItemJnlPostLine@1000 : Codeunit 22;
@@ -296,6 +297,8 @@ OBJECT Codeunit 5987 Serv-Posting Journals Mgt.
           TESTFIELD("Appl.-from Item Entry");
 
         ItemJnlPostLine.RunWithCheck(ItemJnlLine);
+
+        ItemJnlPostLine.CollectValueEntryRelation(TempValueEntryRelation,'');
 
         IF ItemJnlPostLine.CollectTrackingSpecification(TempHandlingSpecification) THEN
           ServITRMgt.InsertTempHandlngSpecification(DATABASE::"Service Line",
@@ -645,7 +648,17 @@ OBJECT Codeunit 5987 Serv-Posting Journals Mgt.
 
     PROCEDURE CollectValueEntryRelation@5(VAR PassedValueEntryRelation@1000 : Record 6508;RowId@1001 : Text[100]);
     BEGIN
-      ItemJnlPostLine.CollectValueEntryRelation(PassedValueEntryRelation,RowId)
+      TempValueEntryRelation.RESET;
+      PassedValueEntryRelation.RESET;
+
+      IF TempValueEntryRelation.FINDSET THEN
+        REPEAT
+          PassedValueEntryRelation := TempValueEntryRelation;
+          PassedValueEntryRelation."Source RowId" := RowId;
+          PassedValueEntryRelation.INSERT;
+        UNTIL TempValueEntryRelation.NEXT = 0;
+
+      TempValueEntryRelation.DELETEALL;
     END;
 
     PROCEDURE PostJobJnlLine@38(VAR ServHeader@1004 : Record 5900;ServLine@1012 : Record 5902;QtyToBeConsumed@1018 : Decimal;ItemLedgerEntryNo@1002 : Integer) : Boolean;
@@ -786,59 +799,6 @@ OBJECT Codeunit 5987 Serv-Posting Journals Mgt.
       ResJnlLine."Time Sheet No." := ServiceLine."Time Sheet No.";
       ResJnlLine."Time Sheet Line No." := ServiceLine."Time Sheet Line No.";
       ResJnlLine."Time Sheet Date" := ServiceLine."Time Sheet Date";
-    END;
-
-    PROCEDURE PostDirectConsumption@24(VAR ServiceLine@1000 : Record 5902;VAR ServiceHeader@1001 : Record 5900;ShptNo@1005 : Code[20]);
-    VAR
-      GenJnlLine@1002 : Record 81;
-      ServiceCost@1003 : Record 5905;
-      CustPostGroup@1004 : Record 92;
-      GeneralPostingSetup@1006 : Record 252;
-      GenJnlPostLine@1007 : Codeunit 12;
-    BEGIN
-      GenJnlLine.INIT;
-      WITH ServiceHeader DO BEGIN
-        GenJnlLine."Posting Date" := "Posting Date";
-        GenJnlLine."Document Date" := "Document Date";
-        GenJnlLine.Description := "Posting Description";
-        GenJnlLine."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
-        GenJnlLine."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
-        GenJnlLine."Dimension Set ID" := "Dimension Set ID";
-        GenJnlLine."Reason Code" := "Reason Code";
-        GenJnlLine."Account Type" := GenJnlLine."Account Type"::"G/L Account";
-        IF ServiceLine.Type = ServiceLine.Type::"G/L Account" THEN
-          GenJnlLine."Account No." := ServiceLine."No."
-        ELSE BEGIN
-          ServiceCost.GET(ServiceLine."No.");
-          GenJnlLine."Account No." := ServiceCost."Account No.";
-        END;
-        GenJnlLine."Document No." := ShptNo;
-        GenJnlLine."Bal. Account Type" := GenJnlLine."Bal. Account Type"::"G/L Account";
-        IF ServiceLine.Type IN [ServiceLine.Type::Cost,ServiceLine.Type::"G/L Account"] THEN BEGIN
-          GeneralPostingSetup.GET(ServiceLine."Gen. Bus. Posting Group",ServiceLine."Gen. Prod. Posting Group");
-          GeneralPostingSetup.TESTFIELD("Sales Line Disc. Account");
-          GenJnlLine."Bal. Account No." := GeneralPostingSetup."Sales Line Disc. Account";
-        END ELSE BEGIN
-          CustPostGroup.GET("Customer Posting Group");
-          GenJnlLine."Bal. Account No." := CustPostGroup."Receivables Account";
-        END;
-        GenJnlLine."Currency Code" := "Currency Code";
-        GenJnlLine.Amount := ServiceLine."Qty. to Consume" * ServiceLine."Unit Price";
-        GenJnlLine."Source Currency Code" := "Currency Code";
-        GenJnlLine."Source Currency Amount" := GenJnlLine.Amount;
-        IF "Currency Code" = '' THEN
-          GenJnlLine."Currency Factor" := 1
-        ELSE
-          GenJnlLine.VALIDATE("Currency Factor","Currency Factor");
-        GenJnlLine."Job No." := ServiceLine."Job No.";
-        GenJnlLine."Source Type" := GenJnlLine."Source Type"::Customer;
-        GenJnlLine."Source No." := "Bill-to Customer No.";
-        GenJnlLine."Source Code" := SrcCode;
-        GenJnlLine."Posting No. Series" := "Shipping No. Series";
-        GenJnlLine."System-Created Entry" := TRUE;
-        GenJnlLine.Correction := Correction;
-        GenJnlPostLine.RunWithCheck(GenJnlLine);
-      END;
     END;
 
     PROCEDURE SetPostingDate@39(PostingDate@1000 : Date);

@@ -2,9 +2,9 @@ OBJECT Report 5900 Service Order
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -6006,10 +6006,11 @@ Cstr(Fields!PageCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.82011cm</Top>
-              <Left>11.8853cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <Visibility>
                 <Hidden>=iif(Code.IsEmpty(Fields!CompanyInfo2Picture.Value), true, false)</Hidden>
               </Visibility>
@@ -6047,10 +6048,11 @@ Cstr(Fields!PageCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.82011cm</Top>
-              <Left>5.89947cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.IsEmpty(Fields!CompanyInfo1Picture.Value), true, false)</Hidden>
@@ -6087,10 +6089,10 @@ Cstr(Fields!PageCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.82011cm</Top>
-              <Left>0.41302cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>4</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.IsEmpty(Fields!CompanyInfo3Picture.Value), true, false)</Hidden>

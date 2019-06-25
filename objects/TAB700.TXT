@@ -2,9 +2,9 @@ OBJECT Table 700 Error Message
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -25,6 +25,7 @@ OBJECT Table 700 Error Message
                                                                   "Table Number" := RecordRef.NUMBER;
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Record-id;
                                                               ENU=Record ID] }
     { 3   ;   ;Field Number        ;Integer       ;CaptionML=[DAN=Feltnummer;
@@ -46,7 +47,8 @@ OBJECT Table 700 Error Message
                                                    Editable=No }
     { 8   ;   ;Table Number        ;Integer       ;CaptionML=[DAN=Tabelnummer;
                                                               ENU=Table Number] }
-    { 10  ;   ;Context Record ID   ;RecordID      ;CaptionML=[DAN=Kontekstpost-id;
+    { 10  ;   ;Context Record ID   ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontekstpost-id;
                                                               ENU=Context Record ID] }
     { 11  ;   ;Field Name          ;Text80        ;FieldClass=FlowField;
                                                    CalcFormula=Lookup(Field."Field Caption" WHERE (TableNo=FIELD(Table Number),
@@ -312,6 +314,16 @@ OBJECT Table 700 Error Message
       DELETEALL(TRUE);
     END;
 
+    PROCEDURE ClearLogRec@23(RecordVariant@1000 : Variant);
+    BEGIN
+      AssertRecordTemporaryOrInContext;
+
+      ClearFilters;
+      SetContextFilter;
+      SetRecordFilter(RecordVariant);
+      DELETEALL(TRUE);
+    END;
+
     PROCEDURE HasErrorMessagesRelatedTo@1(RecRelatedVariant@1000 : Variant) : Boolean;
     VAR
       RecordRef@1001 : RecordRef;
@@ -513,6 +525,14 @@ OBJECT Table 700 Error Message
         SETRANGE("Context Record ID")
       ELSE
         SETRANGE("Context Record ID",ContextRecordID);
+    END;
+
+    LOCAL PROCEDURE SetRecordFilter@26(RecordVariant@1000 : Variant);
+    VAR
+      RecordRef@1001 : RecordRef;
+    BEGIN
+      DataTypeManagement.GetRecordRef(RecordVariant,RecordRef);
+      SETRANGE("Record ID",RecordRef.RECORDID);
     END;
 
     BEGIN

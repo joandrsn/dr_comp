@@ -2,9 +2,9 @@ OBJECT Table 5531 Inventory Page Data
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -37,7 +37,8 @@ OBJECT Table 5531 Inventory Page Data
     { 7   ;   ;Level               ;Integer       ;CaptionML=[DAN=Niveau;
                                                               ENU=Level];
                                                    Editable=No }
-    { 9   ;   ;Source Line ID      ;RecordID      ;CaptionML=[DAN=Kildelinje-id;
+    { 9   ;   ;Source Line ID      ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildelinje-id;
                                                               ENU=Source Line ID];
                                                    Editable=No }
     { 10  ;   ;Item No.            ;Code20        ;TableRelation=Item;
@@ -109,7 +110,8 @@ OBJECT Table 5531 Inventory Page Data
                                                                     ENU=" ,New,Change Qty.,Reschedule,Resched. & Chg. Qty.,Cancel"];
                                                    OptionString=[ ,New,Change Qty.,Reschedule,Resched. & Chg. Qty.,Cancel];
                                                    Editable=No }
-    { 30  ;   ;Source Document ID  ;RecordID      ;CaptionML=[DAN=Kildebilags-id;
+    { 30  ;   ;Source Document ID  ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildebilags-id;
                                                               ENU=Source Document ID];
                                                    Editable=No }
     { 31  ;   ;Attached to Line No.;Integer       ;CaptionML=[DAN=Tilknyttet linjenr.;

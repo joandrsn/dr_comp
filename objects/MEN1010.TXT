@@ -2,9 +2,9 @@ OBJECT MenuSuite 1010 Dept - MBS
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -8034,8 +8034,8 @@ OBJECT MenuSuite 1010 Dept - MBS
                                                                 NextNodeID=[{6CAC498F-1DCD-4611-8E76-603DEBEBE2CC}];
                                                                 DepartmentCategory=Administration }
     { MenuItem       ;[{DCAAF831-FDB6-4CE6-A65D-58FBA1063614}] ;Name=Analysis View Card;
-                                                                CaptionML=[DAN=Analysekort - lager;
-                                                                           ENU=Analysis View Card Inventory];
+                                                                CaptionML=[DAN=Visninger af lageranalyse;
+                                                                           ENU=Inventory Analysis Views];
                                                                 MemberOfMenu=[{F8D2429D-034B-4C58-9B5E-81BE962DB1BC}];
                                                                 RunObjectType=Page;
                                                                 RunObjectID=9372;
@@ -10830,8 +10830,8 @@ OBJECT MenuSuite 1010 Dept - MBS
                                                                 NextNodeID=[{EB57F663-9272-4D36-BA3E-4853FBF05477}];
                                                                 DepartmentCategory=Administration }
     { MenuItem       ;[{B4260252-2CB5-4374-8607-6CCC691FE57D}] ;Name=Analysis View Card;
-                                                                CaptionML=[DAN=Købsanalysekort;
-                                                                           ENU=Purchase Analysis View Card];
+                                                                CaptionML=[DAN=Visninger af købsanalyse;
+                                                                           ENU=Purchase Analysis Views];
                                                                 MemberOfMenu=[{03134937-C76A-4D80-A8B2-FF6458E180EB}];
                                                                 RunObjectType=Page;
                                                                 RunObjectID=9370;
@@ -11773,8 +11773,8 @@ OBJECT MenuSuite 1010 Dept - MBS
                                                                 NextNodeID=[{D8C2081C-F128-41EC-B433-9EB719B63C82}];
                                                                 DepartmentCategory=Administration }
     { MenuItem       ;[{B3E7876D-F013-4937-B887-4B4437B7B57C}] ;Name=Analysis View Card;
-                                                                CaptionML=[DAN=Salgsanalysekort;
-                                                                           ENU=Sales Analysis View Card];
+                                                                CaptionML=[DAN=Visninger af salgsanalyse;
+                                                                           ENU=Sales Analysis Views];
                                                                 MemberOfMenu=[{2DC8C4FE-7346-4124-8C20-383346384C03}];
                                                                 RunObjectType=Page;
                                                                 RunObjectID=9371;
@@ -17217,5 +17217,16 @@ OBJECT MenuSuite 1010 Dept - MBS
                                                                 Visible=Yes;
                                                                 NextNodeID=[{F2D0A3E6-C41D-47B3-826E-AC2DF7D236A9}];
                                                                 DepartmentCategory=Lists }
+    { MenuItem       ;[{BF800C60-E030-4889-BE36-EEE707EB966C}] ;Name=Data Classification Worksheet;
+                                                                AccessByPermission=TableData 2000000159=R;
+                                                                CaptionML=[DAN=Regneark til dataklassificering;
+                                                                           ENU=Data Classification Worksheet];
+                                                                MemberOfMenu=[{19A352FE-D90D-424E-B85F-CF3B8E98CF0E}];
+                                                                RunObjectType=Page;
+                                                                RunObjectID=1751;
+                                                                ParentNodeID=[{F92B71B3-1719-40AA-B896-ACFA2FA993F8}];
+                                                                Visible=Yes;
+                                                                NextNodeID=[{399DBF58-9482-4693-9719-DE17917E7022}];
+                                                                DepartmentCategory=Administration }
   }
 }

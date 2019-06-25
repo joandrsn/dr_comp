@@ -2,9 +2,9 @@ OBJECT Table 5304 Outlook Synch. Field
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -63,7 +63,7 @@ OBJECT Table 5304 Outlook Synch. Field
                                                               ENU=Element No.] }
     { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
                                                               ENU=Line No.] }
-    { 4   ;   ;Master Table No.    ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 4   ;   ;Master Table No.    ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    CaptionML=[DAN=Overordnet tabelnr.;
                                                               ENU=Master Table No.];
                                                    Editable=No }
@@ -147,7 +147,7 @@ OBJECT Table 5304 Outlook Synch. Field
     { 9   ;   ;Condition           ;Text250       ;CaptionML=[DAN=Betingelse;
                                                               ENU=Condition];
                                                    Editable=No }
-    { 10  ;   ;Table No.           ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 10  ;   ;Table No.           ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    OnValidate=BEGIN
                                                                 CALCFIELDS("Table Caption");
 
@@ -313,7 +313,8 @@ OBJECT Table 5304 Outlook Synch. Field
 
                                                    CaptionML=[DAN=Standardfeltværdi;
                                                               ENU=Field Default Value] }
-    { 17  ;   ;Record GUID         ;GUID          ;CaptionML=[DAN=Record-GUID;
+    { 17  ;   ;Record GUID         ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-GUID;
                                                               ENU=Record GUID];
                                                    Editable=No }
     { 99  ;   ;DefaultValueExpression;Text250     ;CaptionML=[DAN=DefaultValueExpression;

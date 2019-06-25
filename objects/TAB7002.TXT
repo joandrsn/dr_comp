@@ -2,9 +2,9 @@ OBJECT Table 7002 Sales Price
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -81,7 +81,6 @@ OBJECT Table 7002 Sales Price
                                                                   END;
                                                               END;
 
-                                                   ValidateTableRelation=No;
                                                    CaptionML=[DAN=Salgskode;
                                                               ENU=Sales Code] }
     { 3   ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
@@ -128,6 +127,7 @@ OBJECT Table 7002 Sales Price
                                                    OptionString=Customer,Customer Price Group,All Customers,Campaign }
     { 14  ;   ;Minimum Quantity    ;Decimal       ;CaptionML=[DAN=Min. antal;
                                                               ENU=Minimum Quantity];
+                                                   DecimalPlaces=0:5;
                                                    MinValue=0 }
     { 15  ;   ;Ending Date         ;Date          ;OnValidate=BEGIN
                                                                 IF CurrFieldNo = 0 THEN
@@ -181,6 +181,19 @@ OBJECT Table 7002 Sales Price
           "VAT Bus. Posting Gr. (Price)" := Item."VAT Bus. Posting Gr. (Price)";
         END;
       END;
+    END;
+
+    PROCEDURE CopySalesPriceToCustomersSalesPrice@3(VAR SalesPrice@1000 : Record 7002;CustNo@1002 : Code[20]);
+    VAR
+      NewSalesPrice@1001 : Record 7002;
+    BEGIN
+      IF SalesPrice.FINDSET THEN
+        REPEAT
+          NewSalesPrice := SalesPrice;
+          NewSalesPrice."Sales Type" := NewSalesPrice."Sales Type"::Customer;
+          NewSalesPrice."Sales Code" := CustNo;
+          IF NewSalesPrice.INSERT THEN;
+        UNTIL SalesPrice.NEXT = 0;
     END;
 
     BEGIN

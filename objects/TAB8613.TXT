@@ -2,9 +2,9 @@ OBJECT Table 8613 Config. Package Table
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -49,7 +49,7 @@ OBJECT Table 8613 Config. Package Table
     { 1   ;   ;Package Code        ;Code20        ;TableRelation="Config. Package";
                                                    CaptionML=[DAN=Pakkekode;
                                                               ENU=Package Code] }
-    { 2   ;   ;Table ID            ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 2   ;   ;Table ID            ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    OnValidate=BEGIN
                                                                 IF ConfigMgt.IsSystemTable("Table ID") THEN
                                                                   ERROR(Text001,"Table ID");
@@ -112,7 +112,7 @@ OBJECT Table 8613 Config. Package Table
     { 14  ;   ;Package Processing Order;Integer   ;CaptionML=[DAN=Pakkebehandlingsordre;
                                                               ENU=Package Processing Order];
                                                    Editable=No }
-    { 15  ;   ;Page ID             ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Page));
+    { 15  ;   ;Page ID             ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Page));
                                                    OnLookup=BEGIN
                                                               ConfigValidateMgt.LookupPage("Page ID");
                                                               VALIDATE("Page ID");
@@ -155,6 +155,7 @@ OBJECT Table 8613 Config. Package Table
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Importeret af bruger-id;
                                                               ENU=Imported by User ID];
                                                    Editable=No }
@@ -166,6 +167,7 @@ OBJECT Table 8613 Config. Package Table
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Oprettet af bruger-id;
                                                               ENU=Created by User ID];
                                                    Editable=No }
@@ -525,9 +527,13 @@ OBJECT Table 8613 Config. Package Table
 
     PROCEDURE GetNoOfDatabaseRecords@15() : Integer;
     VAR
+      AllObj@1001 : Record 2000000038;
       RecRef@1000 : RecordRef;
     BEGIN
       IF "Table ID" = 0 THEN
+        EXIT(0);
+
+      IF NOT AllObj.GET(AllObj."Object Type"::Table,"Table ID") THEN
         EXIT(0);
 
       RecRef.OPEN("Table ID",FALSE,"Company Filter (Source Table)");

@@ -2,9 +2,9 @@ OBJECT Report 82 Export Budget to Excel
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -24,6 +24,7 @@ OBJECT Report 82 Export Budget to Excel
                DataItemTableView=SORTING(Budget Name,G/L Account No.,Business Unit Code,Global Dimension 1 Code,Global Dimension 2 Code,Budget Dimension 1 Code,Budget Dimension 2 Code,Budget Dimension 3 Code,Budget Dimension 4 Code,Date);
                OnPreDataItem=VAR
                                BusUnit@1000 : Record 220;
+                               DimensionValue@1001 : Record 349;
                              BEGIN
                                IF GETRANGEMIN("Budget Name") <> GETRANGEMAX("Budget Name") THEN
                                  ERROR(Text001);
@@ -47,10 +48,13 @@ OBJECT Report 82 Export Budget to Excel
                                END;
                                IF SelectedDim.FIND('-') THEN
                                  REPEAT
-                                   i := i + 1;
-                                   IF i > ARRAYLEN(ColumnDimCode) THEN
-                                     ERROR(Text003,ARRAYLEN(ColumnDimCode));
-                                   ColumnDimCode[i] := SelectedDim."Dimension Code";
+                                   DimensionValue.SETRANGE("Dimension Code",SelectedDim."Dimension Code");
+                                   IF NOT DimensionValue.ISEMPTY THEN BEGIN
+                                     i := i + 1;
+                                     IF i > ARRAYLEN(ColumnDimCode) THEN
+                                       ERROR(Text003,ARRAYLEN(ColumnDimCode));
+                                     ColumnDimCode[i] := SelectedDim."Dimension Code";
+                                   END;
                                  UNTIL (SelectedDim.NEXT = 0) OR (i = 8);
                                NoOfDimensions := i;
 

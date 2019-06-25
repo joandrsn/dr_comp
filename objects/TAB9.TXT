@@ -2,9 +2,9 @@ OBJECT Table 9 Country/Region
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50785,NAVDK9.00.00.50785;
   }
   PROPERTIES
   {
@@ -60,6 +60,21 @@ OBJECT Table 9 Country/Region
   }
   CODE
   {
+    VAR
+      CountryRegionNotFilledErr@1000 : TextConst 'DAN=Du skal angive et land/område.;ENU=You must specify a country or region.';
+
+    PROCEDURE IsEUCountry@74(CountryRegionCode@1000 : Code[10]) : Boolean;
+    VAR
+      CountryRegion@1003 : Record 9;
+    BEGIN
+      IF CountryRegionCode = '' THEN
+        ERROR(CountryRegionNotFilledErr);
+
+      IF NOT CountryRegion.GET(CountryRegionCode) THEN
+        ERROR(CountryRegionNotFilledErr);
+
+      EXIT(CountryRegion."EU Country/Region Code" <> '');
+    END;
 
     BEGIN
     END.

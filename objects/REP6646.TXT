@@ -2,9 +2,9 @@ OBJECT Report 6646 Sales - Return Receipt
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -4054,10 +4054,9 @@ Cstr(Fields!EmailCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Top>0.08417in</Top>
-              <Height>40pt</Height>
-              <Width>5.45877cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>40</ZIndex>
               <Visibility>
                 <Hidden>=iif(IsNothing(Fields!CompanyInfo1Picture.Value) =TRUE,TRUE,FALSE)</Hidden>
@@ -4072,11 +4071,10 @@ Cstr(Fields!EmailCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Top>0.08417in</Top>
-              <Left>2.505in</Left>
-              <Height>40pt</Height>
-              <Width>5.45877cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>41</ZIndex>
               <Visibility>
                 <Hidden>=iif(IsNothing(Fields!CompanyInfo2Picture.Value)=TRUE,TRUE,FALSE)</Hidden>
@@ -4091,11 +4089,10 @@ Cstr(Fields!EmailCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Top>0.08417in</Top>
-              <Left>5.00558in</Left>
-              <Height>40pt</Height>
-              <Width>5.14483cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>42</ZIndex>
               <Visibility>
                 <Hidden>=iif(IsNothing(Fields!CompanyInfo3Picture.Value)=TRUE,TRUE,FALSE)</Hidden>

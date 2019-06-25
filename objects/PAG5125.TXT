@@ -2,9 +2,9 @@ OBJECT Page 5125 Opportunity Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -33,6 +33,9 @@ OBJECT Page 5125 Opportunity Subform
 
     { 6   ;2   ;Field     ;
                 SourceExpr="Sales Cycle Stage" }
+
+    { 3   ;2   ;Field     ;
+                SourceExpr="Sales Cycle Stage Description" }
 
     { 8   ;2   ;Field     ;
                 SourceExpr="Date of Change" }

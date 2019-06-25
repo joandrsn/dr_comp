@@ -2,9 +2,9 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.51418,NAVDK9.00.00.51418;
   }
   PROPERTIES
   {
@@ -45,6 +45,7 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
       OverrideDimErr@1022 : Boolean;
       SalesDocAlreadyExistsErr@1026 : TextConst '@@@="%1 = Document Type; %2 = Document No.";DAN=Salg %1 %2 findes allerede.;ENU=Sales %1 %2 already exists.';
       PurchDocAlreadyExistsErr@1025 : TextConst '@@@="%1 = Document Type; %2 = Document No.";DAN=Køb %1 %2 findes allerede.;ENU=Purchase %1 %2 already exists.';
+      IsBatchMode@1016 : Boolean;
 
     PROCEDURE RunCheck@4(VAR GenJnlLine@1000 : Record 81);
     VAR
@@ -65,26 +66,8 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
           GenJnlTemplateFound := TRUE;
         END;
 
-        TESTFIELD("Posting Date");
-        IF "Posting Date" <> NORMALDATE("Posting Date") THEN BEGIN
-          IF ("Account Type" <> "Account Type"::"G/L Account") OR
-             ("Bal. Account Type" <> "Bal. Account Type"::"G/L Account")
-          THEN
-            FIELDERROR("Posting Date",Text000);
-          AccountingPeriod.GET(NORMALDATE("Posting Date") + 1);
-          AccountingPeriod.TESTFIELD("New Fiscal Year",TRUE);
-          AccountingPeriod.TESTFIELD("Date Locked",TRUE);
-        END;
-
-        IF DateNotAllowed("Posting Date") THEN
-          FIELDERROR("Posting Date",Text001);
-
-        IF "Document Date" <> 0D THEN
-          IF ("Document Date" <> NORMALDATE("Document Date")) AND
-             (("Account Type" <> "Account Type"::"G/L Account") OR
-              ("Bal. Account Type" <> "Bal. Account Type"::"G/L Account"))
-          THEN
-            FIELDERROR("Document Date",Text000);
+        ValidateSalesPersonPurchaserCode(GenJnlLine);
+        CheckDates(GenJnlLine);
 
         TESTFIELD("Document No.");
 
@@ -106,11 +89,7 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
         IF "Bal. Account No." = '' THEN
           TESTFIELD("Account No.");
 
-        IF ("Account No." <> '') AND
-           NOT "System-Created Entry" AND
-           NOT "Allow Zero-Amount Posting" AND
-           ("Account Type" <> "Account Type"::"Fixed Asset")
-        THEN
+        IF NeedCheckZeroAmount AND NOT (IsRecurring AND IsBatchMode) THEN
           TESTFIELD(Amount);
 
         IF Amount * "Amount (LCY)" < 0 THEN
@@ -137,6 +116,9 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
                    ("VAT Bus. Posting Group" <> '') OR ("VAT Prod. Posting Group" <> '')
                 THEN
                   TESTFIELD("Gen. Posting Type");
+
+                CheckGenProdPostingGroupWhenAdjustForPmtDisc(GenJnlLine);
+
                 IF ("Gen. Posting Type" <> "Gen. Posting Type"::" ") AND
                    ("VAT Posting" = "VAT Posting"::"Automatic VAT Entry")
                 THEN BEGIN
@@ -222,6 +204,9 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
                    ("Bal. VAT Bus. Posting Group" <> '') OR ("Bal. VAT Prod. Posting Group" <> '')
                 THEN
                   TESTFIELD("Bal. Gen. Posting Type");
+
+                CheckBalGenProdPostingGroupWhenAdjustForPmtDisc(GenJnlLine);
+
                 IF ("Bal. Gen. Posting Type" <> "Bal. Gen. Posting Type"::" ") AND
                    ("VAT Posting" = "VAT Posting"::"Automatic VAT Entry")
                 THEN BEGIN
@@ -351,10 +336,7 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
           EXIT;
 
         IF NOT DimMgt.CheckDimIDComb("Dimension Set ID") THEN
-          ERROR(
-            Text011,
-            TABLECAPTION,"Journal Template Name","Journal Batch Name","Line No.",
-            DimMgt.GetDimCombErr);
+          ThrowGenJnlLineError(GenJnlLine,Text011,DimMgt.GetDimCombErr);
 
         TableID[1] := DimMgt.TypeToTableID1("Account Type");
         No[1] := "Account No.";
@@ -367,13 +349,7 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
         TableID[5] := DATABASE::Campaign;
         No[5] := "Campaign No.";
         IF NOT DimMgt.CheckDimValuePosting(TableID,No,"Dimension Set ID") THEN
-          IF "Line No." <> 0 THEN
-            ERROR(
-              Text012,
-              TABLECAPTION,"Journal Template Name","Journal Batch Name","Line No.",
-              DimMgt.GetDimValuePostingErr)
-          ELSE
-            ERROR(DimMgt.GetDimValuePostingErr);
+          ThrowGenJnlLineError(GenJnlLine,Text012,DimMgt.GetDimValuePostingErr);
       END;
 
       IF CostAccSetup.GET THEN
@@ -418,6 +394,32 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
       OverrideDimErr := TRUE;
     END;
 
+    LOCAL PROCEDURE CheckDates@11(GenJnlLine@1001 : Record 81);
+    BEGIN
+      WITH GenJnlLine DO BEGIN
+        TESTFIELD("Posting Date");
+        IF "Posting Date" <> NORMALDATE("Posting Date") THEN BEGIN
+          IF ("Account Type" <> "Account Type"::"G/L Account") OR
+             ("Bal. Account Type" <> "Bal. Account Type"::"G/L Account")
+          THEN
+            FIELDERROR("Posting Date",Text000);
+          AccountingPeriod.GET(NORMALDATE("Posting Date") + 1);
+          AccountingPeriod.TESTFIELD("New Fiscal Year",TRUE);
+          AccountingPeriod.TESTFIELD("Date Locked",TRUE);
+        END;
+
+        IF DateNotAllowed("Posting Date") THEN
+          FIELDERROR("Posting Date",Text001);
+
+        IF "Document Date" <> 0D THEN
+          IF ("Document Date" <> NORMALDATE("Document Date")) AND
+             (("Account Type" <> "Account Type"::"G/L Account") OR
+              ("Bal. Account Type" <> "Bal. Account Type"::"G/L Account"))
+          THEN
+            FIELDERROR("Document Date",Text000);
+      END;
+    END;
+
     PROCEDURE CheckSalesDocNoIsNotUsed@115(DocType@1000 : Option;DocNo@1001 : Code[20]);
     VAR
       OldCustLedgEntry@1002 : Record 21;
@@ -445,11 +447,80 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
       WITH GenJnlLine DO
         IF "Document Type" <> 0 THEN BEGIN
           IsPayment := "Document Type" IN ["Document Type"::Payment,"Document Type"::"Credit Memo"];
-          IF IsPayment XOR ("Account Type" = "Account Type"::Customer) THEN
+          IF (IsPayment XOR (("Account Type" = "Account Type"::Customer) OR IsVendorPaymentToCrMemo(GenJnlLine)))
+          THEN
             ErrorIfNegativeAmt(GenJnlLine)
           ELSE
             ErrorIfPositiveAmt(GenJnlLine);
         END;
+    END;
+
+    LOCAL PROCEDURE IsVendorPaymentToCrMemo@26(GenJournalLine@1002 : Record 81) : Boolean;
+    VAR
+      GenJournalTemplate@1001 : Record 80;
+    BEGIN
+      WITH GenJournalLine DO BEGIN
+        IF ("Account Type" = "Account Type"::Vendor) AND
+           ("Document Type" = "Document Type"::Payment) AND
+           ("Applies-to Doc. Type" = "Applies-to Doc. Type"::"Credit Memo") AND
+           ("Applies-to Doc. No." <> '') AND
+           (("Bal. Account No." <> '') OR "Check Printed")
+        THEN BEGIN
+          GenJournalTemplate.GET("Journal Template Name");
+          EXIT(GenJournalTemplate.Type = GenJournalTemplate.Type::Payments);
+        END;
+        EXIT(FALSE);
+      END;
+    END;
+
+    LOCAL PROCEDURE ThrowGenJnlLineError@8(GenJournalLine@1000 : Record 81;ErrorTemplate@1001 : Text;ErrorText@1002 : Text);
+    BEGIN
+      WITH GenJournalLine DO
+        IF "Line No." <> 0 THEN
+          ERROR(
+            ErrorTemplate,
+            TABLECAPTION,"Journal Template Name","Journal Batch Name","Line No.",
+            ErrorText);
+      ERROR(ErrorText);
+    END;
+
+    PROCEDURE SetBatchMode@10(NewBatchMode@1000 : Boolean);
+    BEGIN
+      IsBatchMode := NewBatchMode;
+    END;
+
+    LOCAL PROCEDURE CheckGenProdPostingGroupWhenAdjustForPmtDisc@33(GenJnlLine@1000 : Record 81);
+    VAR
+      VATPostingSetup@1001 : Record 325;
+    BEGIN
+      WITH GenJnlLine DO BEGIN
+        IF ("Payment Discount %" = 0) OR ("Document Type" <> "Document Type"::Invoice) OR "System-Created Entry" OR
+           NOT ("Gen. Posting Type" IN ["Gen. Posting Type"::Purchase,"Gen. Posting Type"::Sale])
+        THEN
+          EXIT;
+
+        IF VATPostingSetup.GET("VAT Bus. Posting Group","VAT Prod. Posting Group") AND
+           VATPostingSetup."Adjust for Payment Discount"
+        THEN
+          TESTFIELD("Gen. Prod. Posting Group");
+      END;
+    END;
+
+    LOCAL PROCEDURE CheckBalGenProdPostingGroupWhenAdjustForPmtDisc@34(GenJnlLine@1000 : Record 81);
+    VAR
+      VATPostingSetup@1001 : Record 325;
+    BEGIN
+      WITH GenJnlLine DO BEGIN
+        IF ("Payment Discount %" = 0) OR ("Document Type" <> "Document Type"::Invoice) OR "System-Created Entry" OR
+           NOT ("Bal. Gen. Posting Type" IN ["Bal. Gen. Posting Type"::Purchase,"Bal. Gen. Posting Type"::Sale])
+        THEN
+          EXIT;
+
+        IF VATPostingSetup.GET("Bal. VAT Bus. Posting Group","Bal. VAT Prod. Posting Group") AND
+           VATPostingSetup."Adjust for Payment Discount"
+        THEN
+          TESTFIELD("Bal. Gen. Prod. Posting Group");
+      END;
     END;
 
     [Integration]

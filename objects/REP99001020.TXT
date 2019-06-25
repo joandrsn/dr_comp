@@ -2,9 +2,9 @@ OBJECT Report 99001020 Carry Out Action Msg. - Plan.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -99,7 +99,10 @@ OBJECT Report 99001020 Carry Out Action Msg. - Plan.
                                   MESSAGE(Text010);
 
                                 IF CounterFailed > 0 THEN
-                                  MESSAGE(Text013,CounterFailed);
+                                  IF GETLASTERRORTEXT = '' THEN
+                                    MESSAGE(Text013,CounterFailed)
+                                  ELSE
+                                    MESSAGE(GETLASTERRORTEXT);
                               END;
                                }
 
@@ -326,7 +329,7 @@ OBJECT Report 99001020 Carry Out Action Msg. - Plan.
       ReserveforPlannedProd@1033 : Boolean;
       NoPlanningResiliency@1031 : Boolean;
       Text010@1030 : TextConst 'DAN=Komponenter blev ikke reserveret for ordrer med status Planlagt.;ENU=Components were not reserved for orders with status Planned.';
-      Text011@1032 : TextConst 'DAN=Du skal lave en ordre for både linje %1 og %2, fordi de er knyttet til hinanden.;ENU=You must make order for both line %1 and %2 because they are associated.';
+      Text011@1032 : TextConst 'DAN=Du skal oprette en ordre for både linje %1 og %2, fordi de er knyttet til hinanden.;ENU=You must make order for both line %1 and %2 because they are associated.';
       Text012@1034 : TextConst 'DAN=Udfører handlinger    #1########## @2@@@@@@@@@@@@@;ENU=Carrying Out Actions  #1########## @2@@@@@@@@@@@@@';
       Counter@1036 : Integer;
       CounterTotal@1037 : Integer;

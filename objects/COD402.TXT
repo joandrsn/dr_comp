@@ -2,9 +2,9 @@ OBJECT Codeunit 402 Purchase Header Apply
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -35,7 +35,7 @@ OBJECT Codeunit 402 Purchase Header Apply
               VendLedgEntry.SETRANGE("Vendor No.",PayToVendorNo);
               VendLedgEntry.SETRANGE(Open,TRUE);
               VendLedgEntry.SETRANGE("Applies-to ID","Applies-to ID");
-              IF VendLedgEntry.FIND('-') THEN BEGIN
+              IF NOT VendLedgEntry.ISEMPTY THEN BEGIN
                 "Applies-to Doc. Type" := 0;
                 "Applies-to Doc. No." := '';
               END ELSE

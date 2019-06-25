@@ -2,9 +2,9 @@ OBJECT Page 5116 Salesperson/Purchaser Card
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -233,6 +233,12 @@ OBJECT Page 5116 Salesperson/Purchaser Card
 
     { 12  ;2   ;Field     ;
                 SourceExpr="Next To-do Date" }
+
+    { 195 ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om adgangen til data skal begrænses for dataemnet i den daglige drift. Dette er eksempelvis nyttigt, når du vil beskytte data mod ændringer, mens det kontrolleres, om de indeholder personlige oplysninger.;
+                           ENU=Specifies whether to limit access to data for the data subject during daily operations. This is useful, for example, when protecting data from changes while it is under privacy review.];
+                SourceExpr="Privacy Blocked";
+                Importance=Additional }
 
     { 1905885101;1;Group  ;
                 CaptionML=[DAN=Fakturering;

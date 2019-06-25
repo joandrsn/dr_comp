@@ -2,9 +2,9 @@ OBJECT Table 5809 Item Charge Assignment (Sales)
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -14,7 +14,6 @@ OBJECT Table 5809 Item Charge Assignment (Sales)
 
     CaptionML=[DAN=Varegebyrtildeling (salg);
                ENU=Item Charge Assignment (Sales)];
-    PasteIsValid=No;
   }
   FIELDS
   {
@@ -65,11 +64,14 @@ OBJECT Table 5809 Item Charge Assignment (Sales)
                                                    CaptionML=[DAN=Kostpris;
                                                               ENU=Unit Cost];
                                                    AutoFormatType=2 }
-    { 11  ;   ;Amount to Assign    ;Decimal       ;OnValidate=BEGIN
+    { 11  ;   ;Amount to Assign    ;Decimal       ;OnValidate=VAR
+                                                                ItemChargeAssgntSales@1000 : Codeunit 5807;
+                                                              BEGIN
                                                                 SalesLine.GET("Document Type","Document No.","Document Line No.");
                                                                 IF NOT Currency.GET(SalesLine."Currency Code") THEN
                                                                   Currency.InitRoundingPrecision;
                                                                 "Amount to Assign" := ROUND("Qty. to Assign" * "Unit Cost",Currency."Amount Rounding Precision");
+                                                                ItemChargeAssgntSales.SuggestAssignmentFromLine(Rec);
                                                               END;
 
                                                    CaptionML=[DAN=Beløb der skal tildeles;

@@ -2,9 +2,9 @@ OBJECT Codeunit 99000831 Reservation Engine Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -42,7 +42,6 @@ OBJECT Codeunit 99000831 Reservation Engine Mgt.
       LostReservationQty@1019 : Decimal;
       Text008@1020 : TextConst 'DAN="Du kan ikke angive %1 eller %2 for en efterspørgsel, når den er kædet til et udbud af %3 = %4.";ENU="You cannot state %1 or %2 on a demand when it is linked to a supply by %3 = %4."';
       ReservationsModified@1021 : Boolean;
-      IsPick@1022 : Boolean;
 
     PROCEDURE CancelReservation@9(ReservEntry@1002 : Record 337);
     VAR
@@ -571,8 +570,6 @@ OBJECT Codeunit 99000831 Reservation Engine Mgt.
     END;
 
     LOCAL PROCEDURE ModifyItemTrkgByReservStatus@32(VAR TempReservEntry@1000 : TEMPORARY Record 337;VAR TrackingSpecification@1006 : Record 336;ReservStatus@1007 : 'Reservation,Tracking,Surplus,Prospect';VAR QtyToAdd@1005 : Decimal;VAR QtyToAddAsBlank@1004 : Decimal;SNSpecific@1003 : Boolean;LotSpecific@1002 : Boolean);
-    VAR
-      ReservEntry2@1001 : Record 337;
     BEGIN
       IF QtyToAdd = 0 THEN
         EXIT;
@@ -580,20 +577,10 @@ OBJECT Codeunit 99000831 Reservation Engine Mgt.
       TempReservEntry.SETRANGE("Reservation Status",ReservStatus);
       IF TempReservEntry.FINDSET THEN
         REPEAT
-          IF IsPick THEN BEGIN
-            // pick must be tracked against Item ledger entry only
-            IF NOT ReservEntry2.GET(TempReservEntry."Entry No.",NOT TempReservEntry.Positive) THEN
-              ReservEntry2."Source Type" := DATABASE::"Item Ledger Entry";
-            IF ReservEntry2."Source Type" = DATABASE::"Item Ledger Entry" THEN
-              QtyToAdd :=
-                ModifyItemTrackingOnTempRec(
-                  TempReservEntry,TrackingSpecification,QtyToAdd,
-                  QtyToAddAsBlank,0,SNSpecific,LotSpecific,FALSE,FALSE);
-          END ELSE
-            QtyToAdd :=
-              ModifyItemTrackingOnTempRec(
-                TempReservEntry,TrackingSpecification,QtyToAdd,
-                QtyToAddAsBlank,0,SNSpecific,LotSpecific,FALSE,FALSE);
+          QtyToAdd :=
+            ModifyItemTrackingOnTempRec(
+              TempReservEntry,TrackingSpecification,QtyToAdd,
+              QtyToAddAsBlank,0,SNSpecific,LotSpecific,FALSE,FALSE);
         UNTIL (TempReservEntry.NEXT = 0) OR (QtyToAdd = 0);
     END;
 
@@ -606,9 +593,6 @@ OBJECT Codeunit 99000831 Reservation Engine Mgt.
       TrackingSpecification2@1013 : Record 336;
       QtyToAdd2@1010 : Decimal;
       ModifyPartnerRec@1009 : Boolean;
-      ItemTrackingMgt@1102601000 : Codeunit 6500;
-      FromSourceID@1102601001 : Text[100];
-      ToSourceID@1102601002 : Text[100];
     BEGIN
       IF NOT CalledRecursively THEN BEGIN
         TempReservEntryCopy := TempReservEntry;
@@ -734,20 +718,6 @@ OBJECT Codeunit 99000831 Reservation Engine Mgt.
       IF ModifyPartnerRec THEN
         ModifyItemTrackingOnTempRec(TempReservEntry2,TrackingSpecification2,
           QtyToAdd2,QtyToAddAsBlank,LastEntryNo,SNSpecific,LotSpecific,EntryMismatch,TRUE);
-      IF (TempReservEntry."Reservation Status" = TempReservEntry."Reservation Status"::Reservation) AND
-         (TempReservEntry."Source Type" = DATABASE::"Transfer Line") AND
-         (TempReservEntry."Source Subtype" = 0) AND
-         (TempReservEntry.Binding = TempReservEntry.Binding::"Order-to-Order") AND
-         NOT ModifyPartnerRec
-      THEN BEGIN
-        FromSourceID := ItemTrackingMgt.ComposeRowID(TempReservEntry."Source Type",
-            TempReservEntry."Source Subtype",TempReservEntry."Source ID",TempReservEntry."Source Batch Name",
-            TempReservEntry."Source Prod. Order Line",TempReservEntry."Source Ref. No.");
-        ToSourceID := ItemTrackingMgt.ComposeRowID(TempReservEntry."Source Type",
-            1,TempReservEntry."Source ID",TempReservEntry."Source Batch Name",
-            TempReservEntry."Source Prod. Order Line",TempReservEntry."Source Ref. No.");
-        ItemTrackingMgt.SynchronizeItemTracking(FromSourceID,ToSourceID,'');
-      END;
 
       TempSurplusEntry.RESET;
       IF TempSurplusEntry.FINDSET THEN BEGIN
@@ -847,7 +817,7 @@ OBJECT Codeunit 99000831 Reservation Engine Mgt.
         TempReservEntry.DELETE;
         IF SurplusEntry."Entry No." <> 0 THEN BEGIN
           IF ReservEntry."Quantity (Base)" = 0 THEN
-            ReservEntry.DELETE
+            ReservEntry.DELETE(TRUE)
           ELSE BEGIN
             ReservEntry.VALIDATE("Quantity (Base)");
             ReservEntry.MODIFY;
@@ -1283,11 +1253,6 @@ OBJECT Codeunit 99000831 Reservation Engine Mgt.
       ReservEntry.SETFILTER("Expected Receipt Date",'<>%1',0D);
 
       EXIT(NOT ReservEntry.ISEMPTY);
-    END;
-
-    PROCEDURE SetPick@31(IsPick2@1000 : Boolean);
-    BEGIN
-      IsPick := IsPick2;
     END;
 
     LOCAL PROCEDURE TransferLineWithItemTracking@5(ReservEntry@1000 : Record 337) : Boolean;

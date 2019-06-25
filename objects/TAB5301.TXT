@@ -2,9 +2,9 @@ OBJECT Table 5301 Outlook Synch. Entity Element
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -51,7 +51,7 @@ OBJECT Table 5301 Outlook Synch. Entity Element
                                                    NotBlank=Yes }
     { 2   ;   ;Element No.         ;Integer       ;CaptionML=[DAN=Elementnr.;
                                                               ENU=Element No.] }
-    { 3   ;   ;Table No.           ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 3   ;   ;Table No.           ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    OnValidate=BEGIN
                                                                 IF "Table No." <> xRec."Table No." THEN BEGIN
                                                                   CheckUserSetup;
@@ -182,7 +182,8 @@ OBJECT Table 5301 Outlook Synch. Entity Element
                                                    CaptionML=[DAN=Overordnet tabelnr.;
                                                               ENU=Master Table No.];
                                                    Editable=No }
-    { 8   ;   ;Record GUID         ;GUID          ;CaptionML=[DAN=Record-GUID;
+    { 8   ;   ;Record GUID         ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-GUID;
                                                               ENU=Record GUID];
                                                    Editable=No }
     { 9   ;   ;No. of Dependencies ;Integer       ;FieldClass=FlowField;

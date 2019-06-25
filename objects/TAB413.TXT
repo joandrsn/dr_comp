@@ -2,9 +2,9 @@ OBJECT Table 413 IC Partner
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -40,7 +40,7 @@ OBJECT Table 413 IC Partner
                    ERROR(Text002,Code,Cust.TABLECAPTION,Cust."No.");
 
                IF "Vendor No." <> '' THEN
-                 IF Vend.GET("Customer No.") THEN
+                 IF Vend.GET("Vendor No.") THEN
                    ERROR(Text002,Code,Vend.TABLECAPTION,Vend."No.");
 
                ICInbox.SETRANGE("IC Partner Code",Code);

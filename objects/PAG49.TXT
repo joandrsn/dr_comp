@@ -2,9 +2,9 @@ OBJECT Page 49 Purchase Quote
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974,NAVDK9.00.00.44974;
+    Version List=NAVW19.00.00.50868,NAVDK9.00.00.50868;
   }
   PROPERTIES
   {
@@ -42,6 +42,7 @@ OBJECT Page 49 Purchase Quote
     OnAfterGetCurrRecord=BEGIN
                            CurrPage.IncomingDocAttachFactBox.PAGE.LoadDataFromRecord(Rec);
                            ShowWorkflowStatus := CurrPage.WorkflowStatus.PAGE.SetFilterOnWorkflowRecord(RECORDID);
+                           CurrPage.ApprovalFactBox.PAGE.RefreshPage(RECORDID);
                          END;
 
     ActionList=ACTIONS
@@ -157,14 +158,16 @@ OBJECT Page 49 Purchase Quote
                       Name=Comment;
                       CaptionML=[DAN=Bemærkninger;
                                  ENU=Comments];
-                      RunObject=Page 660;
-                      RunPageLink=Table ID=CONST(38),
-                                  Document Type=FIELD(Document Type),
-                                  Document No.=FIELD(No.);
                       Promoted=Yes;
                       Visible=OpenApprovalEntriesExistForCurrUser;
                       Image=ViewComments;
-                      PromotedCategory=Category4 }
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1000 : Codeunit 1535;
+                               BEGIN
+                                 ApprovalsMgmt.GetApprovalComment(Rec);
+                               END;
+                                }
       { 70      ;1   ;Action    ;
                       Name=Print;
                       Ellipsis=Yes;
@@ -344,12 +347,12 @@ OBJECT Page 49 Purchase Quote
                                END;
                                 }
       { 7       ;1   ;ActionGroup;
-                      CaptionML=[DAN=Lav ordre;
+                      CaptionML=[DAN=Opret ordre;
                                  ENU=Make Order];
                       Image=MakeOrder }
       { 69      ;2   ;Action    ;
                       Name=Make Order;
-                      CaptionML=[DAN=Lav &ordre;
+                      CaptionML=[DAN=Opret &ordre;
                                  ENU=Make &Order];
                       Promoted=Yes;
                       Image=MakeOrder;
@@ -608,7 +611,7 @@ OBJECT Page 49 Purchase Quote
                                ChangeExchangeRate.SetParameter("Currency Code","Currency Factor",WORKDATE);
                                IF ChangeExchangeRate.RUNMODAL = ACTION::OK THEN BEGIN
                                  VALIDATE("Currency Factor",ChangeExchangeRate.GetParameter);
-                                 CurrPage.UPDATE;
+                                 SaveInvoiceDiscountAmount;
                                END;
                                CLEAR(ChangeExchangeRate);
                              END;
@@ -661,9 +664,7 @@ OBJECT Page 49 Purchase Quote
                 PartType=Page }
 
     { 1906354007;1;Part   ;
-                SubPageLink=Table ID=CONST(38),
-                            Document Type=FIELD(Document Type),
-                            Document No.=FIELD(No.);
+                Name=ApprovalFactBox;
                 PagePartID=Page9092;
                 Visible=FALSE;
                 PartType=Page }
@@ -713,6 +714,15 @@ OBJECT Page 49 Purchase Quote
     LOCAL PROCEDURE ApproveCalcInvDisc@1();
     BEGIN
       CurrPage.PurchLines.PAGE.ApproveCalcInvDisc;
+    END;
+
+    LOCAL PROCEDURE SaveInvoiceDiscountAmount@14();
+    VAR
+      DocumentTotals@1000 : Codeunit 57;
+    BEGIN
+      CurrPage.SAVERECORD;
+      DocumentTotals.PurchaseRedistributeInvoiceDiscountAmountsOnDocument(Rec);
+      CurrPage.UPDATE(FALSE);
     END;
 
     LOCAL PROCEDURE BuyfromVendorNoOnAfterValidate@19032492();

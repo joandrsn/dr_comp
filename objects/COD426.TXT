@@ -2,9 +2,9 @@ OBJECT Codeunit 426 Payment Tolerance Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -21,7 +21,7 @@ OBJECT Codeunit 426 Payment Tolerance Management
   {
     VAR
       CurrExchRate@1000 : Record 330;
-      ApplyingPostedEntries@1001 : Boolean;
+      AccTypeOrBalAccTypeIsIncorrectErr@1002 : TextConst '@@@="%1 = Customer or Vendor";DAN=Værdien i feltet Kontotype eller feltet Modkontotype er forkert.\\ Værdien skal være %1.;ENU=The value in either the Account Type field or the Bal. Account Type field is wrong.\\ The value must be %1.';
 
     PROCEDURE PmtTolCust@10(VAR CustLedgEntry@1000 : Record 21) : Boolean;
     VAR
@@ -155,32 +155,13 @@ OBJECT Codeunit 426 Payment Tolerance Management
       EXIT(TRUE);
     END;
 
-    PROCEDURE PmtTolGenJnl@16(VAR NewGenJnlline@1000 : Record 81) : Boolean;
+    PROCEDURE PmtTolGenJnl@16(VAR NewGenJnlLine@1000 : Record 81) : Boolean;
     VAR
-      GLSetup@1009 : Record 98;
       GenJnlLine@1016 : TEMPORARY Record 81;
-      Customer@1001 : Record 18;
-      Vendor@1002 : Record 23;
-      NewCustLedgEntry@1007 : Record 21;
-      NewVendLedgEntry@1008 : Record 25;
-      ExchAccGLJnlLine@1013 : Codeunit 366;
-      GenJnlPostPreview@1005 : Codeunit 19;
-      AppliedAmount@1003 : Decimal;
-      ApplyingAmount@1004 : Decimal;
-      AmounttoApply@1017 : Decimal;
-      PmtDiscAmount@1018 : Decimal;
-      MaxPmtTolAmount@1006 : Decimal;
-      GenJnlLineApplID@1010 : Code[50];
-      ApplnRoundingPrecision@1015 : Decimal;
     BEGIN
-      MaxPmtTolAmount := 0;
-      PmtDiscAmount := 0;
-      AppliedAmount := 0;
-      ApplyingAmount := 0;
-      AmounttoApply := 0;
-      GenJnlLine := NewGenJnlline;
+      GenJnlLine := NewGenJnlLine;
 
-      IF GenJnlLine."Check Printed" = TRUE THEN
+      IF GenJnlLine."Check Printed" THEN
         EXIT(TRUE);
 
       IF GenJnlLine."Financial Void" THEN
@@ -189,81 +170,151 @@ OBJECT Codeunit 426 Payment Tolerance Management
       IF (GenJnlLine."Applies-to Doc. No." = '') AND (GenJnlLine."Applies-to ID" = '') THEN
         EXIT(TRUE);
 
-      IF (GenJnlLine."Account Type" = GenJnlLine."Account Type"::Customer) OR
-         (GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Customer)
-      THEN BEGIN
-        IF GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Customer THEN
-          ExchAccGLJnlLine.RUN(GenJnlLine);
-        IF NOT Customer.GET(GenJnlLine."Account No.") THEN
-          EXIT(FALSE);
-
-        IF Customer."Block Payment Tolerance" THEN
-          EXIT(FALSE);
-      END ELSE
-        IF (GenJnlLine."Account Type" = GenJnlLine."Account Type"::Vendor) OR
-           (GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Vendor)
-        THEN BEGIN
-          IF GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Vendor THEN
-            ExchAccGLJnlLine.RUN(GenJnlLine);
-          IF NOT Vendor.GET(GenJnlLine."Account No.") THEN
-            EXIT(FALSE);
-
-          IF Vendor."Block Payment Tolerance" THEN
-            EXIT(FALSE);
-        END;
-
-      GLSetup.GET;
-      IF GenJnlLine."Applies-to Doc. No." = '' THEN
-        IF GenJnlLine."Applies-to ID" <> '' THEN
-          GenJnlLineApplID := GenJnlLine."Applies-to ID";
-
-      IF (GenJnlLine."Account Type" = GenJnlLine."Account Type"::Customer) OR
-         (GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Customer)
-      THEN BEGIN
-        NewCustLedgEntry."Posting Date" := GenJnlLine."Posting Date";
-        NewCustLedgEntry."Document No." := GenJnlLine."Document No.";
-        NewCustLedgEntry."Customer No." := GenJnlLine."Account No.";
-        NewCustLedgEntry."Currency Code" := GenJnlLine."Currency Code";
-        IF GenJnlLine."Applies-to Doc. No." <> '' THEN
-          NewCustLedgEntry."Applies-to Doc. No." := GenJnlLine."Applies-to Doc. No.";
-        IF NOT GenJnlPostPreview.IsStarted THEN
-          DelCustPmtTolAcc(NewCustLedgEntry,GenJnlLineApplID);
-        NewCustLedgEntry.Amount := GenJnlLine.Amount;
-        NewCustLedgEntry."Remaining Amount" := GenJnlLine.Amount;
-        NewCustLedgEntry."Document Type" := GenJnlLine."Document Type";
-        CalcCustApplnAmount(
-          NewCustLedgEntry,GLSetup,AppliedAmount,ApplyingAmount,AmounttoApply,PmtDiscAmount,
-          MaxPmtTolAmount,GenJnlLineApplID,ApplnRoundingPrecision);
-      END ELSE BEGIN
-        NewVendLedgEntry."Posting Date" := GenJnlLine."Posting Date";
-        NewVendLedgEntry."Document No." := GenJnlLine."Document No.";
-        NewVendLedgEntry."Vendor No." := GenJnlLine."Account No.";
-        NewVendLedgEntry."Currency Code" := GenJnlLine."Currency Code";
-        IF GenJnlLine."Applies-to Doc. No." <> '' THEN
-          NewVendLedgEntry."Applies-to Doc. No." := GenJnlLine."Applies-to Doc. No.";
-        DelVendPmtTolAcc(NewVendLedgEntry,GenJnlLineApplID);
-        NewVendLedgEntry.Amount := GenJnlLine.Amount;
-        NewVendLedgEntry."Remaining Amount" := GenJnlLine.Amount;
-        NewVendLedgEntry."Document Type" := GenJnlLine."Document Type";
-        CalcVendApplnAmount(
-          NewVendLedgEntry,GLSetup,AppliedAmount,ApplyingAmount,AmounttoApply,PmtDiscAmount,
-          MaxPmtTolAmount,GenJnlLineApplID,
-          ApplnRoundingPrecision);
+      CASE TRUE OF
+        (GenJnlLine."Account Type" = GenJnlLine."Account Type"::Customer) OR
+        (GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Customer):
+          EXIT(SalesPmtTolGenJnl(GenJnlLine));
+        (GenJnlLine."Account Type" = GenJnlLine."Account Type"::Vendor) OR
+        (GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Vendor):
+          EXIT(PurchPmtTolGenJnl(GenJnlLine));
       END;
+    END;
+
+    LOCAL PROCEDURE SalesPmtTolGenJnl@45(VAR GenJnlLine@1000 : Record 81) : Boolean;
+    VAR
+      NewCustLedgEntry@1007 : Record 21;
+      GenJnlPostPreview@1005 : Codeunit 19;
+      GenJnlLineApplID@1010 : Code[50];
+    BEGIN
+      IF IsCustBlockPmtToleranceInGenJnlLine(GenJnlLine) THEN
+        EXIT(FALSE);
+
+      GenJnlLineApplID := GetAppliesToID(GenJnlLine);
+
+      NewCustLedgEntry."Posting Date" := GenJnlLine."Posting Date";
+      NewCustLedgEntry."Document No." := GenJnlLine."Document No.";
+      NewCustLedgEntry."Customer No." := GenJnlLine."Account No.";
+      NewCustLedgEntry."Currency Code" := GenJnlLine."Currency Code";
+      IF GenJnlLine."Applies-to Doc. No." <> '' THEN
+        NewCustLedgEntry."Applies-to Doc. No." := GenJnlLine."Applies-to Doc. No.";
+      IF NOT GenJnlPostPreview.IsStarted THEN
+        DelCustPmtTolAcc(NewCustLedgEntry,GenJnlLineApplID);
+      NewCustLedgEntry.Amount := GenJnlLine.Amount;
+      NewCustLedgEntry."Remaining Amount" := GenJnlLine.Amount;
+      NewCustLedgEntry."Document Type" := GenJnlLine."Document Type";
+      EXIT(
+        PmtTolCustLedgEntry(NewCustLedgEntry,GenJnlLine."Account No.",GenJnlLine."Posting Date",
+          GenJnlLine."Document No.",GenJnlLineApplID,GenJnlLine."Applies-to Doc. No.",
+          GenJnlLine."Currency Code"));
+    END;
+
+    LOCAL PROCEDURE PurchPmtTolGenJnl@51(VAR GenJnlLine@1000 : Record 81) : Boolean;
+    VAR
+      NewVendLedgEntry@1008 : Record 25;
+      GenJnlLineApplID@1010 : Code[50];
+    BEGIN
+      IF IsVendBlockPmtToleranceInGenJnlLine(GenJnlLine) THEN
+        EXIT(FALSE);
+
+      GenJnlLineApplID := GetAppliesToID(GenJnlLine);
+
+      NewVendLedgEntry."Posting Date" := GenJnlLine."Posting Date";
+      NewVendLedgEntry."Document No." := GenJnlLine."Document No.";
+      NewVendLedgEntry."Vendor No." := GenJnlLine."Account No.";
+      NewVendLedgEntry."Currency Code" := GenJnlLine."Currency Code";
+      IF GenJnlLine."Applies-to Doc. No." <> '' THEN
+        NewVendLedgEntry."Applies-to Doc. No." := GenJnlLine."Applies-to Doc. No.";
+      DelVendPmtTolAcc(NewVendLedgEntry,GenJnlLineApplID);
+      NewVendLedgEntry.Amount := GenJnlLine.Amount;
+      NewVendLedgEntry."Remaining Amount" := GenJnlLine.Amount;
+      NewVendLedgEntry."Document Type" := GenJnlLine."Document Type";
+      EXIT(
+        PmtTolVendLedgEntry(
+          NewVendLedgEntry,GenJnlLine."Account No.",GenJnlLine."Posting Date",
+          GenJnlLine."Document No.",GenJnlLineApplID,GenJnlLine."Applies-to Doc. No.",
+          GenJnlLine."Currency Code"));
+    END;
+
+    PROCEDURE PmtTolPmtReconJnl@44(VAR NewBankAccReconciliationLine@1000 : Record 274) : Boolean;
+    VAR
+      BankAccReconciliationLine@1010 : Record 274;
+    BEGIN
+      BankAccReconciliationLine := NewBankAccReconciliationLine;
+
+      CASE BankAccReconciliationLine."Account Type" OF
+        BankAccReconciliationLine."Account Type"::Customer:
+          EXIT(SalesPmtTolPmtReconJnl(BankAccReconciliationLine));
+        BankAccReconciliationLine."Account Type"::Vendor:
+          EXIT(PurchPmtTolPmtReconJnl(BankAccReconciliationLine));
+      END;
+    END;
+
+    LOCAL PROCEDURE SalesPmtTolPmtReconJnl@55(VAR BankAccReconciliationLine@1000 : Record 274) : Boolean;
+    VAR
+      NewCustLedgEntry@1004 : Record 21;
+    BEGIN
+      BankAccReconciliationLine.TESTFIELD("Account Type",BankAccReconciliationLine."Account Type"::Customer);
+
+      IF IsCustBlockPmtTolerance(BankAccReconciliationLine."Account No.") THEN
+        EXIT(FALSE);
+
+      NewCustLedgEntry."Posting Date" := BankAccReconciliationLine."Transaction Date";
+      NewCustLedgEntry."Document No." := BankAccReconciliationLine."Document No.";
+      NewCustLedgEntry."Customer No." := BankAccReconciliationLine."Account No.";
+      DelCustPmtTolAcc(NewCustLedgEntry,BankAccReconciliationLine.GetAppliesToID);
+      NewCustLedgEntry.Amount := -BankAccReconciliationLine."Statement Amount";
+      NewCustLedgEntry."Remaining Amount" := -BankAccReconciliationLine."Statement Amount";
+      NewCustLedgEntry."Document Type" := NewCustLedgEntry."Document Type"::Payment;
+
+      EXIT(
+        PmtTolCustLedgEntry(
+          NewCustLedgEntry,BankAccReconciliationLine."Account No.",BankAccReconciliationLine."Transaction Date",
+          BankAccReconciliationLine."Statement No.",BankAccReconciliationLine.GetAppliesToID,'',
+          ''));
+    END;
+
+    LOCAL PROCEDURE PurchPmtTolPmtReconJnl@60(VAR BankAccReconciliationLine@1000 : Record 274) : Boolean;
+    VAR
+      NewVendLedgEntry@1003 : Record 25;
+    BEGIN
+      BankAccReconciliationLine.TESTFIELD("Account Type",BankAccReconciliationLine."Account Type"::Vendor);
+
+      IF IsVendBlockPmtTolerance(BankAccReconciliationLine."Account No.") THEN
+        EXIT(FALSE);
+
+      NewVendLedgEntry."Posting Date" := BankAccReconciliationLine."Transaction Date";
+      NewVendLedgEntry."Document No." := BankAccReconciliationLine."Document No.";
+      NewVendLedgEntry."Vendor No." := BankAccReconciliationLine."Account No.";
+      DelVendPmtTolAcc(NewVendLedgEntry,BankAccReconciliationLine.GetAppliesToID);
+      NewVendLedgEntry.Amount := -BankAccReconciliationLine."Statement Amount";
+      NewVendLedgEntry."Remaining Amount" := -BankAccReconciliationLine."Statement Amount";
+      NewVendLedgEntry."Document Type" := NewVendLedgEntry."Document Type"::Payment;
+
+      EXIT(
+        PmtTolVendLedgEntry(
+          NewVendLedgEntry,BankAccReconciliationLine."Account No.",BankAccReconciliationLine."Transaction Date",
+          BankAccReconciliationLine."Statement No.",BankAccReconciliationLine.GetAppliesToID,'',
+          ''));
+    END;
+
+    LOCAL PROCEDURE PmtTolCustLedgEntry@46(VAR NewCustLedgEntry@1008 : Record 21;AccountNo@1005 : Code[20];PostingDate@1004 : Date;DocNo@1003 : Code[20];AppliesToID@1002 : Code[50];AppliesToDocNo@1001 : Code[20];CurrencyCode@1000 : Code[10]) : Boolean;
+    VAR
+      GLSetup@1016 : Record 98;
+      AppliedAmount@1014 : Decimal;
+      ApplyingAmount@1013 : Decimal;
+      AmounttoApply@1012 : Decimal;
+      PmtDiscAmount@1011 : Decimal;
+      MaxPmtTolAmount@1010 : Decimal;
+      ApplnRoundingPrecision@1009 : Decimal;
+    BEGIN
+      GLSetup.GET;
+      CalcCustApplnAmount(
+        NewCustLedgEntry,GLSetup,AppliedAmount,ApplyingAmount,AmounttoApply,PmtDiscAmount,
+        MaxPmtTolAmount,AppliesToID,ApplnRoundingPrecision);
 
       IF GLSetup."Pmt. Disc. Tolerance Warning" THEN
-        CASE GenJnlLine."Account Type" OF
-          GenJnlLine."Account Type"::Customer:
-            IF NOT ManagePaymentDiscToleranceWarningCustomer(
-                 NewCustLedgEntry,GenJnlLineApplID,AppliedAmount,AmounttoApply,GenJnlLine."Applies-to Doc. No.")
-            THEN
-              EXIT(FALSE);
-          GenJnlLine."Account Type"::Vendor:
-            IF NOT ManagePaymentDiscToleranceWarningVendor(
-                 NewVendLedgEntry,GenJnlLineApplID,AppliedAmount,AmounttoApply,GenJnlLine."Applies-to Doc. No.")
-            THEN
-              EXIT(FALSE);
-        END;
+        IF NOT ManagePaymentDiscToleranceWarningCustomer(NewCustLedgEntry,AppliesToID,AppliedAmount,AmounttoApply,AppliesToDocNo) THEN
+          EXIT(FALSE);
 
       IF ABS(AmounttoApply) >= ABS(AppliedAmount - PmtDiscAmount - MaxPmtTolAmount) THEN BEGIN
         AppliedAmount := AppliedAmount - PmtDiscAmount;
@@ -274,37 +325,67 @@ OBJECT Codeunit 426 Payment Tolerance Management
            (MaxPmtTolAmount <> 0) AND ((ABS(AppliedAmount + ApplyingAmount) - ApplnRoundingPrecision) <> 0) AND
            (ABS(AppliedAmount + ApplyingAmount) > ApplnRoundingPrecision)
         THEN
-          IF GenJnlLine."Account Type" = GenJnlLine."Account Type"::Customer THEN BEGIN
-            IF GLSetup."Payment Tolerance Warning" THEN BEGIN
-              IF CallPmtTolWarning(
-                   GenJnlLine."Posting Date",GenJnlLine."Account No.",GenJnlLine."Document No.",
-                   GenJnlLine."Currency Code",ApplyingAmount,AppliedAmount)
-              THEN BEGIN
-                IF (AppliedAmount <> 0) AND (ApplyingAmount <> 0) THEN
-                  PutCustPmtTolAmount(NewCustLedgEntry,ApplyingAmount,AppliedAmount,GenJnlLineApplID)
-                ELSE
-                  DelCustPmtTolAcc(NewCustLedgEntry,GenJnlLineApplID);
-              END ELSE
-                EXIT(FALSE);
-            END ELSE
-              PutCustPmtTolAmount(NewCustLedgEntry,ApplyingAmount,AppliedAmount,GenJnlLineApplID);
-          END ELSE BEGIN
-            IF GLSetup."Payment Tolerance Warning" THEN BEGIN
-              IF CallPmtTolWarning(
-                   GenJnlLine."Posting Date",GenJnlLine."Account No.",GenJnlLine."Document No.",
-                   GenJnlLine."Currency Code",ApplyingAmount,AppliedAmount)
-              THEN BEGIN
-                IF (AppliedAmount <> 0) AND (ApplyingAmount <> 0) THEN
-                  PutVendPmtTolAmount(NewVendLedgEntry,ApplyingAmount,AppliedAmount,GenJnlLineApplID)
-                ELSE
-                  DelVendPmtTolAcc(NewVendLedgEntry,GenJnlLineApplID);
-              END ELSE BEGIN
-                DelVendPmtTolAcc(NewVendLedgEntry,GenJnlLineApplID);
-                EXIT(FALSE);
-              END;
-            END ELSE
-              PutVendPmtTolAmount(NewVendLedgEntry,ApplyingAmount,AppliedAmount,GenJnlLineApplID);
-          END;
+          IF GLSetup."Payment Tolerance Warning" THEN
+            IF CallPmtTolWarning(
+                 PostingDate,AccountNo,DocNo,
+                 CurrencyCode,ApplyingAmount,AppliedAmount)
+            THEN BEGIN
+              IF (AppliedAmount <> 0) AND (ApplyingAmount <> 0) THEN
+                PutCustPmtTolAmount(NewCustLedgEntry,ApplyingAmount,AppliedAmount,AppliesToID)
+              ELSE
+                DelCustPmtTolAcc(NewCustLedgEntry,AppliesToID);
+            END ELSE BEGIN
+              DelCustPmtTolAcc(NewCustLedgEntry,AppliesToID);
+              EXIT(FALSE);
+            END
+          ELSE
+            PutCustPmtTolAmount(NewCustLedgEntry,ApplyingAmount,AppliedAmount,AppliesToID);
+      END;
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE PmtTolVendLedgEntry@49(VAR NewVendLedgEntry@1007 : Record 25;AccountNo@1005 : Code[20];PostingDate@1004 : Date;DocNo@1003 : Code[20];AppliesToID@1002 : Code[50];AppliesToDocNo@1001 : Code[20];CurrencyCode@1000 : Code[10]) : Boolean;
+    VAR
+      GLSetup@1016 : Record 98;
+      AppliedAmount@1014 : Decimal;
+      ApplyingAmount@1013 : Decimal;
+      AmounttoApply@1012 : Decimal;
+      PmtDiscAmount@1011 : Decimal;
+      MaxPmtTolAmount@1010 : Decimal;
+      ApplnRoundingPrecision@1009 : Decimal;
+    BEGIN
+      GLSetup.GET;
+      CalcVendApplnAmount(
+        NewVendLedgEntry,GLSetup,AppliedAmount,ApplyingAmount,AmounttoApply,PmtDiscAmount,
+        MaxPmtTolAmount,AppliesToID,ApplnRoundingPrecision);
+
+      IF GLSetup."Pmt. Disc. Tolerance Warning" THEN
+        IF NOT ManagePaymentDiscToleranceWarningVendor(NewVendLedgEntry,AppliesToID,AppliedAmount,AmounttoApply,AppliesToDocNo) THEN
+          EXIT(FALSE);
+
+      IF ABS(AmounttoApply) >= ABS(AppliedAmount - PmtDiscAmount - MaxPmtTolAmount) THEN BEGIN
+        AppliedAmount := AppliedAmount - PmtDiscAmount;
+        IF (ABS(AppliedAmount) > ABS(AmounttoApply)) AND (AppliedAmount * PmtDiscAmount >= 0) THEN
+          AppliedAmount := AmounttoApply;
+
+        IF ((ABS(AppliedAmount + ApplyingAmount) - ApplnRoundingPrecision) <= ABS(MaxPmtTolAmount)) AND
+           (MaxPmtTolAmount <> 0) AND ((ABS(AppliedAmount + ApplyingAmount) - ApplnRoundingPrecision) <> 0) AND
+           (ABS(AppliedAmount + ApplyingAmount) > ApplnRoundingPrecision)
+        THEN
+          IF GLSetup."Payment Tolerance Warning" THEN
+            IF CallPmtTolWarning(
+                 PostingDate,AccountNo,DocNo,CurrencyCode,ApplyingAmount,AppliedAmount)
+            THEN BEGIN
+              IF (AppliedAmount <> 0) AND (ApplyingAmount <> 0) THEN
+                PutVendPmtTolAmount(NewVendLedgEntry,ApplyingAmount,AppliedAmount,AppliesToID)
+              ELSE
+                DelVendPmtTolAcc(NewVendLedgEntry,AppliesToID);
+            END ELSE BEGIN
+              DelVendPmtTolAcc(NewVendLedgEntry,AppliesToID);
+              EXIT(FALSE);
+            END
+          ELSE
+            PutVendPmtTolAmount(NewVendLedgEntry,ApplyingAmount,AppliedAmount,AppliesToID);
       END;
       EXIT(TRUE);
     END;
@@ -382,21 +463,20 @@ OBJECT Codeunit 426 Payment Tolerance Management
               REPEAT
                 CALCFIELDS("Remaining Amount");
                 AppliedCustLedgEntryTemp := AppliedCustLedgEntry;
-                IF NOT ApplyingPostedEntries THEN
-                  IF "Currency Code" <> ApplnCurrencyCode THEN BEGIN
-                    "Remaining Amount" :=
-                      CurrExchRate.ExchangeAmtFCYToFCY(
-                        ApplnDate,"Currency Code",ApplnCurrencyCode,"Remaining Amount");
-                    "Remaining Pmt. Disc. Possible" :=
-                      CurrExchRate.ExchangeAmtFCYToFCY(
-                        ApplnDate,"Currency Code",ApplnCurrencyCode,"Remaining Pmt. Disc. Possible");
-                    "Max. Payment Tolerance" :=
-                      CurrExchRate.ExchangeAmtFCYToFCY(
-                        ApplnDate,"Currency Code",ApplnCurrencyCode,"Max. Payment Tolerance");
-                    "Amount to Apply" :=
-                      CurrExchRate.ExchangeAmtFCYToFCY(
-                        ApplnDate,"Currency Code",ApplnCurrencyCode,"Amount to Apply");
-                  END;
+                IF "Currency Code" <> ApplnCurrencyCode THEN BEGIN
+                  "Remaining Amount" :=
+                    CurrExchRate.ExchangeAmtFCYToFCY(
+                      ApplnDate,"Currency Code",ApplnCurrencyCode,"Remaining Amount");
+                  "Remaining Pmt. Disc. Possible" :=
+                    CurrExchRate.ExchangeAmtFCYToFCY(
+                      ApplnDate,"Currency Code",ApplnCurrencyCode,"Remaining Pmt. Disc. Possible");
+                  "Max. Payment Tolerance" :=
+                    CurrExchRate.ExchangeAmtFCYToFCY(
+                      ApplnDate,"Currency Code",ApplnCurrencyCode,"Max. Payment Tolerance");
+                  "Amount to Apply" :=
+                    CurrExchRate.ExchangeAmtFCYToFCY(
+                      ApplnDate,"Currency Code",ApplnCurrencyCode,"Amount to Apply");
+                END;
                 // Check Payment Discount
                 UseDisc := FALSE;
                 IF CheckCalcPmtDiscCust(
@@ -571,21 +651,20 @@ OBJECT Codeunit 426 Payment Tolerance Management
               REPEAT
                 CALCFIELDS("Remaining Amount");
                 AppliedVendLedgEntryTemp := AppliedVendLedgEntry;
-                IF NOT ApplyingPostedEntries THEN
-                  IF "Currency Code" <> ApplnCurrencyCode THEN BEGIN
-                    "Remaining Amount" :=
-                      CurrExchRate.ExchangeAmtFCYToFCY(
-                        ApplnDate,"Currency Code",ApplnCurrencyCode,"Remaining Amount");
-                    "Remaining Pmt. Disc. Possible" :=
-                      CurrExchRate.ExchangeAmtFCYToFCY(
-                        ApplnDate,"Currency Code",ApplnCurrencyCode,"Remaining Pmt. Disc. Possible");
-                    "Max. Payment Tolerance" :=
-                      CurrExchRate.ExchangeAmtFCYToFCY(
-                        ApplnDate,"Currency Code",ApplnCurrencyCode,"Max. Payment Tolerance");
-                    "Amount to Apply" :=
-                      CurrExchRate.ExchangeAmtFCYToFCY(
-                        ApplnDate,"Currency Code",ApplnCurrencyCode,"Amount to Apply");
-                  END;
+                IF "Currency Code" <> ApplnCurrencyCode THEN BEGIN
+                  "Remaining Amount" :=
+                    CurrExchRate.ExchangeAmtFCYToFCY(
+                      ApplnDate,"Currency Code",ApplnCurrencyCode,"Remaining Amount");
+                  "Remaining Pmt. Disc. Possible" :=
+                    CurrExchRate.ExchangeAmtFCYToFCY(
+                      ApplnDate,"Currency Code",ApplnCurrencyCode,"Remaining Pmt. Disc. Possible");
+                  "Max. Payment Tolerance" :=
+                    CurrExchRate.ExchangeAmtFCYToFCY(
+                      ApplnDate,"Currency Code",ApplnCurrencyCode,"Max. Payment Tolerance");
+                  "Amount to Apply" :=
+                    CurrExchRate.ExchangeAmtFCYToFCY(
+                      ApplnDate,"Currency Code",ApplnCurrencyCode,"Amount to Apply");
+                END;
                 // Check Payment Discount
                 UseDisc := FALSE;
                 IF CheckCalcPmtDiscVend(
@@ -695,7 +774,8 @@ OBJECT Codeunit 426 Payment Tolerance Management
       ToleranceAmount@1005 : Decimal;
     BEGIN
       IF ((NewDocType = NewDocType::Payment) AND
-          ((OldCustLedgEntry."Document Type" = OldCustLedgEntry."Document Type"::Invoice) AND
+          ((OldCustLedgEntry."Document Type" IN [OldCustLedgEntry."Document Type"::Invoice,
+                                                 OldCustLedgEntry."Document Type"::"Credit Memo"]) AND
            (NewPostingdate > OldCustLedgEntry."Pmt. Discount Date") AND
            (NewPostingdate <= OldCustLedgEntry."Pmt. Disc. Tolerance Date"))) OR
          ((NewDocType = NewDocType::Refund) AND
@@ -727,7 +807,8 @@ OBJECT Codeunit 426 Payment Tolerance Management
       ToleranceAmount@1006 : Decimal;
     BEGIN
       IF ((NewDocType = NewDocType::Payment) AND
-          ((OldVendLedgEntry."Document Type" = OldVendLedgEntry."Document Type"::Invoice) AND
+          ((OldVendLedgEntry."Document Type" IN [OldVendLedgEntry."Document Type"::Invoice,
+                                                 OldVendLedgEntry."Document Type"::"Credit Memo"]) AND
            (NewPostingdate > OldVendLedgEntry."Pmt. Discount Date") AND
            (NewPostingdate <= OldVendLedgEntry."Pmt. Disc. Tolerance Date"))) OR
          ((NewDocType = NewDocType::Refund) AND
@@ -1394,56 +1475,54 @@ OBJECT Codeunit 426 Payment Tolerance Management
     BEGIN
       AppliedCustLedgEntry.CALCFIELDS("Remaining Amount");
       TempAppliedCustLedgEntry := AppliedCustLedgEntry;
-      IF NOT ApplyingPostedEntries THEN
-        IF CustLedgEntry."Currency Code" <> AppliedCustLedgEntry."Currency Code" THEN BEGIN
-          AppliedCustLedgEntry."Remaining Amount" :=
-            CurrExchRate.ExchangeAmount(
-              AppliedCustLedgEntry."Remaining Amount",AppliedCustLedgEntry."Currency Code",
-              CustLedgEntry."Currency Code",CustLedgEntry."Posting Date");
-          AppliedCustLedgEntry."Remaining Pmt. Disc. Possible" :=
-            CurrExchRate.ExchangeAmount(
-              AppliedCustLedgEntry."Remaining Pmt. Disc. Possible",
-              AppliedCustLedgEntry."Currency Code",
-              CustLedgEntry."Currency Code",CustLedgEntry."Posting Date");
-          AppliedCustLedgEntry."Max. Payment Tolerance" :=
-            CurrExchRate.ExchangeAmount(
-              AppliedCustLedgEntry."Max. Payment Tolerance",
-              AppliedCustLedgEntry."Currency Code",
-              CustLedgEntry."Currency Code",CustLedgEntry."Posting Date");
-          AppliedCustLedgEntry."Amount to Apply" :=
-            CurrExchRate.ExchangeAmount(
-              AppliedCustLedgEntry."Amount to Apply",
-              AppliedCustLedgEntry."Currency Code",
-              CustLedgEntry."Currency Code",CustLedgEntry."Posting Date");
-        END;
+      IF CustLedgEntry."Currency Code" <> AppliedCustLedgEntry."Currency Code" THEN BEGIN
+        AppliedCustLedgEntry."Remaining Amount" :=
+          CurrExchRate.ExchangeAmount(
+            AppliedCustLedgEntry."Remaining Amount",AppliedCustLedgEntry."Currency Code",
+            CustLedgEntry."Currency Code",CustLedgEntry."Posting Date");
+        AppliedCustLedgEntry."Remaining Pmt. Disc. Possible" :=
+          CurrExchRate.ExchangeAmount(
+            AppliedCustLedgEntry."Remaining Pmt. Disc. Possible",
+            AppliedCustLedgEntry."Currency Code",
+            CustLedgEntry."Currency Code",CustLedgEntry."Posting Date");
+        AppliedCustLedgEntry."Max. Payment Tolerance" :=
+          CurrExchRate.ExchangeAmount(
+            AppliedCustLedgEntry."Max. Payment Tolerance",
+            AppliedCustLedgEntry."Currency Code",
+            CustLedgEntry."Currency Code",CustLedgEntry."Posting Date");
+        AppliedCustLedgEntry."Amount to Apply" :=
+          CurrExchRate.ExchangeAmount(
+            AppliedCustLedgEntry."Amount to Apply",
+            AppliedCustLedgEntry."Currency Code",
+            CustLedgEntry."Currency Code",CustLedgEntry."Posting Date");
+      END;
     END;
 
     LOCAL PROCEDURE UpdateVendAmountsForApplication@32(VAR AppliedVendLedgEntry@1008 : Record 25;VAR VendLedgEntry@1009 : Record 25;VAR TempAppliedVendLedgEntry@1000 : TEMPORARY Record 25);
     BEGIN
       AppliedVendLedgEntry.CALCFIELDS("Remaining Amount");
       TempAppliedVendLedgEntry := AppliedVendLedgEntry;
-      IF NOT ApplyingPostedEntries THEN
-        IF VendLedgEntry."Currency Code" <> AppliedVendLedgEntry."Currency Code" THEN BEGIN
-          AppliedVendLedgEntry."Remaining Amount" :=
-            CurrExchRate.ExchangeAmount(
-              AppliedVendLedgEntry."Remaining Amount",AppliedVendLedgEntry."Currency Code",
-              VendLedgEntry."Currency Code",VendLedgEntry."Posting Date");
-          AppliedVendLedgEntry."Remaining Pmt. Disc. Possible" :=
-            CurrExchRate.ExchangeAmount(
-              AppliedVendLedgEntry."Remaining Pmt. Disc. Possible",
-              AppliedVendLedgEntry."Currency Code",
-              VendLedgEntry."Currency Code",VendLedgEntry."Posting Date");
-          AppliedVendLedgEntry."Max. Payment Tolerance" :=
-            CurrExchRate.ExchangeAmount(
-              AppliedVendLedgEntry."Max. Payment Tolerance",
-              AppliedVendLedgEntry."Currency Code",
-              VendLedgEntry."Currency Code",VendLedgEntry."Posting Date");
-          AppliedVendLedgEntry."Amount to Apply" :=
-            CurrExchRate.ExchangeAmount(
-              AppliedVendLedgEntry."Amount to Apply",
-              AppliedVendLedgEntry."Currency Code",
-              VendLedgEntry."Currency Code",VendLedgEntry."Posting Date");
-        END;
+      IF VendLedgEntry."Currency Code" <> AppliedVendLedgEntry."Currency Code" THEN BEGIN
+        AppliedVendLedgEntry."Remaining Amount" :=
+          CurrExchRate.ExchangeAmount(
+            AppliedVendLedgEntry."Remaining Amount",AppliedVendLedgEntry."Currency Code",
+            VendLedgEntry."Currency Code",VendLedgEntry."Posting Date");
+        AppliedVendLedgEntry."Remaining Pmt. Disc. Possible" :=
+          CurrExchRate.ExchangeAmount(
+            AppliedVendLedgEntry."Remaining Pmt. Disc. Possible",
+            AppliedVendLedgEntry."Currency Code",
+            VendLedgEntry."Currency Code",VendLedgEntry."Posting Date");
+        AppliedVendLedgEntry."Max. Payment Tolerance" :=
+          CurrExchRate.ExchangeAmount(
+            AppliedVendLedgEntry."Max. Payment Tolerance",
+            AppliedVendLedgEntry."Currency Code",
+            VendLedgEntry."Currency Code",VendLedgEntry."Posting Date");
+        AppliedVendLedgEntry."Amount to Apply" :=
+          CurrExchRate.ExchangeAmount(
+            AppliedVendLedgEntry."Amount to Apply",
+            AppliedVendLedgEntry."Currency Code",
+            VendLedgEntry."Currency Code",VendLedgEntry."Posting Date");
+      END;
     END;
 
     LOCAL PROCEDURE GetCustPositiveFilter@29(DocumentType@1002 : ' ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund';TempAmount@1000 : Decimal) PositiveFilter : Boolean;
@@ -1636,11 +1715,6 @@ OBJECT Codeunit 426 Payment Tolerance Management
       END;
       ApplnRoundingPrecision := Currency."Appln. Rounding Precision";
       AmountRoundingPrecision := Currency."Amount Rounding Precision";
-    END;
-
-    PROCEDURE ApplyPostedEntriesMode@47();
-    BEGIN
-      ApplyingPostedEntries := TRUE;
     END;
 
     PROCEDURE CalcRemainingPmtDisc@59(VAR NewCVLedgEntryBuf@1000 : Record 382;VAR OldCVLedgEntryBuf@1001 : Record 382;VAR OldCVLedgEntryBuf2@1002 : Record 382;GLSetup@1003 : Record 98);
@@ -1940,6 +2014,62 @@ OBJECT Codeunit 426 Payment Tolerance Management
       END;
 
       EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE IsCustBlockPmtToleranceInGenJnlLine@52(VAR GenJnlLine@1000 : Record 81) : Boolean;
+    BEGIN
+      CheckAccountType(GenJnlLine,GenJnlLine."Account Type"::Customer);
+
+      IF GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Customer THEN
+        CODEUNIT.RUN(CODEUNIT::"Exchange Acc. G/L Journal Line",GenJnlLine);
+
+      EXIT(IsCustBlockPmtTolerance(GenJnlLine."Account No."));
+    END;
+
+    LOCAL PROCEDURE IsVendBlockPmtToleranceInGenJnlLine@54(VAR GenJnlLine@1000 : Record 81) : Boolean;
+    BEGIN
+      CheckAccountType(GenJnlLine,GenJnlLine."Account Type"::Vendor);
+
+      IF GenJnlLine."Bal. Account Type" = GenJnlLine."Bal. Account Type"::Vendor THEN
+        CODEUNIT.RUN(CODEUNIT::"Exchange Acc. G/L Journal Line",GenJnlLine);
+
+      EXIT(IsVendBlockPmtTolerance(GenJnlLine."Account No."));
+    END;
+
+    LOCAL PROCEDURE IsCustBlockPmtTolerance@61(AccountNo@1001 : Code[20]) : Boolean;
+    VAR
+      Customer@1000 : Record 18;
+    BEGIN
+      IF NOT Customer.GET(AccountNo) THEN
+        EXIT(FALSE);
+      IF Customer."Block Payment Tolerance" THEN
+        EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE IsVendBlockPmtTolerance@62(AccountNo@1001 : Code[20]) : Boolean;
+    VAR
+      Vendor@1000 : Record 23;
+    BEGIN
+      IF NOT Vendor.GET(AccountNo) THEN
+        EXIT(FALSE);
+      IF Vendor."Block Payment Tolerance" THEN
+        EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE CheckAccountType@68(GenJnlLine@1000 : Record 81;AccountType@1001 : Option);
+    VAR
+      DummyGenJnlLine@1002 : Record 81;
+    BEGIN
+      DummyGenJnlLine."Account Type" := AccountType;
+      IF NOT (AccountType IN [GenJnlLine."Account Type",GenJnlLine."Bal. Account Type"]) THEN
+        ERROR(AccTypeOrBalAccTypeIsIncorrectErr,DummyGenJnlLine."Account Type");
+    END;
+
+    LOCAL PROCEDURE GetAppliesToID@64(GenJnlLine@1000 : Record 81) : Code[50];
+    BEGIN
+      IF GenJnlLine."Applies-to Doc. No." = '' THEN
+        IF GenJnlLine."Applies-to ID" <> '' THEN
+          EXIT(GenJnlLine."Applies-to ID");
     END;
 
     BEGIN

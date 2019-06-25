@@ -2,9 +2,9 @@ OBJECT Report 7317 Whse. - Shipment
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -1766,6 +1766,7 @@ OBJECT Report 7317 Whse. - Shipment
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

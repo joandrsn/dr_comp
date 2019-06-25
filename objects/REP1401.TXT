@@ -2,9 +2,9 @@ OBJECT Report 1401 Check
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897,NAVDK9.00.00.43897;
+    Version List=NAVW19.00.00.50221,NAVDK9.00.00.50221;
   }
   PROPERTIES
   {
@@ -82,6 +82,8 @@ OBJECT Report 1401 Check
                                     Currency.TESTFIELD("Conv. LCY Rndg. Credit Acc.");
                                   END;
 
+                                  JournalPostingDate := "Posting Date";
+
                                   IF "Bank Payment Type" = "Bank Payment Type"::"Computer Check" THEN
                                     TESTFIELD("Exported to Payment File",FALSE);
 
@@ -135,6 +137,9 @@ OBJECT Report 1401 Check
                                       BalancingType::Customer:
                                         BEGIN
                                           Cust.GET(BalancingNo);
+                                          IF Cust."Privacy Blocked" THEN
+                                            ERROR(Cust.GetPrivacyBlockedGenericErrorText(Cust));
+
                                           IF Cust.Blocked = Cust.Blocked::All THEN
                                             ERROR(Text064,Cust.FIELDCAPTION(Blocked),Cust.Blocked,Cust.TABLECAPTION,Cust."No.");
                                           Cust.Contact := '';
@@ -149,6 +154,9 @@ OBJECT Report 1401 Check
                                       BalancingType::Vendor:
                                         BEGIN
                                           Vend.GET(BalancingNo);
+                                          IF Vend."Privacy Blocked" THEN
+                                            ERROR(Vend.GetPrivacyBlockedGenericErrorText(Vend));
+
                                           IF Vend.Blocked IN [Vend.Blocked::All,Vend.Blocked::Payment] THEN
                                             ERROR(Text064,Vend.FIELDCAPTION(Blocked),Vend.Blocked,Vend.TABLECAPTION,Vend."No.");
                                           Vend.Contact := '';
@@ -222,7 +230,9 @@ OBJECT Report 1401 Check
                                     CheckNoText := Text011;
                                 END;
 
-               OnPostDataItem=BEGIN
+               OnPostDataItem=VAR
+                                RecordRestrictionMgt@1000 : Codeunit 1550;
+                              BEGIN
                                 IF NOT TestPrint THEN BEGIN
                                   IF UseCheckNo <> GenJnlLine."Document No." THEN BEGIN
                                     GenJnlLine3.RESET;
@@ -245,6 +255,7 @@ OBJECT Report 1401 Check
                                     IF GenJnlLine2.FIND('-') THEN BEGIN
                                       HighestLineNo := GenJnlLine2."Line No.";
                                       REPEAT
+                                        RecordRestrictionMgt.CheckRecordHasUsageRestrictions(GenJnlLine2.RECORDID);
                                         IF GenJnlLine2."Line No." > HighestLineNo THEN
                                           HighestLineNo := GenJnlLine2."Line No.";
                                         GenJnlLine3 := GenJnlLine2;
@@ -288,6 +299,8 @@ OBJECT Report 1401 Check
                                     GenJnlLine3."Reason Code" := GenJnlLine."Reason Code";
                                     GenJnlLine3."Allow Zero-Amount Posting" := TRUE;
                                     GenJnlLine3.INSERT;
+                                    IF CheckGenJournalBatchAndLineIsApproved(GenJnlLine) THEN
+                                      RecordRestrictionMgt.AllowRecordUsage(GenJnlLine3.RECORDID);
                                   END;
                                 END;
 
@@ -952,6 +965,7 @@ OBJECT Report 1401 Check
       HighestLineNo@1106 : Integer;
       PreprintedStub@1107 : Boolean;
       TotalText@1108 : Text[10];
+      JournalPostingDate@1017 : Date;
       DocDate@1109 : Date;
       i@1110 : Integer;
       Text062@1111 : TextConst 'DAN=Finanskonto,Debitor,Kreditor,Bankkonto;ENU=G/L Account,Customer,Vendor,Bank Account';
@@ -1060,6 +1074,8 @@ OBJECT Report 1401 Check
     END;
 
     LOCAL PROCEDURE CustUpdateAmounts@3(VAR CustLedgEntry2@1000 : Record 21;RemainingAmount2@1001 : Decimal);
+    VAR
+      AmountToApply@1002 : Decimal;
     BEGIN
       IF (ApplyMethod = ApplyMethod::OneLineOneEntry) OR
          (ApplyMethod = ApplyMethod::MoreLinesOneEntry)
@@ -1100,9 +1116,7 @@ OBJECT Report 1401 Check
           CustLedgEntry2."Accepted Payment Tolerance",
           CustLedgEntry2."Amount to Apply");
       LineAmount2 :=
-        ROUND(
-          ExchangeAmt(CustLedgEntry2."Posting Date",GenJnlLine."Currency Code",CurrencyCode2,LineAmount),
-          Currency."Amount Rounding Precision");
+        ROUND(ExchangeAmt(GenJnlLine."Currency Code",CurrencyCode2,LineAmount),Currency."Amount Rounding Precision");
 
       IF ((CustLedgEntry2."Document Type" IN [CustLedgEntry2."Document Type"::Invoice,
                                               CustLedgEntry2."Document Type"::"Credit Memo"]) AND
@@ -1114,27 +1128,22 @@ OBJECT Report 1401 Check
         IF CustLedgEntry2."Accepted Payment Tolerance" <> 0 THEN
           LineDiscount := LineDiscount - CustLedgEntry2."Accepted Payment Tolerance";
       END ELSE BEGIN
-        IF RemainingAmount2 >=
-           ROUND(
-             -ExchangeAmt(CustLedgEntry2."Posting Date",GenJnlLine."Currency Code",CurrencyCode2,
-               CustLedgEntry2."Amount to Apply"),Currency."Amount Rounding Precision")
-        THEN
-          LineAmount2 :=
-            ROUND(
-              -ExchangeAmt(CustLedgEntry2."Posting Date",GenJnlLine."Currency Code",CurrencyCode2,
-                CustLedgEntry2."Amount to Apply"),Currency."Amount Rounding Precision")
+        AmountToApply :=
+          ROUND(-ExchangeAmt(
+              GenJnlLine."Currency Code",CurrencyCode2,CustLedgEntry2."Amount to Apply"),Currency."Amount Rounding Precision");
+        IF RemainingAmount2 >= AmountToApply THEN
+          LineAmount2 := AmountToApply
         ELSE BEGIN
           LineAmount2 := RemainingAmount2;
-          LineAmount :=
-            ROUND(
-              ExchangeAmt(CustLedgEntry2."Posting Date",CurrencyCode2,GenJnlLine."Currency Code",
-                LineAmount2),Currency."Amount Rounding Precision");
+          LineAmount := ROUND(ExchangeAmt(CurrencyCode2,GenJnlLine."Currency Code",LineAmount2),Currency."Amount Rounding Precision");
         END;
         LineDiscount := 0;
       END;
     END;
 
     LOCAL PROCEDURE VendUpdateAmounts@4(VAR VendLedgEntry2@1000 : Record 25;RemainingAmount2@1001 : Decimal);
+    VAR
+      AmountToApply@1002 : Decimal;
     BEGIN
       IF (ApplyMethod = ApplyMethod::OneLineOneEntry) OR
          (ApplyMethod = ApplyMethod::MoreLinesOneEntry)
@@ -1175,9 +1184,7 @@ OBJECT Report 1401 Check
           VendLedgEntry2."Amount to Apply");
 
       LineAmount2 :=
-        ROUND(
-          ExchangeAmt(VendLedgEntry2."Posting Date",GenJnlLine."Currency Code",CurrencyCode2,LineAmount),
-          Currency."Amount Rounding Precision");
+        ROUND(ExchangeAmt(GenJnlLine."Currency Code",CurrencyCode2,LineAmount),Currency."Amount Rounding Precision");
 
       IF ((VendLedgEntry2."Document Type" IN [VendLedgEntry2."Document Type"::Invoice,
                                               VendLedgEntry2."Document Type"::"Credit Memo"]) AND
@@ -1189,25 +1196,17 @@ OBJECT Report 1401 Check
         IF VendLedgEntry2."Accepted Payment Tolerance" <> 0 THEN
           LineDiscount := LineDiscount - VendLedgEntry2."Accepted Payment Tolerance";
       END ELSE BEGIN
-        IF ABS(RemainingAmount2) >=
-           ABS(ROUND(
-               ExchangeAmt(VendLedgEntry2."Posting Date",GenJnlLine."Currency Code",CurrencyCode2,
-                 VendLedgEntry2."Amount to Apply"),Currency."Amount Rounding Precision"))
-        THEN BEGIN
-          LineAmount2 :=
-            ROUND(
-              -(ExchangeAmt(VendLedgEntry2."Posting Date",GenJnlLine."Currency Code",CurrencyCode2,
-                  VendLedgEntry2."Amount to Apply")),Currency."Amount Rounding Precision");
+        AmountToApply := ROUND(-ExchangeAmt(
+              GenJnlLine."Currency Code",CurrencyCode2,VendLedgEntry2."Amount to Apply"),Currency."Amount Rounding Precision");
+        IF ABS(RemainingAmount2) >= ABS(AmountToApply) THEN BEGIN
+          LineAmount2 := AmountToApply;
           LineAmount :=
-            ROUND(
-              ExchangeAmt(VendLedgEntry2."Posting Date",CurrencyCode2,GenJnlLine."Currency Code",
-                LineAmount2),Currency."Amount Rounding Precision");
+            ROUND(ExchangeAmt(CurrencyCode2,GenJnlLine."Currency Code",LineAmount2),Currency."Amount Rounding Precision");
         END ELSE BEGIN
           LineAmount2 := RemainingAmount2;
           LineAmount :=
             ROUND(
-              ExchangeAmt(VendLedgEntry2."Posting Date",CurrencyCode2,GenJnlLine."Currency Code",
-                LineAmount2),Currency."Amount Rounding Precision");
+              ExchangeAmt(CurrencyCode2,GenJnlLine."Currency Code",LineAmount2),Currency."Amount Rounding Precision");
         END;
         LineDiscount := 0;
       END;
@@ -1265,20 +1264,22 @@ OBJECT Report 1401 Check
         END;
     END;
 
-    LOCAL PROCEDURE ExchangeAmt@7(PostingDate@1000 : Date;CurrencyCode@1001 : Code[10];CurrencyCode2@1003 : Code[10];Amount@1002 : Decimal) Amount2 : Decimal;
+    LOCAL PROCEDURE ExchangeAmt@7(CurrencyCode@1001 : Code[10];CurrencyCode2@1003 : Code[10];Amount@1002 : Decimal) Amount2 : Decimal;
     BEGIN
       IF (CurrencyCode <> '')  AND (CurrencyCode2 = '') THEN
-         Amount2 :=
-           CurrencyExchangeRate.ExchangeAmtLCYToFCY(
-             PostingDate,CurrencyCode,Amount,CurrencyExchangeRate.ExchangeRate(PostingDate,CurrencyCode))
-      ELSE IF (CurrencyCode = '') AND (CurrencyCode2 <> '') THEN
         Amount2 :=
-          CurrencyExchangeRate.ExchangeAmtFCYToLCY(
-            PostingDate,CurrencyCode2,Amount,CurrencyExchangeRate.ExchangeRate(PostingDate,CurrencyCode2))
-      ELSE IF (CurrencyCode <> '') AND (CurrencyCode2 <> '') AND (CurrencyCode <> CurrencyCode2) THEN
-        Amount2 := CurrencyExchangeRate.ExchangeAmtFCYToFCY(PostingDate,CurrencyCode2,CurrencyCode,Amount)
+          CurrencyExchangeRate.ExchangeAmtLCYToFCY(
+            JournalPostingDate,CurrencyCode,Amount,CurrencyExchangeRate.ExchangeRate(JournalPostingDate,CurrencyCode))
       ELSE
-        Amount2 := Amount;
+        IF (CurrencyCode = '') AND (CurrencyCode2 <> '') THEN
+          Amount2 :=
+            CurrencyExchangeRate.ExchangeAmtFCYToLCY(
+              JournalPostingDate,CurrencyCode2,Amount,CurrencyExchangeRate.ExchangeRate(JournalPostingDate,CurrencyCode2))
+        ELSE
+          IF (CurrencyCode <> '') AND (CurrencyCode2 <> '') AND (CurrencyCode <> CurrencyCode2) THEN
+            Amount2 := CurrencyExchangeRate.ExchangeAmtFCYToFCY(JournalPostingDate,CurrencyCode2,CurrencyCode,Amount)
+          ELSE
+            Amount2 := Amount;
     END;
 
     LOCAL PROCEDURE ABSMin@21(Decimal1@1000 : Decimal;Decimal2@1001 : Decimal) : Decimal;
@@ -1308,6 +1309,31 @@ OBJECT Report 1401 Check
         Currency.TESTFIELD("Amount Rounding Precision");
       END;
       EXIT(1 / Currency."Amount Rounding Precision");
+    END;
+
+    LOCAL PROCEDURE CheckGenJournalBatchAndLineIsApproved@15(GenJournalLine@1000 : Record 81) : Boolean;
+    VAR
+      GenJournalBatch@1002 : Record 232;
+    BEGIN
+      GenJournalBatch.GET(GenJournalLine."Journal Template Name",GenJournalLine."Journal Batch Name");
+      EXIT(
+        VerifyRecordIdIsApproved(GenJournalBatch.RECORDID) OR
+        VerifyRecordIdIsApproved(GenJournalLine.RECORDID));
+    END;
+
+    LOCAL PROCEDURE VerifyRecordIdIsApproved@19(RecordId@1001 : RecordID) : Boolean;
+    VAR
+      ApprovalEntry@1002 : Record 454;
+    BEGIN
+      ApprovalEntry.SETRANGE("Table ID",RecordId.TABLENO);
+      ApprovalEntry.SETRANGE("Record ID to Approve",RecordId);
+      ApprovalEntry.SETRANGE(Status,ApprovalEntry.Status::Approved);
+      ApprovalEntry.SETRANGE("Related to Change",FALSE);
+      IF ApprovalEntry.ISEMPTY THEN
+        EXIT(FALSE);
+
+      ApprovalEntry.SETFILTER(Status,'%1|%2',ApprovalEntry.Status::Open,ApprovalEntry.Status::Created);
+      EXIT(ApprovalEntry.ISEMPTY);
     END;
 
     BEGIN

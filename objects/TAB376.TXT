@@ -2,9 +2,9 @@ OBJECT Table 376 G/L Account (Analysis View)
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -189,7 +189,7 @@ OBJECT Table 376 G/L Account (Analysis View)
     { 41  ;   ;Consol. Credit Acc. ;Code20        ;AccessByPermission=TableData 220=R;
                                                    CaptionML=[DAN=Kons.kreditkonto;
                                                               ENU=Consol. Credit Acc.] }
-    { 42  ;   ;Business Unit Filter;Code10        ;FieldClass=FlowFilter;
+    { 42  ;   ;Business Unit Filter;Code20        ;FieldClass=FlowFilter;
                                                    TableRelation="Business Unit";
                                                    CaptionML=[DAN=Koncernvirk.filter;
                                                               ENU=Business Unit Filter] }

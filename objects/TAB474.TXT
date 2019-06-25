@@ -2,9 +2,9 @@ OBJECT Table 474 Job Queue Log Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -20,6 +20,7 @@ OBJECT Table 474 Job Queue Log Entry
                                                               ENU=ID] }
     { 3   ;   ;User ID             ;Text65        ;TableRelation=User."User Name";
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 4   ;   ;Start Date/Time     ;DateTime      ;CaptionML=[DAN=Startdato/-tidspunkt;
@@ -58,7 +59,8 @@ OBJECT Table 474 Job Queue Log Entry
                                                    TestTableRelation=No;
                                                    CaptionML=[DAN=Opgavekøkode;
                                                               ENU=Job Queue Code] }
-    { 16  ;   ;Processed by User ID;Text65        ;CaptionML=[DAN=Behandlet af bruger-id;
+    { 16  ;   ;Processed by User ID;Text65        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Behandlet af bruger-id;
                                                               ENU=Processed by User ID] }
     { 17  ;   ;Job Queue Category Code;Code10     ;TableRelation="Job Queue Category";
                                                    ValidateTableRelation=No;

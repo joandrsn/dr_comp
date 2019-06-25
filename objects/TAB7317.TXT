@@ -2,9 +2,9 @@ OBJECT Table 7317 Warehouse Receipt Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49741;
   }
   PROPERTIES
   {
@@ -30,7 +30,6 @@ OBJECT Table 7317 Warehouse Receipt Line
 
     CaptionML=[DAN=Lagermodtagelseslinje;
                ENU=Warehouse Receipt Line];
-    PasteIsValid=No;
     LookupPageID=Page7342;
     DrillDownPageID=Page7342;
   }
@@ -111,8 +110,8 @@ OBJECT Table 7317 Warehouse Receipt Line
                                                               ENU=Item No.];
                                                    Editable=No }
     { 15  ;   ;Quantity            ;Decimal       ;OnValidate=BEGIN
-                                                                InitOutstandingQtys;
                                                                 "Qty. (Base)" := CalcBaseQty(Quantity);
+                                                                InitOutstandingQtys;
                                                               END;
 
                                                    CaptionML=[DAN=Antal;

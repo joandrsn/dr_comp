@@ -2,9 +2,9 @@ OBJECT Page 7158 Sales Analysis by Dimensions
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -599,6 +599,7 @@ OBJECT Page 7158 Sales Analysis by Dimensions
       Item.SETFILTER("No.",ItemFilter);
       RecRef.GETTABLE(Item);
       RecRef.SETTABLE(Item);
+
       IF ShowColumnName THEN
         CaptionFieldNo := Item.FIELDNO(Description)
       ELSE
@@ -606,10 +607,8 @@ OBJECT Page 7158 Sales Analysis by Dimensions
 
       MatrixMgt.GenerateMatrixData(RecRef,SetWanted,NoOfColumns,CaptionFieldNo,MATRIX_PKFirstRecInCurrSet,MatrixColumnCaptions,
         MATRIX_CaptionRange,MATRIX_CurrSetLength);
-
-      IF ShowColumnName THEN
-        MATRIX_CodeRange :=
-          MatrixMgt.GetPKRange(RecRef,Item.FIELDNO("No."),MATRIX_PKFirstRecInCurrSet,MATRIX_CurrSetLength);
+      MATRIX_CodeRange :=
+        MatrixMgt.GetPKRange(RecRef,Item.FIELDNO("No."),MATRIX_PKFirstRecInCurrSet,MATRIX_CurrSetLength);
 
       IF MATRIX_CurrSetLength > 0 THEN BEGIN
         FirstColumn := MatrixColumnCaptions[1];
@@ -629,6 +628,7 @@ OBJECT Page 7158 Sales Analysis by Dimensions
       Location.SETFILTER(Code,LocationFilter);
       RecRef.GETTABLE(Location);
       RecRef.SETTABLE(Location);
+
       IF ShowColumnName THEN
         CaptionFieldNo := Location.FIELDNO(Name)
       ELSE
@@ -636,10 +636,8 @@ OBJECT Page 7158 Sales Analysis by Dimensions
 
       MatrixMgt.GenerateMatrixData(RecRef,SetWanted,NoOfColumns,CaptionFieldNo,MATRIX_PKFirstRecInCurrSet,MatrixColumnCaptions,
         MATRIX_CaptionRange,MATRIX_CurrSetLength);
-
-      IF ShowColumnName THEN
-        MATRIX_CodeRange :=
-          MatrixMgt.GetPKRange(RecRef,Location.FIELDNO(Code),MATRIX_PKFirstRecInCurrSet,MATRIX_CurrSetLength);
+      MATRIX_CodeRange :=
+        MatrixMgt.GetPKRange(RecRef,Location.FIELDNO(Code),MATRIX_PKFirstRecInCurrSet,MATRIX_CurrSetLength);
 
       IF MATRIX_CurrSetLength > 0 THEN BEGIN
         FirstColumn := MatrixColumnCaptions[1];
@@ -668,15 +666,11 @@ OBJECT Page 7158 Sales Analysis by Dimensions
       ELSE
         CaptionFieldNo := DimVal.FIELDNO(Code);
 
-      IF ShowColumnName THEN BEGIN
-        MatrixMgt.GenerateMatrixData(RecRef,SetWanted,NoOfColumns,DimVal.FIELDNO(Code),MATRIX_PKFirstRecInCurrSet,MatrixColumnCaptions,
-          MATRIX_CaptionRange,MATRIX_CurrSetLength);
-        MATRIX_CodeRange :=
-          MatrixMgt.GetPKRange(RecRef,DimVal.FIELDNO(Code),MATRIX_PKFirstRecInCurrSet,MATRIX_CurrSetLength);
-      END;
-
       MatrixMgt.GenerateMatrixData(RecRef,SetWanted,NoOfColumns,CaptionFieldNo,MATRIX_PKFirstRecInCurrSet,MatrixColumnCaptions,
         MATRIX_CaptionRange,MATRIX_CurrSetLength);
+      IF DimensionCode <> '' THEN
+        MATRIX_CodeRange :=
+          MatrixMgt.GetPKRange(RecRef,DimVal.FIELDNO(Code),MATRIX_PKFirstRecInCurrSet,MATRIX_CurrSetLength);
 
       IF MATRIX_CurrSetLength > 0 THEN BEGIN
         FirstColumn := MatrixColumnCaptions[1];
@@ -692,23 +686,10 @@ OBJECT Page 7158 Sales Analysis by Dimensions
       CurDim2Filter@1003 : Text[250];
       CurDim3Filter@1004 : Text[250];
     BEGIN
-      CASE ColumnDimOption OF
-        ColumnDimOption::Item:
-          CurItemFilter := MATRIX_CodeRange;
-        ColumnDimOption::Location:
-          CurLocationFilter := MATRIX_CodeRange;
-        ColumnDimOption::"Dimension 1":
-          CurDim1Filter := MATRIX_CodeRange;
-        ColumnDimOption::"Dimension 2":
-          CurDim2Filter := MATRIX_CodeRange;
-        ColumnDimOption::"Dimension 3":
-          CurDim3Filter := MATRIX_CodeRange;
-        ColumnDimOption::Period:
-          BEGIN
-            FirstColumn := FORMAT(FirstColumnDate);
-            LastColumn := FORMAT(LastColumnDate);
-            PeriodInitialized := TRUE;
-          END;
+      PeriodInitialized := ColumnDimOption = ColumnDimOption::Period;
+      IF PeriodInitialized THEN BEGIN
+        FirstColumn := FORMAT(FirstColumnDate);
+        LastColumn := FORMAT(LastColumnDate);
       END;
       IF CurItemFilter = '' THEN
         CurItemFilter := ItemFilter;
@@ -728,6 +709,7 @@ OBJECT Page 7158 Sales Analysis by Dimensions
         ShowOppositeSign,PeriodInitialized,ShowColumnName,MATRIX_CurrSetLength);
       SalesAnalysisByDimMatrix.LoadFilters(CurItemFilter,CurLocationFilter,CurDim1Filter,CurDim2Filter,CurDim3Filter,
         DateFilter,BudgetFilter,InternalDateFilter);
+      SalesAnalysisByDimMatrix.LoadCodeRange(MATRIX_CodeRange);
 
       SalesAnalysisByDimMatrix.RUNMODAL;
     END;

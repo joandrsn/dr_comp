@@ -2,9 +2,9 @@ OBJECT Codeunit 86 Sales-Quote to Order
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -20,13 +20,21 @@ OBJECT Codeunit 86 Sales-Quote to Order
             TESTFIELD("Document Type","Document Type"::Quote);
             ShouldRedistributeInvoiceAmount := SalesCalcDiscountByType.ShouldRedistributeInvoiceDiscountAmount(Rec);
 
+            OnCheckSalesPostRestrictions;
+
             Cust.GET("Sell-to Customer No.");
             Cust.CheckBlockedCustOnDocs(Cust,"Document Type"::Order,TRUE,FALSE);
+            IF "Sell-to Customer No." <> "Bill-to Customer No." THEN BEGIN
+              Cust.GET("Bill-to Customer No.");
+              Cust.CheckBlockedCustOnDocs(Cust,"Document Type"::Order,TRUE,FALSE);
+            END;
             CALCFIELDS("Amount Including VAT");
             SalesOrderHeader := Rec;
             IF GUIALLOWED AND NOT HideValidationDialog THEN
               CustCheckCreditLimit.SalesHeaderCheck(SalesOrderHeader);
             SalesOrderHeader."Document Type" := SalesOrderHeader."Document Type"::Order;
+
+            ValidateSalesPersonOnSalesHeader(Rec,TRUE,FALSE);
 
             CheckAvailability(Rec);
             CheckInProgressOpportunities(Rec);
@@ -41,25 +49,11 @@ OBJECT Codeunit 86 Sales-Quote to Order
             SalesOrderHeader."Order Date" := "Order Date";
             IF "Posting Date" <> 0D THEN
               SalesOrderHeader."Posting Date" := "Posting Date";
-            SalesOrderHeader."Document Date" := "Document Date";
-            SalesOrderHeader."Shipment Date" := "Shipment Date";
-            SalesOrderHeader."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
-            SalesOrderHeader."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
-            SalesOrderHeader."Dimension Set ID" := "Dimension Set ID";
 
-            SalesOrderHeader."Location Code" := "Location Code";
+            SalesOrderHeader.InitFromSalesHeader(Rec);
             SalesOrderHeader."Outbound Whse. Handling Time" := "Outbound Whse. Handling Time";
-            SalesOrderHeader."Ship-to Name" := "Ship-to Name";
-            SalesOrderHeader."Ship-to Name 2" := "Ship-to Name 2";
-            SalesOrderHeader."Ship-to Address" := "Ship-to Address";
-            SalesOrderHeader."Ship-to Address 2" := "Ship-to Address 2";
-            SalesOrderHeader."Ship-to City" := "Ship-to City";
-            SalesOrderHeader."Ship-to Post Code" := "Ship-to Post Code";
-            SalesOrderHeader."Ship-to County" := "Ship-to County";
-            SalesOrderHeader."Ship-to Country/Region Code" := "Ship-to Country/Region Code";
-            SalesOrderHeader."Ship-to Contact" := "Ship-to Contact";
-
             SalesOrderHeader.Reserve := Reserve;
+
             SalesOrderHeader."Prepayment %" := Cust."Prepayment %";
             IF SalesOrderHeader."Posting Date" = 0D THEN
               SalesOrderHeader."Posting Date" := WORKDATE;
@@ -113,8 +107,8 @@ OBJECT Codeunit 86 Sales-Quote to Order
 
             DELETELINKS;
             DELETE;
-            ApprovalsMgmt.CopyApprovalEntryQuoteToOrder(DATABASE::"Sales Header","No.",SalesOrderHeader."No.",SalesOrderHeader.RECORDID);
-            ApprovalsMgmt.DeleteApprovalEntry(DATABASE::"Sales Header","Document Type","No.");
+            ApprovalsMgmt.CopyApprovalEntryQuoteToOrder(RECORDID,SalesOrderHeader."No.",SalesOrderHeader.RECORDID);
+            ApprovalsMgmt.DeleteApprovalEntries(RECORDID);
 
             SalesQuoteLine.DELETEALL;
 
@@ -246,12 +240,19 @@ OBJECT Codeunit 86 Sales-Quote to Order
     LOCAL PROCEDURE TransferQuoteToSalesOrderLines@5(VAR QuoteSalesLine@1000 : Record 37;VAR QuoteSalesHeader@1001 : Record 36;VAR OrderSalesLine@1004 : Record 37;VAR OrderSalesHeader@1005 : Record 36;Customer@1002 : Record 18);
     VAR
       ATOLink@1003 : Record 904;
+      Resource@1008 : Record 156;
     BEGIN
       QuoteSalesLine.RESET;
       QuoteSalesLine.SETRANGE("Document Type",QuoteSalesHeader."Document Type");
       QuoteSalesLine.SETRANGE("Document No.",QuoteSalesHeader."No.");
       IF QuoteSalesLine.FINDSET THEN
         REPEAT
+          IF QuoteSalesLine.Type = QuoteSalesLine.Type::Resource THEN
+            IF QuoteSalesLine."No." <> '' THEN
+              IF Resource.GET(QuoteSalesLine."No.") THEN BEGIN
+                Resource.CheckResourcePrivacyBlocked(FALSE);
+                Resource.TESTFIELD(Blocked,FALSE);
+              END;
           OrderSalesLine := QuoteSalesLine;
           OrderSalesLine."Document Type" := OrderSalesHeader."Document Type";
           OrderSalesLine."Document No." := OrderSalesHeader."No.";
@@ -265,8 +266,7 @@ OBJECT Codeunit 86 Sales-Quote to Order
           OrderSalesLine.DefaultDeferralCode;
 
           OrderSalesLine.INSERT;
-          IF ATOLink.AsmExistsForSalesLine(QuoteSalesLine) THEN
-            ATOLink.MakeAsmOrderLinkedToSalesOrderLine(QuoteSalesLine,OrderSalesLine);
+          ATOLink.MakeAsmOrderLinkedToSalesOrderLine(QuoteSalesLine,OrderSalesLine);
           ReserveSalesLine.TransferSaleLineToSalesLine(
             QuoteSalesLine,OrderSalesLine,QuoteSalesLine."Outstanding Qty. (Base)");
           ReserveSalesLine.VerifyQuantity(OrderSalesLine,QuoteSalesLine);

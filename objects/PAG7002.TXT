@@ -2,9 +2,9 @@ OBJECT Page 7002 Sales Prices
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -18,6 +18,7 @@ OBJECT Page 7002 Sales Prices
     OnInit=BEGIN
              SalesCodeFilterCtrlEnable := TRUE;
              SalesCodeEditable := TRUE;
+             IsLookupMode := CurrPage.LOOKUPMODE;
            END;
 
     OnOpenPage=BEGIN
@@ -29,6 +30,24 @@ OBJECT Page 7002 Sales Prices
                            SalesCodeEditable := SetSalesCodeEditable("Sales Type");
                          END;
 
+    ActionList=ACTIONS
+    {
+      { 3       ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 5       ;1   ;Action    ;
+                      Name=CopyPrices;
+                      CaptionML=[DAN=Kopiér priser;
+                                 ENU=Copy Prices];
+                      ToolTipML=[DAN=Vælg priser, og tryk på OK for at kopiere dem til Debitornr.;
+                                 ENU=Select prices and press OK to copy them to Customer No.];
+                      Visible=NOT IsLookupMode;
+                      Image=Copy;
+                      OnAction=BEGIN
+                                 CopyPrices;
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+    }
   }
   CONTROLS
   {
@@ -240,6 +259,9 @@ OBJECT Page 7002 Sales Prices
       Text001@1009 : TextConst 'DAN=Ingen %1 i filteret %2.;ENU=No %1 within the filter %2.';
       SalesCodeEditable@19031640 : Boolean INDATASET;
       SalesCodeFilterCtrlEnable@19013164 : Boolean INDATASET;
+      IsLookupMode@1004 : Boolean;
+      MultipleCustomersSelectedErr@1012 : TextConst 'DAN=Mere end én debitor bruger salgspriserne. Hvis du vil kopiere priser, må feltet Salgskodefilter kun indeholde én debitor.;ENU=More than one customer uses these sales prices. To copy prices, the Sales Code Filter field must contain one customer only.';
+      IncorrectSalesTypeToCopyPricesErr@1010 : TextConst 'DAN=Hvis du vil kopiere salgspriser, skal feltet Salgstypefilter indeholde debitor.;ENU=To copy sales prices, The Sales Type Filter field must contain Customer.';
 
     LOCAL PROCEDURE GetRecFilters@2();
     BEGIN
@@ -323,7 +345,7 @@ OBJECT Page 7002 Sales Prices
         SalesTypeFilter::Customer:
           BEGIN
             SalesSrcTableName := ObjTransl.TranslateObject(ObjTransl."Object Type"::Table,18);
-            Cust."No." := SalesCodeFilter;
+            Cust."No." := COPYSTR(SalesCodeFilter,1,MAXSTRLEN(Cust."No."));
             IF Cust.FIND THEN
               Description := Cust.Name;
           END;
@@ -417,6 +439,35 @@ OBJECT Page 7002 Sales Prices
     LOCAL PROCEDURE SetSalesCodeEditable@5(SalesType@1000 : Option) : Boolean;
     BEGIN
       EXIT(SalesType <> "Sales Type"::"All Customers");
+    END;
+
+    LOCAL PROCEDURE CopyPrices@6();
+    VAR
+      Customer@1001 : Record 18;
+      SalesPrice@1004 : Record 7002;
+      SelectedSalesPrice@1005 : Record 7002;
+      SalesPrices@1002 : Page 7002;
+      CopyToCustomerNo@1003 : Code[20];
+    BEGIN
+      IF SalesTypeFilter <> SalesTypeFilter::Customer THEN
+        ERROR(IncorrectSalesTypeToCopyPricesErr);
+      Customer.SETFILTER("No.",SalesCodeFilter);
+      IF Customer.COUNT <> 1 THEN
+        ERROR(MultipleCustomersSelectedErr);
+      CopyToCustomerNo := COPYSTR(SalesCodeFilter,1,MAXSTRLEN(CopyToCustomerNo));
+      SalesPrice.SETRANGE("Sales Type",SalesPrice."Sales Type"::Customer);
+      SalesPrice.SETFILTER("Sales Code",'<>%1',SalesCodeFilter);
+      SalesPrices.LOOKUPMODE(TRUE);
+      SalesPrices.SETTABLEVIEW(SalesPrice);
+      IF SalesPrices.RUNMODAL = ACTION::LookupOK THEN BEGIN
+        SalesPrices.GetSelectionFilter(SelectedSalesPrice);
+        CopySalesPriceToCustomersSalesPrice(SelectedSalesPrice,CopyToCustomerNo);
+      END;
+    END;
+
+    PROCEDURE GetSelectionFilter@7(VAR SalesPrice@1000 : Record 7002);
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(SalesPrice);
     END;
 
     BEGIN

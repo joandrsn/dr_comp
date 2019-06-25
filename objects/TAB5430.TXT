@@ -2,9 +2,9 @@ OBJECT Table 5430 Planning Error Log
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -28,7 +28,7 @@ OBJECT Table 5430 Planning Error Log
                                                               ENU=Item No.] }
     { 5   ;   ;Error Description   ;Text250       ;CaptionML=[DAN=Fejlbeskrivelse;
                                                               ENU=Error Description] }
-    { 6   ;   ;Table ID            ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 6   ;   ;Table ID            ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    CaptionML=[DAN=Tabel-id;
                                                               ENU=Table ID] }
     { 7   ;   ;Table Position      ;Text250       ;CaptionML=[DAN=Tabelplacering;

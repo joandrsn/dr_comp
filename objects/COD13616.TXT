@@ -2,9 +2,9 @@ OBJECT Codeunit 13616 OIOUBL Export Service Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVDK8.00;
+    Version List=NAVDK9.00.00.51014;
   }
   PROPERTIES
   {
@@ -16,6 +16,7 @@ OBJECT Codeunit 13616 OIOUBL Export Service Invoice
             SalespersonPurchaser@1060013 : Record 13;
             OIOUBLProfile@1060015 : Record 13600;
             RBMgt@1060006 : Codeunit 419;
+            XMLDOMManagement@1060019 : Codeunit 6224;
             XMLCurrNode@1060012 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
             XMLNewChild@1060005 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
             XMLdocOut@1060004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
@@ -50,8 +51,6 @@ OBJECT Codeunit 13616 OIOUBL Export Service Invoice
             IF NOT ServInvLine.FINDSET THEN
               EXIT;
 
-            XMLdocOut := XMLdocOut.XmlDocument;
-
             FromFile := RBMgt.ServerTempFileName('');
 
             // Invoice
@@ -64,7 +63,7 @@ OBJECT Codeunit 13616 OIOUBL Export Service Invoice
               'xmlns:sdt="urn:oasis:names:specification:ubl:schema:xsd:SpecializedDatatypes-2" ' +
               'xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2"/> ';
 
-            XMLdocOut.LoadXml := Header;
+            XMLDOMManagement.LoadXMLDocumentFromText(Header,XMLdocOut);
             XMLCurrNode := XMLdocOut.DocumentElement;
 
             WITH OIOUBLDOMManagement DO BEGIN
@@ -815,7 +814,7 @@ OBJECT Codeunit 13616 OIOUBL Export Service Invoice
                 AddAttribute(XMLCurrNode,'currencyID',CurrencyCode);
                 XMLCurrNode := XMLCurrNode.ParentNode;
 
-                AddElement(XMLCurrNode,'BaseQuantity',OIOUBLDocumentEncode.DecimalToText(ABS(ServInvLine.Quantity)),
+                AddElement(XMLCurrNode,'BaseQuantity','1',
                   DocNameSpace,XMLNewChild,Prefix);
                 XMLCurrNode := XMLNewChild;
                 AddAttribute(XMLNewChild,'unitCode',OIOUBLDocumentEncode.GetUoMCode(ServInvLine."Unit of Measure Code"));
@@ -882,7 +881,7 @@ OBJECT Codeunit 13616 OIOUBL Export Service Invoice
 
     PROCEDURE GetPaymentChannelCode@1060014() : Text[7];
     BEGIN
-      EXIT(CompanyInfo."Country/Region Code" + ':' + 'BANK');
+      EXIT(CompanyInfo.GetPaymentChannelCode);
     END;
 
     PROCEDURE GetTaxCategoryID@1060038(Type@1060000 : 'Normal VAT,Reverse Charge VAT,Full VAT,Sales Tax';VATPercent@1060001 : Decimal) : Text[15];

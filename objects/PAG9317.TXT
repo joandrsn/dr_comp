@@ -2,9 +2,9 @@ OBJECT Page 9317 Service Quotes
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -87,7 +87,7 @@ OBJECT Page 9317 Service Quotes
       { 1900000004;0 ;ActionContainer;
                       ActionContainerType=ActionItems }
       { 50      ;1   ;Action    ;
-                      CaptionML=[DAN=Lav &ordre;
+                      CaptionML=[DAN=Opret &ordre;
                                  ENU=Make &Order];
                       Promoted=Yes;
                       Image=MakeOrder;
@@ -151,19 +151,11 @@ OBJECT Page 9317 Service Quotes
 
     { 121 ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 1 Code";
-                Visible=FALSE;
-                OnLookup=BEGIN
-                           DimMgt.LookupDimValueCodeNoUpdate(1);
-                         END;
-                          }
+                Visible=FALSE }
 
     { 119 ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 2 Code";
-                Visible=FALSE;
-                OnLookup=BEGIN
-                           DimMgt.LookupDimValueCodeNoUpdate(2);
-                         END;
-                          }
+                Visible=FALSE }
 
     { 31  ;2   ;Field     ;
                 SourceExpr="Assigned User ID" }
@@ -251,7 +243,6 @@ OBJECT Page 9317 Service Quotes
   CODE
   {
     VAR
-      DimMgt@1001 : Codeunit 408;
       CreateServiceOrder@1102601000 : Codeunit 5922;
 
     BEGIN

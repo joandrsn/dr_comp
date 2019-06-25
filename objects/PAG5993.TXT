@@ -2,9 +2,9 @@ OBJECT Page 5993 Troubleshooting Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -24,10 +24,15 @@ OBJECT Page 5993 Troubleshooting Setup
                  "No.Visible" := GETFILTER("No.") = '';
 
                  IF (GETFILTER(Type) <> '') AND (GETFILTER("No.") <> '') THEN BEGIN
-                   xRec.VALIDATE(Type,GETRANGEMIN(Type));
-                   xRec.VALIDATE("No.",GETRANGEMIN("No."));
+                   RecType := GETRANGEMIN(Type);
+                   No := GETRANGEMIN("No.");
                  END;
                END;
+
+    OnNewRecord=BEGIN
+                  VALIDATE(Type,RecType);
+                  VALIDATE("No.",No);
+                END;
 
     ActionList=ACTIONS
     {
@@ -99,6 +104,8 @@ OBJECT Page 5993 Troubleshooting Setup
       Tblshtg@1001 : Page 5990;
       TypeVisible@19063733 : Boolean INDATASET;
       "No.Visible"@19001701 : Boolean INDATASET;
+      RecType@1003 : Option;
+      No@1002 : Code[20];
 
     BEGIN
     END.

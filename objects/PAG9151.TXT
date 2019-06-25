@@ -2,9 +2,9 @@ OBJECT Page 9151 My Vendors
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -68,10 +68,10 @@ OBJECT Page 9151 My Vendors
                 Editable=FALSE }
 
     { 13  ;2   ;Field     ;
-                Name=Balance;
-                CaptionML=[DAN=Saldo;
-                           ENU=Balance];
-                SourceExpr=Vendor.Balance;
+                Name=BalanceLCY;
+                CaptionML=[DAN=Saldo (RV);
+                           ENU=Balance (LCY)];
+                SourceExpr=Vendor."Balance (LCY)";
                 Visible=FALSE;
                 Editable=FALSE }
 
@@ -86,7 +86,7 @@ OBJECT Page 9151 My Vendors
       CLEAR(Vendor);
 
       IF Vendor.GET("Vendor No.") THEN
-        Vendor.CALCFIELDS(Balance);
+        Vendor.CALCFIELDS("Balance (LCY)");
     END;
 
     BEGIN

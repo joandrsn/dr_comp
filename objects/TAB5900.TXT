@@ -2,9 +2,9 @@ OBJECT Table 5900 Service Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50221,NAVDK9.00.00.50221;
   }
   PROPERTIES
   {
@@ -109,27 +109,8 @@ OBJECT Table 5900 Service Header
                IF (ServShptHeader."No." <> '') OR
                   (ServInvHeader."No." <> '') OR
                   (ServCrMemoHeader."No." <> '')
-               THEN BEGIN
-                 COMMIT;
-
-                 IF ServShptHeader."No." <> '' THEN
-                   IF CONFIRM(Text048,TRUE,ServShptHeader."No.") THEN BEGIN
-                     ServShptHeader.SETRECFILTER;
-                     ServShptHeader.PrintRecords(TRUE);
-                   END;
-
-                 IF ServInvHeader."No." <> '' THEN
-                   IF CONFIRM(Text049,TRUE,ServInvHeader."No.") THEN BEGIN
-                     ServInvHeader.SETRECFILTER;
-                     ServInvHeader.PrintRecords(TRUE);
-                   END;
-
-                 IF ServCrMemoHeader."No." <> '' THEN
-                   IF CONFIRM(Text002,TRUE,ServCrMemoHeader."No.") THEN BEGIN
-                     ServCrMemoHeader.SETRECFILTER;
-                     ServCrMemoHeader.PrintRecords(TRUE);
-                   END;
-               END;
+               THEN
+                 MESSAGE(PostedDocsToPrintCreatedMsg);
 
                ServOrderAlloc.RESET;
                ServOrderAlloc.SETCURRENTKEY("Document Type");
@@ -414,7 +395,7 @@ OBJECT Table 5900 Service Header
                                                                 "Invoice Disc. Code" := Cust."Invoice Disc. Code";
                                                                 "Customer Disc. Group" := Cust."Customer Disc. Group";
                                                                 "Language Code" := Cust."Language Code";
-                                                                "Salesperson Code" := Cust."Salesperson Code";
+                                                                SetSalespersonCode(Cust."Salesperson Code","Salesperson Code");
                                                                 Reserve := Cust.Reserve;
                                                                 ValidateServPriceGrOnServItem;
 
@@ -709,7 +690,6 @@ OBJECT Table 5900 Service Header
                                                                   VALIDATE("Pmt. Discount Date",0D);
                                                                   VALIDATE("Payment Discount %",0);
                                                                 END;
-                                                                UpdatePmtDiscDate;
                                                               END;
 
                                                    CaptionML=[DAN=Betalingsbeting.kode;
@@ -723,7 +703,6 @@ OBJECT Table 5900 Service Header
                                                                 ELSE
                                                                   "VAT Base Discount %" := GLSetup."VAT Tolerance %";
                                                                 VALIDATE("VAT Base Discount %");
-                                                                UpdatePmtDiscDate;
                                                               END;
 
                                                    CaptionML=[DAN=Kontantrabatpct.;
@@ -731,11 +710,7 @@ OBJECT Table 5900 Service Header
                                                    DecimalPlaces=0:5;
                                                    MinValue=0;
                                                    MaxValue=100 }
-    { 26  ;   ;Pmt. Discount Date  ;Date          ;OnValidate=BEGIN
-                                                                UpdatePmtDiscDate;
-                                                              END;
-
-                                                   CaptionML=[DAN=Kont.rabatdato;
+    { 26  ;   ;Pmt. Discount Date  ;Date          ;CaptionML=[DAN=Kont.rabatdato;
                                                               ENU=Pmt. Discount Date] }
     { 27  ;   ;Shipment Method Code;Code10        ;TableRelation="Shipment Method";
                                                    OnValidate=BEGIN
@@ -756,7 +731,8 @@ OBJECT Table 5900 Service Header
 
                                                    CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code] }
-    { 29  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+    { 29  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 CheckHeaderDimension;
                                                                 ValidateShortcutDimCode(1,"Shortcut Dimension 1 Code");
@@ -765,7 +741,8 @@ OBJECT Table 5900 Service Header
                                                    CaptionML=[DAN=Genvejsdimension 1-kode;
                                                               ENU=Shortcut Dimension 1 Code];
                                                    CaptionClass='1,2,1' }
-    { 30  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+    { 30  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 CheckHeaderDimension;
                                                                 ValidateShortcutDimCode(2,"Shortcut Dimension 2 Code");
@@ -922,8 +899,10 @@ OBJECT Table 5900 Service Header
 
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code] }
-    { 43  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 43  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=BEGIN
+                                                                ValidateSalesPersonOnServiceHeader(Rec,FALSE,FALSE);
+
                                                                 CreateDim(
                                                                   DATABASE::"Salesperson/Purchaser","Salesperson Code",
                                                                   DATABASE::Customer,"Bill-to Customer No.",
@@ -1044,11 +1023,11 @@ OBJECT Table 5900 Service Header
                                                               ENU=Reason Code] }
     { 74  ;   ;Gen. Bus. Posting Group;Code10     ;TableRelation="Gen. Business Posting Group";
                                                    OnValidate=BEGIN
-                                                                IF "Gen. Bus. Posting Group" <> xRec."Gen. Bus. Posting Group" THEN
-                                                                  IF GenBusPostingGrp.ValidateVatBusPostingGroup(GenBusPostingGrp,"Gen. Bus. Posting Group") THEN BEGIN
+                                                                IF "Gen. Bus. Posting Group" <> xRec."Gen. Bus. Posting Group" THEN BEGIN
+                                                                  IF GenBusPostingGrp.ValidateVatBusPostingGroup(GenBusPostingGrp,"Gen. Bus. Posting Group") THEN
                                                                     "VAT Bus. Posting Group" := GenBusPostingGrp."Def. VAT Bus. Posting Group";
-                                                                    RecreateServLines(FIELDCAPTION("Gen. Bus. Posting Group"));
-                                                                  END;
+                                                                  RecreateServLines(FIELDCAPTION("Gen. Bus. Posting Group"));
+                                                                END;
                                                               END;
 
                                                    CaptionML=[DAN=Virksomhedsbogføringsgruppe;
@@ -2152,6 +2131,7 @@ OBJECT Table 5900 Service Header
                                                                     RespCenter.TABLECAPTION,UserSetupMgt.GetServiceFilter2("Assigned User ID"));
                                                               END;
 
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
     { 9001;   ;Quote No.           ;Code20        ;CaptionML=[DAN=Tilbudsnr.;
@@ -2214,7 +2194,6 @@ OBJECT Table 5900 Service Header
     VAR
       Text000@1000 : TextConst '@@@="%1=Responsibility center table caption;%2=User management service filter;";DAN=Du kan ikke slette dette bilag. Dit id tillader kun behandling fra %1 %2.;ENU=You cannot delete this document. Your identification is set up to process from %1 %2 only.';
       Text001@1001 : TextConst 'DAN=Hvis du ændrer %1 i servicehovedet %2, opdateres de eksisterende servicelinjer ikke.\Du skal opdatere de eksisterende servicelinjer manuelt.;ENU=Changing %1 in service header %2 will not update the existing service lines.\You must update the existing service lines manually.';
-      Text002@1095 : TextConst 'DAN=Ønsker du at udskrive kreditnota %1?;ENU=Do you want to print credit memo %1?';
       Text003@1003 : TextConst '@@@="%1=Customer number field caption;%2=Document type;%3=Number field caption;%4=Number;%5=Contract number field caption;%6=Contract number; ";DAN=Du kan ikke ændre %1, fordi %2 %3 %4 er tilknyttet en %5 %6.;ENU=You cannot change the %1 because the %2 %3 %4 is associated with a %5 %6.';
       Text004@1004 : TextConst 'DAN=Hvis du ændrer %1, slettes den eksisterende serviceartikellinje og den eksisterende servicelinje.\Vil du ændre %1?;ENU=When you change the %1 the existing Service item line and service line will be deleted.\Do you want to change the %1?';
       Text005@1005 : TextConst 'DAN=Vil du ændre %1?;ENU=Do you want to change the %1?';
@@ -2258,6 +2237,7 @@ OBJECT Table 5900 Service Header
       ServCrMemoHeader@1077 : Record 5994;
       ReservEntry@1076 : Record 337;
       TempReservEntry@1075 : TEMPORARY Record 337;
+      Salesperson@1906 : Record 13;
       ServOrderMgt@1037 : Codeunit 5900;
       DimMgt@1038 : Codeunit 408;
       NoSeriesMgt@1039 : Codeunit 396;
@@ -2297,8 +2277,6 @@ OBJECT Table 5900 Service Header
       Text045@1083 : TextConst '@@@="%1=Posting date field caption;%2=Posting number series field caption;%3=Posting number series;%4=NoSeries date order field caption;%5=NoSeries date order;%6=Document type;%7=posting number field caption;%8=Posting number;";DAN="Du kan ikke ændre feltet %1, fordi %2 %3 har %4 = %5 og %6 allerede er blevet tildelt %7 %8.";ENU="You can not change the %1 field because %2 %3 has %4 = %5 and the %6 has already been assigned %7 %8."';
       Text046@1104 : TextConst 'DAN=Du kan ikke slette fakturaen %1, fordi der findes en eller flere serviceposter til denne faktura.;ENU=You cannot delete invoice %1 because one or more service ledger entries exist for this invoice.';
       Text047@1100 : TextConst 'DAN=Du kan ikke ændre %1, fordi der er reservation, varesporing eller ordresporing på salgsordren.;ENU=You cannot change %1 because reservation, item tracking, or order tracking exists on the sales order.';
-      Text048@1097 : TextConst 'DAN=Ønsker du at udskrive leverance %1?;ENU=Do you want to print shipment %1?';
-      Text049@1096 : TextConst 'DAN=Ønsker du at udskrive faktura %1?;ENU=Do you want to print invoice %1?';
       Text050@1094 : TextConst 'DAN=Du kan ikke nulstille %1, fordi dokumentet stadig indeholder en eller flere linjer.;ENU=You cannot reset %1 because the document still has one or more lines.';
       Text051@1082 : TextConst '@@@="%1=Document type format;%2=Number;";DAN=Servicen %1 %2 findes allerede.;ENU=The service %1 %2 already exists.';
       Text052@1098 : TextConst '@@@="%1=Document type format;%2=Number;";DAN=Servicen %1 %2 har varesporing. Vil du slette den alligevel?;ENU=The service %1 %2 has item tracking. Do you want to delete it anyway?';
@@ -2316,6 +2294,7 @@ OBJECT Table 5900 Service Header
       Text13606@1101100001 : TextConst 'DAN=indeholder ikke et gyldigt 13-cifret EAN-nr.;ENU=does not contain a valid, 13-digit EAN No.';
       Text13607@1101100002 : TextConst 'DAN=%1 %2 understøttes ikke i denne version af OIOUBL.;ENU=%1 %2 is not supported in this version of OIOUBL.';
       Text066@1017 : TextConst 'DAN=Du kan ikke ændre dimensionen, da der er serviceposter forbundet til denne linje.;ENU=You cannot change the dimension because there are service entries connected to this line.';
+      PostedDocsToPrintCreatedMsg@1020 : TextConst 'DAN=Et eller flere bilag er bogført under sletningen, som du kan udskrive fra det relaterede bogførte bilag.;ENU=One or more documents have been posted during deletion, which you can print from the related posted document.';
 
     PROCEDURE AssistEdit@1(OldServHeader@1000 : Record 5900) : Boolean;
     VAR
@@ -2344,7 +2323,7 @@ OBJECT Table 5900 Service Header
       ServiceContractHeader@1015 : Record 5965;
       No@1010 : ARRAY [10] OF Code[20];
       TableID@1009 : ARRAY [10] OF Integer;
-      DimensionSetIDArr@1014 : ARRAY [10] OF Integer;
+      ContractDimensionSetID@1014 : Integer;
       OldDimSetID@1013 : Integer;
     BEGIN
       SourceCodeSetup.GET;
@@ -2364,19 +2343,15 @@ OBJECT Table 5900 Service Header
       "Shortcut Dimension 2 Code" := '';
       OldDimSetID := "Dimension Set ID";
 
-      DimensionSetIDArr[1] :=
-        DimMgt.GetDefaultDimID(
-          TableID,No,SourceCodeSetup."Service Management",
-          "Shortcut Dimension 1 Code","Shortcut Dimension 2 Code",0,0);
-
       IF "Contract No." <> '' THEN BEGIN
         ServiceContractHeader.GET(ServiceContractHeader."Contract Type"::Contract,"Contract No.");
-        DimensionSetIDArr[2] := ServiceContractHeader."Dimension Set ID";
+        ContractDimensionSetID := ServiceContractHeader."Dimension Set ID";
       END;
 
       "Dimension Set ID" :=
-        DimMgt.GetCombinedDimensionSetID(
-          DimensionSetIDArr,"Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
+        DimMgt.GetDefaultDimID(
+          TableID,No,SourceCodeSetup."Service Management",
+          "Shortcut Dimension 1 Code","Shortcut Dimension 2 Code",ContractDimensionSetID,DATABASE::"Service Contract Header");
 
       IF ("Dimension Set ID" <> OldDimSetID) AND (ServItemLineExists OR ServLineExists) THEN BEGIN
         MODIFY;
@@ -3112,7 +3087,10 @@ OBJECT Table 5900 Service Header
       Reserve := Reserve::Optional;
 
       IF Cust.GET("Customer No.") THEN
-        "Responsibility Center" := UserSetupMgt.GetRespCenter(2,Cust."Responsibility Center")
+        IF Cust."Responsibility Center" <> '' THEN
+          "Responsibility Center" := UserSetupMgt.GetRespCenter(2,Cust."Responsibility Center")
+        ELSE
+          "Responsibility Center" := UserSetupMgt.GetRespCenter(2,"Responsibility Center")
       ELSE
         "Responsibility Center" := UserSetupMgt.GetServiceFilter;
     END;
@@ -3371,13 +3349,6 @@ OBJECT Table 5900 Service Header
       SETRANGE("Date Filter",0D,WORKDATE - 1);
     END;
 
-    LOCAL PROCEDURE UpdatePmtDiscDate@44();
-    BEGIN
-      IF "Payment Discount %" = 0 THEN
-        IF "Document Type" <> "Document Type"::"Credit Memo" THEN
-          "Pmt. Discount Date" := "Due Date";
-    END;
-
     LOCAL PROCEDURE CheckMandSalesPersonOrderData@40(ServiceMgtSetup@1000 : Record 5911);
     BEGIN
       IF ServiceMgtSetup."Salesperson Mandatory" THEN
@@ -3476,6 +3447,28 @@ OBJECT Table 5900 Service Header
     BEGIN
       IF ("Contract No." <> '') AND ("Document Type" = "Document Type"::Invoice) THEN
         ERROR(Text066);
+    END;
+
+    PROCEDURE ValidateSalesPersonOnServiceHeader@433(ServiceHeader2@1000 : Record 5900;IsTransaction@1001 : Boolean;IsPostAction@1002 : Boolean);
+    BEGIN
+      IF ServiceHeader2."Salesperson Code" <> '' THEN
+        IF Salesperson.GET(ServiceHeader2."Salesperson Code") THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN BEGIN
+            IF IsTransaction THEN
+              ERROR(Salesperson.GetPrivacyBlockedTransactionText(Salesperson,IsPostAction,TRUE));
+            IF NOT IsTransaction THEN
+              ERROR(Salesperson.GetPrivacyBlockedGenericText(Salesperson,TRUE));
+          END;
+    END;
+
+    LOCAL PROCEDURE SetSalespersonCode@218(SalesPersonCodeToCheck@1000 : Code[20];VAR SalesPersonCodeToAssign@1001 : Code[20]);
+    BEGIN
+      IF SalesPersonCodeToCheck <> '' THEN
+        IF Salesperson.GET(SalesPersonCodeToCheck) THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN
+            SalesPersonCodeToAssign := ''
+          ELSE
+            SalesPersonCodeToAssign := SalesPersonCodeToCheck;
     END;
 
     LOCAL PROCEDURE CreateServiceLines@50(VAR TempServLine@1004 : TEMPORARY Record 5902;VAR ExtendedTextAdded@1000 : Boolean);

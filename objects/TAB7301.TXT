@@ -2,9 +2,9 @@ OBJECT Table 7301 Warehouse Employee
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -39,6 +39,7 @@ OBJECT Table 7301 Warehouse Employee
 
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 2   ;   ;Location Code       ;Code10        ;TableRelation=Location;
@@ -57,6 +58,7 @@ OBJECT Table 7301 Warehouse Employee
                                                                 END;
                                                               END;
 
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=ADCS-bruger;
                                                               ENU=ADCS User] }
   }

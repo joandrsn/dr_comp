@@ -2,9 +2,9 @@ OBJECT Table 5895 Inventory Adjustment Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,56 +13,73 @@ OBJECT Table 5895 Inventory Adjustment Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+    { 1   ;   ;Entry No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
     { 2   ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Varenr.;
                                                               ENU=Item No.] }
-    { 3   ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+    { 3   ;   ;Posting Date        ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogføringsdato;
                                                               ENU=Posting Date] }
-    { 6   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+    { 6   ;   ;Document No.        ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bilagsnr.;
                                                               ENU=Document No.] }
     { 8   ;   ;Location Code       ;Code10        ;TableRelation=Location;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code] }
     { 11  ;   ;Item Ledger Entry No.;Integer      ;TableRelation="Item Ledger Entry";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Varepostløbenr.;
                                                               ENU=Item Ledger Entry No.] }
-    { 13  ;   ;Item Ledger Entry Quantity;Decimal ;CaptionML=[DAN=Varepostmængde;
+    { 13  ;   ;Item Ledger Entry Quantity;Decimal ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Varepostmængde;
                                                               ENU=Item Ledger Entry Quantity];
                                                    DecimalPlaces=0:5 }
-    { 43  ;   ;Cost Amount (Actual);Decimal       ;CaptionML=[DAN=Kostbeløb (faktisk);
+    { 43  ;   ;Cost Amount (Actual);Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kostbeløb (faktisk);
                                                               ENU=Cost Amount (Actual)];
                                                    AutoFormatType=1 }
-    { 68  ;   ;Cost Amount (Actual) (ACY);Decimal ;CaptionML=[DAN=Kostbeløb (faktisk) (EV);
+    { 68  ;   ;Cost Amount (Actual) (ACY);Decimal ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kostbeløb (faktisk) (EV);
                                                               ENU=Cost Amount (Actual) (ACY)];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr=GetCurrencyCode }
-    { 98  ;   ;Expected Cost       ;Boolean       ;CaptionML=[DAN=Forventet kostpris;
+    { 98  ;   ;Expected Cost       ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Forventet kostpris;
                                                               ENU=Expected Cost] }
-    { 100 ;   ;Valued By Average Cost;Boolean     ;CaptionML=[DAN=Værdisat efter gnsn. kostpris;
+    { 100 ;   ;Valued By Average Cost;Boolean     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Værdisat efter gnsn. kostpris;
                                                               ENU=Valued By Average Cost] }
-    { 104 ;   ;Valuation Date      ;Date          ;CaptionML=[DAN=Værdiansættelsesdato;
+    { 104 ;   ;Valuation Date      ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Værdiansættelsesdato;
                                                               ENU=Valuation Date] }
-    { 105 ;   ;Entry Type          ;Option        ;CaptionML=[DAN=Posttype;
+    { 105 ;   ;Entry Type          ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Posttype;
                                                               ENU=Entry Type];
                                                    OptionCaptionML=[DAN=Købspris,Værdiregulering,Afrunding,Indir. omkostning,Afvigelse;
                                                                     ENU=Direct Cost,Revaluation,Rounding,Indirect Cost,Variance];
                                                    OptionString=Direct Cost,Revaluation,Rounding,Indirect Cost,Variance }
-    { 106 ;   ;Variance Type       ;Option        ;CaptionML=[DAN=Afvigelsestype;
+    { 106 ;   ;Variance Type       ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afvigelsestype;
                                                               ENU=Variance Type];
                                                    OptionCaptionML=[DAN=" ,Køb,Materiale,Kapacitet,Indirekte kap.kostpris,Indirekte prod.kostpris,Underleverandør";
                                                                     ENU=" ,Purchase,Material,Capacity,Capacity Overhead,Manufacturing Overhead,Subcontracted"];
                                                    OptionString=[ ,Purchase,Material,Capacity,Capacity Overhead,Manufacturing Overhead,Subcontracted] }
-    { 151 ;   ;Cost Amount (Expected);Decimal     ;CaptionML=[DAN=Kostbeløb (forventet);
+    { 151 ;   ;Cost Amount (Expected);Decimal     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kostbeløb (forventet);
                                                               ENU=Cost Amount (Expected)];
                                                    AutoFormatType=1 }
     { 156 ;   ;Cost Amount (Expected) (ACY);Decimal;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Kostbeløb (forventet) (EV);
                                                               ENU=Cost Amount (Expected) (ACY)];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr=GetCurrencyCode }
     { 5402;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Variantkode;
                                                               ENU=Variant Code] }
   }

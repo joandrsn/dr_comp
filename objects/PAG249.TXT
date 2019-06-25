@@ -2,9 +2,9 @@ OBJECT Page 249 VAT Registration Log
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -28,7 +28,7 @@ OBJECT Page 249 VAT Registration Log
                       ActionContainerType=ActionItems }
       { 13      ;1   ;Action    ;
                       CaptionML=[DAN=Bekræft SE/CVR-nr.;
-                                 ENU=Verify Registration No.];
+                                 ENU=Verify VAT Registration No.];
                       RunObject=Codeunit 248;
                       Promoted=Yes;
                       PromotedIsBig=Yes;

@@ -2,9 +2,9 @@ OBJECT Page 143 Posted Sales Invoices
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.47042,NAVDK9.00.00.47042;
   }
   PROPERTIES
   {
@@ -142,7 +142,6 @@ OBJECT Page 143 Posted Sales Invoices
                       OnAction=VAR
                                  SalesInvoiceHeader@1003 : Record 112;
                                  CRMIntegrationManagement@1000 : Codeunit 5330;
-                                 CRMCouplingManagement@1001 : Codeunit 5331;
                                  SalesInvoiceHeaderRecordRef@1002 : RecordRef;
                                BEGIN
                                  CurrPage.SETSELECTIONFILTER(SalesInvoiceHeader);
@@ -154,13 +153,6 @@ OBJECT Page 143 Posted Sales Invoices
                                    SalesInvoiceHeaderRecordRef.GETTABLE(SalesInvoiceHeader);
                                    CRMIntegrationManagement.CreateNewRecordsInCRM(SalesInvoiceHeaderRecordRef);
                                  END;
-
-                                 REPEAT
-                                   IF CRMCouplingManagement.IsRecordCoupledToCRM(SalesInvoiceHeader.RECORDID) THEN BEGIN
-                                     SalesInvoiceHeader.VALIDATE("Coupled to CRM",TRUE);
-                                     SalesInvoiceHeader.MODIFY;
-                                   END;
-                                 UNTIL SalesInvoiceHeader.NEXT = 0;
                                END;
                                 }
       { 1900000004;0 ;ActionContainer;
@@ -179,6 +171,7 @@ OBJECT Page 143 Posted Sales Invoices
                                BEGIN
                                  SalesInvHeader := Rec;
                                  CurrPage.SETSELECTIONFILTER(SalesInvHeader);
+                                 // Call SendRecords to open sending profile dialog
                                  SalesInvHeader.SendRecords;
                                END;
                                 }

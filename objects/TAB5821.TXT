@@ -2,9 +2,9 @@ OBJECT Table 5821 Item Statistics Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -14,7 +14,8 @@ OBJECT Table 5821 Item Statistics Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+    { 1   ;   ;Code                ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kode;
                                                               ENU=Code];
                                                    NotBlank=Yes }
     { 2   ;   ;Item Filter         ;Code20        ;FieldClass=FlowFilter;
@@ -152,38 +153,53 @@ OBJECT Table 5821 Item Statistics Buffer
                                                    OptionCaptionML=[DAN=" ,Køb,Materiale,Kapacitet,Indirekte kap.kostpris,Indirekte prod.kostpris,Underleverandør";
                                                                     ENU=" ,Purchase,Material,Capacity,Capacity Overhead,Manufacturing Overhead,Subcontracted"];
                                                    OptionString=[ ,Purchase,Material,Capacity,Capacity Overhead,Manufacturing Overhead,Subcontracted] }
-    { 20  ;   ;Sales (LCY)         ;Integer       ;CaptionML=[DAN=Salg (RV);
+    { 20  ;   ;Sales (LCY)         ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Salg (RV);
                                                               ENU=Sales (LCY)] }
-    { 21  ;   ;COGS (LCY)          ;Integer       ;CaptionML=[DAN=Vareforbrug (RV);
+    { 21  ;   ;COGS (LCY)          ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Vareforbrug (RV);
                                                               ENU=COGS (LCY)] }
-    { 22  ;   ;Profit (LCY)        ;Integer       ;CaptionML=[DAN=Avancebeløb (RV);
+    { 22  ;   ;Profit (LCY)        ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Avancebeløb (RV);
                                                               ENU=Profit (LCY)] }
-    { 23  ;   ;Profit %            ;Integer       ;CaptionML=[DAN=Avancepct.;
+    { 23  ;   ;Profit %            ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Avancepct.;
                                                               ENU=Profit %] }
-    { 24  ;   ;Inventoriable Costs ;Integer       ;CaptionML=[DAN=Lagermæssige omk.;
+    { 24  ;   ;Inventoriable Costs ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lagermæssige omk.;
                                                               ENU=Inventoriable Costs] }
-    { 25  ;   ;Direct Cost (LCY)   ;Integer       ;CaptionML=[DAN=Købspris (RV);
+    { 25  ;   ;Direct Cost (LCY)   ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Købspris (RV);
                                                               ENU=Direct Cost (LCY)] }
-    { 26  ;   ;Revaluation (LCY)   ;Integer       ;CaptionML=[DAN=Værdiregulering (RV);
+    { 26  ;   ;Revaluation (LCY)   ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Værdiregulering (RV);
                                                               ENU=Revaluation (LCY)] }
-    { 27  ;   ;Rounding (LCY)      ;Integer       ;CaptionML=[DAN=Afrunding (RV);
+    { 27  ;   ;Rounding (LCY)      ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afrunding (RV);
                                                               ENU=Rounding (LCY)] }
-    { 28  ;   ;Indirect Cost (LCY) ;Integer       ;CaptionML=[DAN=Indir. omkost. (RV);
+    { 28  ;   ;Indirect Cost (LCY) ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Indir. omkost. (RV);
                                                               ENU=Indirect Cost (LCY)] }
-    { 29  ;   ;Variance (LCY)      ;Integer       ;CaptionML=[DAN=Afvigelse (RV);
+    { 29  ;   ;Variance (LCY)      ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afvigelse (RV);
                                                               ENU=Variance (LCY)] }
-    { 30  ;   ;Inventoriable Costs, Total;Integer ;CaptionML=[DAN=Lagermæssige omk. i alt;
+    { 30  ;   ;Inventoriable Costs, Total;Integer ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lagermæssige omk. i alt;
                                                               ENU=Inventoriable Costs, Total] }
-    { 31  ;   ;Inventory (LCY)     ;Integer       ;CaptionML=[DAN=Lagerbeholdning (RV);
+    { 31  ;   ;Inventory (LCY)     ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lagerbeholdning (RV);
                                                               ENU=Inventory (LCY)] }
-    { 34  ;   ;Non-Invtbl. Costs (LCY);Integer    ;CaptionML=[DAN=Kostpriser (ikke-lager) (RV);
+    { 34  ;   ;Non-Invtbl. Costs (LCY);Integer    ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kostpriser (ikke-lager) (RV);
                                                               ENU=Non-Invtbl. Costs (LCY)] }
-    { 40  ;   ;Line Option         ;Option        ;CaptionML=[DAN=Linjeindstilling;
+    { 40  ;   ;Line Option         ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Linjeindstilling;
                                                               ENU=Line Option];
                                                    OptionCaptionML=[DAN=Avanceberegning,Kostprisspec.,Købsvaregebyrspec.,Salgsvaregebyrspec.,Periode,Lokation;
                                                                     ENU=Profit Calculation,Cost Specification,Purch. Item Charge Spec.,Sales Item Charge Spec.,Period,Location];
                                                    OptionString=Profit Calculation,Cost Specification,Purch. Item Charge Spec.,Sales Item Charge Spec.,Period,Location }
-    { 41  ;   ;Column Option       ;Option        ;CaptionML=[DAN=Kolonneindstilling;
+    { 41  ;   ;Column Option       ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kolonneindstilling;
                                                               ENU=Column Option];
                                                    OptionCaptionML=[DAN=Avanceberegning,Kostprisspec.,Købsvaregebyrspec.,Salgsvaregebyrspec.,Periode,Lokation;
                                                                     ENU=Profit Calculation,Cost Specification,Purch. Item Charge Spec.,Sales Item Charge Spec.,Period,Location];

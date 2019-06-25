@@ -2,9 +2,9 @@ OBJECT Codeunit 5064 E-Mail Logging Dispatcher
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -310,7 +310,7 @@ OBJECT Codeunit 5064 E-Mail Logging Dispatcher
       InteractLogEntry.INSERT;
     END;
 
-    PROCEDURE IsSalesperson@16(Email@1000 : Text;VAR SalespersonCode@1001 : Code[10]) : Boolean;
+    PROCEDURE IsSalesperson@16(Email@1000 : Text;VAR SalespersonCode@1001 : Code[20]) : Boolean;
     VAR
       Salesperson@1002 : Record 13;
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Codeunit 424 Export Analysis View
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -163,7 +163,7 @@ OBJECT Codeunit 424 Export Analysis View
         END;
         RowNoCount := RowNoCount + 1;
         ExcelHelper.FindRange(xlWorkSheet3,'B' + FORMAT(RowNoCount)).Value2 := AnalysisView.FIELDCAPTION("Last Date Updated");
-        ExcelHelper.FindRange(xlWorkSheet3,'C' + FORMAT(RowNoCount)).Value2 := AnalysisView."Last Date Updated";
+        ExcelHelper.FindRange(xlWorkSheet3,'C' + FORMAT(RowNoCount)).Value2 := FORMAT(AnalysisView."Last Date Updated");
         AnalysisViewFilter.SETFILTER("Analysis View Code","Analysis View Code");
         IF AnalysisViewFilter.FIND('-') THEN
           REPEAT
@@ -529,23 +529,23 @@ OBJECT Codeunit 424 Export Analysis View
 
               IF NOT ShowInAddCurr THEN
                 Line2 :=
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),-1)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),0)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),1)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),2)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),3)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),4)) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),-1),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),0),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),1),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),2),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),3),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),4),0,9) + Tab +
                   FORMAT(Amount * SignValue,0,'<Standard Format,1>') + Tab +
                   FORMAT("Debit Amount" * SignValue,0,'<Standard Format,1>') + Tab +
                   FORMAT("Credit Amount" * SignValue,0,'<Standard Format,1>')
               ELSE
                 Line2 :=
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),-1)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),0)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),1)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),2)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),3)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),4)) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),-1),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),0),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),1),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),2),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),3),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),4),0,9) + Tab +
                   FORMAT("Add.-Curr. Amount" * SignValue,0,'<Standard Format,1>') + Tab +
                   FORMAT("Add.-Curr. Debit Amount" * SignValue,0,'<Standard Format,1>') + Tab +
                   FORMAT("Add.-Curr. Credit Amount" * SignValue,0,'<Standard Format,1>');
@@ -600,13 +600,13 @@ OBJECT Codeunit 424 Export Analysis View
 
               IF NOT ShowInAddCurr THEN BEGIN
                 Line2 :=
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),-1)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),0)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),1)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),2)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),3)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),4)) + Tab +
-                  Tab + Tab + Tab + FORMAT(Amount * SignValue);
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),-1),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),0),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),1),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),2),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),3),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),4),0,9) + Tab +
+                  Tab + Tab + Tab + FORMAT(Amount * SignValue,0,'<Standard Format,1>');
               END ELSE BEGIN
                 IF AnalysisViewBudgetEntry.GETFILTER("Posting Date") = '' THEN
                   CurrExchDate := WORKDATE
@@ -630,13 +630,13 @@ OBJECT Codeunit 424 Export Analysis View
                           CurrExchDate,GLSetup."Additional Reporting Currency")) * SignValue,
                       GLSetup."Amount Rounding Precision");
                 Line2 :=
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),-1)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),0)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),1)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),2)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),3)) + Tab +
-                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),4)) + Tab +
-                  Tab + Tab + Tab + FORMAT(AddRepCurrAmount);
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),-1),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),0),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),1),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),2),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),3),0,9) + Tab +
+                  FORMAT(CalculatePeriodStart(NORMALDATE("Posting Date"),4),0,9) + Tab +
+                  Tab + Tab + Tab + FORMAT(AddRepCurrAmount,0,'<Standard Format,1>');
               END;
               TextFileStreamWriter.WriteLine(Line[1] + Line[2] + Line[3] + Line[4] + Line[5] + Line2);
             END;
@@ -745,9 +745,9 @@ OBJECT Codeunit 424 Export Analysis View
       WHILE StartDate <= EndDate DO BEGIN
         NoOfRows := NoOfRows + 1;
         TextFileStreamWriter.WriteLine(
-          Line2 + Tab + FORMAT(StartDate) + Tab + FORMAT(CalculatePeriodStart(StartDate,1)) + Tab +
-          FORMAT(CalculatePeriodStart(StartDate,2)) + Tab + FORMAT(CalculatePeriodStart(StartDate,3)) + Tab +
-          FORMAT(CalculatePeriodStart(StartDate,4)));
+          Line2 + Tab + FORMAT(StartDate,0,9) + Tab + FORMAT(CalculatePeriodStart(StartDate,1),0,9) + Tab +
+          FORMAT(CalculatePeriodStart(StartDate,2),0,9) + Tab + FORMAT(CalculatePeriodStart(StartDate,3),0,9) + Tab +
+          FORMAT(CalculatePeriodStart(StartDate,4),0,9));
         StartDate := CALCDATE('<1W>',StartDate);
       END;
 
@@ -927,7 +927,7 @@ OBJECT Codeunit 424 Export Analysis View
       EXIT(Line)
     END;
 
-    LOCAL PROCEDURE FillOutBusUnit@11(BusUnitCode@1001 : Code[10];ShowName@1005 : Boolean) Line@1009 : Text[1024];
+    LOCAL PROCEDURE FillOutBusUnit@11(BusUnitCode@1001 : Code[20];ShowName@1005 : Boolean) Line@1009 : Text[1024];
     BEGIN
       IF BusUnitCode <> '' THEN BEGIN
         BusUnit.GET(BusUnitCode);

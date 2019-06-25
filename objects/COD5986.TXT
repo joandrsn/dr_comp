@@ -2,9 +2,9 @@ OBJECT Codeunit 5986 Serv-Amounts Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -122,12 +122,6 @@ OBJECT Codeunit 5986 Serv-Amounts Mgt.
           TotalVATACY,
           TotalAmount,
           TotalAmountACY);
-        IF ServiceLine."Line Discount %" = 100 THEN BEGIN
-          InvPostingBuffer[1]."VAT Base Amount" := 0;
-          InvPostingBuffer[1]."VAT Base Amount (ACY)" := 0;
-          InvPostingBuffer[1]."VAT Amount" := 0;
-          InvPostingBuffer[1]."VAT Amount (ACY)" := 0;
-        END;
         UpdInvPostingBuffer(InvPostingBuffer,ServiceLine);
       END;
 
@@ -136,7 +130,9 @@ OBJECT Codeunit 5986 Serv-Amounts Mgt.
         TotalVATACY,
         TotalAmount,
         TotalAmountACY,
-        ServiceLine."VAT Difference");
+        ServiceLine."VAT Difference",
+        TotalAmount,
+        TotalAmountACY);
 
       CASE ServiceLine.Type OF
         ServiceLine.Type::"G/L Account":
@@ -176,12 +172,6 @@ OBJECT Codeunit 5986 Serv-Amounts Mgt.
               TotalAmountACY);
           END;
         END;
-      END;
-      IF ServiceLine."Line Discount %" = 100 THEN BEGIN
-        InvPostingBuffer[1]."VAT Base Amount" := 0;
-        InvPostingBuffer[1]."VAT Base Amount (ACY)" := 0;
-        InvPostingBuffer[1]."VAT Amount" := 0;
-        InvPostingBuffer[1]."VAT Amount (ACY)" := 0;
       END;
       UpdInvPostingBuffer(InvPostingBuffer,ServiceLine);
     END;
@@ -445,6 +435,8 @@ OBJECT Codeunit 5986 Serv-Amounts Mgt.
 
     PROCEDURE InvoiceRounding@12(VAR ServiceHeader@1005 : Record 5900;VAR ServiceLine@1007 : Record 5902;VAR TotalServiceLine@1004 : Record 5902;VAR LastLineRetrieved@1008 : Boolean;UseTempData@1000 : Boolean;BiggestLineNo@1002 : Integer);
     VAR
+      TempServiceLineForCalc@1003 : TEMPORARY Record 5902;
+      RoundingServiceLine@1009 : Record 5902;
       CustPostingGr@1006 : Record 92;
       InvoiceRoundingAmount@1001 : Decimal;
     BEGIN
@@ -467,11 +459,16 @@ OBJECT Codeunit 5986 Serv-Amounts Mgt.
           IF UseTempData THEN BEGIN
             "Line No." := 0;
             Type := Type::"G/L Account";
+            TempServiceLineForCalc := ServiceLine;
+            TempServiceLineForCalc.VALIDATE("No.",CustPostingGr."Invoice Rounding Account");
+            ServiceLine := TempServiceLineForCalc;
           END ELSE BEGIN
             "Line No." := BiggestLineNo;
-            VALIDATE(Type,Type::"G/L Account");
+            RoundingServiceLine := ServiceLine;
+            RoundingServiceLine.VALIDATE(Type,Type::"G/L Account");
+            RoundingServiceLine.VALIDATE("No.",CustPostingGr."Invoice Rounding Account");
+            ServiceLine := RoundingServiceLine;
           END;
-          VALIDATE("No.",CustPostingGr."Invoice Rounding Account");
           VALIDATE(Quantity,1);
           IF ServiceHeader."Prices Including VAT" THEN
             VALIDATE("Unit Price",InvoiceRoundingAmount)

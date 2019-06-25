@@ -2,9 +2,9 @@ OBJECT Report 5751 Put-away List
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -15214,7 +15214,7 @@ and Fields!No1_WhseActivHeader.Value=previous(Fields!No1_WhseActivHeader.Value),
             <Style />
           </Tablix>
         </ReportItems>
-        <Height>17.55937cm</Height>
+        <Height>17.13636cm</Height>
         <Style />
       </Body>
       <Width>25.4cm</Width>
@@ -15347,6 +15347,7 @@ and Fields!No1_WhseActivHeader.Value=previous(Fields!No1_WhseActivHeader.Value),
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -15364,9 +15365,9 @@ and Fields!No1_WhseActivHeader.Value=previous(Fields!No1_WhseActivHeader.Value),
                 </Paragraph>
               </Paragraphs>
               <Top>1.269cm</Top>
-              <Left>22.12222cm</Left>
+              <Left>20.12222cm</Left>
               <Height>0.423cm</Height>
-              <Width>3.25cm</Width>
+              <Width>5.25cm</Width>
               <ZIndex>5</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>

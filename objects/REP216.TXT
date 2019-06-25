@@ -2,9 +2,9 @@ OBJECT Report 216 Archived Sales Order
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -494,7 +494,7 @@ OBJECT Report 216 Archived Sales Order
                AutoFormatExpr="Sales Header Archive"."Currency Code" }
 
     { 86  ;4   ;Column  ;SalesLineArch__Inv__Discount_Amount_;
-               SourceExpr=-SalesLineArch."Inv. Discount Amount";
+               SourceExpr=SalesLineArch."Inv. Discount Amount";
                AutoFormatType=1;
                AutoFormatExpr="Sales Header Archive"."Currency Code" }
 
@@ -3534,7 +3534,7 @@ OBJECT Report 216 Archived Sales Order
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=SUM(Fields!SalesLineArch__Inv__Discount_Amount_.Value)</Value>
+                                                    <Value>=-SUM(Fields!SalesLineArch__Inv__Discount_Amount_.Value)</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <Format>=Fields!SalesLineArch__Inv__Discount_Amount_Format.Value</Format>
@@ -5915,7 +5915,7 @@ OBJECT Report 216 Archived Sales Order
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=sum(Fields!VATAmount.Value)</Value>
+                                                    <Value>=last(Fields!VATAmount.Value)</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <Format>=Fields!VATAmountFormat.Value</Format>
@@ -6137,7 +6137,7 @@ OBJECT Report 216 Archived Sales Order
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=sum(Fields!VATBaseAmount.Value)</Value>
+                                                    <Value>=last(Fields!VATBaseAmount.Value)</Value>
                                                     <Style>
                                                       <FontSize>9pt</FontSize>
                                                       <Format>=Fields!VATBaseAmountFormat.Value</Format>
@@ -9957,10 +9957,10 @@ OBJECT Report 216 Archived Sales Order
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(1))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.95238cm</Top>
-              <Left>0.25429cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(1) = "",true,false)</Hidden>
@@ -9972,10 +9972,11 @@ OBJECT Report 216 Archived Sales Order
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(2))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.95238cm</Top>
-              <Left>5.71429cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>1</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(2) = "",true,false)</Hidden>
@@ -9987,10 +9988,11 @@ OBJECT Report 216 Archived Sales Order
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(3))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.95238cm</Top>
-              <Left>11.59429cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(3) = "",true,false)</Hidden>
               </Visibility>

@@ -2,9 +2,9 @@ OBJECT Table 374 G/L Acc. Budget Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -16,7 +16,8 @@ OBJECT Table 374 G/L Acc. Budget Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+    { 1   ;   ;Code                ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kode;
                                                               ENU=Code];
                                                    NotBlank=Yes }
     { 3   ;   ;Budget Filter       ;Code10        ;FieldClass=FlowFilter;
@@ -28,7 +29,7 @@ OBJECT Table 374 G/L Acc. Budget Buffer
                                                    ValidateTableRelation=No;
                                                    CaptionML=[DAN=Finanskontofilter;
                                                               ENU=G/L Account Filter] }
-    { 5   ;   ;Business Unit Filter;Code10        ;FieldClass=FlowFilter;
+    { 5   ;   ;Business Unit Filter;Code20        ;FieldClass=FlowFilter;
                                                    TableRelation="Business Unit";
                                                    CaptionML=[DAN=Koncernvirk.filter;
                                                               ENU=Business Unit Filter] }

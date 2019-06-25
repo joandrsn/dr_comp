@@ -2,9 +2,9 @@ OBJECT Page 743 VAT Report Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=25-04-19;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.51333;
   }
   PROPERTIES
   {
@@ -33,6 +33,8 @@ OBJECT Page 743 VAT Report Setup
                            ENU=General] }
 
     { 4   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om brugerne kan modificere momsrapporter, der er blevet indsendt til SKAT. Hvis feltet er tomt, skal brugerne i stedet for oprette en korrigerende eller supplerende momsrapport.;
+                           ENU=Specifies if users can modify VAT reports that have been submitted to the tax authorities. If the field is left blank, users must create a corrective or supplementary VAT report instead.];
                 SourceExpr="Modify Submitted Reports" }
 
     { 1904569201;1;Group  ;
@@ -40,7 +42,97 @@ OBJECT Page 743 VAT Report Setup
                            ENU=Numbering] }
 
     { 7   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den nummerserie, der skal bruges til standardmomsrapporter.;
+                           ENU=Specifies the number series that will be used for standard VAT reports.];
                 SourceExpr="No. Series" }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den nummerserie, der bruges til momsangivelsesrecords.;
+                           ENU=Specifies the number series that is used for VAT return records.];
+                SourceExpr="VAT Return No. Series" }
+
+    { 8   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den nummerserie, der bruges til momsangivelsesperioderecords.;
+                           ENU=Specifies the number series that is used for the VAT return period records.];
+                SourceExpr="VAT Return Period No. Series" }
+
+    { 3   ;1   ;Group     ;
+                Name=Return Period;
+                CaptionML=[DAN=Angivelsesperiode;
+                           ENU=Return Period];
+                GroupType=Group }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den momsrapportversion, der bruger til momsrapportperioderne.;
+                           ENU=Specifies the VAT report version that is used for the VAT reporting periods.];
+                SourceExpr="Report Version" }
+
+    { 5   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver en formel, der bruges til at give besked om en åben momsrapportperiode med en kommende forfaldsdato.;
+                           ENU=Specifies a formula that is used to notify about an open VAT report period with an upcoming due date.];
+                SourceExpr="Period Reminder Calculation" }
+
+    { 16  ;2   ;Group     ;
+                GroupType=Group }
+
+    { 10  ;3   ;Field     ;
+                CaptionML=[DAN=Codeunit-id for manuel modtagelse;
+                           ENU=Manual Receive Codeunit ID];
+                ToolTipML=[DAN=Angiver det codeunit-id, der er knyttet til manuel modtagelse af momsangivelsesperioder.;
+                           ENU=Specifies the codeunit ID associated with a manual receipt of the VAT return periods.];
+                SourceExpr="Manual Receive Period CU ID";
+                Importance=Additional }
+
+    { 13  ;3   ;Field     ;
+                CaptionML=[DAN=Titel på Codeunit for manuel modtagelse;
+                           ENU=Manual Receive Codeunit Caption];
+                ToolTipML=[DAN=Angiver den titel på codeunit, der er knyttet til manuel modtagelse af momsangivelsesperioder.;
+                           ENU=Specifies the codeunit caption associated with a manual receipt of the VAT return periods.];
+                SourceExpr="Manual Receive Period CU Cap";
+                Importance=Additional }
+
+    { 15  ;3   ;Field     ;
+                CaptionML=[DAN=Modtag sendt Codeunit-id for angivelse;
+                           ENU=Receive Submitted Return Codeunit ID];
+                ToolTipML=[DAN=Angiver det codeunit-id, der er knyttet til en modtagelse af sendte momsangivelser.;
+                           ENU=Specifies the codeunit ID associated with a receipt of the submitted VAT returns.];
+                SourceExpr="Receive Submitted Return CU ID";
+                Importance=Additional }
+
+    { 9   ;3   ;Field     ;
+                CaptionML=[DAN=Titel på modtag sendt Codeunit-id for angivelse;
+                           ENU=Receive Submitted Return Codeunit Caption];
+                ToolTipML=[DAN=Angiver den titel på codeunit, der er knyttet til en modtagelse af de sendte momsangivelser.;
+                           ENU=Specifies the codeunit caption associated with a receipt of the submitted VAT returns.];
+                SourceExpr="Receive Submitted Return CUCap";
+                Importance=Additional }
+
+    { 17  ;2   ;Group     ;
+                Name=Auto Update Job;
+                CaptionML=[DAN=Opdater job automatisk;
+                           ENU=Auto Update Job];
+                GroupType=Group }
+
+    { 19  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver jobfrekvensen for en automatisk opdatering af momsangivelsesperioderne.;
+                           ENU=Specifies the job frequency for an automatic update of the VAT return periods.];
+                SourceExpr="Update Period Job Frequency" }
+
+    { 11  ;3   ;Field     ;
+                CaptionML=[DAN=Codeunit-id for automatisk modtagelse;
+                           ENU=Auto Receive Codeunit ID];
+                ToolTipML=[DAN=Angiver det codeunit-id, der er knyttet til en automatisk modtagelse af momsangivelsesperioderne.;
+                           ENU=Specifies the codeunit ID associated with an automatic receipt of the VAT return periods.];
+                SourceExpr="Auto Receive Period CU ID";
+                Importance=Additional }
+
+    { 14  ;3   ;Field     ;
+                CaptionML=[DAN=Titel på Codeunit for automatisk modtagelse;
+                           ENU=Auto Receive Codeunit Caption];
+                ToolTipML=[DAN=Angiver titlen på den codeunit, der er knyttet til en automatisk modtagelse af momsangivelsesperioderne.;
+                           ENU=Specifies the codeunit caption associated with an automatic receipt of the VAT return periods.];
+                SourceExpr="Auto Receive Period CU Cap";
+                Importance=Additional }
 
   }
   CODE

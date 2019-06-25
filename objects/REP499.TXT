@@ -2,9 +2,9 @@ OBJECT Report 499 Delete Invoiced Purch. Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
@@ -51,8 +51,7 @@ OBJECT Report 499 Delete Invoiced Purch. Orders
                                           IF PurchLine.FIND('-') THEN
                                             REPEAT
                                               PurchLine.CALCFIELDS("Qty. Assigned");
-                                              IF ((PurchLine."Qty. Assigned" = PurchLine."Quantity Invoiced") AND
-                                                  (PurchLine."Qty. Assigned" <> 0)) OR
+                                              IF (PurchLine."Qty. Assigned" = PurchLine."Quantity Invoiced") OR
                                                  (PurchLine.Type <> PurchLine.Type::"Charge (Item)")
                                               THEN BEGIN
                                                 IF PurchLine.Type = PurchLine.Type::"Charge (Item)" THEN BEGIN
@@ -84,7 +83,7 @@ OBJECT Report 499 Delete Invoiced Purch. Orders
                                             WhseRequest.SETRANGE("Source No.","No.");
                                             WhseRequest.DELETEALL(TRUE);
 
-                                            ApprovalsMgmt.DeleteApprovalEntry(DATABASE::"Purchase Header","Document Type","No.");
+                                            ApprovalsMgmt.DeleteApprovalEntries(RECORDID);
 
                                             IF HASLINKS THEN
                                               DELETELINKS;
@@ -135,19 +134,15 @@ OBJECT Report 499 Delete Invoiced Purch. Orders
     VAR
       SalesLine@1001 : Record 37;
     BEGIN
-      IF NOT PurchLine."Special Order" THEN
-        EXIT;
-      WITH SalesLine DO BEGIN
-        RESET;
-        SETRANGE("Special Order Purchase No.",PurchLine."Document No.");
-        SETRANGE("Special Order Purch. Line No.",PurchLine."Line No.");
-        SETRANGE("Purchasing Code",PurchLine."Purchasing Code");
-        IF FINDFIRST THEN BEGIN
-          "Special Order Purchase No." := '';
-          "Special Order Purch. Line No." := 0;
-          MODIFY;
-        END;
-      END;
+      WITH SalesLine DO
+        IF PurchLine."Special Order" THEN
+          IF GET(
+               "Document Type"::Order,PurchLine."Special Order Sales No.",PurchLine."Special Order Sales Line No.")
+          THEN BEGIN
+            "Special Order Purchase No." := '';
+            "Special Order Purch. Line No." := 0;
+            MODIFY;
+          END;
     END;
 
     BEGIN

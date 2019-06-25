@@ -1,0 +1,25 @@
+OBJECT Codeunit 384 Upd. Pending Prepmt. Purchase
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29-11-18;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.50785;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            PrepaymentMgt@1000 : Codeunit 441;
+          BEGIN
+            PrepaymentMgt.UpdatePendingPrepaymentPurchase;
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -2,9 +2,9 @@ OBJECT Report 699 Calculate Plan - Req. Wksh.
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -167,6 +167,7 @@ OBJECT Report 699 Calculate Plan - Req. Wksh.
                   SourceExpr=ExcludeForecastBefore }
 
       { 4   ;2   ;Field     ;
+                  Name=RespectPlanningParm;
                   CaptionML=[DAN=Respekter planlægningsparametre for forsyning udløst af sikkerhedslager;
                              ENU=Respect Planning Parameters for Supply Triggered by Safety Stock];
                   SourceExpr=RespectPlanningParm }

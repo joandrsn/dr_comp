@@ -2,9 +2,9 @@ OBJECT Table 5772 Registered Whse. Activity Hdr.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -41,6 +41,7 @@ OBJECT Table 5772 Registered Whse. Activity Hdr.
                                                               ENU=Location Code];
                                                    NotBlank=Yes }
     { 4   ;   ;Assigned User ID    ;Code50        ;TableRelation="Warehouse Employee" WHERE (Location Code=FIELD(Location Code));
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
     { 5   ;   ;Assignment Date     ;Date          ;CaptionML=[DAN=Tildelt den;

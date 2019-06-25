@@ -2,9 +2,9 @@ OBJECT Table 203 Res. Ledger Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -83,6 +83,7 @@ OBJECT Table 203 Res. Ledger Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 21  ;   ;Source Code         ;Code10        ;TableRelation="Source Code";

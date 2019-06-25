@@ -2,9 +2,9 @@ OBJECT Page 343 Check Credit Limit
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-09-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50637;
   }
   PROPERTIES
   {
@@ -81,7 +81,18 @@ OBJECT Page 343 Check Credit Limit
                 SourceExpr=Name }
 
     { 3   ;2   ;Field     ;
-                SourceExpr="Balance (LCY)" }
+                SourceExpr="Balance (LCY)";
+                OnDrillDown=VAR
+                              DtldCustLedgEntry@1001 : Record 379;
+                              CustLedgEntry@1000 : Record 21;
+                            BEGIN
+                              DtldCustLedgEntry.SETFILTER("Customer No.","No.");
+                              COPYFILTER("Global Dimension 1 Filter",DtldCustLedgEntry."Initial Entry Global Dim. 1");
+                              COPYFILTER("Global Dimension 2 Filter",DtldCustLedgEntry."Initial Entry Global Dim. 2");
+                              COPYFILTER("Currency Filter",DtldCustLedgEntry."Currency Code");
+                              CustLedgEntry.DrillDownOnEntries(DtldCustLedgEntry);
+                            END;
+                             }
 
     { 31  ;2   ;Field     ;
                 CaptionML=[DAN=Udestående beløb (RV);
@@ -110,8 +121,13 @@ OBJECT Page 343 Check Credit Limit
                 SourceExpr="Credit Limit (LCY)" }
 
     { 21  ;2   ;Field     ;
-                SourceExpr="Balance Due (LCY)";
-                CaptionClass=FORMAT(STRSUBSTNO(Text001,FORMAT(GETRANGEMAX("Date Filter")))) }
+                Name=Balance Due (LCY);
+                SourceExpr=CalcOverdueBalance;
+                CaptionClass=FORMAT(STRSUBSTNO(Text001,FORMAT(GETRANGEMAX("Date Filter"))));
+                OnDrillDown=BEGIN
+                              ShowOverdueEntries;
+                            END;
+                             }
 
     { 4   ;2   ;Field     ;
                 CaptionML=[DAN=Faktureret forudbetalingsbeløb (RV);
@@ -243,7 +259,7 @@ OBJECT Page 343 Check Credit Limit
       EXIT(ShowWarning(ServHeader."Bill-to Customer No.",NewOrderAmountLCY,0,TRUE));
     END;
 
-    LOCAL PROCEDURE ServiceLineShowWarning@10(ServLine@1000 : Record 5902) : Boolean;
+    PROCEDURE ServiceLineShowWarning@10(ServLine@1000 : Record 5902) : Boolean;
     BEGIN
       SalesSetup.GET;
       IF SalesSetup."Credit Warnings" =
@@ -266,6 +282,16 @@ OBJECT Page 343 Check Credit Limit
         DeltaAmount + ServLineAmount(ServLine."Document Type",ServLine."Document No.",ServLine);
 
       EXIT(ShowWarning(ServHeader."Bill-to Customer No.",NewOrderAmountLCY,OldOrderAmountLCY,FALSE))
+    END;
+
+    PROCEDURE ServiceContractHeaderShowWarning@11(ServiceContractHeader@1000 : Record 5965) : Boolean;
+    BEGIN
+      SalesSetup.GET;
+      IF SalesSetup."Credit Warnings" =
+         SalesSetup."Credit Warnings"::"No Warning"
+      THEN
+        EXIT(FALSE);
+      EXIT(ShowWarning(ServiceContractHeader."Bill-to Customer No.",0,0,TRUE));
     END;
 
     LOCAL PROCEDURE SalesLineAmount@5(DocType@1000 : Integer;DocNo@1001 : Code[20]) : Decimal;

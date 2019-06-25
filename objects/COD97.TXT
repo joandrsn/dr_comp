@@ -2,9 +2,9 @@ OBJECT Codeunit 97 Blanket Purch. Order to Order
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -20,53 +20,18 @@ OBJECT Codeunit 97 Blanket Purch. Order to Order
             Vend.GET("Buy-from Vendor No.");
             Vend.CheckBlockedVendOnDocs(Vend,FALSE);
 
+            ValidatePurchaserOnPurchHeader(Rec,TRUE,FALSE);
+
             IF QtyToReceiveIsZero THEN
               ERROR(Text002);
 
             PurchSetup.GET;
 
-            PurchOrderHeader := Rec;
-            PurchOrderHeader."Document Type" := PurchOrderHeader."Document Type"::Order;
-            PurchOrderHeader."No. Printed" := 0;
-            PurchOrderHeader.Status := PurchOrderHeader.Status::Open;
-            PurchOrderHeader."No." := '';
-
-            PurchOrderLine.LOCKTABLE;
-            PurchOrderHeader.INSERT(TRUE);
-
-            IF "Order Date" = 0D THEN
-              PurchOrderHeader."Order Date" := WORKDATE
-            ELSE
-              PurchOrderHeader."Order Date" := "Order Date";
-            IF "Posting Date" <> 0D THEN
-              PurchOrderHeader."Posting Date" := "Posting Date";
-            PurchOrderHeader."Document Date" := "Document Date";
-            PurchOrderHeader."Expected Receipt Date" := "Expected Receipt Date";
-            PurchOrderHeader."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
-            PurchOrderHeader."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
-            PurchOrderHeader."Dimension Set ID" := "Dimension Set ID";
-            PurchOrderHeader."Inbound Whse. Handling Time" := "Inbound Whse. Handling Time";
-            PurchOrderHeader."Location Code" := "Location Code";
-            PurchOrderHeader."Ship-to Name" := "Ship-to Name";
-            PurchOrderHeader."Ship-to Name 2" := "Ship-to Name 2";
-            PurchOrderHeader."Ship-to Address" := "Ship-to Address";
-            PurchOrderHeader."Ship-to Address 2" := "Ship-to Address 2";
-            PurchOrderHeader."Ship-to City" := "Ship-to City";
-            PurchOrderHeader."Ship-to Post Code" := "Ship-to Post Code";
-            PurchOrderHeader."Ship-to County" := "Ship-to County";
-            PurchOrderHeader."Ship-to Country/Region Code" := "Ship-to Country/Region Code";
-            PurchOrderHeader."Ship-to Contact" := "Ship-to Contact";
-
-            PurchOrderHeader."Prepayment %" := Vend."Prepayment %";
-            IF PurchOrderHeader."Posting Date" = 0D THEN
-              PurchOrderHeader."Posting Date" := WORKDATE;
-
-            PurchOrderHeader.MODIFY;
+            CreatePurchHeader(Rec,Vend."Prepayment %");
 
             PurchBlanketOrderLine.RESET;
             PurchBlanketOrderLine.SETRANGE("Document Type","Document Type");
             PurchBlanketOrderLine.SETRANGE("Document No.","No.");
-
             IF PurchBlanketOrderLine.FINDSET THEN
               REPEAT
                 IF (PurchBlanketOrderLine.Type = PurchBlanketOrderLine.Type::" ") OR
@@ -143,7 +108,8 @@ OBJECT Codeunit 97 Blanket Purch. Order to Order
                   PurchOrderLine."Shortcut Dimension 2 Code" := PurchBlanketOrderLine."Shortcut Dimension 2 Code";
                   PurchOrderLine."Dimension Set ID" := PurchBlanketOrderLine."Dimension Set ID";
                   PurchOrderLine.DefaultDeferralCode;
-                  PurchOrderLine.INSERT;
+                  IF IsPurchOrderLineToBeInserted(PurchOrderLine) THEN
+                    PurchOrderLine.INSERT;
 
                   IF PurchBlanketOrderLine."Qty. to Receive" <> 0 THEN BEGIN
                     PurchBlanketOrderLine.VALIDATE("Qty. to Receive",0);
@@ -182,6 +148,35 @@ OBJECT Codeunit 97 Blanket Purch. Order to Order
       QuantityOnOrders@1012 : Decimal;
       Text002@1002 : TextConst 'DAN=Der er intet at oprette.;ENU=There is nothing to create.';
 
+    LOCAL PROCEDURE CreatePurchHeader@5(PurchHeader@1000 : Record 38;PrepmtPercent@1001 : Decimal);
+    BEGIN
+      WITH PurchHeader DO BEGIN
+        PurchOrderHeader := PurchHeader;
+        PurchOrderHeader."Document Type" := PurchOrderHeader."Document Type"::Order;
+        PurchOrderHeader."No. Printed" := 0;
+        PurchOrderHeader.Status := PurchOrderHeader.Status::Open;
+        PurchOrderHeader."No." := '';
+
+        PurchOrderLine.LOCKTABLE;
+        PurchOrderHeader.INSERT(TRUE);
+
+        IF "Order Date" = 0D THEN
+          PurchOrderHeader."Order Date" := WORKDATE
+        ELSE
+          PurchOrderHeader."Order Date" := "Order Date";
+        IF "Posting Date" <> 0D THEN
+          PurchOrderHeader."Posting Date" := "Posting Date";
+        IF PurchOrderHeader."Posting Date" = 0D THEN
+          PurchOrderHeader."Posting Date" := WORKDATE;
+
+        PurchOrderHeader.InitFromPurchHeader(PurchHeader);
+        PurchOrderHeader.VALIDATE("Posting Date");
+
+        PurchOrderHeader."Prepayment %" := PrepmtPercent;
+        PurchOrderHeader.MODIFY;
+      END;
+    END;
+
     LOCAL PROCEDURE ResetQuantityFields@1(VAR TempPurchLine@1000 : Record 39);
     BEGIN
       TempPurchLine.Quantity := 0;
@@ -197,6 +192,17 @@ OBJECT Codeunit 97 Blanket Purch. Order to Order
     PROCEDURE GetPurchOrderHeader@2(VAR PurchHeader@1000 : Record 38);
     BEGIN
       PurchHeader := PurchOrderHeader;
+    END;
+
+    LOCAL PROCEDURE IsPurchOrderLineToBeInserted@4(PurchOrderLine@1000 : Record 39) : Boolean;
+    VAR
+      AttachedToPurchaseLine@1001 : Record 39;
+    BEGIN
+      IF PurchOrderLine."Attached to Line No." = 0 THEN
+        EXIT(TRUE);
+      EXIT(
+        AttachedToPurchaseLine.GET(
+          PurchOrderLine."Document Type",PurchOrderLine."Document No.",PurchOrderLine."Attached to Line No."));
     END;
 
     LOCAL PROCEDURE CopyCommentsFromBlanketToOrder@3(BlanketOrderPurchaseHeader@1000 : Record 38);

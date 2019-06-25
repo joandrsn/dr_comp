@@ -2,9 +2,9 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51418;
   }
   PROPERTIES
   {
@@ -187,7 +187,7 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
       ItemTrackingSummaryForm.SETTABLEVIEW(TempGlobalEntrySummary);
       TempGlobalEntrySummary.SETFILTER("Table ID",'<>%1',0); // Filter out summations
       ItemTrackingSummaryForm.SetSources(TempGlobalReservEntry,TempGlobalEntrySummary);
-      ItemTrackingSummaryForm.SetSelectionMode(TRUE);
+      ItemTrackingSummaryForm.SetSelectionMode(MaxQuantity <> 0);
       ItemTrackingSummaryForm.LOOKUPMODE(TRUE);
       ItemTrackingSummaryForm.SetMaxQuantity(MaxQuantity);
       ItemTrackingSummaryForm.SetCurrentBinAndItemTrkgCode(CurrBinCode,CurrItemTrackingCode);
@@ -272,6 +272,7 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
     VAR
       ItemLedgEntry@1001 : Record 32;
       ReservEntry@1007 : Record 337;
+      TempReservEntry@1002 : TEMPORARY Record 337;
       xTrackingSpecification@1006 : TEMPORARY Record 336;
     BEGIN
       LastSummaryEntryNo := 0;
@@ -292,6 +293,13 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
       ReservEntry.SETRANGE("Location Code",TrackingSpecification."Location Code");
       ReservEntry.SETFILTER("Item Tracking",'<>%1',ReservEntry."Item Tracking"::None);
 
+      IF ReservEntry.FINDSET THEN
+        REPEAT
+          TempReservEntry := ReservEntry;
+          IF CanIncludeReservEntryToTrackingSpec(TempReservEntry) THEN
+            TempReservEntry.INSERT;
+        UNTIL ReservEntry.NEXT = 0;
+
       ItemLedgEntry.RESET;
       ItemLedgEntry.SETCURRENTKEY("Item No.",Open,"Variant Code","Location Code","Item Tracking",
         "Lot No.","Serial No.");
@@ -301,7 +309,7 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
       ItemLedgEntry.SETRANGE("Location Code",TrackingSpecification."Location Code");
 
       IF FullDataSet THEN BEGIN
-        TransferReservEntryToTempRec(ReservEntry,TrackingSpecification);
+        TransferReservEntryToTempRec(TempReservEntry,TrackingSpecification);
         TransferItemLedgToTempRec(ItemLedgEntry,TrackingSpecification);
       END ELSE BEGIN
         IF TrackingSpecification.FIND('-') THEN
@@ -310,7 +318,7 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
             ReservEntry.SETRANGE("Lot No.",TrackingSpecification."Lot No.");
             ItemLedgEntry.SETRANGE("Serial No.",TrackingSpecification."Serial No.");
             ReservEntry.SETRANGE("Serial No.",TrackingSpecification."Serial No.");
-            TransferReservEntryToTempRec(ReservEntry,TrackingSpecification);
+            TransferReservEntryToTempRec(TempReservEntry,TrackingSpecification);
             TransferItemLedgToTempRec(ItemLedgEntry,TrackingSpecification);
           UNTIL TrackingSpecification.NEXT = 0;
       END;
@@ -355,15 +363,15 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
         UNTIL ItemLedgEntry.NEXT = 0;
     END;
 
-    LOCAL PROCEDURE TransferReservEntryToTempRec@70(VAR ReservEntry@1000 : Record 337;VAR TrackingSpecification@1001 : TEMPORARY Record 336);
+    LOCAL PROCEDURE TransferReservEntryToTempRec@70(VAR TempReservEntry@1000 : TEMPORARY Record 337;VAR TrackingSpecification@1001 : TEMPORARY Record 336);
     BEGIN
-      IF ReservEntry.FINDSET THEN
+      IF TempReservEntry.FINDSET THEN
         REPEAT
-          TempGlobalReservEntry := ReservEntry;
+          TempGlobalReservEntry := TempReservEntry;
           TempGlobalReservEntry."Transferred from Entry No." := 0;
           IF TempGlobalReservEntry.INSERT THEN
             CreateEntrySummary(TrackingSpecification,TempGlobalReservEntry);
-        UNTIL ReservEntry.NEXT = 0;
+        UNTIL TempReservEntry.NEXT = 0;
     END;
 
     LOCAL PROCEDURE CreateEntrySummary@65(TrackingSpecification@1005 : TEMPORARY Record 336;TempReservEntry@1002 : TEMPORARY Record 337);
@@ -866,10 +874,11 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
     LOCAL PROCEDURE SummarizeInventoryFEFO@17(Location@1002 : Record 14;ItemNo@1001 : Code[20];VariantCode@1000 : Code[10];HasExpirationDate@1210 : Boolean);
     VAR
       ItemLedgEntry@1003 : Record 32;
+      NonReservedQtyLotSN@1005 : Decimal;
     BEGIN
       WITH ItemLedgEntry DO BEGIN
         RESET;
-        SETCURRENTKEY("Item No.",Open,"Variant Code",Positive,"Expiration Date","Lot No.","Serial No.");
+        SETCURRENTKEY("Item No.",Open,"Variant Code",Positive,"Lot No.","Serial No.");
         SETRANGE("Item No.",ItemNo);
         SETRANGE(Open,TRUE);
         SETRANGE("Variant Code",VariantCode);
@@ -884,11 +893,44 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
 
         FINDSET;
         REPEAT
-          CALCFIELDS("Reserved Quantity");
-          IF "Remaining Quantity" - ("Reserved Quantity" - CalcReservedToSource("Entry No.")) > 0 THEN
-            IF NOT EntrySummaryFEFOExists("Lot No.","Serial No.") THEN
-              InsertEntrySummaryFEFO("Lot No.","Serial No.","Expiration Date");
+          NonReservedQtyLotSN := 0;
+          SETRANGE("Lot No.","Lot No.");
+          SETRANGE("Serial No.","Serial No.");
+          FINDSET;
+          REPEAT
+            CALCFIELDS("Reserved Quantity");
+            NonReservedQtyLotSN += "Remaining Quantity" - ("Reserved Quantity" - CalcReservedToSource("Entry No."));
+          UNTIL NEXT = 0;
+
+          IF NonReservedQtyLotSN - CalcNonRegisteredPickQtyOutstanding(
+               "Item No.","Variant Code","Location Code","Lot No.","Serial No.",HasExpirationDate) > 0
+          THEN
+            InsertEntrySummaryFEFO("Lot No.","Serial No.","Expiration Date");
+
+          SETRANGE("Lot No.");
+          SETRANGE("Serial No.");
         UNTIL NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcNonRegisteredPickQtyOutstanding@19(ItemNo@1000 : Code[20];VariantCode@1001 : Code[10];LocationCode@1002 : Code[10];LotNo@1003 : Code[20];SerialNo@1004 : Code[20];HasExpirationDate@1005 : Boolean) : Decimal;
+    VAR
+      WarehouseActivityLine@1006 : Record 5767;
+    BEGIN
+      WITH WarehouseActivityLine DO BEGIN
+        SETRANGE("Activity Type","Activity Type"::Pick);
+        SETRANGE("Action Type","Action Type"::Take);
+        SETRANGE("Item No.",ItemNo);
+        SETRANGE("Variant Code",VariantCode);
+        SETRANGE("Location Code",LocationCode);
+        SETRANGE("Lot No.",LotNo);
+        SETRANGE("Serial No.",SerialNo);
+        IF HasExpirationDate THEN
+          SETFILTER("Expiration Date",'<>%1',0D)
+        ELSE
+          SETRANGE("Expiration Date",0D);
+        CALCSUMS("Qty. Outstanding (Base)");
+        EXIT("Qty. Outstanding (Base)");
       END;
     END;
 
@@ -1294,6 +1336,23 @@ OBJECT Codeunit 6501 Item Tracking Data Collection
           ("Source Batch Name" = '') AND ("Source Prod. Order Line" = 0) AND
           ("Reservation Status" = "Reservation Status"::Reservation));
       END;
+    END;
+
+    LOCAL PROCEDURE CanIncludeReservEntryToTrackingSpec@22(TempReservEntry@1000 : TEMPORARY Record 337) : Boolean;
+    VAR
+      SalesLine@1001 : Record 37;
+    BEGIN
+      WITH TempReservEntry DO
+        IF ("Reservation Status" = "Reservation Status"::Prospect) AND
+           ("Source Type" = DATABASE::"Sales Line") AND
+           ("Source Subtype" = 2)
+        THEN BEGIN
+          SalesLine.GET("Source Subtype","Source ID","Source Ref. No.");
+          IF SalesLine."Shipment No." <> '' THEN
+            EXIT(FALSE);
+        END;
+
+      EXIT(TRUE);
     END;
 
     BEGIN

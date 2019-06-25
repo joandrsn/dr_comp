@@ -2,9 +2,9 @@ OBJECT Codeunit 1530 Request Page Parameters Helper
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -49,7 +49,7 @@ OBJECT Codeunit 1530 Request Page Parameters Helper
       XMLDOMMgt@1004 : Codeunit 6224;
       ParametersXmlDoc@1001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
     BEGIN
-      IF NOT TryLoadXml(ParametersXmlDoc,Parameters) THEN
+      IF NOT XMLDOMMgt.LoadXMLDocumentFromText(Parameters,ParametersXmlDoc) THEN
         EXIT(FALSE);
 
       IF NOT XMLDOMMgt.FindNodes(ParametersXmlDoc.DocumentElement,NodePath,FoundXmlNodeList) THEN
@@ -58,20 +58,14 @@ OBJECT Codeunit 1530 Request Page Parameters Helper
       EXIT(TRUE);
     END;
 
-    [TryFunction]
-    LOCAL PROCEDURE TryLoadXml@1(VAR ParametersXmlDoc@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";Parameters@1001 : Text);
-    BEGIN
-      ParametersXmlDoc := ParametersXmlDoc.XmlDocument;
-      ParametersXmlDoc.LoadXml(Parameters);
-    END;
-
     LOCAL PROCEDURE GetFiltersForTable@10(RecRef@1003 : RecordRef;FoundXmlNodeList@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNodeList") : Boolean;
     VAR
       FoundXmlNode@1001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
     BEGIN
       FOREACH FoundXmlNode IN FoundXmlNodeList DO
         IF (FoundXmlNode.Attributes.ItemOf('name').Value = GetTableCaption(RecRef.NUMBER)) OR
-           (FoundXmlNode.Attributes.ItemOf('name').Value = GetTableName(RecRef.NUMBER))
+           (FoundXmlNode.Attributes.ItemOf('name').Value = GetTableName(RecRef.NUMBER)) OR
+           (FoundXmlNode.Attributes.ItemOf('name').Value = STRSUBSTNO('Table%1',RecRef.NUMBER))
         THEN BEGIN
           RecRef.SETVIEW(FoundXmlNode.InnerText);
           EXIT(TRUE);
@@ -206,7 +200,7 @@ OBJECT Codeunit 1530 Request Page Parameters Helper
       XMLDOMMgt.AddElement(ReportParametersXmlNode,'DataItems','','',DataItemsXmlNode);
       FOREACH TableFilter IN TableFilterDictionary DO BEGIN
         XMLDOMMgt.AddElement(DataItemsXmlNode,'DataItem',TableFilter.Value,'',DataItemXmlNode);
-        XMLDOMMgt.AddAttribute(DataItemXmlNode,'name',GetTableCaption(TableFilter.Key));
+        XMLDOMMgt.AddAttribute(DataItemXmlNode,'name',STRSUBSTNO('Table%1',TableFilter.Key));
       END;
 
       EXIT(XmlDoc.InnerXml);

@@ -2,9 +2,9 @@ OBJECT Report 5913 Service - Shipment
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -4464,10 +4464,10 @@ Cstr(Fields!EmailIdCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>12.32115cm</Left>
-              <Height>40pt</Height>
-              <Width>6.16424cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <Visibility>
                 <Hidden>=iif(Isnothing(Fields!CompanyInfo1Picture.Value) = True,true,false)</Hidden>
               </Visibility>
@@ -4480,10 +4480,10 @@ Cstr(Fields!EmailIdCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>6.23054cm</Left>
-              <Height>40pt</Height>
-              <Width>6.05886cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>1</ZIndex>
               <Visibility>
                 <Hidden>=iif(IsNothing(Fields!CompanyInfo2Picture.Value) = True,true,false)</Hidden>
@@ -4497,8 +4497,9 @@ Cstr(Fields!EmailIdCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Height>40pt</Height>
-              <Width>6.19173cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Visibility>
                 <Hidden>=iif(IsNothing(Fields!CompanyInfo3Picture.Value) = True,true,false)</Hidden>

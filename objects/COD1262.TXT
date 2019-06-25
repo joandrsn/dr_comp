@@ -2,9 +2,9 @@ OBJECT Codeunit 1262 Pre & Post Process XML Import
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50458,NAVDK9.00.00.50458;
   }
   PROPERTIES
   {
@@ -56,12 +56,12 @@ OBJECT Codeunit 1262 Pre & Post Process XML Import
       SetValueFromDataExchField(DataExchFieldDetails,DataExch,CrdDbtIndPathFilter,MissingCrdDbtIndInDataMsg,RecRef,FieldNo);
     END;
 
-    PROCEDURE PreProcessBankAccount@5(DataExch@1005 : Record 1220;BankAccNo@1004 : Code[20];BankAccNoPathFilter@1006 : Text;CurrCodePathFilter@1007 : Text);
+    PROCEDURE PreProcessBankAccount@5(DataExch@1005 : Record 1220;BankAccNo@1004 : Code[20];IBANPathFilter@1006 : Text;BankAccIDPathFilter@1000 : Text;CurrCodePathFilter@1007 : Text);
     VAR
       BankAccount@1001 : Record 270;
     BEGIN
       BankAccount.GET(BankAccNo);
-      CheckBankAccNo(DataExch,BankAccount,BankAccNoPathFilter);
+      CheckBankAccNo(DataExch,BankAccount,IBANPathFilter,BankAccIDPathFilter);
       CheckBankAccCurrency(DataExch,BankAccount,CurrCodePathFilter);
     END;
 
@@ -97,9 +97,11 @@ OBJECT Codeunit 1262 Pre & Post Process XML Import
       EXIT(COPYSTR(Node,1,STRLEN(Node) - Distance * 4));
     END;
 
-    LOCAL PROCEDURE CheckBankAccNo@4(DataExch@1003 : Record 1220;BankAccount@1000 : Record 270;BankAccNoPathFilter@1001 : Text);
+    LOCAL PROCEDURE CheckBankAccNo@4(DataExch@1003 : Record 1220;BankAccount@1000 : Record 270;IBANPathFilter@1001 : Text;BankAccIDPathFilter@1004 : Text);
     VAR
       DataExchFieldDetails@1002 : Query 1232;
+      FileHasIBAN@1005 : Boolean;
+      FileHasBankAccID@1006 : Boolean;
     BEGIN
       IF BankAccount.GetBankAccountNo = '' THEN BEGIN
         IF NOT CONFIRM(STRSUBSTNO(MissingBankAccNoQst,BankAccount."No.")) THEN
@@ -107,7 +109,11 @@ OBJECT Codeunit 1262 Pre & Post Process XML Import
         EXIT;
       END;
 
-      IF NOT HasDataExchFieldValue(DataExchFieldDetails,DataExch."Entry No.",BankAccNoPathFilter) THEN
+      FileHasIBAN := HasDataExchFieldValue(DataExchFieldDetails,DataExch."Entry No.",IBANPathFilter);
+      IF NOT FileHasIBAN AND (BankAccIDPathFilter <> '') THEN
+        FileHasBankAccID := HasDataExchFieldValue(DataExchFieldDetails,DataExch."Entry No.",BankAccIDPathFilter);
+
+      IF NOT FileHasIBAN AND NOT FileHasBankAccID THEN
         ERROR(MissingBankAccNoInDataErr);
 
       IF (DELCHR(DataExchFieldDetails.FieldValue,'=','- ') <> DELCHR(BankAccount."Bank Account No.",'=','- ')) AND

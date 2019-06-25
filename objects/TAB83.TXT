@@ -2,9 +2,9 @@ OBJECT Table 83 Item Journal Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -495,7 +495,7 @@ OBJECT Table 83 Item Journal Line
                                                               ENU=Discount Amount];
                                                    Editable=No;
                                                    AutoFormatType=1 }
-    { 23  ;   ;Salespers./Purch. Code;Code10      ;TableRelation=Salesperson/Purchaser;
+    { 23  ;   ;Salespers./Purch. Code;Code20      ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=BEGIN
                                                                 IF ("Order Type" <> "Order Type"::Production) OR ("Order No." = '') THEN
                                                                   CreateDim(
@@ -522,7 +522,7 @@ OBJECT Table 83 Item Journal Line
                                                                       ERROR(Text006,FIELDCAPTION("Applies-to Entry"));
 
                                                                     IF "Inventory Value Per" = "Inventory Value Per"::" " THEN
-                                                                      IF NOT RevaluationPerEntryAllowed(Item."No.") THEN
+                                                                      IF NOT RevaluationPerEntryAllowed("Item No.") THEN
                                                                         ERROR(Text034);
 
                                                                     InitRevalJnlLine(ItemLedgEntry);
@@ -879,6 +879,10 @@ OBJECT Table 83 Item Journal Line
                                                                           "Order Line No." := ProdOrderLine."Line No.";
                                                                           "Routing No." := ProdOrderLine."Routing No.";
                                                                           "Routing Reference No." := ProdOrderLine."Routing Reference No.";
+                                                                          IF "Entry Type" = "Entry Type"::Output THEN BEGIN
+                                                                            "Location Code" := ProdOrderLine."Location Code";
+                                                                            "Bin Code" := ProdOrderLine."Bin Code";
+                                                                          END;
                                                                         END;
                                                                       END;
 
@@ -1013,7 +1017,7 @@ OBJECT Table 83 Item Journal Line
                                                                            ProdOrderComp."Bin Code",
                                                                            "Order No.")
                                                                       THEN
-                                                                        ERROR(Text012);
+                                                                        ERROR(UpdateInterruptedErr);
                                                                   END;
                                                                 END;
 
@@ -1319,12 +1323,13 @@ OBJECT Table 83 Item Journal Line
                                                                 IF "No." = '' THEN BEGIN
                                                                   "Work Center No." := '';
                                                                   VALIDATE("Item No.");
-                                                                  CreateDim(
-                                                                    DATABASE::"Work Center","Work Center No.",
-                                                                    DATABASE::Item,"Item No.",
-                                                                    DATABASE::"Salesperson/Purchaser","Salespers./Purch. Code");
                                                                   IF Type IN [Type::"Work Center",Type::"Machine Center"] THEN
-                                                                    UpdateDimForProdJnlLine;
+                                                                    CreateDimWithProdOrderLine
+                                                                  ELSE
+                                                                    CreateDim(
+                                                                      DATABASE::"Work Center","Work Center No.",
+                                                                      DATABASE::Item,"Item No.",
+                                                                      DATABASE::"Salesperson/Purchaser","Salespers./Purch. Code");
                                                                   EXIT;
                                                                 END;
 
@@ -1352,6 +1357,7 @@ OBJECT Table 83 Item Journal Line
                                                                   Type::Resource:
                                                                     BEGIN
                                                                       Resource.GET("No.");
+                                                                      Resource.CheckResourcePrivacyBlocked(FALSE);
                                                                       Resource.TESTFIELD(Blocked,FALSE);
                                                                     END;
                                                                 END;
@@ -1361,13 +1367,8 @@ OBJECT Table 83 Item Journal Line
                                                                   VALIDATE("Cap. Unit of Measure Code",WorkCenter."Unit of Measure Code");
                                                                 END;
 
-                                                                IF "Work Center No." <> '' THEN BEGIN
-                                                                  CreateDim(
-                                                                    DATABASE::"Work Center","Work Center No.",
-                                                                    DATABASE::Item,"Item No.",
-                                                                    DATABASE::"Salesperson/Purchaser","Salespers./Purch. Code");
-                                                                  UpdateDimForProdJnlLine;
-                                                                END;
+                                                                IF "Work Center No." <> '' THEN
+                                                                  CreateDimWithProdOrderLine;
                                                               END;
 
                                                    CaptionML=[DAN=Nummer;
@@ -1387,6 +1388,7 @@ OBJECT Table 83 Item Journal Line
                                                                 TESTFIELD("Order No.");
                                                                 TESTFIELD("Item No.");
 
+                                                                ConfirmOutputOnFinishedOperation;
                                                                 GetProdOrderRtngLine(ProdOrderRtngLine);
 
                                                                 CASE ProdOrderRtngLine.Type OF
@@ -1406,6 +1408,8 @@ OBJECT Table 83 Item Journal Line
                                                               ENU=Work Center No.];
                                                    Editable=No }
     { 5841;   ;Setup Time          ;Decimal       ;OnValidate=BEGIN
+                                                                IF SubcontractingWorkCenterUsed AND ("Setup Time" <> 0) THEN
+                                                                  SubcontractedErr;
                                                                 "Setup Time (Base)" := CalcBaseTime("Setup Time");
                                                               END;
 
@@ -1414,6 +1418,9 @@ OBJECT Table 83 Item Journal Line
                                                               ENU=Setup Time];
                                                    DecimalPlaces=0:5 }
     { 5842;   ;Run Time            ;Decimal       ;OnValidate=BEGIN
+                                                                IF SubcontractingWorkCenterUsed AND ("Run Time" <> 0) THEN
+                                                                  SubcontractedErr;
+
                                                                 "Run Time (Base)" := CalcBaseTime("Run Time");
                                                               END;
 
@@ -1431,6 +1438,11 @@ OBJECT Table 83 Item Journal Line
                                                    DecimalPlaces=0:5 }
     { 5846;   ;Output Quantity     ;Decimal       ;OnValidate=BEGIN
                                                                 TESTFIELD("Entry Type","Entry Type"::Output);
+                                                                IF SubcontractingWorkCenterUsed AND ("Output Quantity" <> 0) THEN
+                                                                  SubcontractedErr;
+
+                                                                ConfirmOutputOnFinishedOperation;
+
                                                                 IF LastOutputOperation(Rec) THEN
                                                                   WhseValidateSourceLine.ItemLineVerifyChange(Rec,xRec);
 
@@ -1760,7 +1772,7 @@ OBJECT Table 83 Item Journal Line
       MfgSetupRead@1035 : Boolean;
       UnitCost@1031 : Decimal;
       Text007@1006 : TextConst 'DAN="Ny ";ENU="New "';
-      Text012@1045 : TextConst 'DAN=Opdateringen er afbrudt på grund af advarslen.;ENU=The update has been interrupted to respect the warning.';
+      UpdateInterruptedErr@1045 : TextConst 'DAN=Opdateringen er afbrudt på grund af advarslen.;ENU=The update has been interrupted to respect the warning.';
       Text021@1051 : TextConst 'DAN=Den angivne placeringskode %1 er en anden end placeringskoden %2 i produktionsordrekomponenten %3.\\Er du sikker på, at du vil bogføre forbruget fra placeringskoden %1?;ENU=The entered bin code %1 is different from the bin code %2 in production order component %3.\\Are you sure that you want to post the consumption from bin code %1?';
       Text029@1047 : TextConst 'DAN=skal være positiv;ENU=must be positive';
       Text030@1046 : TextConst 'DAN=skal være negativ;ENU=must be negative';
@@ -1768,6 +1780,7 @@ OBJECT Table 83 Item Journal Line
       Text032@1000 : TextConst 'DAN=Når posten bogføres, åbnes %1 først.;ENU=When posting, the entry %1 will be opened first.';
       Text033@1049 : TextConst 'DAN=Hvis varen har serie- eller lotnumre, skal du bruge feltet %1 i vinduet %2.;ENU=If the item carries serial or lot numbers, then you must use the %1 field in the %2 window.';
       Text034@1050 : TextConst 'DAN=Du kan ikke regulere vareposter for varer, der bruger den gennemsnitlige kostmetode.;ENU=You cannot revalue individual item ledger entries for items that use the average costing method.';
+      FinishedOutputQst@1004 : TextConst 'DAN=Handlingen er udført. Vil du bogføre resultatet af den færdige handling?;ENU=The operation has been finished. Do you want to post output for the finished operation?';
 
     PROCEDURE EmptyLine@5() : Boolean;
     BEGIN
@@ -1922,12 +1935,20 @@ OBJECT Table 83 Item Journal Line
     END;
 
     LOCAL PROCEDURE GetUnitAmount@6(CalledByFieldNo@1000 : Integer);
+    VAR
+      UnitCostValue@1001 : Decimal;
     BEGIN
       RetrieveCosts;
       IF ("Value Entry Type" <> "Value Entry Type"::"Direct Cost") OR
          ("Item Charge No." <> '')
       THEN
         EXIT;
+
+      UnitCostValue := UnitCost;
+      IF (CalledByFieldNo = FIELDNO(Quantity)) AND
+         (Item."No." <> '') AND (Item."Costing Method" <> Item."Costing Method"::Standard)
+      THEN
+        UnitCostValue := "Unit Cost" / UOMMgt.GetQtyPerUnitOfMeasure(Item,"Unit of Measure Code");
 
       CASE "Entry Type" OF
         "Entry Type"::Purchase:
@@ -1937,10 +1958,10 @@ OBJECT Table 83 Item Journal Line
         "Entry Type"::"Positive Adjmt.":
           "Unit Amount" :=
             ROUND(
-              ((UnitCost - "Overhead Rate") * "Qty. per Unit of Measure") / (1 + "Indirect Cost %" / 100),
+              ((UnitCostValue - "Overhead Rate") * "Qty. per Unit of Measure") / (1 + "Indirect Cost %" / 100),
               GLSetup."Unit-Amount Rounding Precision");
         "Entry Type"::"Negative Adjmt.":
-          "Unit Amount" := UnitCost * "Qty. per Unit of Measure";
+          "Unit Amount" := UnitCostValue * "Qty. per Unit of Measure";
         "Entry Type"::Transfer:
           "Unit Amount" := 0;
       END;
@@ -1985,30 +2006,55 @@ OBJECT Table 83 Item Journal Line
       ReserveItemJnlLine.CallItemTracking(Rec,IsReclass);
     END;
 
-    LOCAL PROCEDURE CreateDim@13(Type1@1000 : Integer;No1@1001 : Code[20];Type2@1002 : Integer;No2@1003 : Code[20];Type3@1007 : Integer;No3@1006 : Code[20]);
+    LOCAL PROCEDURE PickDimension@48(TableList@1005 : ARRAY [10] OF Integer;CodeList@1004 : ARRAY [10] OF Code[20];InheritFromDimSetID@1003 : Integer;InheritFromTableNo@1002 : Integer);
     VAR
-      TableID@1004 : ARRAY [10] OF Integer;
-      No@1005 : ARRAY [10] OF Code[20];
+      ItemJournalTemplate@1001 : Record 82;
+      SourceCode@1000 : Code[10];
     BEGIN
-      TableID[1] := Type1;
-      No[1] := No1;
-      TableID[2] := Type2;
-      No[2] := No2;
-      TableID[3] := Type3;
-      No[3] := No3;
+      SourceCode := "Source Code";
+      IF SourceCode = '' THEN
+        IF ItemJournalTemplate.GET("Journal Template Name") THEN
+          SourceCode := ItemJournalTemplate."Source Code";
 
       "Shortcut Dimension 1 Code" := '';
       "Shortcut Dimension 2 Code" := '';
       "Dimension Set ID" :=
         DimMgt.GetDefaultDimID(
-          TableID,No,"Source Code",
-          "Shortcut Dimension 1 Code","Shortcut Dimension 2 Code",0,0);
+          TableList,CodeList,SourceCode,
+          "Shortcut Dimension 1 Code","Shortcut Dimension 2 Code",InheritFromDimSetID,InheritFromTableNo);
+      DimMgt.UpdateGlobalDimFromDimSetID("Dimension Set ID","Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
 
       IF "Entry Type" = "Entry Type"::Transfer THEN BEGIN
         "New Dimension Set ID" := "Dimension Set ID";
         "New Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
         "New Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
       END;
+    END;
+
+    LOCAL PROCEDURE CreateCodeList@90(VAR CodeList@1003 : ARRAY [10] OF Code[20];No1@1002 : Code[20];No2@1001 : Code[20];No3@1000 : Code[20]);
+    BEGIN
+      CLEAR(CodeList);
+      CodeList[1] := No1;
+      CodeList[2] := No2;
+      CodeList[3] := No3;
+    END;
+
+    LOCAL PROCEDURE CreateTableList@92(VAR TableID@1001 : ARRAY [10] OF Integer;Type1@1000 : Integer;Type2@1002 : Integer;Type3@1007 : Integer);
+    BEGIN
+      CLEAR(TableID);
+      TableID[1] := Type1;
+      TableID[2] := Type2;
+      TableID[3] := Type3;
+    END;
+
+    LOCAL PROCEDURE CreateDim@13(Type1@1000 : Integer;No1@1001 : Code[20];Type2@1002 : Integer;No2@1003 : Code[20];Type3@1007 : Integer;No3@1006 : Code[20]);
+    VAR
+      TableID@1004 : ARRAY [10] OF Integer;
+      No@1005 : ARRAY [10] OF Code[20];
+    BEGIN
+      CreateTableList(TableID,Type1,Type2,Type3);
+      CreateCodeList(No,No1,No2,No3);
+      PickDimension(TableID,No,0,0);
     END;
 
     PROCEDURE CopyDim@46(DimesionSetID@1000 : Integer);
@@ -2080,6 +2126,22 @@ OBJECT Table 83 Item Journal Line
         DimSetIDArr[i] := AssemblyLine."Dimension Set ID";
       END;
       "Dimension Set ID" := DimMgt.GetCombinedDimensionSetID(DimSetIDArr,"Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
+    END;
+
+    LOCAL PROCEDURE CreateDimWithProdOrderLine@54();
+    VAR
+      ProdOrderLine@1005 : Record 5406;
+      InheritFromDimSetID@1004 : Integer;
+      TableID@1001 : ARRAY [10] OF Integer;
+      No@1000 : ARRAY [10] OF Code[20];
+    BEGIN
+      IF "Order Type" = "Order Type"::Production THEN
+        IF ProdOrderLine.GET(ProdOrderLine.Status::Released,"Order No.","Order Line No.") THEN
+          InheritFromDimSetID := ProdOrderLine."Dimension Set ID";
+
+      CreateTableList(TableID,DATABASE::"Work Center",DATABASE::"Salesperson/Purchaser",0);
+      CreateCodeList(No,"Work Center No.","Salespers./Purch. Code",'');
+      PickDimension(TableID,No,InheritFromDimSetID,DATABASE::Item);
     END;
 
     PROCEDURE ValidateShortcutDimCode@9(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
@@ -2379,6 +2441,8 @@ OBJECT Table 83 Item Journal Line
       ProdOrderCompLineList@1001 : Page 5407;
     BEGIN
       ProdOrderComp.SetFilterByReleasedOrderNo("Order No.");
+      IF "Order Line No." <> 0 THEN
+        ProdOrderComp.SETRANGE("Prod. Order Line No.","Order Line No.");
       ProdOrderComp.Status := ProdOrderComp.Status::Released;
       ProdOrderComp."Prod. Order No." := "Order No.";
       ProdOrderComp."Prod. Order Line No." := "Order Line No.";
@@ -2538,17 +2602,6 @@ OBJECT Table 83 Item Journal Line
       EXIT(ValueEntry.ISEMPTY);
     END;
 
-    LOCAL PROCEDURE UpdateDimForProdJnlLine@48();
-    VAR
-      DimensionSetIDArr@1000 : ARRAY [10] OF Integer;
-    BEGIN
-      DimensionSetIDArr[1] := "Dimension Set ID";
-      CreateProdDim;
-      DimensionSetIDArr[2] := "Dimension Set ID";
-      "Dimension Set ID" :=
-        DimMgt.GetCombinedDimensionSetID(DimensionSetIDArr,"Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
-    END;
-
     PROCEDURE TrackingExists@47() : Boolean;
     BEGIN
       EXIT(("Serial No." <> '') OR ("Lot No." <> ''));
@@ -2558,7 +2611,9 @@ OBJECT Table 83 Item Journal Line
     BEGIN
       EXIT(
         ("Document Type" IN ["Document Type"::"Purchase Credit Memo",
-                             "Document Type"::"Purchase Return Shipment"]) AND
+                             "Document Type"::"Purchase Return Shipment",
+                             "Document Type"::"Purchase Invoice",
+                             "Document Type"::"Purchase Receipt"]) AND
         (Quantity < 0));
     END;
 
@@ -2578,6 +2633,42 @@ OBJECT Table 83 Item Journal Line
       END;
 
       EXIT((("Journal Batch Name" <> '') AND ("Journal Template Name" = '')) OR (BatchFilter <> ''));
+    END;
+
+    PROCEDURE SubcontractingWorkCenterUsed@52() : Boolean;
+    VAR
+      WorkCenter@1000 : Record 99000754;
+    BEGIN
+      IF Type = Type::"Work Center" THEN
+        IF WorkCenter.GET("Work Center No.") THEN
+          EXIT(WorkCenter."Subcontractor No." <> '');
+
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE ConfirmOutputOnFinishedOperation@79();
+    VAR
+      ProdOrderRtngLine@1000 : Record 5409;
+    BEGIN
+      IF ("Entry Type" <> "Entry Type"::Output) OR ("Output Quantity" = 0) THEN
+        EXIT;
+
+      IF NOT ProdOrderRtngLine.GET(
+           ProdOrderRtngLine.Status::Released,"Order No.","Routing Reference No.","Routing No.","Operation No.")
+      THEN
+        EXIT;
+
+      IF ProdOrderRtngLine."Routing Status" <> ProdOrderRtngLine."Routing Status"::Finished THEN
+        EXIT;
+
+      IF NOT CONFIRM(FinishedOutputQst) THEN
+        ERROR(UpdateInterruptedErr);
+    END;
+
+    LOCAL PROCEDURE SubcontractedErr@51();
+    BEGIN
+      WorkCenter.GET("Work Center No.");
+      WorkCenter.FIELDERROR("Subcontractor No.");
     END;
 
     BEGIN

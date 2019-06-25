@@ -2,9 +2,9 @@ OBJECT Codeunit 8611 Config. Package Management
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -54,6 +54,16 @@ OBJECT Codeunit 8611 Config. Package Management
       END;
     END;
 
+    PROCEDURE InsertPackageTableWithoutValidation@84(VAR ConfigPackageTable@1001 : Record 8613;PackageCode@1002 : Code[20];TableID@1000 : Integer);
+    BEGIN
+      IF NOT ConfigPackageTable.GET(PackageCode,TableID) THEN BEGIN
+        ConfigPackageTable.INIT;
+        ConfigPackageTable."Package Code" := PackageCode;
+        ConfigPackageTable."Table ID" := TableID;
+        ConfigPackageTable.INSERT;
+      END;
+    END;
+
     PROCEDURE InsertPackageField@19(VAR ConfigPackageField@1007 : Record 8616;PackageCode@1006 : Code[20];TableID@1000 : Integer;FieldID@1001 : Integer;FieldName@1008 : Text[30];FieldCaption@1009 : Text[250];SetInclude@1002 : Boolean;SetValidate@1003 : Boolean;SetLocalize@1005 : Boolean;SetDimension@1004 : Boolean);
     BEGIN
       IF NOT ConfigPackageField.GET(PackageCode,TableID,FieldID) THEN BEGIN
@@ -98,6 +108,7 @@ OBJECT Codeunit 8611 Config. Package Management
     LOCAL PROCEDURE InsertPackageRecord@3(ConfigPackageRecord@1001 : Record 8614);
     VAR
       RecRef@1000 : RecordRef;
+      DelayedInsert@1002 : Boolean;
     BEGIN
       IF (ConfigPackageRecord."Package Code" = '') OR (ConfigPackageRecord."Table ID" = 0) THEN
         EXIT;
@@ -109,13 +120,13 @@ OBJECT Codeunit 8611 Config. Package Management
       IF ApplyMode <> ApplyMode::NonKeyFields THEN
         RecRef.INIT;
 
-      InsertPrimaryKeyFields(RecRef,ConfigPackageRecord,TRUE);
+      InsertPrimaryKeyFields(RecRef,ConfigPackageRecord,TRUE,DelayedInsert);
 
       IF ApplyMode = ApplyMode::PrimaryKey THEN
         UpdateKeyInfoForConfigPackageRecord(RecRef,ConfigPackageRecord);
 
-      IF ApplyMode = ApplyMode::NonKeyFields THEN
-        ModifyRecordDataFields(RecRef,ConfigPackageRecord,TRUE);
+      IF (ApplyMode = ApplyMode::NonKeyFields) OR DelayedInsert THEN
+        ModifyRecordDataFields(RecRef,ConfigPackageRecord,TRUE,DelayedInsert);
     END;
 
     PROCEDURE InsertPackageData@31(VAR ConfigPackageData@1000 : Record 8615;PackageCode@1001 : Code[20];TableID@1002 : Integer;No@1003 : Integer;FieldID@1004 : Integer;Value@1005 : Text[250];Invalid@1006 : Boolean);
@@ -144,11 +155,10 @@ OBJECT Codeunit 8611 Config. Package Management
       END;
     END;
 
-    LOCAL PROCEDURE InsertPrimaryKeyFields@40(VAR RecRef@1000 : RecordRef;ConfigPackageRecord@1002 : Record 8614;DoInsert@1008 : Boolean);
+    LOCAL PROCEDURE InsertPrimaryKeyFields@40(VAR RecRef@1000 : RecordRef;ConfigPackageRecord@1002 : Record 8614;DoInsert@1008 : Boolean;VAR DelayedInsert@1003 : Boolean);
     VAR
       ConfigPackageData@1001 : Record 8615;
       ConfigPackageField@1007 : Record 8616;
-      ConfigPackageTable@1009 : Record 8613;
       TempConfigPackageField@1010 : TEMPORARY Record 8616;
       RecRef1@1006 : RecordRef;
       FieldRef@1004 : FieldRef;
@@ -169,6 +179,7 @@ OBJECT Codeunit 8611 Config. Package Management
         IF ConfigPackageData.FINDFIRST THEN BEGIN
           ConfigPackageField.GET(ConfigPackageData."Package Code",ConfigPackageData."Table ID",ConfigPackageData."Field ID");
           UpdateValueUsingMapping(ConfigPackageData,ConfigPackageField);
+          ValidationFieldID := FieldRef.NUMBER;
           ConfigValidateMgt.EvaluateTextToFieldRef(
             ConfigPackageData.Value,FieldRef,ConfigPackageField."Validate Field" AND (ApplyMode = ApplyMode::PrimaryKey));
         END ELSE
@@ -182,10 +193,10 @@ OBJECT Codeunit 8611 Config. Package Management
         EXIT
       END;
 
-      IF DoInsert THEN BEGIN
-        ConfigPackageTable.GET(ConfigPackageRecord."Package Code",ConfigPackageRecord."Table ID");
-        RecRef.INSERT(NOT ConfigPackageTable."Skip Table Triggers");
-      END;
+      IF DoInsert THEN
+        DelayedInsert := InsertRecord(RecRef,ConfigPackageRecord)
+      ELSE
+        DelayedInsert := FALSE;
     END;
 
     LOCAL PROCEDURE UpdateKeyInfoForConfigPackageRecord@128(RecRef@1001 : RecordRef;ConfigPackageRecord@1000 : Record 8614);
@@ -225,26 +236,47 @@ OBJECT Codeunit 8611 Config. Package Management
       ConfigPackageRecord.INSERT;
     END;
 
-    LOCAL PROCEDURE ModifyRecordDataFields@39(VAR RecRef@1004 : RecordRef;ConfigPackageRecord@1005 : Record 8614;DoModify@1013 : Boolean);
+    LOCAL PROCEDURE InsertRecord@64(VAR RecRef@1000 : RecordRef;ConfigPackageRecord@1001 : Record 8614) : Boolean;
+    VAR
+      ConfigPackageTable@1003 : Record 8613;
+      ConfigTryValidate@1004 : Codeunit 8613;
+    BEGIN
+      ConfigPackageTable.GET(ConfigPackageRecord."Package Code",ConfigPackageRecord."Table ID");
+      IF ConfigPackageTable."Skip Table Triggers" THEN
+        RecRef.INSERT
+      ELSE BEGIN
+        COMMIT;
+        ConfigTryValidate.SetInsertParameters(RecRef);
+        IF NOT ConfigTryValidate.RUN THEN BEGIN
+          CLEARLASTERROR;
+          EXIT(TRUE);
+        END;
+      END;
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE ModifyRecordDataFields@39(VAR RecRef@1004 : RecordRef;ConfigPackageRecord@1005 : Record 8614;DoModify@1013 : Boolean;DelayedInsert@1008 : Boolean);
     VAR
       ConfigPackageData@1002 : Record 8615;
       ConfigPackageField@1000 : Record 8616;
       ConfigQuestion@1003 : Record 8612;
       Field@1007 : Record 2000000041;
       ConfigPackageTable@1012 : Record 8613;
-      ConfigTemplateHeader@1009 : Record 8618;
-      ConfigTemplateMgt@1011 : Codeunit 8612;
       ConfigQuestionnaireMgt@1006 : Codeunit 8610;
       FieldRef@1001 : FieldRef;
     BEGIN
-      ConfigPackageTable.GET(ConfigPackageRecord."Package Code",ConfigPackageRecord."Table ID");
-
       ConfigPackageField.RESET;
       ConfigPackageField.SETCURRENTKEY("Package Code","Table ID","Processing Order");
       ConfigPackageField.SETRANGE("Package Code",ConfigPackageRecord."Package Code");
       ConfigPackageField.SETRANGE("Table ID",ConfigPackageRecord."Table ID");
       ConfigPackageField.SETRANGE("Include Field",TRUE);
       ConfigPackageField.SETRANGE(Dimension,FALSE);
+
+      IF DoModify THEN BEGIN
+        ConfigPackageTable.GET(ConfigPackageRecord."Package Code",ConfigPackageRecord."Table ID");
+        ApplyTemplate(ConfigPackageTable,RecRef);
+      END;
+
       IF ConfigPackageField.FINDSET THEN
         REPEAT
           ValidationFieldID := ConfigPackageField."Field ID";
@@ -256,14 +288,18 @@ OBJECT Codeunit 8611 Config. Package Management
               FieldRef := RecRef.FIELD(ConfigPackageField."Field ID");
               UpdateValueUsingMapping(ConfigPackageData,ConfigPackageField);
               ConfigValidateMgt.EvaluateTextToFieldRef(
-                ConfigPackageData.Value,FieldRef,ConfigPackageField."Validate Field" AND (ApplyMode = ApplyMode::NonKeyFields));
+                ConfigPackageData.Value,FieldRef,
+                ConfigPackageField."Validate Field" AND ((ApplyMode = ApplyMode::NonKeyFields) OR DelayedInsert));
+              IF TextFieldIsBlank(FieldRef) THEN
+                CLEAR(FieldRef);
             END;
-          IF ConfigTemplateHeader.GET(ConfigPackageTable."Data Template") AND DoModify THEN
-            ConfigTemplateMgt.UpdateRecord(ConfigTemplateHeader,RecRef);
         UNTIL ConfigPackageField.NEXT = 0;
 
       IF DoModify THEN BEGIN
-        RecRef.MODIFY(NOT ConfigPackageTable."Skip Table Triggers");
+        IF DelayedInsert THEN
+          RecRef.INSERT(TRUE)
+        ELSE
+          RecRef.MODIFY(NOT ConfigPackageTable."Skip Table Triggers");
 
         IF RecRef.NUMBER <> DATABASE::"Config. Question" THEN
           EXIT;
@@ -274,6 +310,20 @@ OBJECT Codeunit 8611 Config. Package Management
         IF Field.FINDFIRST THEN
           ConfigQuestionnaireMgt.ModifyConfigQuestionAnswer(ConfigQuestion,Field);
       END;
+    END;
+
+    LOCAL PROCEDURE ApplyTemplate@68(ConfigPackageTable@1002 : Record 8613;VAR RecRef@1000 : RecordRef);
+    VAR
+      ConfigTemplateHeader@1003 : Record 8618;
+      ConfigTemplateMgt@1001 : Codeunit 8612;
+    BEGIN
+      IF ConfigTemplateHeader.GET(ConfigPackageTable."Data Template") THEN
+        ConfigTemplateMgt.UpdateRecord(ConfigTemplateHeader,RecRef);
+    END;
+
+    LOCAL PROCEDURE TextFieldIsBlank@269(VAR FieldRef@1000 : FieldRef) : Boolean;
+    BEGIN
+      EXIT(FORMAT(FieldRef.VALUE) = '')
     END;
 
     PROCEDURE ValidatePackageRelations@11(VAR ConfigPackageTable@1000 : Record 8613;VAR TempConfigPackageTable@1001 : TEMPORARY Record 8613;SetupProcessingOrderForTables@1003 : Boolean);
@@ -431,11 +481,12 @@ OBJECT Codeunit 8611 Config. Package Management
       ConfigPackageRecord@1002 : Record 8614;
       RecRef@1001 : RecordRef;
       FieldRef@1000 : FieldRef;
+      DelayedInsert@1004 : Boolean;
     BEGIN
       RecRef.OPEN(ConfigPackageData."Table ID");
       ConfigPackageRecord.GET(ConfigPackageData."Package Code",ConfigPackageData."Table ID",ConfigPackageData."No.");
-      InsertPrimaryKeyFields(RecRef,ConfigPackageRecord,FALSE);
-      ModifyRecordDataFields(RecRef,ConfigPackageRecord,FALSE);
+      InsertPrimaryKeyFields(RecRef,ConfigPackageRecord,FALSE,DelayedInsert);
+      ModifyRecordDataFields(RecRef,ConfigPackageRecord,FALSE,FALSE);
 
       FieldRef := RecRef.FIELD(ConfigPackageData."Field ID");
       ConfigValidateMgt.EvaluateValue(FieldRef,ConfigPackageData.Value,FALSE);
@@ -652,6 +703,7 @@ OBJECT Codeunit 8611 Config. Package Management
     LOCAL PROCEDURE ApplyPackageTables@24(ConfigPackage@1002 : Record 8623;VAR ConfigPackageTable@1000 : Record 8613;ApplyMode@1003 : ',PrimaryKey,NonKeyFields');
     VAR
       ConfigPackageRecord@1001 : Record 8614;
+      TempConfigPackageRecord@1004 : TEMPORARY Record 8614;
     BEGIN
       ConfigPackageTable.SETCURRENTKEY("Package Processing Order","Processing Order");
 
@@ -665,13 +717,25 @@ OBJECT Codeunit 8611 Config. Package Management
           ConfigPackageRecord.SETRANGE("Table ID",ConfigPackageTable."Table ID");
           IF NOT HideDialog THEN
             ConfigProgressBar.Update(ConfigPackageTable."Table Name");
-          ApplyPackageRecords(ConfigPackageRecord,ConfigPackageTable."Package Code",ConfigPackageTable."Table ID",ApplyMode);
+          ApplyPackageRecordsAndQueueRecordsForDeletion(
+            ConfigPackageRecord,ConfigPackageTable."Package Code",ConfigPackageTable."Table ID",ApplyMode,TempConfigPackageRecord);
         UNTIL ConfigPackageTable.NEXT = 0;
+
+      DeletePackageRecords(TempConfigPackageRecord);
+
       IF NOT HideDialog THEN
         ConfigProgressBar.Close;
     END;
 
     PROCEDURE ApplyPackageRecords@14(VAR ConfigPackageRecord@1000 : Record 8614;PackageCode@1002 : Code[20];TableNo@1006 : Integer;ApplyMode@1004 : ',PrimaryKey,NonKeyFields');
+    VAR
+      TempConfigPackageRecord@1011 : TEMPORARY Record 8614;
+    BEGIN
+      ApplyPackageRecordsAndQueueRecordsForDeletion(ConfigPackageRecord,PackageCode,TableNo,ApplyMode,TempConfigPackageRecord);
+      DeletePackageRecords(TempConfigPackageRecord);
+    END;
+
+    PROCEDURE ApplyPackageRecordsAndQueueRecordsForDeletion@66(VAR ConfigPackageRecord@1000 : Record 8614;PackageCode@1002 : Code[20];TableNo@1006 : Integer;ApplyMode@1004 : ',PrimaryKey,NonKeyFields';VAR TempConfigPackageRecordForDeletion@1011 : TEMPORARY Record 8614);
     VAR
       ConfigPackageTable@1005 : Record 8613;
       ConfigPackageMgt@1003 : Codeunit 8611;
@@ -700,7 +764,7 @@ OBJECT Codeunit 8611 Config. Package Management
           IF (ApplyMode = ApplyMode::PrimaryKey) OR NOT IsRecordErrorsExistsInPrimaryKeyFields(ConfigPackageRecord) THEN
             IF ConfigPackageMgt.RUN(ConfigPackageRecord) THEN BEGIN
               IF NOT ((ApplyMode = ApplyMode::PrimaryKey) OR IsRecordErrorsExists(ConfigPackageRecord)) THEN
-                ConfigPackageRecord.DELETE(TRUE);
+                QueuePackageRecordForDeletion(ConfigPackageRecord,TempConfigPackageRecordForDeletion);
               COMMIT;
             END ELSE
               IF GETLASTERRORTEXT <> '' THEN BEGIN
@@ -715,6 +779,25 @@ OBJECT Codeunit 8611 Config. Package Management
       END;
       IF NOT HideDialog AND (RecordCount > 1000) THEN
         ConfigProgressBarRecord.Close;
+    END;
+
+    LOCAL PROCEDURE QueuePackageRecordForDeletion@69(VAR ConfigPackageRecord@1000 : Record 8614;VAR TempConfigPackageRecord@1001 : TEMPORARY Record 8614);
+    BEGIN
+      TempConfigPackageRecord.INIT;
+      TempConfigPackageRecord := ConfigPackageRecord;
+      TempConfigPackageRecord.INSERT;
+    END;
+
+    LOCAL PROCEDURE DeletePackageRecords@70(VAR TempConfigPackageRecord@1000 : TEMPORARY Record 8614);
+    VAR
+      ConfigPackageRecord@1001 : Record 8614;
+    BEGIN
+      IF TempConfigPackageRecord.FINDSET THEN
+        REPEAT
+          ConfigPackageRecord.TRANSFERFIELDS(TempConfigPackageRecord);
+          ConfigPackageRecord.DELETE(TRUE);
+        UNTIL TempConfigPackageRecord.NEXT = 0;
+      COMMIT;
     END;
 
     PROCEDURE ApplyConfigTables@47(ConfigPackage@1002 : Record 8623);
@@ -1001,18 +1084,17 @@ OBJECT Codeunit 8611 Config. Package Management
               REPEAT
                 ConfigPackageDataDim[2].SETRANGE("Package Code",ConfigPackageRecord."Package Code");
                 ConfigPackageDataDim[2].SETRANGE("Table ID",DATABASE::"Default Dimension");
+                ConfigPackageDataDim[2].SETRANGE("No.",ConfigPackageDataDim[1]."No.");
                 ConfigPackageDataDim[2].SETRANGE("Field ID",DefaultDim.FIELDNO("No."));
                 ConfigPackageDataDim[2].SETRANGE(Value,MasterNo);
                 IF ConfigPackageDataDim[2].FINDSET THEN
                   REPEAT
-                    IF ConfigPackageDataDim[1]."No." = ConfigPackageDataDim[2]."No." THEN BEGIN // same record
-                      ConfigPackageDataDim[3].SETRANGE("Package Code",ConfigPackageRecord."Package Code");
-                      ConfigPackageDataDim[3].SETRANGE("Table ID",DATABASE::"Default Dimension");
-                      ConfigPackageDataDim[3].SETRANGE("Field ID",DefaultDim.FIELDNO("Dimension Code"));
-                      ConfigPackageDataDim[3].SETRANGE(Value,ConfigPackageField."Field Name");
-                      IF ConfigPackageDataDim[3].FINDFIRST THEN
-                        RecordFound := ConfigPackageDataDim[1]."No." = ConfigPackageDataDim[3]."No.";
-                    END;
+                    ConfigPackageDataDim[3].SETRANGE("Package Code",ConfigPackageRecord."Package Code");
+                    ConfigPackageDataDim[3].SETRANGE("Table ID",DATABASE::"Default Dimension");
+                    ConfigPackageDataDim[3].SETRANGE("No.",ConfigPackageDataDim[2]."No.");
+                    ConfigPackageDataDim[3].SETRANGE("Field ID",DefaultDim.FIELDNO("Dimension Code"));
+                    ConfigPackageDataDim[3].SETRANGE(Value,ConfigPackageField."Field Name");
+                    RecordFound := ConfigPackageDataDim[3].FINDFIRST;
                   UNTIL (ConfigPackageDataDim[2].NEXT = 0) OR RecordFound;
               UNTIL (ConfigPackageDataDim[1].NEXT = 0) OR RecordFound;
             IF NOT RecordFound THEN BEGIN
@@ -1038,6 +1120,9 @@ OBJECT Codeunit 8611 Config. Package Management
                   ConfigPackageRecordDim."Package Code",ConfigPackageRecordDim."Table ID",ConfigPackageRecordDim."No.",
                   DefaultDim.FIELDNO("Dimension Value Code"),ConfigPackageData.Value,FALSE);
             END ELSE BEGIN
+              ConfigPackageDataDim[3].SETRANGE("Field ID",DefaultDim.FIELDNO("Dimension Value Code"));
+              ConfigPackageDataDim[3].SETRANGE(Value);
+              ConfigPackageDataDim[3].FINDFIRST;
               ConfigPackageDataDim[3].Value := ConfigPackageData.Value;
               ConfigPackageDataDim[3].MODIFY;
             END;

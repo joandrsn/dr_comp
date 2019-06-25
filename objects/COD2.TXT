@@ -2,9 +2,9 @@ OBJECT Codeunit 2 Company-Initialize
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50785,NAVDK9.00.00.50785;
   }
   PROPERTIES
   {
@@ -223,6 +223,8 @@ OBJECT Codeunit 2 Company-Initialize
       PEPPOL21_ElectronicFormatDescriptionTxt@1170 : TextConst 'DAN=PEPPOL 2.1-format (Pan-European Public Procurement Online);ENU=PEPPOL 2.1 Format (Pan-European Public Procurement Online)';
       PEPPOL20_ElectronicFormatTxt@1172 : TextConst '@@@={Locked};DAN=PEPPOL 2.0;ENU=PEPPOL 2.0';
       PEPPOL20_ElectronicFormatDescriptionTxt@1171 : TextConst 'DAN=PEPPOL 2.0-format (Pan-European Public Procurement Online);ENU=PEPPOL 2.0 Format (Pan-European Public Procurement Online)';
+      PEPPOLBIS3_ElectronicFormatTxt@1177 : TextConst '@@@={Locked};DAN=PEPPOL BIS3;ENU=PEPPOL BIS3';
+      PEPPOLBIS3_ElectronicFormatDescriptionTxt@1178 : TextConst 'DAN=PEPPOL BIS3-format (Pan-European Public Procurement Online);ENU=PEPPOL BIS3 Format (Pan-European Public Procurement Online)';
       OIOUBLFormatTxt@1060001 : TextConst '@@@=Locked;DAN=OIOUBL;ENU=OIOUBL';
       OIOUBLFormatDescriptionTxt@1060000 : TextConst 'DAN=OIOUBL-format (Offentlig Information Online Universal Business Language);ENU=OIOUBL Format (Offentlig Information Online Universal Business Language)';
 
@@ -530,7 +532,7 @@ OBJECT Codeunit 2 Company-Initialize
           InsertRepSelection(Usage::"P. Arch. Return Order",'1',REPORT::"Arch.Purch. Return Order");
           InsertRepSelection(Usage::"S. Arch. Return Order",'1',REPORT::"Arch. Sales Return Order");
           InsertRepSelection(Usage::"S.Order Pick Instruction",'1',REPORT::"Pick Instruction");
-          InsertRepSelection(Usage::"C.Statement",'1',REPORT::Statement);
+          InsertRepSelection(Usage::"C.Statement",'1',REPORT::"Mini Statement");
         END;
     END;
 
@@ -704,6 +706,22 @@ OBJECT Codeunit 2 Company-Initialize
       InsertElectronicFormat(
         PEPPOL20_ElectronicFormatTxt,PEPPOL20_ElectronicFormatDescriptionTxt,
         CODEUNIT::"PEPPOL Service Validation",ElectronicDocumentFormat.Usage::"Service Validation");
+
+      InsertElectronicFormat(
+        PEPPOLBIS3_ElectronicFormatTxt,PEPPOLBIS3_ElectronicFormatDescriptionTxt,
+        CODEUNIT::"Exp. Sales Inv. PEPPOL BIS3.0",ElectronicDocumentFormat.Usage::"Sales Invoice");
+
+      InsertElectronicFormat(
+        PEPPOLBIS3_ElectronicFormatTxt,PEPPOLBIS3_ElectronicFormatDescriptionTxt,
+        CODEUNIT::"Exp. Sales CrM. PEPPOL BIS3.0",ElectronicDocumentFormat.Usage::"Sales Credit Memo");
+
+      InsertElectronicFormat(
+        PEPPOLBIS3_ElectronicFormatTxt,PEPPOLBIS3_ElectronicFormatDescriptionTxt,
+        CODEUNIT::"Exp. Sales Inv. PEPPOL BIS3.0",ElectronicDocumentFormat.Usage::"Service Invoice");
+
+      InsertElectronicFormat(
+        PEPPOLBIS3_ElectronicFormatTxt,PEPPOLBIS3_ElectronicFormatDescriptionTxt,
+        CODEUNIT::"Exp. Sales CrM. PEPPOL BIS3.0",ElectronicDocumentFormat.Usage::"Service Credit Memo");
 
       // OIOUBL
       InsertElectronicFormat(

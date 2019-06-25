@@ -2,9 +2,9 @@ OBJECT Codeunit 361 MoveEntries
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -55,54 +55,24 @@ OBJECT Codeunit 361 MoveEntries
       InvtAdjmtEntryOrder@1031 : Record 5896;
       ServLedgEntry@1023 : Record 5907;
       WarrantyLedgEntry@1024 : Record 5908;
-      Text010@1027 : TextConst 'DAN=Du kan ikke slette %1 %2, da den indeholder finansposter efter %3.;ENU=You cannot delete %1 %2 because it has ledger entries after %3.';
-      Text011@1026 : TextConst 'DAN=Du kan ikke slette %1 %2, da den indeholder budgetposter\;ENU=You cannot delete %1 %2 because it has budget ledger entries\';
-      Text012@1025 : TextConst 'DAN=" efter %3 i %4 = %5.";ENU=" after %3 in %4 = %5."';
+      CannotDeleteGLBugetEntriesErr@1026 : TextConst '@@@="%1 - G/L Account No., %2 - Date, %3 - G/L Budget Name. You cannot delete G/L Account 1000 because it has budget ledger entries\ after 25/01/2018 in G/L Budget Name = Budget_2018.";DAN=Du kan ikke slette finanskontoen %1, da den indeholder budgetfinansposter efter %2 for finansbudgetnavnet %3.;ENU=You cannot delete G/L account %1 because it contains budget ledger entries after %2 for G/L budget name %3.';
       Text013@1028 : TextConst 'DAN=Du kan ikke slette %1 %2, fordi der findes forudbetalte kontraktposter i %3.;ENU=You cannot delete %1 %2 because prepaid contract entries exist in %3.';
       Text014@1029 : TextConst 'DAN=Du kan ikke slette %1 %2, fordi der er åbne, forudbetalte kontraktposter i %3.;ENU=You cannot delete %1 %2, because open prepaid contract entries exist in %3.';
       Text015@1030 : TextConst 'DAN=Du kan ikke slette %1 %2, fordi der findes udestående købsreturvareordrelinjer.;ENU=You cannot delete %1 %2 because there are outstanding purchase return order lines.';
+      TimeSheetLinesErr@1033 : TextConst '@@@=You cannot delete job JOB001 because it has open or submitted time sheet lines.;DAN=Du kan ikke slette sag %1, fordi den har åbne eller sendte timeseddellinjer.;ENU=You cannot delete job %1 because it has open or submitted time sheet lines.';
+      GLAccDeleteClosedPeriodsQst@1034 : TextConst 'DAN=Bemærk, at regnskabslovgivningen kan muligvis kræver, at regnskabsdata gemmes i et bestemt antal år. Er du sikker på, at du vil slette finanskontoen?;ENU=Note that accounting regulations may require that you save accounting data for a certain number of years. Are you sure you want to delete the G/L account?';
+      CannotDeleteGLAccountWithEntriesInOpenFiscalYearErr@1035 : TextConst '@@@=%1 - G/L Account No. You cannot delete G/L Account 1000 because it has ledger entries in a fiscal year that has not been closed yet.;DAN=Du kan ikke slette finanskontoen %1, fordi den har poster i et regnskabsår, der endnu ikke er afsluttet.;ENU=You cannot delete G/L account %1 because it has ledger entries in a fiscal year that has not been closed yet.';
+      CannotDeleteGLAccountWithEntriesAfterDateErr@1036 : TextConst '@@@=%1 - G/L Account No., %2 - Date. You cannot delete G/L Account 1000 because it has ledger entries posted after 01-01-2010.;DAN=Du kan ikke slette finanskontoen %1, da den indeholder poster, der er bogført efter %2.;ENU=You cannot delete G/L account %1 because it has ledger entries posted after %2.';
 
     PROCEDURE MoveGLEntries@1(GLAcc@1000 : Record 15);
     VAR
       GLSetup@1004 : Record 98;
-      BudgetName@1003 : Record 95;
-      GLBudgetEntry@1002 : Record 96;
       CalcGLAccWhereUsed@1001 : Codeunit 100;
     BEGIN
-      GLEntry.LOCKTABLE;
-
-      IF GLAcc."Account Type" = GLAcc."Account Type"::Posting THEN BEGIN
-        GLAcc.CALCFIELDS(Balance);
-        GLAcc.TESTFIELD(Balance,0);
-      END;
-
-      GLEntry.SETCURRENTKEY("G/L Account No.");
-      GLEntry.SETRANGE("G/L Account No.",GLAcc."No.");
-      AccountingPeriod.SETRANGE(Closed,FALSE);
-      IF AccountingPeriod.FIND('-') THEN
-        GLEntry.SETFILTER("Posting Date",'>=%1',AccountingPeriod."Starting Date");
-      IF GLEntry.FIND('-') THEN
-        ERROR(
-          Text000,
-          GLAcc.TABLECAPTION,GLAcc."No.");
-
       GLSetup.GET;
-      IF GLSetup."Allow G/L Acc. Deletion Before" <> 0D THEN BEGIN
-        GLEntry.SETFILTER("Posting Date",'>=%1',GLSetup."Allow G/L Acc. Deletion Before");
-        IF GLEntry.FIND('-') THEN
-          ERROR(
-            Text010,
-            GLAcc.TABLECAPTION,GLAcc."No.",GLSetup."Allow G/L Acc. Deletion Before");
-        GLBudgetEntry.LOCKTABLE;
-        GLBudgetEntry.SETCURRENTKEY("Budget Name","G/L Account No.",Date);
-        GLBudgetEntry.SETRANGE("G/L Account No.",GLAcc."No.");
-        GLBudgetEntry.SETFILTER(Date,'>=%1',GLSetup."Allow G/L Acc. Deletion Before");
-        IF GLBudgetEntry.FIND('-') THEN
-          ERROR(
-            Text011 + Text012,
-            GLAcc.TABLECAPTION,GLAcc."No.",GLSetup."Allow G/L Acc. Deletion Before",
-            BudgetName.TABLECAPTION,GLBudgetEntry."Budget Name");
-      END;
+
+      CheckGLAccountEntries(GLAcc,GLSetup);
+
       IF GLSetup."Check G/L Account Usage" THEN
         CalcGLAccWhereUsed.DeleteGLNo(GLAcc."No.");
 
@@ -437,6 +407,8 @@ OBJECT Codeunit 361 MoveEntries
     END;
 
     PROCEDURE MoveJobEntries@7(Job@1000 : Record 167);
+    VAR
+      TimeSheetLine@1001 : Record 951;
     BEGIN
       JobLedgEntry.SETCURRENTKEY("Job No.");
       JobLedgEntry.SETRANGE("Job No.",Job."No.");
@@ -446,6 +418,12 @@ OBJECT Codeunit 361 MoveEntries
         ERROR(
           Text006,
           Job.TABLECAPTION,Job."No.");
+
+      TimeSheetLine.SETRANGE(Type,TimeSheetLine.Type::Job);
+      TimeSheetLine.SETRANGE("Job No.",Job."No.");
+      TimeSheetLine.SETFILTER(Status,'%1|%2',TimeSheetLine.Status::Open,TimeSheetLine.Status::Submitted);
+      IF NOT TimeSheetLine.ISEMPTY THEN
+        ERROR(TimeSheetLinesErr,Job."No.");
 
       PurchOrderLine.SETCURRENTKEY("Document Type");
       PurchOrderLine.SETFILTER(
@@ -697,6 +675,55 @@ OBJECT Codeunit 361 MoveEntries
 
       ServiceLedgerEntry.SETRANGE(Open);
       EXIT('');
+    END;
+
+    LOCAL PROCEDURE CheckGLAccountEntries@12(GLAccount@1000 : Record 15;GeneralLedgerSetup@1002 : Record 98);
+    VAR
+      GLBudgetEntry@1003 : Record 96;
+      HasGLEntries@1004 : Boolean;
+      HasGLBudgetEntries@1005 : Boolean;
+    BEGIN
+      IF GLAccount."Account Type" = GLAccount."Account Type"::Posting THEN BEGIN
+        GLAccount.CALCFIELDS(Balance);
+        GLAccount.TESTFIELD(Balance,0);
+      END;
+
+      GLEntry.SETRANGE("G/L Account No.",GLAccount."No.");
+      AccountingPeriod.SETRANGE(Closed,FALSE);
+      IF AccountingPeriod.FINDFIRST THEN
+        GLEntry.SETFILTER("Posting Date",'>=%1',AccountingPeriod."Starting Date");
+      IF NOT GLEntry.ISEMPTY THEN
+        ERROR(CannotDeleteGLAccountWithEntriesInOpenFiscalYearErr,GLAccount."No.");
+
+      AccountingPeriod.SETRANGE(Closed,TRUE);
+      IF AccountingPeriod.ISEMPTY THEN
+        EXIT;
+
+      GeneralLedgerSetup.TESTFIELD("Allow G/L Acc. Deletion Before");
+
+      GLEntry.SETFILTER("Posting Date",'>=%1',GeneralLedgerSetup."Allow G/L Acc. Deletion Before");
+
+      GLBudgetEntry.LOCKTABLE;
+      GLBudgetEntry.SETCURRENTKEY("Budget Name","G/L Account No.",Date);
+      GLBudgetEntry.SETRANGE("G/L Account No.",GLAccount."No.");
+      GLBudgetEntry.SETFILTER(Date,'>=%1',GeneralLedgerSetup."Allow G/L Acc. Deletion Before");
+
+      HasGLEntries := NOT GLEntry.ISEMPTY;
+      HasGLBudgetEntries := GLBudgetEntry.FINDFIRST;
+
+      IF HasGLEntries OR HasGLBudgetEntries THEN BEGIN
+        IF CONFIRM(GLAccDeleteClosedPeriodsQst) THEN
+          EXIT;
+
+        IF HasGLEntries THEN
+          ERROR(
+            CannotDeleteGLAccountWithEntriesAfterDateErr,
+            GLAccount."No.",GeneralLedgerSetup."Allow G/L Acc. Deletion Before");
+        IF HasGLBudgetEntries THEN
+          ERROR(
+            CannotDeleteGLBugetEntriesErr,
+            GLAccount."No.",GeneralLedgerSetup."Allow G/L Acc. Deletion Before",GLBudgetEntry."Budget Name");
+      END;
     END;
 
     BEGIN

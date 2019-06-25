@@ -2,9 +2,9 @@ OBJECT Page 1290 Payment Reconciliation Journal
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.47256,NAVDK9.00.00.47256;
   }
   PROPERTIES
   {
@@ -28,7 +28,8 @@ OBJECT Page 1290 Payment Reconciliation Journal
                      BEGIN
                        MatchDetails := PaymentMatchingDetails.MergeMessages(Rec);
 
-                       GetAppliedPmtEntriesInfo(AppliedPmtEntry,StatementToRemAmtDifference);
+                       GetAppliedPmtData(AppliedPmtEntry,RemainingAmountAfterPosting,StatementToRemAmtDifference,PmtAppliedToTxt);
+                       ShowShortcutDimCode(ShortcutDimCode);
                      END;
 
     OnNewRecord=BEGIN
@@ -236,6 +237,7 @@ OBJECT Page 1290 Payment Reconciliation Journal
                       PromotedCategory=Category4;
                       OnAction=BEGIN
                                  DisplayApplication;
+                                 GetAppliedPmtData(AppliedPmtEntry,RemainingAmountAfterPosting,StatementToRemAmtDifference,PmtAppliedToTxt);
                                END;
                                 }
       { 15      ;1   ;ActionGroup;
@@ -269,6 +271,7 @@ OBJECT Page 1290 Payment Reconciliation Journal
                       ActionContainerType=RelatedInformation }
       { 38      ;1   ;Action    ;
                       Name=Dimensions;
+                      ShortCutKey=Shift+Ctrl+D;
                       CaptionML=[DAN=Dimensioner;
                                  ENU=Dimensions];
                       Image=Dimensions;
@@ -458,6 +461,102 @@ OBJECT Page 1290 Payment Reconciliation Journal
                 Visible=FALSE;
                 Editable=FALSE }
 
+    { 64  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dimensionsværdikode, der er knyttet til kladdelinjen.;
+                           ENU=Specifies the dimension value code linked to the journal line.];
+                SourceExpr="Shortcut Dimension 1 Code";
+                Visible=FALSE }
+
+    { 65  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dimensionsværdikode, der er knyttet til kladdelinjen.;
+                           ENU=Specifies the dimension value code linked to the journal line.];
+                SourceExpr="Shortcut Dimension 2 Code";
+                Visible=FALSE }
+
+    { 71  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dimensionsværdikode, der er knyttet til kladdelinjen.;
+                           ENU=Specifies the dimension value code linked to the journal line.];
+                SourceExpr=ShortcutDimCode[3];
+                CaptionClass='1,2,3';
+                TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(3),
+                                                            Dimension Value Type=CONST(Standard),
+                                                            Blocked=CONST(No));
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(3,ShortcutDimCode[3]);
+                           END;
+                            }
+
+    { 70  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dimensionsværdikode, der er knyttet til kladdelinjen.;
+                           ENU=Specifies the dimension value code linked to the journal line.];
+                SourceExpr=ShortcutDimCode[4];
+                CaptionClass='1,2,4';
+                TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(4),
+                                                            Dimension Value Type=CONST(Standard),
+                                                            Blocked=CONST(No));
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(4,ShortcutDimCode[4]);
+                           END;
+                            }
+
+    { 69  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dimensionsværdikode, der er knyttet til kladdelinjen.;
+                           ENU=Specifies the dimension value code linked to the journal line.];
+                SourceExpr=ShortcutDimCode[5];
+                CaptionClass='1,2,5';
+                TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(5),
+                                                            Dimension Value Type=CONST(Standard),
+                                                            Blocked=CONST(No));
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(5,ShortcutDimCode[5]);
+                           END;
+                            }
+
+    { 68  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dimensionsværdikode, der er knyttet til kladdelinjen.;
+                           ENU=Specifies the dimension value code linked to the journal line.];
+                SourceExpr=ShortcutDimCode[6];
+                CaptionClass='1,2,6';
+                TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(6),
+                                                            Dimension Value Type=CONST(Standard),
+                                                            Blocked=CONST(No));
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(6,ShortcutDimCode[6]);
+                           END;
+                            }
+
+    { 67  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dimensionsværdikode, der er knyttet til kladdelinjen.;
+                           ENU=Specifies the dimension value code linked to the journal line.];
+                SourceExpr=ShortcutDimCode[7];
+                CaptionClass='1,2,7';
+                TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(7),
+                                                            Dimension Value Type=CONST(Standard),
+                                                            Blocked=CONST(No));
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(7,ShortcutDimCode[7]);
+                           END;
+                            }
+
+    { 66  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den dimensionsværdikode, der er knyttet til kladdelinjen.;
+                           ENU=Specifies the dimension value code linked to the journal line.];
+                SourceExpr=ShortcutDimCode[8];
+                CaptionClass='1,2,8';
+                TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(8),
+                                                            Dimension Value Type=CONST(Standard),
+                                                            Blocked=CONST(No));
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(8,ShortcutDimCode[8]);
+                           END;
+                            }
+
     { 43  ;1   ;Field     ;
                 Name=AccountName;
                 CaptionML=[DAN=Kontonavn:;
@@ -526,6 +625,7 @@ OBJECT Page 1290 Payment Reconciliation Journal
       FinanceChargeMemoEnabled@1001 : Boolean;
       RemainingAmountAfterPosting@1006 : Decimal;
       RemoveExistingApplicationsQst@1008 : TextConst 'DAN=Når du kører handlingen Udlign automatisk, annulleres alle tidligere udligninger.\\Vil du fortsætte?;ENU=When you run the Apply Automatically action, it will undo all previous applications.\\Do you want to continue?';
+      ShortcutDimCode@1013 : ARRAY [8] OF Code[20];
 
     LOCAL PROCEDURE UpdateFIKStatus@1060000();
     BEGIN
@@ -534,33 +634,6 @@ OBJECT Page 1290 Payment Reconciliation Journal
           BankAccReconciliation."FIK Payment Reconciliation" := FALSE;
           BankAccReconciliation.MODIFY;
         END;
-    END;
-
-    LOCAL PROCEDURE GetAppliedPmtEntriesInfo@1(VAR AppliedPmtEntry@1000 : Record 1294;VAR DifferenceStatementAmtToApplEntryAmount@1002 : Decimal);
-    VAR
-      CurrRemAmtAfterPosting@1001 : Decimal;
-    BEGIN
-      AppliedPmtEntry.INIT;
-      RemainingAmountAfterPosting := 0;
-      DifferenceStatementAmtToApplEntryAmount := 0;
-
-      AppliedPmtEntry.FilterAppliedPmtEntry(Rec);
-      AppliedPmtEntry.SETFILTER("Applies-to Entry No.",'<>0');
-      IF AppliedPmtEntry.FINDSET THEN BEGIN
-        DifferenceStatementAmtToApplEntryAmount := "Statement Amount";
-        REPEAT
-          CurrRemAmtAfterPosting :=
-            AppliedPmtEntry.GetRemAmt -
-            AppliedPmtEntry."Applied Pmt. Discount" -
-            AppliedPmtEntry.GetAmtAppliedToOtherStmtLines;
-
-          RemainingAmountAfterPosting += CurrRemAmtAfterPosting;
-          DifferenceStatementAmtToApplEntryAmount -= CurrRemAmtAfterPosting;
-        UNTIL AppliedPmtEntry.NEXT = 0;
-      END;
-
-      IF "Applied Entries" > 1 THEN
-        AppliedPmtEntry.Description := STRSUBSTNO(PmtAppliedToTxt,"Applied Entries");
     END;
 
     LOCAL PROCEDURE UpdateSorting@4(IsAscending@1003 : Boolean);
@@ -582,7 +655,7 @@ OBJECT Page 1290 Payment Reconciliation Journal
           BankAccReconciliationLine."Sorting Order" := BankAccReconciliationLine."Match Confidence" * ScoreRange;
 
           // Update sorting for same match confidence based onother criteria
-          GetAppliedPmtEntriesInfo(AppliedPaymentEntry2,AmountDifference);
+          GetAppliedPmtData(AppliedPaymentEntry2,RemainingAmountAfterPosting,AmountDifference,PmtAppliedToTxt);
 
           ScoreRange := ScoreRange / 10;
           IF AmountDifference <> 0 THEN

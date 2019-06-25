@@ -2,9 +2,9 @@ OBJECT Table 13600 OIOUBL Profile
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVDK7.10;
+    Version List=NAVDK9.00.00.50087;
   }
   PROPERTIES
   {
@@ -15,9 +15,11 @@ OBJECT Table 13600 OIOUBL Profile
   }
   FIELDS
   {
-    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+    { 1   ;   ;Code                ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kode;
                                                               ENU=Code] }
-    { 2   ;   ;Profile ID          ;Text50        ;CaptionML=[DAN=Profil-id;
+    { 2   ;   ;Profile ID          ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Profil-id;
                                                               ENU=Profile ID] }
   }
   KEYS

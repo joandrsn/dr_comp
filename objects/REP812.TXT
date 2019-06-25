@@ -2,9 +2,9 @@ OBJECT Report 812 Assembly BOM - End Items
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=26-01-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.47864;
   }
   PROPERTIES
   {
@@ -805,7 +805,7 @@ OBJECT Report 812 Assembly BOM - End Items
                 </Paragraph>
               </Paragraphs>
               <Height>0.423cm</Height>
-              <Width>7.5cm</Width>
+              <Width>7.8123cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -828,7 +828,7 @@ OBJECT Report 812 Assembly BOM - End Items
               </Paragraphs>
               <Top>0.423cm</Top>
               <Height>0.423cm</Height>
-              <Width>7.5cm</Width>
+              <Width>7.8123cm</Width>
               <ZIndex>2</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -861,6 +861,7 @@ OBJECT Report 812 Assembly BOM - End Items
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

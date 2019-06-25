@@ -2,9 +2,9 @@ OBJECT Codeunit 8610 Questionnaire Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -277,11 +277,12 @@ OBJECT Codeunit 8610 Questionnaire Management
     PROCEDURE GenerateQuestionnaireXMLDocument@1100(QuestionnaireXML@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";VAR ConfigQuestionnaire@1001 : Record 8610);
     VAR
       ConfigQuestionArea@1005 : Record 8611;
+      XMLDOMManagement@1003 : Codeunit 6224;
       RecRef@1002 : RecordRef;
       DocumentNode@1004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
     BEGIN
-      QuestionnaireXML.LoadXml(
-        '<?xml version="1.0" encoding="UTF-16" standalone="yes"?><Questionnaire></Questionnaire>');
+      XMLDOMManagement.LoadXMLDocumentFromText(
+        '<?xml version="1.0" encoding="UTF-16" standalone="yes"?><Questionnaire></Questionnaire>',QuestionnaireXML);
 
       DocumentNode := QuestionnaireXML.DocumentElement;
 
@@ -312,10 +313,10 @@ OBJECT Codeunit 8610 Questionnaire Management
 
     PROCEDURE ImportQuestionnaireAsXML@5(XMLDataFile@1000 : Text) : Boolean;
     VAR
+      XMLDOMManagement@1001 : Codeunit 6224;
       QuestionnaireXML@1100 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
     BEGIN
-      QuestionnaireXML := QuestionnaireXML.XmlDocument;
-      QuestionnaireXML.Load(XMLDataFile);
+      XMLDOMManagement.LoadXMLDocumentFromFile(XMLDataFile,QuestionnaireXML);
 
       EXIT(ImportQuestionnaireXMLDocument(QuestionnaireXML));
     END;

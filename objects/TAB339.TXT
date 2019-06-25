@@ -2,9 +2,9 @@ OBJECT Table 339 Item Application Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-04-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51333;
   }
   PROPERTIES
   {
@@ -46,6 +46,7 @@ OBJECT Table 339 Item Application Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Oprettet af bruger;
                                                               ENU=Created By User] }
     { 27  ;   ;Last Modified Date  ;DateTime      ;CaptionML=[DAN=Dato for sidste ændring;
@@ -58,6 +59,7 @@ OBJECT Table 339 Item Application Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Sidst ændret af bruger;
                                                               ENU=Last Modified By User] }
     { 5800;   ;Cost Application    ;Boolean       ;CaptionML=[DAN=Kostprisudligning;
@@ -338,7 +340,8 @@ OBJECT Table 339 Item Application Entry
     VAR
       ItemLedgEntry@1991 : Record 32;
     BEGIN
-      ItemLedgEntry.GET(EntryNo);
+      IF NOT ItemLedgEntry.GET(EntryNo) THEN
+        EXIT(FALSE);
       EXIT(CheckCyclicProdCyclicalLoop(CheckItemLedgEntry,ItemLedgEntry));
     END;
 
@@ -346,13 +349,13 @@ OBJECT Table 339 Item Application Entry
     VAR
       ItemLedgEntry@1991 : Record 32;
     BEGIN
-      ItemLedgEntry.GET(EntryNo);
+      IF NOT ItemLedgEntry.GET(EntryNo) THEN
+        EXIT(FALSE);
       EXIT(CheckCyclicAsmCyclicalLoop(CheckItemLedgEntry,ItemLedgEntry));
     END;
 
     LOCAL PROCEDURE CheckCyclicFwdToAppliedEntries@8(CheckItemLedgEntry@1001 : Record 32;VAR ItemApplnEntry@1005 : Record 339;FromEntryNo@1002 : Integer;IsPositiveToNegativeFlow@1009 : Boolean) : Boolean;
     VAR
-      ValueEntry@1000 : Record 5802;
       ToEntryNo@1008 : Integer;
     BEGIN
       IF EntryIsVisited(FromEntryNo) THEN
@@ -364,10 +367,7 @@ OBJECT Table 339 Item Application Entry
         ELSE
           ToEntryNo := ItemApplnEntry."Inbound Item Entry No.";
 
-        ValueEntry.SETCURRENTKEY("Item Ledger Entry No.","Valuation Date");
-        ValueEntry.SETRANGE("Item Ledger Entry No.",ItemApplnEntry."Item Ledger Entry No.");
-        ValueEntry.FINDLAST;
-        IF (MaxValuationDate = 0D) OR (ValueEntry."Valuation Date" <= MaxValuationDate) THEN BEGIN
+        IF CheckLatestItemLedgEntryValuationDate(ItemApplnEntry."Item Ledger Entry No.",MaxValuationDate) THEN BEGIN
           IF TrackChain THEN
             IF NOT ItemLedgEntryInChainNo.GET(ToEntryNo) THEN BEGIN
               ItemLedgEntryInChainNo.Number := ToEntryNo;
@@ -417,10 +417,14 @@ OBJECT Table 339 Item Application Entry
     BEGIN
       MaxValuationDate := 0D;
       IF WithinValuationDate THEN BEGIN
-        ValueEntry.SETCURRENTKEY("Item Ledger Entry No.","Entry Type");
+        ValueEntry.SETCURRENTKEY("Item Ledger Entry No.","Valuation Date");
         ValueEntry.SETRANGE("Item Ledger Entry No.",FromItemLedgEntry."Entry No.");
-        ValueEntry.FINDFIRST;
+        ValueEntry.FINDLAST;
         AvgCostAdjmtEntryPoint.SETRANGE("Item No.",FromItemLedgEntry."Item No.");
+        IF NOT AvgCostAdjmtEntryPoint.IsAvgCostCalcTypeItem(ValueEntry."Valuation Date") THEN BEGIN
+          AvgCostAdjmtEntryPoint.SETRANGE("Variant Code",FromItemLedgEntry."Variant Code");
+          AvgCostAdjmtEntryPoint.SETRANGE("Location Code",FromItemLedgEntry."Location Code");
+        END;
         AvgCostAdjmtEntryPoint.SETRANGE("Valuation Date",ValueEntry."Valuation Date",31129999D);
         IF AvgCostAdjmtEntryPoint.FINDFIRST THEN
           MaxValuationDate := AvgCostAdjmtEntryPoint."Valuation Date"
@@ -565,6 +569,29 @@ OBJECT Table 339 Item Application Entry
       SETFILTER("Outbound Item Entry No.",'<>%1',0);
       SETRANGE("Cost Application",TRUE);
       EXIT(FINDFIRST);
+    END;
+
+    PROCEDURE IsOutbndItemApplEntryCostApplication@400(OutboundItemLedgEntryNo@1000 : Integer) : Boolean;
+    VAR
+      ItemApplicationEntry@1001 : Record 339;
+    BEGIN
+      ItemApplicationEntry.SETCURRENTKEY("Outbound Item Entry No.","Item Ledger Entry No.","Cost Application");
+      ItemApplicationEntry.SETRANGE("Outbound Item Entry No.",OutboundItemLedgEntryNo);
+      ItemApplicationEntry.SETRANGE("Item Ledger Entry No.",OutboundItemLedgEntryNo);
+      ItemApplicationEntry.SETRANGE("Cost Application",FALSE);
+      EXIT(ItemApplicationEntry.ISEMPTY);
+    END;
+
+    LOCAL PROCEDURE CheckLatestItemLedgEntryValuationDate@18(ItemLedgerEntryNo@1000 : Integer;MaxDate@1001 : Date) : Boolean;
+    VAR
+      ValueEntry@1002 : Record 5802;
+    BEGIN
+      IF MaxDate = 0D THEN
+        EXIT(TRUE);
+      ValueEntry.SETCURRENTKEY("Item Ledger Entry No.","Valuation Date");
+      ValueEntry.SETRANGE("Item Ledger Entry No.",ItemLedgerEntryNo);
+      ValueEntry.FINDLAST;
+      EXIT(ValueEntry."Valuation Date" <= MaxDate);
     END;
 
     BEGIN

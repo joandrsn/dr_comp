@@ -2,9 +2,9 @@ OBJECT Table 179 Reversal Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -429,7 +429,10 @@ OBJECT Table 179 Reversal Entry
       IF NOT DtldCustLedgEntry.ISEMPTY THEN
         ERROR(ReversalErrorForChangedEntry(CustLedgEntry.TABLECAPTION,CustLedgEntry."Entry No."));
 
-      DtldCustLedgEntry.SETRANGE(Unapplied);
+      DtldCustLedgEntry.RESET;
+      DtldCustLedgEntry.SETCURRENTKEY("Transaction No.","Customer No.","Entry Type");
+      DtldCustLedgEntry.SETRANGE("Transaction No.",CustLedgEntry."Transaction No.");
+      DtldCustLedgEntry.SETRANGE("Customer No.",CustLedgEntry."Customer No.");
       DtldCustLedgEntry.SETFILTER("Entry Type",'%1|%2',
         DtldCustLedgEntry."Entry Type"::"Realized Gain",DtldCustLedgEntry."Entry Type"::"Realized Loss");
       IF NOT DtldCustLedgEntry.ISEMPTY THEN
@@ -447,7 +450,10 @@ OBJECT Table 179 Reversal Entry
       IF NOT DtldVendLedgEntry.ISEMPTY THEN
         ERROR(ReversalErrorForChangedEntry(VendLedgEntry.TABLECAPTION,VendLedgEntry."Entry No."));
 
-      DtldVendLedgEntry.SETRANGE(Unapplied);
+      DtldVendLedgEntry.RESET;
+      DtldVendLedgEntry.SETCURRENTKEY("Transaction No.","Vendor No.","Entry Type");
+      DtldVendLedgEntry.SETRANGE("Transaction No.",VendLedgEntry."Transaction No.");
+      DtldVendLedgEntry.SETRANGE("Vendor No.",VendLedgEntry."Vendor No.");
       DtldVendLedgEntry.SETFILTER("Entry Type",'%1|%2',
         DtldVendLedgEntry."Entry Type"::"Realized Gain",DtldVendLedgEntry."Entry Type"::"Realized Loss");
       IF NOT DtldVendLedgEntry.ISEMPTY THEN
@@ -469,6 +475,7 @@ OBJECT Table 179 Reversal Entry
         VendLedgEntry.SETRANGE("Transaction No.",Number);
         BankAccLedgEntry.SETRANGE("Transaction No.",Number);
         FALedgEntry.SETRANGE("Transaction No.",Number);
+        FALedgEntry.SETFILTER("G/L Entry No.",'<>%1',0);
         MaintenanceLedgEntry.SETRANGE("Transaction No.",Number);
         VATEntry.SETRANGE("Transaction No.",Number);
       END ELSE BEGIN
@@ -670,6 +677,11 @@ OBJECT Table 179 Reversal Entry
         "Entry Type",'<>%1',DtldCustLedgEntry."Entry Type"::"Initial Entry");
       IF CustLedgEntry.FINDSET THEN
         REPEAT
+          DtldCustLedgEntry.SETRANGE("Transaction No.",CustLedgEntry."Transaction No.");
+          DtldCustLedgEntry.SETRANGE("Customer No.",CustLedgEntry."Customer No.");
+          IF (NOT DtldCustLedgEntry.ISEMPTY) AND (RevType = RevType::Register) THEN
+            ERROR(Text012,Number);
+
           CLEAR(ReversalEntry);
           IF RevType = RevType::Register THEN
             ReversalEntry."G/L Register No." := Number;
@@ -701,13 +713,12 @@ OBJECT Table 179 Reversal Entry
           NextLineNo := NextLineNo + 1;
           ReversalEntry.INSERT;
 
-          DtldCustLedgEntry.SETRANGE("Transaction No.",CustLedgEntry."Transaction No.");
-          DtldCustLedgEntry.SETRANGE("Customer No.",CustLedgEntry."Customer No.");
-          IF NOT DtldCustLedgEntry.ISEMPTY THEN BEGIN
-            IF RevType = RevType::Register THEN
-              ERROR(Text012,Number);
-            InsertCustTempRevertTransNo(TempRevertTransactionNo,CustLedgEntry."Entry No.");
-          END;
+          DtldCustLedgEntry.SETRANGE(Unapplied,TRUE);
+          IF DtldCustLedgEntry.FINDSET THEN
+            REPEAT
+              InsertCustTempRevertTransNo(TempRevertTransactionNo,DtldCustLedgEntry."Unapplied by Entry No.");
+            UNTIL DtldCustLedgEntry.NEXT = 0;
+          DtldCustLedgEntry.SETRANGE(Unapplied);
         UNTIL CustLedgEntry.NEXT = 0;
     END;
 
@@ -721,6 +732,11 @@ OBJECT Table 179 Reversal Entry
         "Entry Type",'<>%1',DtldVendLedgEntry."Entry Type"::"Initial Entry");
       IF VendLedgEntry.FINDSET THEN
         REPEAT
+          DtldVendLedgEntry.SETRANGE("Transaction No.",VendLedgEntry."Transaction No.");
+          DtldVendLedgEntry.SETRANGE("Vendor No.",VendLedgEntry."Vendor No.");
+          IF (NOT DtldVendLedgEntry.ISEMPTY) AND (RevType = RevType::Register) THEN
+            ERROR(Text012,Number);
+
           CLEAR(ReversalEntry);
           IF RevType = RevType::Register THEN
             ReversalEntry."G/L Register No." := Number;
@@ -752,13 +768,12 @@ OBJECT Table 179 Reversal Entry
           NextLineNo := NextLineNo + 1;
           ReversalEntry.INSERT;
 
-          DtldVendLedgEntry.SETRANGE("Transaction No.",VendLedgEntry."Transaction No.");
-          DtldVendLedgEntry.SETRANGE("Vendor No.",VendLedgEntry."Vendor No.");
-          IF NOT DtldVendLedgEntry.ISEMPTY THEN BEGIN
-            IF RevType = RevType::Register THEN
-              ERROR(Text012,Number);
-            InsertVendTempRevertTransNo(TempRevertTransactionNo,VendLedgEntry."Entry No.");
-          END;
+          DtldVendLedgEntry.SETRANGE(Unapplied,TRUE);
+          IF DtldVendLedgEntry.FINDSET THEN
+            REPEAT
+              InsertVendTempRevertTransNo(TempRevertTransactionNo,DtldVendLedgEntry."Unapplied by Entry No.");
+            UNTIL DtldVendLedgEntry.NEXT = 0;
+          DtldVendLedgEntry.SETRANGE(Unapplied);
         UNTIL VendLedgEntry.NEXT = 0;
     END;
 
@@ -945,14 +960,10 @@ OBJECT Table 179 Reversal Entry
     VAR
       DtldCustLedgEntry@1002 : Record 379;
     BEGIN
-      DtldCustLedgEntry.SETCURRENTKEY("Cust. Ledger Entry No.");
-      DtldCustLedgEntry.SETRANGE("Cust. Ledger Entry No.",CustLedgEntryNo);
-      DtldCustLedgEntry.SETRANGE(Unapplied,TRUE);
-      IF DtldCustLedgEntry.FINDSET THEN BEGIN
-        REPEAT
-          TempRevertTransactionNo.Number := DtldCustLedgEntry."Transaction No.";
-          IF TempRevertTransactionNo.INSERT THEN;
-        UNTIL DtldCustLedgEntry.NEXT = 0;
+      DtldCustLedgEntry.GET(CustLedgEntryNo);
+      IF DtldCustLedgEntry."Transaction No." <> 0 THEN BEGIN
+        TempRevertTransactionNo.Number := DtldCustLedgEntry."Transaction No.";
+        IF TempRevertTransactionNo.INSERT THEN;
       END;
     END;
 
@@ -960,14 +971,10 @@ OBJECT Table 179 Reversal Entry
     VAR
       DtldVendLedgEntry@1002 : Record 380;
     BEGIN
-      DtldVendLedgEntry.SETCURRENTKEY("Vendor Ledger Entry No.");
-      DtldVendLedgEntry.SETRANGE("Vendor Ledger Entry No.",VendLedgEntryNo);
-      DtldVendLedgEntry.SETRANGE(Unapplied,TRUE);
-      IF DtldVendLedgEntry.FINDSET THEN BEGIN
-        REPEAT
-          TempRevertTransactionNo.Number := DtldVendLedgEntry."Transaction No.";
-          IF TempRevertTransactionNo.INSERT THEN;
-        UNTIL DtldVendLedgEntry.NEXT = 0;
+      DtldVendLedgEntry.GET(VendLedgEntryNo);
+      IF DtldVendLedgEntry."Transaction No." <> 0 THEN BEGIN
+        TempRevertTransactionNo.Number := DtldVendLedgEntry."Transaction No.";
+        IF TempRevertTransactionNo.INSERT THEN;
       END;
     END;
 

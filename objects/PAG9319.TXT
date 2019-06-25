@@ -2,9 +2,9 @@ OBJECT Page 9319 Service Invoices
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -195,19 +195,11 @@ OBJECT Page 9319 Service Invoices
 
     { 121 ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 1 Code";
-                Visible=FALSE;
-                OnLookup=BEGIN
-                           DimMgt.LookupDimValueCodeNoUpdate(1);
-                         END;
-                          }
+                Visible=FALSE }
 
     { 119 ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 2 Code";
-                Visible=FALSE;
-                OnLookup=BEGIN
-                           DimMgt.LookupDimValueCodeNoUpdate(2);
-                         END;
-                          }
+                Visible=FALSE }
 
     { 31  ;2   ;Field     ;
                 SourceExpr="Assigned User ID" }
@@ -262,8 +254,6 @@ OBJECT Page 9319 Service Invoices
   }
   CODE
   {
-    VAR
-      DimMgt@1001 : Codeunit 408;
 
     BEGIN
     END.

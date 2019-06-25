@@ -2,16 +2,16 @@ OBJECT Table 5355 CRM Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=invoice;
-    CaptionML=[DAN=Invoice;
-               ENU=Invoice];
+    CaptionML=[DAN=CRM Invoice;
+               ENU=CRM Invoice];
     Description=Order that has been billed.;
   }
   FIELDS

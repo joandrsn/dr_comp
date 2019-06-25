@@ -2,14 +2,16 @@ OBJECT Codeunit 410 Update Analysis View
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
     TableNo=363;
-    Permissions=TableData 363=rm,
+    Permissions=TableData 17=r,
+                TableData 96=r,
+                TableData 363=rm,
                 TableData 364=r,
                 TableData 365=rimd,
                 TableData 366=rimd;
@@ -71,20 +73,13 @@ OBJECT Codeunit 410 Update Analysis View
       GLBudgetEntry.RESET;
       IF LastEntryNoIsInitialized THEN
         EXIT;
-      LastEntryNoIsInitialized := TRUE;
-      COMMIT;
-      WITH GLEntry DO BEGIN
-        LOCKTABLE;
+      WITH GLEntry DO
         IF FINDLAST THEN
           LastGLEntryNo := "Entry No.";
-        COMMIT;
-      END;
-      WITH GLBudgetEntry DO BEGIN
-        LOCKTABLE;
+      WITH GLBudgetEntry DO
         IF FINDLAST THEN
           LastBudgetEntryNo := "Entry No.";
-        COMMIT;
-      END;
+      LastEntryNoIsInitialized := TRUE;
     END;
 
     PROCEDURE UpdateAll@15(Which@1000 : 'Ledger Entries,Budget Entries,Both';DirectlyFromPosting@1001 : Boolean);
@@ -330,7 +325,7 @@ OBJECT Codeunit 410 Update Analysis View
       FlushAnalysisViewBudgetEntry;
     END;
 
-    LOCAL PROCEDURE UpdateAnalysisViewEntry@3(AccNo@1013 : Code[20];BusUnitCode@1014 : Code[10];CashFlowForecastNo@1015 : Code[20];DimValue1@1000 : Code[20];DimValue2@1001 : Code[20];DimValue3@1002 : Code[20];DimValue4@1003 : Code[20];PostingDate@1007 : Date;Amount@1004 : Decimal;DebitAmount@1008 : Decimal;CreditAmount@1009 : Decimal;AmountACY@1010 : Decimal;DebitAmountACY@1012 : Decimal;CreditAmountACY@1011 : Decimal;EntryNo@1016 : Integer);
+    LOCAL PROCEDURE UpdateAnalysisViewEntry@3(AccNo@1013 : Code[20];BusUnitCode@1014 : Code[20];CashFlowForecastNo@1015 : Code[20];DimValue1@1000 : Code[20];DimValue2@1001 : Code[20];DimValue3@1002 : Code[20];DimValue4@1003 : Code[20];PostingDate@1007 : Date;Amount@1004 : Decimal;DebitAmount@1008 : Decimal;CreditAmount@1009 : Decimal;AmountACY@1010 : Decimal;DebitAmountACY@1012 : Decimal;CreditAmountACY@1011 : Decimal;EntryNo@1016 : Integer);
     BEGIN
       IF PostingDate < AnalysisView."Starting Date" THEN BEGIN
         PostingDate := AnalysisView."Starting Date" - 1;

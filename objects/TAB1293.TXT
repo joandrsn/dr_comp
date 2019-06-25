@@ -2,9 +2,9 @@ OBJECT Table 1293 Payment Application Proposal
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -315,12 +315,14 @@ OBJECT Table 1293 Payment Application Proposal
     VAR
       AppliedPaymentEntry@1002 : Record 1294;
       BankAccReconciliationLine@1003 : Record 274;
+      MatchBankPayments@1004 : Codeunit 1255;
     BEGIN
       AppliedPaymentEntry.TRANSFERFIELDS(Rec);
-
       BankAccReconciliationLine.GET(
         AppliedPaymentEntry."Statement Type",AppliedPaymentEntry."Bank Account No.",
         AppliedPaymentEntry."Statement No.",AppliedPaymentEntry."Statement Line No.");
+      MatchBankPayments.SetApplicationDataInCVLedgEntry(
+        "Account Type","Applies-to Entry No.",BankAccReconciliationLine.GetAppliesToID);
 
       IF AmtToApply = 0 THEN
         ERROR(StmtAmtIsFullyAppliedErr);

@@ -2,9 +2,9 @@ OBJECT Codeunit 5400 Available Management
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -34,9 +34,6 @@ OBJECT Codeunit 5400 Available Management
     BEGIN
       CopyOfItem.COPY(Item);
       WITH CopyOfItem DO BEGIN
-        IF "Include Inventory" THEN
-          CALCFIELDS(Inventory);
-
         SETRANGE("Date Filter",0D,GETRANGEMAX("Date Filter"));
         CALCFIELDS(
           "Qty. on Purch. Order",

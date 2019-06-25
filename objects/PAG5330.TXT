@@ -2,9 +2,9 @@ OBJECT Page 5330 CRM Connection Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -21,7 +21,8 @@ OBJECT Page 5330 CRM Connection Setup
                  IF NOT GET THEN BEGIN
                    INIT;
                    INSERT;
-                 END;
+                 END ELSE
+                   ConnectionString := GetConnectionString;
 
                  UpdateIsEnabledState;
                  IF NOT ConnectionEnabled THEN
@@ -29,7 +30,7 @@ OBJECT Page 5330 CRM Connection Setup
                END;
 
     OnClosePage=BEGIN
-                  CRMIntegrationManagement.Clear;
+                  CRMIntegrationManagement.ClearState;
                 END;
 
     OnAfterGetRecord=BEGIN
@@ -215,6 +216,7 @@ OBJECT Page 5330 CRM Connection Setup
                                IF CONFIRM(STRSUBSTNO(ReplaceServerAddressQst,"Server Address",ProposedUri)) THEN
                                  "Server Address" := ProposedUri;
                              END;
+                             ConnectionString := GetConnectionString;
                            END;
                             }
 
@@ -223,6 +225,7 @@ OBJECT Page 5330 CRM Connection Setup
                 Editable=IsEditable;
                 OnValidate=BEGIN
                              "User Name" := DELCHR("User Name",'<>');
+                             ConnectionString := GetConnectionString;
                            END;
                             }
 
@@ -237,7 +240,7 @@ OBJECT Page 5330 CRM Connection Setup
                              COMMIT;
                              IF (NewPassword <> '') AND (NOT ENCRYPTIONENABLED) THEN
                                IF CONFIRM(EncryptionIsNotActivatedQst) THEN
-                                 PAGE.RUN(PAGE::"Data Encryption Management")
+                                 PAGE.RUNMODAL(PAGE::"Data Encryption Management")
                            END;
                             }
 
@@ -434,6 +437,41 @@ OBJECT Page 5330 CRM Connection Setup
 
     { 30  ;2   ;Field      }
 
+    { 33  ;1   ;Group     ;
+                Name=AuthTypeDetails;
+                CaptionML=[DAN=Detaljer om godkendelsestype;
+                           ENU=Authentication Type Details];
+                GroupType=Group }
+
+    { 32  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den godkendelsestype, der anvendes til at godkende med Dynamics CRM.;
+                           ENU=Specifies the authentication type that will be used to authenticate with Dynamics CRM];
+                SourceExpr="Authentication Type";
+                Editable=NOT "Is Enabled";
+                OnValidate=BEGIN
+                             SetIsConnectionStringEditable;
+                             ConnectionString := GetConnectionString;
+                           END;
+                            }
+
+    { 31  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver domænenavnet for din Dynamics CRM-installation.;
+                           ENU=Specifies the domain name of your Dynamics CRM deployment.];
+                SourceExpr=Domain }
+
+    { 38  ;2   ;Field     ;
+                Name=Connection String;
+                CaptionML=[DAN=Forbindelsesstreng;
+                           ENU=Connection String];
+                ToolTipML=[DAN=Angiver den forbindelsesstreng, der anvendes til at oprette forbindelse til Dynamics CRM.;
+                           ENU=Specifies the connection string that will be used to connect to Dynamics CRM];
+                SourceExpr=ConnectionString;
+                Editable=IsConnectionStringEditable;
+                OnValidate=BEGIN
+                             SetConnectionString(ConnectionString);
+                           END;
+                            }
+
   }
   CODE
   {
@@ -495,9 +533,12 @@ OBJECT Page 5330 CRM Connection Setup
       ScheduledSynchJobsRunningMsgStyleExpr@1050 : Text;
       CurrentuserIsMappedToCRMUserMsg@1053 : TextConst '@@@="%1 = Current User ID";DAN=Dynamics NAV-bruger (%1) er knyttet til en Dynamics CRM-bruger.;ENU=Dynamics NAV user (%1) is mapped to a Dynamics CRM user.';
       CurrentuserIsNotMappedToCRMUserMsg@1054 : TextConst '@@@="%1 = Current User ID";DAN=Da feltet Dynamics NAV-brugere skal knyttes til Dynamics CRM-brugere er markeret, er integration af Dynamics CRM ikke aktiveret for %1.\\Hvis du vil aktivere Dynamics CRM integration for Dynamics NAV-brugeren %1, skal godkendelsesmailadressen være den samme som en Dynamics CRM-brugers primære mailadresse.;ENU=Because the Dynamics NAV Users Must Map to Dynamics CRM Users field is set, Dynamics CRM integration is not enabled for %1.\\To enable Dynamics CRM integration for Dynamics NAV user %1, the authentication e-mail must match the primary e-mail of a Dynamics CRM user.';
+      ConnectionString@1058 : Text;
+      IsConnectionStringEditable@1057 : Boolean;
 
     LOCAL PROCEDURE RefreshData@19();
     BEGIN
+      SetIsConnectionStringEditable;
       RefreshDataFromCRM;
       RefreshDataFromNAV;
     END;
@@ -610,7 +651,7 @@ OBJECT Page 5330 CRM Connection Setup
           IF (Version.Major > 6) AND NOT ((Version.Major = 7) AND (Version.Minor = 1)) THEN
             CRMSettingVersionStyleExpr := FavorableStyleExprTxt;
       END;
-      CRMSystemuser.SETRANGE(InternalEMailAddress,"User Name");
+      FilterCRMSystemUser(CRMSystemuser);
       IF CRMSystemuser.FINDFIRST THEN
         CRMSettingIsConnectionUserIntegrationUser := CRMSystemuser.IsIntegrationUser
       ELSE
@@ -646,7 +687,7 @@ OBJECT Page 5330 CRM Connection Setup
       TempCRMConnectionSetup.RegisterConnectionWithName(ConnectionName);
       SETDEFAULTTABLECONNECTION(TABLECONNECTIONTYPE::CRM,ConnectionName,TRUE);
 
-      CRMSystemuser.SETRANGE(InternalEMailAddress,"User Name");
+      FilterCRMSystemUser(CRMSystemuser);
       CRMSystemuser.FINDFIRST;
 
       IF (CRMSystemuser.InviteStatusCode <> CRMSystemuser.InviteStatusCode::InvitationAccepted) OR
@@ -769,7 +810,7 @@ OBJECT Page 5330 CRM Connection Setup
       IF ("User Name" = '') OR (NewPassword = '') OR ("Server Address" = '') THEN
         ERROR(DetailsMissingErr);
 
-      CRMIntegrationManagement.Clear;
+      CRMIntegrationManagement.ClearState;
 
       IF NOT TestConnection THEN
         ERROR(ConnectionErr,CRMIntegrationManagement.GetLastErrorMessage);
@@ -808,13 +849,14 @@ OBJECT Page 5330 CRM Connection Setup
     BEGIN
       CreateTempNoDelegateConnection(CRMConnectionSetup);
       CRMConnectionSetup."Primary Key" := COPYSTR('TEMP' + "Primary Key",1,MAXSTRLEN(CRMConnectionSetup."Primary Key"));
-      CRMConnectionSetup."User Name" := '';
+      CRMConnectionSetup.VALIDATE("User Name",'');
       CLEAR(CRMConnectionSetup."User Password Key");
     END;
 
     LOCAL PROCEDURE CreateTempNoDelegateConnection@10(VAR CRMConnectionSetup@1000 : Record 5330);
     BEGIN
       CRMConnectionSetup.INIT;
+      CALCFIELDS("Server Connection String");
       CRMConnectionSetup.TRANSFERFIELDS(Rec);
       CRMConnectionSetup."Primary Key" := COPYSTR('TEMP' + "Primary Key",1,MAXSTRLEN(CRMConnectionSetup."Primary Key"));
       CRMConnectionSetup."Is Enabled" := TRUE;
@@ -830,6 +872,11 @@ OBJECT Page 5330 CRM Connection Setup
         CurrentUserIsMappedToCRMUserStyleExpr := FavorableStyleExprTxt
       ELSE
         CurrentUserIsMappedToCRMUserStyleExpr := UnFavorableStyleExprTxt;
+    END;
+
+    LOCAL PROCEDURE SetIsConnectionStringEditable@14();
+    BEGIN
+      IsConnectionStringEditable := NOT "Is Enabled";
     END;
 
     BEGIN

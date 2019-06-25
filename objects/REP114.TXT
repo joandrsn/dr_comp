@@ -2,9 +2,9 @@ OBJECT Report 114 Salesperson - Sales Statistics
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -45,7 +45,7 @@ OBJECT Report 114 Salesperson - Sales Statistics
                                       IF CustLedgEntry."Document Type" IN [CustLedgEntry."Document Type"::Invoice,
                                                                            CustLedgEntry."Document Type"::"Credit Memo"]
                                       THEN
-                                        AdjProfit += CustLedgEntry."Sales (LCY)" + CostCalculationMgt.CalcCustLedgActualCostLCY(CustLedgEntry)
+                                        AdjProfit += CustLedgEntry."Profit (LCY)" + CostCalculationMgt.CalcCustLedgAdjmtCostLCY(CustLedgEntry)
                                       ELSE
                                         AdjProfit += CustLedgEntry."Profit (LCY)"
                                     UNTIL CustLedgEntry.NEXT = 0
@@ -252,51 +252,51 @@ OBJECT Report 114 Salesperson - Sales Statistics
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>0.82677in</Width>
+                  <Width>2.1cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.8563in</Width>
+                  <Width>2.175cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.76772in</Width>
+                  <Width>1.95001cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.76772in</Width>
+                  <Width>1.95001cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.41339in</Width>
+                  <Width>1.05001cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.5315in</Width>
+                  <Width>1.35001cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.76772in</Width>
+                  <Width>1.95001cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.76772in</Width>
+                  <Width>1.95001cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.79724in</Width>
+                  <Width>2.02499cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.1204in</Width>
+                  <Width>0.30582cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.07874in</Width>
+                  <Width>0.2cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.07874in</Width>
+                  <Width>0.2cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.07874in</Width>
+                  <Width>0.2cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.08915in</Width>
+                  <Width>0.22644cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
                 <TablixRow>
-                  <Height>0.49994in</Height>
+                  <Height>1.26985cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -618,7 +618,7 @@ OBJECT Report 114 Salesperson - Sales Statistics
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.16654in</Height>
+                  <Height>0.42301cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -1050,7 +1050,7 @@ OBJECT Report 114 Salesperson - Sales Statistics
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.16654in</Height>
+                  <Height>0.42301cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -1460,7 +1460,7 @@ OBJECT Report 114 Salesperson - Sales Statistics
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.16654in</Height>
+                  <Height>0.42301cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -1891,7 +1891,7 @@ OBJECT Report 114 Salesperson - Sales Statistics
         <Height>3.80788cm</Height>
         <Style />
       </Body>
-      <Width>20.1323cm</Width>
+      <Width>18.15cm</Width>
       <Page>
         <PageHeader>
           <Height>2.538cm</Height>
@@ -2040,6 +2040,7 @@ OBJECT Report 114 Salesperson - Sales Statistics
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

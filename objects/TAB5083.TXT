@@ -2,9 +2,9 @@ OBJECT Table 5083 Team
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -61,7 +61,7 @@ OBJECT Table 5083 Team
                                                    OptionCaptionML=[DAN=Lav,Normal,Høj;
                                                                     ENU=Low,Normal,High];
                                                    OptionString=Low,Normal,High }
-    { 11  ;   ;Salesperson Filter  ;Code10        ;FieldClass=FlowFilter;
+    { 11  ;   ;Salesperson Filter  ;Code20        ;FieldClass=FlowFilter;
                                                    TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerfilter;
                                                               ENU=Salesperson Filter] }

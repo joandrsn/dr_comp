@@ -2,9 +2,9 @@ OBJECT Table 7134 Item Budget Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -65,6 +65,7 @@ OBJECT Table 7134 Item Budget Entry
 
     OnDelete=BEGIN
                CheckIfBlocked;
+               DeleteItemAnalysisViewBudgEntry;
              END;
 
     CaptionML=[DAN=Varebudgetpost;
@@ -125,6 +126,7 @@ OBJECT Table 7134 Item Budget Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    Editable=No }
@@ -519,6 +521,16 @@ OBJECT Table 7134 Item Budget Entry
         TempDimSetEntry."Dimension Value ID" := DimVal."Dimension Value ID";
         TempDimSetEntry.INSERT;
       END;
+    END;
+
+    LOCAL PROCEDURE DeleteItemAnalysisViewBudgEntry@6();
+    VAR
+      ItemAnalysisViewBudgEntry@1000 : Record 7156;
+    BEGIN
+      ItemAnalysisViewBudgEntry.SETRANGE("Entry No.","Entry No.");
+      ItemAnalysisViewBudgEntry.SETRANGE("Analysis Area","Analysis Area");
+      ItemAnalysisViewBudgEntry.SETRANGE("Budget Name","Budget Name");
+      ItemAnalysisViewBudgEntry.DELETEALL;
     END;
 
     BEGIN

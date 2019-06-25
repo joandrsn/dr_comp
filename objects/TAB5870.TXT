@@ -2,9 +2,9 @@ OBJECT Table 5870 BOM Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -16,9 +16,11 @@ OBJECT Table 5870 BOM Buffer
   FIELDS
   {
     { 1   ;   ;Entry No.           ;Integer       ;AutoIncrement=Yes;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
-    { 2   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+    { 2   ;   ;Type                ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Type;
                                                               ENU=Type];
                                                    OptionCaptionML=[DAN=,Vare,Prod.ressource,Arbejdscenter,Ressource;
                                                                     ENU=,Item,Machine Center,Work Center,Resource];
@@ -27,144 +29,186 @@ OBJECT Table 5870 BOM Buffer
                                                                  ELSE IF (Type=CONST(Machine Center)) "Machine Center"
                                                                  ELSE IF (Type=CONST(Work Center)) "Work Center"
                                                                  ELSE IF (Type=CONST(Resource)) Resource;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
-    { 5   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+    { 5   ;   ;Description         ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
     { 6   ;   ;Unit of Measure Code;Code10        ;TableRelation=IF (Type=CONST(Item)) "Item Unit of Measure".Code WHERE (Item No.=FIELD(No.))
                                                                  ELSE IF (Type=CONST(Resource)) "Resource Unit of Measure".Code WHERE (Resource No.=FIELD(No.));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Enhedskode;
                                                               ENU=Unit of Measure Code] }
     { 7   ;   ;Variant Code        ;Code10        ;TableRelation=IF (Type=CONST(Item)) "Item Variant".Code WHERE (Item No.=FIELD(No.));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Variantkode;
                                                               ENU=Variant Code] }
     { 8   ;   ;Location Code       ;Code10        ;TableRelation=Location;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code] }
-    { 9   ;   ;Replenishment System;Option        ;CaptionML=[DAN=Genbestillingssystem;
+    { 9   ;   ;Replenishment System;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Genbestillingssystem;
                                                               ENU=Replenishment System];
                                                    OptionCaptionML=[DAN=Køb,Prod.ordre,Overførsel,Montage;
                                                                     ENU=Purchase,Prod. Order,Transfer,Assembly];
                                                    OptionString=Purchase,Prod. Order,Transfer,Assembly }
-    { 10  ;   ;Indentation         ;Integer       ;CaptionML=[DAN=Indrykning;
+    { 10  ;   ;Indentation         ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Indrykning;
                                                               ENU=Indentation] }
-    { 11  ;   ;Is Leaf             ;Boolean       ;CaptionML=[DAN=Er blad;
+    { 11  ;   ;Is Leaf             ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Er blad;
                                                               ENU=Is Leaf] }
-    { 13  ;   ;Bottleneck          ;Boolean       ;CaptionML=[DAN=Flaskehals;
+    { 13  ;   ;Bottleneck          ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Flaskehals;
                                                               ENU=Bottleneck] }
     { 15  ;   ;Routing No.         ;Code20        ;TableRelation="Routing Header";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Rutenr.;
                                                               ENU=Routing No.] }
     { 16  ;   ;Production BOM No.  ;Code20        ;TableRelation="Production BOM Header";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Produktionsstyklistenr.;
                                                               ENU=Production BOM No.] }
     { 20  ;   ;Lot Size            ;Decimal       ;AccessByPermission=TableData 5405=R;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Lotstørrelse;
                                                               ENU=Lot Size];
                                                    DecimalPlaces=0:5;
                                                    MinValue=0 }
-    { 21  ;   ;Low-Level Code      ;Integer       ;CaptionML=[DAN=Laveste-niveau-kode;
+    { 21  ;   ;Low-Level Code      ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Laveste-niveau-kode;
                                                               ENU=Low-Level Code];
                                                    Editable=No }
     { 22  ;   ;Rounding Precision  ;Decimal       ;InitValue=1;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Afrundingspræcision;
                                                               ENU=Rounding Precision];
                                                    DecimalPlaces=0:5 }
-    { 30  ;   ;Qty. per Parent     ;Decimal       ;CaptionML=[DAN=Ant. pr. overordnet;
+    { 30  ;   ;Qty. per Parent     ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ant. pr. overordnet;
                                                               ENU=Qty. per Parent];
                                                    DecimalPlaces=0:5 }
-    { 31  ;   ;Qty. per Top Item   ;Decimal       ;CaptionML=[DAN=Ant. pr. topvare;
+    { 31  ;   ;Qty. per Top Item   ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ant. pr. topvare;
                                                               ENU=Qty. per Top Item];
                                                    DecimalPlaces=0:5 }
-    { 32  ;   ;Able to Make Top Item;Decimal      ;CaptionML=[DAN=Kan blive topvare;
+    { 32  ;   ;Able to Make Top Item;Decimal      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kan blive topvare;
                                                               ENU=Able to Make Top Item];
                                                    DecimalPlaces=0:5 }
-    { 33  ;   ;Able to Make Parent ;Decimal       ;CaptionML=[DAN=Kan blive overordnet;
+    { 33  ;   ;Able to Make Parent ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kan blive overordnet;
                                                               ENU=Able to Make Parent];
                                                    DecimalPlaces=0:5 }
-    { 35  ;   ;Available Quantity  ;Decimal       ;CaptionML=[DAN=Disponibelt antal;
+    { 35  ;   ;Available Quantity  ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Disponibelt antal;
                                                               ENU=Available Quantity];
                                                    DecimalPlaces=0:5 }
-    { 36  ;   ;Gross Requirement   ;Decimal       ;CaptionML=[DAN=Bruttobehov;
+    { 36  ;   ;Gross Requirement   ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bruttobehov;
                                                               ENU=Gross Requirement];
                                                    DecimalPlaces=0:5 }
-    { 37  ;   ;Scheduled Receipts  ;Decimal       ;CaptionML=[DAN=Fastlagt tilgang;
+    { 37  ;   ;Scheduled Receipts  ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Fastlagt tilgang;
                                                               ENU=Scheduled Receipts];
                                                    DecimalPlaces=0:5 }
-    { 38  ;   ;Unused Quantity     ;Decimal       ;CaptionML=[DAN=Ubrugt antal;
+    { 38  ;   ;Unused Quantity     ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ubrugt antal;
                                                               ENU=Unused Quantity];
                                                    DecimalPlaces=0:5 }
-    { 40  ;   ;Lead Time Calculation;DateFormula  ;CaptionML=[DAN=Leveringstid;
+    { 40  ;   ;Lead Time Calculation;DateFormula  ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Leveringstid;
                                                               ENU=Lead Time Calculation] }
-    { 41  ;   ;Lead-Time Offset    ;DateFormula   ;CaptionML=[DAN=Gennemløbstid;
+    { 41  ;   ;Lead-Time Offset    ;DateFormula   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Gennemløbstid;
                                                               ENU=Lead-Time Offset] }
-    { 42  ;   ;Rolled-up Lead-Time Offset;Integer ;CaptionML=[DAN=Akkumuleret gennemløbstid;
+    { 42  ;   ;Rolled-up Lead-Time Offset;Integer ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Akkumuleret gennemløbstid;
                                                               ENU=Rolled-up Lead-Time Offset] }
-    { 43  ;   ;Needed by Date      ;Date          ;CaptionML=[DAN=Behovsdato;
+    { 43  ;   ;Needed by Date      ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Behovsdato;
                                                               ENU=Needed by Date] }
-    { 45  ;   ;Safety Lead Time    ;DateFormula   ;CaptionML=[DAN=Sikkerhedstid;
+    { 45  ;   ;Safety Lead Time    ;DateFormula   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Sikkerhedstid;
                                                               ENU=Safety Lead Time] }
-    { 50  ;   ;Unit Cost           ;Decimal       ;CaptionML=[DAN=Kostpris;
+    { 50  ;   ;Unit Cost           ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kostpris;
                                                               ENU=Unit Cost];
                                                    AutoFormatType=2 }
-    { 52  ;   ;Indirect Cost %     ;Decimal       ;CaptionML=[DAN=Indir. omkost.pct.;
+    { 52  ;   ;Indirect Cost %     ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Indir. omkost.pct.;
                                                               ENU=Indirect Cost %];
                                                    DecimalPlaces=0:5 }
-    { 54  ;   ;Overhead Rate       ;Decimal       ;CaptionML=[DAN=IPO-bidrag;
+    { 54  ;   ;Overhead Rate       ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=IPO-bidrag;
                                                               ENU=Overhead Rate];
                                                    AutoFormatType=2 }
-    { 55  ;   ;Scrap %             ;Decimal       ;CaptionML=[DAN=Spildpct.;
+    { 55  ;   ;Scrap %             ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Spildpct.;
                                                               ENU=Scrap %];
                                                    BlankZero=Yes }
-    { 56  ;   ;Scrap Qty. per Parent;Decimal      ;CaptionML=[DAN=Spildantal pr. overordnet;
+    { 56  ;   ;Scrap Qty. per Parent;Decimal      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Spildantal pr. overordnet;
                                                               ENU=Scrap Qty. per Parent];
                                                    DecimalPlaces=0:5 }
-    { 57  ;   ;Scrap Qty. per Top Item;Decimal    ;CaptionML=[DAN=Spildantal pr. topvare;
+    { 57  ;   ;Scrap Qty. per Top Item;Decimal    ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Spildantal pr. topvare;
                                                               ENU=Scrap Qty. per Top Item];
                                                    DecimalPlaces=0:5 }
-    { 59  ;   ;Resource Usage Type ;Option        ;CaptionML=[DAN=Ressourceanvendelsestype;
+    { 59  ;   ;Resource Usage Type ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ressourceanvendelsestype;
                                                               ENU=Resource Usage Type];
                                                    OptionCaptionML=[DAN=Direkte,Fast;
                                                                     ENU=Direct,Fixed];
                                                    OptionString=Direct,Fixed }
-    { 61  ;   ;Single-Level Material Cost;Decimal ;CaptionML=[DAN=Materialekostpris (enkeltniv.);
+    { 61  ;   ;Single-Level Material Cost;Decimal ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Materialekostpris (enkeltniv.);
                                                               ENU=Single-Level Material Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes;
                                                    AutoFormatType=2 }
-    { 62  ;   ;Single-Level Capacity Cost;Decimal ;CaptionML=[DAN=Kapacitetskostpris (enkeltniv);
+    { 62  ;   ;Single-Level Capacity Cost;Decimal ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kapacitetskostpris (enkeltniv);
                                                               ENU=Single-Level Capacity Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes;
                                                    AutoFormatType=2 }
     { 63  ;   ;Single-Level Subcontrd. Cost;Decimal;
                                                    AccessByPermission=TableData 99000758=R;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Underlev.kostpris (enkeltniv.);
                                                               ENU=Single-Level Subcontrd. Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes;
                                                    AutoFormatType=2 }
-    { 64  ;   ;Single-Level Cap. Ovhd Cost;Decimal;CaptionML=[DAN=Ind. kap.kostpris (enkeltniv.);
+    { 64  ;   ;Single-Level Cap. Ovhd Cost;Decimal;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ind. kap.kostpris (enkeltniv.);
                                                               ENU=Single-Level Cap. Ovhd Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes;
                                                    AutoFormatType=2 }
-    { 65  ;   ;Single-Level Mfg. Ovhd Cost;Decimal;CaptionML=[DAN=Ind. prod.kostpris (enkeltniv);
+    { 65  ;   ;Single-Level Mfg. Ovhd Cost;Decimal;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ind. prod.kostpris (enkeltniv);
                                                               ENU=Single-Level Mfg. Ovhd Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes;
                                                    AutoFormatType=2 }
-    { 66  ;   ;Single-Level Scrap Cost;Decimal    ;CaptionML=[DAN=Spildomkostninger på enkeltniveau;
+    { 66  ;   ;Single-Level Scrap Cost;Decimal    ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Spildomkostninger på enkeltniveau;
                                                               ENU=Single-Level Scrap Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes }
-    { 71  ;   ;Rolled-up Material Cost;Decimal    ;CaptionML=[DAN=Akkum. materialekostpris;
+    { 71  ;   ;Rolled-up Material Cost;Decimal    ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Akkum. materialekostpris;
                                                               ENU=Rolled-up Material Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes;
                                                    Editable=No;
                                                    AutoFormatType=2 }
-    { 72  ;   ;Rolled-up Capacity Cost;Decimal    ;CaptionML=[DAN=Akkum. kapacitetskostpris;
+    { 72  ;   ;Rolled-up Capacity Cost;Decimal    ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Akkum. kapacitetskostpris;
                                                               ENU=Rolled-up Capacity Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes;
@@ -172,35 +216,42 @@ OBJECT Table 5870 BOM Buffer
                                                    AutoFormatType=2 }
     { 73  ;   ;Rolled-up Subcontracted Cost;Decimal;
                                                    AccessByPermission=TableData 99000758=R;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Underlev.kostpris (akkum.);
                                                               ENU=Rolled-up Subcontracted Cost];
                                                    BlankZero=Yes;
                                                    Editable=No;
                                                    AutoFormatType=2 }
     { 74  ;   ;Rolled-up Capacity Ovhd. Cost;Decimal;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Akkumulerede indirekte kapacitetsomkostninger;
                                                               ENU=Rolled-up Capacity Ovhd. Cost];
                                                    BlankZero=Yes;
                                                    Editable=No;
                                                    AutoFormatType=2 }
-    { 75  ;   ;Rolled-up Mfg. Ovhd Cost;Decimal   ;CaptionML=[DAN=Ind. prod.kostpris (akkum.);
+    { 75  ;   ;Rolled-up Mfg. Ovhd Cost;Decimal   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ind. prod.kostpris (akkum.);
                                                               ENU=Rolled-up Mfg. Ovhd Cost];
                                                    BlankZero=Yes;
                                                    Editable=No;
                                                    AutoFormatType=2 }
-    { 76  ;   ;Rolled-up Scrap Cost;Decimal       ;CaptionML=[DAN=Akkumulerede spildomkostninger;
+    { 76  ;   ;Rolled-up Scrap Cost;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Akkumulerede spildomkostninger;
                                                               ENU=Rolled-up Scrap Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes }
-    { 81  ;   ;Total Cost          ;Decimal       ;CaptionML=[DAN=Kostbeløb;
+    { 81  ;   ;Total Cost          ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kostbeløb;
                                                               ENU=Total Cost];
                                                    DecimalPlaces=2:5;
                                                    BlankZero=Yes }
     { 82  ;   ;BOM Unit of Measure Code;Code10    ;TableRelation=IF (Type=CONST(Item)) "Item Unit of Measure".Code WHERE (Item No.=FIELD(No.))
                                                                  ELSE IF (Type=CONST(Resource)) "Resource Unit of Measure".Code WHERE (Resource No.=FIELD(No.));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Måleenhedskode for stykliste;
                                                               ENU=BOM Unit of Measure Code] }
-    { 83  ;   ;Qty. per BOM Line   ;Decimal       ;CaptionML=[DAN=Ant. pr. styklistelinje;
+    { 83  ;   ;Qty. per BOM Line   ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ant. pr. styklistelinje;
                                                               ENU=Qty. per BOM Line];
                                                    DecimalPlaces=0:5 }
   }
@@ -357,7 +408,7 @@ OBJECT Table 5870 BOM Buffer
       "Qty. per Top Item" := ROUND(ParentQtyPer * "Qty. per Parent",0.00001);
       "Qty. per Parent" := ROUND("Qty. per Parent",0.00001);
 
-      "Scrap Qty. per Parent" := "Qty. per Parent" - (ProdBOMLine."Quantity per" / BOMQtyPerUOM);
+      "Scrap Qty. per Parent" := "Qty. per Parent" - (ProdBOMLine.Quantity / BOMQtyPerUOM);
       "Scrap Qty. per Top Item" :=
         "Qty. per Top Item" -
         ROUND((ParentQtyPer - ParentScrapQtyPer) * ("Qty. per Parent" - "Scrap Qty. per Parent"),0.00001);

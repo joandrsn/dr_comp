@@ -2,9 +2,9 @@ OBJECT Page 7376 Invt. Put-away Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -47,6 +47,7 @@ OBJECT Page 7376 Invt. Put-away Subform
                                  ENU=F&unctions];
                       Image=Action }
       { 1901991804;2 ;Action    ;
+                      Name=SplitWhseActivityLine;
                       ShortCutKey=Ctrl+F11;
                       CaptionML=[DAN=&Opdel linje;
                                  ENU=&Split Line];
@@ -266,6 +267,7 @@ OBJECT Page 7376 Invt. Put-away Subform
     BEGIN
       WhseActivLine.COPY(Rec);
       SplitLine(WhseActivLine);
+      COPY(WhseActivLine);
       CurrPage.UPDATE(FALSE);
     END;
 

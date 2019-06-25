@@ -2,9 +2,9 @@ OBJECT Table 255 VAT Statement Template
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -30,7 +30,7 @@ OBJECT Table 255 VAT Statement Template
                                                    NotBlank=Yes }
     { 2   ;   ;Description         ;Text80        ;CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
-    { 6   ;   ;Page ID             ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Page));
+    { 6   ;   ;Page ID             ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Page));
                                                    OnValidate=BEGIN
                                                                 IF "Page ID" = 0 THEN
                                                                   "Page ID" := PAGE::"VAT Statement";
@@ -39,7 +39,7 @@ OBJECT Table 255 VAT Statement Template
 
                                                    CaptionML=[DAN=Side-id;
                                                               ENU=Page ID] }
-    { 7   ;   ;VAT Statement Report ID;Integer    ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Report));
+    { 7   ;   ;VAT Statement Report ID;Integer    ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Report));
                                                    CaptionML=[DAN=Momsang.rapport-id;
                                                               ENU=VAT Statement Report ID] }
     { 16  ;   ;Page Caption        ;Text250       ;FieldClass=FlowField;

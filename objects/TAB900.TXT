@@ -2,9 +2,9 @@ OBJECT Table 900 Assembly Header
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -70,8 +70,7 @@ OBJECT Table 900 Assembly Header
                                                    OptionCaptionML=[DAN=Tilbud,Ordre,,,Rammeordre;
                                                                     ENU=Quote,Order,,,Blanket Order];
                                                    OptionString=Quote,Order,,,Blanket Order }
-    { 2   ;   ;No.                 ;Code20        ;AltSearchField=Search Description;
-                                                   OnValidate=VAR
+    { 2   ;   ;No.                 ;Code20        ;OnValidate=VAR
                                                                 NoSeriesMgt@1000 : Codeunit 396;
                                                               BEGIN
                                                                 TestStatusOpen;
@@ -83,6 +82,7 @@ OBJECT Table 900 Assembly Header
                                                               END;
 
                                                    ValidateTableRelation=No;
+                                                   AltSearchField=Search Description;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 3   ;   ;Description         ;Text50        ;OnValidate=BEGIN
@@ -422,7 +422,7 @@ OBJECT Table 900 Assembly Header
                                                                 GetItem;
                                                                 "Qty. per Unit of Measure" := UOMMgt.GetQtyPerUnitOfMeasure(Item,"Unit of Measure Code");
                                                                 "Unit Cost" := GetUnitCost;
-                                                                "Overhead Rate" := RoundUnitAmount(Item."Overhead Rate" * "Qty. per Unit of Measure");
+                                                                "Overhead Rate" := Item."Overhead Rate";
 
                                                                 AssemblyLineMgt.UpdateAssemblyLines(Rec,xRec,FIELDNO("Unit of Measure Code"),ReplaceLinesFromBOM,CurrFieldNo,CurrentFieldNum);
                                                                 ClearCurrentFieldNum(FIELDNO("Unit of Measure Code"));
@@ -498,6 +498,7 @@ OBJECT Table 900 Assembly Header
                                                               ENU=Dimension Set ID];
                                                    Editable=No }
     { 9000;   ;Assigned User ID    ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
   }
@@ -616,7 +617,10 @@ OBJECT Table 900 Assembly Header
         "Document Type"::Quote:
           AssemblySetup.TESTFIELD("Assembly Quote Nos.");
         "Document Type"::Order:
-          AssemblySetup.TESTFIELD("Assembly Order Nos.");
+          BEGIN
+            AssemblySetup.TESTFIELD("Posted Assembly Order Nos.");
+            AssemblySetup.TESTFIELD("Assembly Order Nos.");
+          END;
         "Document Type"::"Blanket Order":
           AssemblySetup.TESTFIELD("Blanket Assembly Order Nos.");
       END;
@@ -636,7 +640,7 @@ OBJECT Table 900 Assembly Header
 
     LOCAL PROCEDURE GetPostingNoSeriesCode@8() : Code[10];
     BEGIN
-      EXIT(AssemblySetup."Assembly Order Nos.");
+      EXIT(AssemblySetup."Posted Assembly Order Nos.");
     END;
 
     PROCEDURE ShowReservation@121();
@@ -719,15 +723,6 @@ OBJECT Table 900 Assembly Header
       IF NOT GLSetupRead THEN
         GLSetup.GET;
       GLSetupRead := TRUE;
-    END;
-
-    LOCAL PROCEDURE GetCurrencyCode@13() : Code[10];
-    BEGIN
-      IF NOT GLSetupRead THEN BEGIN
-        GLSetup.GET;
-        GLSetupRead := TRUE;
-      END;
-      EXIT(GLSetup."Additional Reporting Currency");
     END;
 
     LOCAL PROCEDURE GetLocation@7300(VAR Location@1001 : Record 14;LocationCode@1000 : Code[10]);
@@ -976,6 +971,7 @@ OBJECT Table 900 Assembly Header
               "Due Date" := NewDueDate;
               "Starting Date" := NewStartDate;
             END ELSE BEGIN
+              ValidateStartDate(NewStartDate,FALSE);
               IF NOT IsAsmToOrder THEN BEGIN
                 IF "Due Date" <> NewDueDate THEN
                   IF GUIALLOWED AND
@@ -988,7 +984,6 @@ OBJECT Table 900 Assembly Header
                   THEN
                     ValidateDueDate(NewDueDate,FALSE);
               END;
-              ValidateStartDate(NewStartDate,FALSE);
             END;
           END;
         FIELDNO("Starting Date"):

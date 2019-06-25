@@ -2,9 +2,9 @@ OBJECT Codeunit 1008 Job Calculate Statistics
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -191,8 +191,10 @@ OBJECT Codeunit 1008 Job Calculate Statistics
       CLEARALL;
       JobPlanningLine.SETCURRENTKEY("Job No.","Job Task No.");
       JobLedgEntry.SETCURRENTKEY("Job No.","Job Task No.","Entry Type");
+      JobPlanningLine.FILTERGROUP(2);
       JobLedgEntry.SETRANGE("Job No.",Job."No.");
       JobPlanningLine.SETRANGE("Job No.",Job."No.");
+      JobPlanningLine.FILTERGROUP(0);
       JobLedgEntry.SETFILTER("Posting Date",Job.GETFILTER("Posting Date Filter"));
       JobPlanningLine.SETFILTER("Planning Date",Job.GETFILTER("Planning Date Filter"));
     END;
@@ -203,10 +205,12 @@ OBJECT Codeunit 1008 Job Calculate Statistics
     BEGIN
       CLEARALL;
       JT := JT2;
+      JobPlanningLine.FILTERGROUP(2);
       JobPlanningLine.SETCURRENTKEY("Job No.","Job Task No.");
       JobLedgEntry.SETCURRENTKEY("Job No.","Job Task No.","Entry Type");
       JobLedgEntry.SETRANGE("Job No.",JT."Job No.");
       JobPlanningLine.SETRANGE("Job No.",JT."Job No.");
+      JobPlanningLine.FILTERGROUP(0);
       IF JT."Job Task No." <> '' THEN
         IF JT.Totaling <> '' THEN BEGIN
           JobLedgEntry.SETFILTER("Job Task No.",JT.Totaling);
@@ -405,6 +409,7 @@ OBJECT Codeunit 1008 Job Calculate Statistics
       PlanningList@1002 : Page 1007;
     BEGIN
       WITH JobPlanningLine DO BEGIN
+        FILTERGROUP(2);
         SETRANGE("Contract Line");
         SETRANGE("Schedule Line");
         SETRANGE(Type);
@@ -414,6 +419,7 @@ OBJECT Codeunit 1008 Job Calculate Statistics
           SETRANGE("Schedule Line",TRUE)
         ELSE
           SETRANGE("Contract Line",TRUE);
+        FILTERGROUP(0);
         PlanningList.SETTABLEVIEW(JobPlanningLine);
         PlanningList.SetActiveField(Showfield);
         PlanningList.RUN;

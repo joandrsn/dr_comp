@@ -2,9 +2,9 @@ OBJECT Codeunit 5051 SegManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -21,6 +21,7 @@ OBJECT Codeunit 5051 SegManagement
       InteractionTmplSetup@1003 : Record 5122;
       Text003@1004 : TextConst 'DAN=Interaktionsskabelonsproget %2 er tilknyttet interaktionsskabelonen %1.\Det er ikke tilladt at have sprog knyttet til skabeloner, der bruges til logføring af systemdokumenter.;ENU=Interaction Template %1 has assigned Interaction Template Language %2.\It is not allowed to have languages assigned to templates used for system document logging.';
       Text004@1006 : TextConst 'DAN=Interaktioner;ENU=Interactions';
+      InterTemplateSalesInvoicesNotSpecifiedErr@1005 : TextConst 'DAN=Feltet Fakturaer i oversigtspanelet Salg i vinduet Opsætning af interaktionsskbl. skal udfyldes.;ENU=The Invoices field on the Sales FastTab in the Interaction Template Setup window must be filled in.';
 
     PROCEDURE LogSegment@3(SegHeader@1000 : Record 5076;Deliver@1001 : Boolean;Followup@1002 : Boolean);
     VAR
@@ -154,6 +155,7 @@ OBJECT Codeunit 5051 SegManagement
       DeliverySorterTemp@1006 : TEMPORARY Record 5074;
       InterLogEntryCommentLine@1011 : Record 5123;
       AttachmentManagement@1007 : Codeunit 5052;
+      FileMgt@1009 : Codeunit 419;
       NextCampaignEntryNo@1008 : Integer;
       FileName@1015 : Text;
     BEGIN
@@ -199,8 +201,10 @@ OBJECT Codeunit 5051 SegManagement
         IF MarketingSetup."Attachment Storage Type" = MarketingSetup."Attachment Storage Type"::"Disk File" THEN
           IF Attachment."No." <> 0 THEN BEGIN
             FileName := Attachment.ConstDiskFileName;
-            IF FileName <> '' THEN
+            IF FileName <> '' THEN BEGIN
+              FileMgt.DeleteServerFile(FileName);
               AttachmentTemp.ExportAttachmentToServerFile(FileName);
+            END;
           END;
         SegLine."Attachment No." := Attachment."No.";
       END;
@@ -248,7 +252,7 @@ OBJECT Codeunit 5051 SegManagement
       END;
     END;
 
-    PROCEDURE LogDocument@2(DocumentType@1000 : Integer;DocumentNo@1001 : Code[20];DocNoOccurrence@1015 : Integer;VersionNo@1016 : Integer;AccountTableNo@1002 : Integer;AccountNo@1003 : Code[20];SalespersonCode@1004 : Code[10];CampaignNo@1018 : Code[20];Description@1005 : Text[50];OpportunityNo@1019 : Code[20]);
+    PROCEDURE LogDocument@2(DocumentType@1000 : Integer;DocumentNo@1001 : Code[20];DocNoOccurrence@1015 : Integer;VersionNo@1016 : Integer;AccountTableNo@1002 : Integer;AccountNo@1003 : Code[20];SalespersonCode@1004 : Code[20];CampaignNo@1018 : Code[20];Description@1005 : Text[50];OpportunityNo@1019 : Code[20]);
     VAR
       InteractTmpl@1006 : Record 5064;
       SegLine@1007 : TEMPORARY Record 5077;
@@ -275,22 +279,16 @@ OBJECT Codeunit 5051 SegManagement
 
       CASE AccountTableNo OF
         DATABASE::Customer:
-          WITH ContBusRel DO BEGIN
-            SETCURRENTKEY("Link to Table","No.");
-            SETRANGE("Link to Table","Link to Table"::Customer);
-            SETRANGE("No.",AccountNo);
-            IF NOT FINDFIRST THEN
+          BEGIN
+            ContNo := FindContactFromContBusRelation(ContBusRel."Link to Table"::Customer,AccountNo);
+            IF ContNo = '' THEN
               EXIT;
-            ContNo := "Contact No.";
           END;
         DATABASE::Vendor:
-          WITH ContBusRel DO BEGIN
-            SETCURRENTKEY("Link to Table","No.");
-            SETRANGE("Link to Table","Link to Table"::Vendor);
-            SETRANGE("No.",AccountNo);
-            IF NOT FINDFIRST THEN
+          BEGIN
+            ContNo := FindContactFromContBusRelation(ContBusRel."Link to Table"::Vendor,AccountNo);
+            IF ContNo = '' THEN
               EXIT;
-            ContNo := "Contact No.";
           END;
         DATABASE::Contact:
           BEGIN
@@ -314,7 +312,7 @@ OBJECT Codeunit 5051 SegManagement
       SegLine."Salesperson Code" := SalespersonCode;
       SegLine."Opportunity No." := OpportunityNo;
       SegLine.INSERT;
-      SegLine.VALIDATE("Interaction Template Code",InteractTmpl.Code);
+      SegLine.VALIDATE("Interaction Template Code",InteractTmplCode);
       IF CampaignNo <> '' THEN
         SegLine."Campaign No." := CampaignNo;
       SegLine.MODIFY;
@@ -570,6 +568,68 @@ OBJECT Codeunit 5051 SegManagement
       SegLine."Send Word Doc. As Attmt." := InteractLogEntry."Send Word Docs. as Attmt.";
       SegLine."Contact Via" := InteractLogEntry."Contact Via";
       SegLine."Opportunity No." := InteractLogEntry."Opportunity No.";
+    END;
+
+    LOCAL PROCEDURE FindContactFromContBusRelation@13(LinkToTable@1000 : Option;AccountNo@1001 : Code[20]) : Code[20];
+    VAR
+      ContBusRel@1002 : Record 5054;
+    BEGIN
+      WITH ContBusRel DO BEGIN
+        SETRANGE("Link to Table",LinkToTable);
+        SETRANGE("No.",AccountNo);
+        IF FINDFIRST THEN
+          EXIT("Contact No.");
+      END;
+    END;
+
+    PROCEDURE CreateCampaignEntryOnSalesInvoicePosting@9(SalesInvHeader@1000 : Record 112);
+    VAR
+      Campaign@1004 : Record 5071;
+      CampaignTargetGr@1001 : Record 7030;
+      ContBusRel@1006 : Record 5054;
+      InteractionLogEntry@1008 : Record 5065;
+      InteractTemplate@1010 : Record 5064;
+      InteractionTemplateCode@1002 : Code[10];
+      ContNo@1003 : Code[20];
+    BEGIN
+      WITH SalesInvHeader DO BEGIN
+        CampaignTargetGr.SETRANGE(Type,CampaignTargetGr.Type::Customer);
+        CampaignTargetGr.SETRANGE("No.","Bill-to Customer No.");
+        IF NOT CampaignTargetGr.FINDFIRST THEN
+          EXIT;
+
+        Campaign.GET(CampaignTargetGr."Campaign No.");
+        IF ("Posting Date" < Campaign."Starting Date") OR ("Posting Date" > Campaign."Ending Date") THEN
+          EXIT;
+
+        ContNo := FindContactFromContBusRelation(ContBusRel."Link to Table"::Customer,"Bill-to Customer No.");
+
+        // Check if Interaction Log Entry already exist for initial Sales Order
+        InteractionTemplateCode := FindInteractTmplCode(SalesInvoiceInterDocType);
+        IF InteractionTemplateCode = '' THEN
+          ERROR(InterTemplateSalesInvoicesNotSpecifiedErr);
+        InteractTemplate.GET(InteractionTemplateCode);
+        InteractionLogEntry.SETRANGE("Contact No.",ContNo);
+        InteractionLogEntry.SETRANGE("Document Type",SalesInvoiceInterDocType);
+        InteractionLogEntry.SETRANGE("Document No.","Order No.");
+        InteractionLogEntry.SETRANGE("Interaction Group Code",InteractTemplate."Interaction Group Code");
+        IF NOT InteractionLogEntry.ISEMPTY THEN
+          EXIT;
+
+        LogDocument(
+          SalesInvoiceInterDocType,"No.",0,0,DATABASE::Contact,"Bill-to Contact No.","Salesperson Code",
+          CampaignTargetGr."Campaign No.","Posting Description",'');
+      END;
+    END;
+
+    PROCEDURE SalesOrderConfirmInterDocType@10() : Integer;
+    BEGIN
+      EXIT(3);
+    END;
+
+    PROCEDURE SalesInvoiceInterDocType@15() : Integer;
+    BEGIN
+      EXIT(4);
     END;
 
     BEGIN

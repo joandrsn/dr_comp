@@ -2,9 +2,9 @@ OBJECT Report 207 Sales - Credit Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.48628,NAVDK9.00.00.48628;
   }
   PROPERTIES
   {
@@ -9378,9 +9378,8 @@ Fields!DocDtCaption_SalesCrMemoHeader.Value, 3)</Hidden>
                   <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Top>0.03528cm</Top>
-                  <Height>40pt</Height>
-                  <Width>5.8cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(IsNothing(Fields!CompanyInfo2Picture.Value) = TRUE,TRUE,FALSE)</Hidden>
                   </Visibility>
@@ -9389,9 +9388,9 @@ Fields!DocDtCaption_SalesCrMemoHeader.Value, 3)</Hidden>
                 </Image>
               </ReportItems>
               <KeepTogether>true</KeepTogether>
-              <Left>11.8cm</Left>
-              <Height>1.4676cm</Height>
-              <Width>5.8cm</Width>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>1</ZIndex>
               <Style />
             </Rectangle>
@@ -9402,8 +9401,8 @@ Fields!DocDtCaption_SalesCrMemoHeader.Value, 3)</Hidden>
                   <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Height>40pt</Height>
-                  <Width>5.8cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(IsNothing(Fields!CompanyInfo1Picture.Value)= TRUE,TRUE,FALSE)</Hidden>
                   </Visibility>
@@ -9412,10 +9411,9 @@ Fields!DocDtCaption_SalesCrMemoHeader.Value, 3)</Hidden>
                 </Image>
               </ReportItems>
               <KeepTogether>true</KeepTogether>
-              <Top>0.03528cm</Top>
-              <Left>6.0cm</Left>
-              <Height>1.51694cm</Height>
-              <Width>5.8cm</Width>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Style />
             </Rectangle>
@@ -9427,7 +9425,7 @@ Fields!DocDtCaption_SalesCrMemoHeader.Value, 3)</Hidden>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
                   <Height>14mm</Height>
-                  <Width>5.8cm</Width>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(IsNothing(Fields!CompanyInfo3Picture.Value) = TRUE,TRUE,FALSE)</Hidden>
                   </Visibility>
@@ -9436,10 +9434,8 @@ Fields!DocDtCaption_SalesCrMemoHeader.Value, 3)</Hidden>
                 </Image>
               </ReportItems>
               <KeepTogether>true</KeepTogether>
-              <Top>0.08167cm</Top>
-              <Left>0.2cm</Left>
-              <Height>1.42121cm</Height>
-              <Width>5.8cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>3</ZIndex>
               <Style />
             </Rectangle>

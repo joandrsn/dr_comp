@@ -2,9 +2,9 @@ OBJECT Table 5303 Outlook Synch. Filter
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -26,7 +26,8 @@ OBJECT Table 5303 Outlook Synch. Filter
   }
   FIELDS
   {
-    { 1   ;   ;Record GUID         ;GUID          ;CaptionML=[DAN=Record-GUID;
+    { 1   ;   ;Record GUID         ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-GUID;
                                                               ENU=Record GUID];
                                                    NotBlank=Yes;
                                                    Editable=No }
@@ -37,7 +38,7 @@ OBJECT Table 5303 Outlook Synch. Filter
                                                    OptionString=Condition,Table Relation }
     { 3   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
                                                               ENU=Line No.] }
-    { 4   ;   ;Table No.           ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 4   ;   ;Table No.           ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    CaptionML=[DAN=Tabelnr.;
                                                               ENU=Table No.] }
     { 5   ;   ;Field No.           ;Integer       ;TableRelation=Field.No. WHERE (TableNo=FIELD(Table No.));
@@ -106,7 +107,7 @@ OBJECT Table 5303 Outlook Synch. Filter
 
                                                    CaptionML=[DAN=Værdi;
                                                               ENU=Value] }
-    { 9   ;   ;Master Table No.    ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 9   ;   ;Master Table No.    ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    CaptionML=[DAN=Overordnet tabelnr.;
                                                               ENU=Master Table No.] }
     { 10  ;   ;Master Table Field No.;Integer     ;TableRelation=Field.No. WHERE (TableNo=FIELD(Master Table No.));

@@ -2,9 +2,9 @@ OBJECT Codeunit 401 Sales Header Apply
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -35,7 +35,7 @@ OBJECT Codeunit 401 Sales Header Apply
               CustLedgEntry.SETRANGE("Customer No.",BilToCustNo);
               CustLedgEntry.SETRANGE(Open,TRUE);
               CustLedgEntry.SETRANGE("Applies-to ID","Applies-to ID");
-              IF CustLedgEntry.FIND('-') THEN BEGIN
+              IF CustLedgEntry.FINDFIRST THEN BEGIN
                 "Applies-to Doc. Type" := 0;
                 "Applies-to Doc. No." := '';
               END ELSE

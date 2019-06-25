@@ -2,9 +2,9 @@ OBJECT Codeunit 99000842 Service Line-Reserve
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -168,12 +168,6 @@ OBJECT Codeunit 99000842 Service Line-Reserve
       NewServiceLine.CALCFIELDS("Reserved Qty. (Base)");
       ShowError := NewServiceLine."Reserved Qty. (Base)" <> 0;
 
-      IF (NewServiceLine."Needed by Date" = 0D) AND (OldServiceLine."Needed by Date" <> 0D) THEN
-        IF ShowError THEN
-          NewServiceLine.FIELDERROR("Needed by Date",Text002)
-        ELSE
-          HasError := TRUE;
-
       IF NewServiceLine.Type <> OldServiceLine.Type THEN
         IF ShowError THEN
           NewServiceLine.FIELDERROR(Type,Text003)
@@ -183,6 +177,12 @@ OBJECT Codeunit 99000842 Service Line-Reserve
       IF NewServiceLine."No." <> OldServiceLine."No." THEN
         IF ShowError THEN
           NewServiceLine.FIELDERROR("No.",Text003)
+        ELSE
+          HasError := TRUE;
+
+      IF (NewServiceLine."Needed by Date" = 0D) AND (OldServiceLine."Needed by Date" <> 0D) THEN
+        IF ShowError THEN
+          NewServiceLine.FIELDERROR("Needed by Date",Text002)
         ELSE
           HasError := TRUE;
 
@@ -417,6 +417,7 @@ OBJECT Codeunit 99000842 Service Line-Reserve
     VAR
       SourceSpecification@1000 : Record 336;
     BEGIN
+      CLEAR(TempInvoicingSpecification);
       IF ServLine.Type <> ServLine.Type::Item THEN
         EXIT;
       IF ((ServLine."Document Type" = ServLine."Document Type"::Invoice) AND

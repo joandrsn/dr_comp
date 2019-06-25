@@ -2,9 +2,9 @@ OBJECT Report 406 Purchase - Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -312,6 +312,30 @@ OBJECT Report 406 Purchase - Invoice
 
     { 61  ;3   ;Column  ;BuyFromVendNo_PurchInvHeaderCaption;
                SourceExpr="Purch. Inv. Header".FIELDCAPTION("Buy-from Vendor No.") }
+
+    { 101 ;3   ;Column  ;VATPercentageCaption;
+               SourceExpr=VATPercentageCaptionLbl }
+
+    { 96  ;3   ;Column  ;VATBaseCaption      ;
+               SourceExpr=VATBaseCaptionLbl }
+
+    { 95  ;3   ;Column  ;VATAmtCaption       ;
+               SourceExpr=VATAmtCaptionLbl }
+
+    { 94  ;3   ;Column  ;VATAmtSpecificationCaption;
+               SourceExpr=VATAmtSpecificationCaptionLbl }
+
+    { 93  ;3   ;Column  ;InvDiscBaseAmtCaption;
+               SourceExpr=InvDiscBaseAmtCaptionLbl }
+
+    { 83  ;3   ;Column  ;LineAmtCaption      ;
+               SourceExpr=LineAmtCaptionLbl }
+
+    { 79  ;3   ;Column  ;VATIdentifierCaption;
+               SourceExpr=VATIdentifierCaptionLbl }
+
+    { 78  ;3   ;Column  ;TotalCaption        ;
+               SourceExpr=TotalCaptionLbl }
 
     { 7574;3   ;DataItem;DimensionLoop1      ;
                DataItemTable=Table2000000026;
@@ -649,30 +673,6 @@ OBJECT Report 406 Purchase - Invoice
 
     { 91  ;4   ;Column  ;VATAmtLineVATIdentifier_VATCounter;
                SourceExpr=VATAmountLine."VAT Identifier" }
-
-    { 88  ;4   ;Column  ;VATPercentageCaption;
-               SourceExpr=VATPercentageCaptionLbl }
-
-    { 89  ;4   ;Column  ;VATBaseCaption      ;
-               SourceExpr=VATBaseCaptionLbl }
-
-    { 90  ;4   ;Column  ;VATAmtCaption       ;
-               SourceExpr=VATAmtCaptionLbl }
-
-    { 71  ;4   ;Column  ;VATAmtSpecificationCaption;
-               SourceExpr=VATAmtSpecificationCaptionLbl }
-
-    { 99  ;4   ;Column  ;InvDiscBaseAmtCaption;
-               SourceExpr=InvDiscBaseAmtCaptionLbl }
-
-    { 103 ;4   ;Column  ;LineAmtCaption      ;
-               SourceExpr=LineAmtCaptionLbl }
-
-    { 107 ;4   ;Column  ;VATIdentifierCaption;
-               SourceExpr=VATIdentifierCaptionLbl }
-
-    { 108 ;4   ;Column  ;TotalCaption        ;
-               SourceExpr=TotalCaptionLbl }
 
     { 2038;3   ;DataItem;VATCounterLCY       ;
                DataItemTable=Table2000000026;
@@ -6363,7 +6363,7 @@ Cstr(Fields!PayToVendNo_PurchInvHeaderCaption.Value)
                               <Width>7.15856in</Width>
                               <ZIndex>3</ZIndex>
                               <Visibility>
-                                <Hidden>=IIF(Fields!VATIdentifierCaption.Value="",TRUE,FALSE)</Hidden>
+                                <Hidden>=IIF(Fields!VALSpecLCYHeader.Value="",TRUE,FALSE)</Hidden>
                               </Visibility>
                               <DataElementOutput>NoOutput</DataElementOutput>
                               <Style />

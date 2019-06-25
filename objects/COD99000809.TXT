@@ -2,9 +2,9 @@ OBJECT Codeunit 99000809 Planning Line Management
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -533,15 +533,17 @@ OBJECT Codeunit 99000809 Planning Line Management
     PROCEDURE CalculatePlanningLineDates@12(VAR ReqLine2@1000 : Record 246);
     VAR
       PlanningRtngLine@1001 : Record 99000830;
+      IsLineModified@1002 : Boolean;
     BEGIN
-      PlanningRtngLine.SETRANGE("Worksheet Template Name",ReqLine."Worksheet Template Name");
-      PlanningRtngLine.SETRANGE("Worksheet Batch Name",ReqLine."Journal Batch Name");
-      PlanningRtngLine.SETRANGE("Worksheet Line No.",ReqLine."Line No.");
+      PlanningRtngLine.SETRANGE("Worksheet Template Name",ReqLine2."Worksheet Template Name");
+      PlanningRtngLine.SETRANGE("Worksheet Batch Name",ReqLine2."Journal Batch Name");
+      PlanningRtngLine.SETRANGE("Worksheet Line No.",ReqLine2."Line No.");
       PlanningRtngLine.SETFILTER("Next Operation No.",'%1','');
 
       IF PlanningRtngLine.FINDFIRST THEN BEGIN
         ReqLine2."Ending Date" := PlanningRtngLine."Ending Date";
         ReqLine2."Ending Time" := PlanningRtngLine."Ending Time";
+        IsLineModified := TRUE;
       END;
 
       PlanningRtngLine.SETRANGE("Next Operation No.");
@@ -550,9 +552,13 @@ OBJECT Codeunit 99000809 Planning Line Management
         ReqLine2."Starting Date" := PlanningRtngLine."Starting Date";
         ReqLine2."Starting Time" := PlanningRtngLine."Starting Time";
         ReqLine2."Order Date" := PlanningRtngLine."Starting Date";
+        IsLineModified := TRUE;
       END;
 
-      ReqLine2.MODIFY;
+      IF IsLineModified THEN BEGIN
+        ReqLine2.UpdateDatetime;
+        ReqLine2.MODIFY;
+      END;
     END;
 
     PROCEDURE Calculate@8(VAR ReqLine2@1000 : Record 246;Direction@1001 : 'Forward,Backward';CalcRouting@1002 : Boolean;CalcComponents@1003 : Boolean;PlanningLevel@1004 : Integer);
@@ -730,7 +736,7 @@ OBJECT Codeunit 99000809 Planning Line Management
           ReqLine3."Location Code" := PlanningComp."Location Code";
           ReqLine3."Bin Code" := PlanningComp."Bin Code";
           ReqLine3."Ending Date" := PlanningComp."Due Date";
-          ReqLine3."Ending Time" := PlanningComp."Due Time";
+          ReqLine3.VALIDATE("Ending Time",PlanningComp."Due Time");
           ReqLine3."Due Date" := PlanningComp."Due Date";
           ReqLine3."Demand Date" := PlanningComp."Due Date";
           ReqLine3.VALIDATE(Quantity,PlanningComp."Expected Quantity");

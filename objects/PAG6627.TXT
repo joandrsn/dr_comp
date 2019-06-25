@@ -2,15 +2,16 @@ OBJECT Page 6627 Sales Return Order Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
     Editable=No;
     CaptionML=[DAN=Salgsreturvareordrearkiv;
                ENU=Sales Return Order Archive];
+    DeleteAllowed=No;
     SourceTable=Table5107;
     SourceTableView=WHERE(Document Type=CONST(Return Order));
     PageType=Document;

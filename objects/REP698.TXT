@@ -2,9 +2,9 @@ OBJECT Report 698 Get Sales Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -158,8 +158,6 @@ OBJECT Report 698 Get Sales Orders
         "Sales Order No." := SalesLine."Document No.";
         "Sales Order Line No." := SalesLine."Line No.";
         "Sell-to Customer No." := SalesLine."Sell-to Customer No.";
-        Description := SalesLine.Description;
-        "Description 2" := SalesLine."Description 2";
         SalesHeader.GET(1,SalesLine."Document No.");
         IF SpecOrder <> 1 THEN
           "Ship-to Code" := SalesHeader."Ship-to Code";
@@ -174,6 +172,7 @@ OBJECT Report 698 Get Sales Orders
           LeadTimeMgt.PlannedEndingDate(
             "No.","Location Code","Variant Code","Due Date","Vendor No.","Ref. Order Type");
         CalcStartingDate('');
+        UpdateDescription;
         UpdateDatetime;
 
         INSERT;

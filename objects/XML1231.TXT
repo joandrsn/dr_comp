@@ -2,9 +2,9 @@ OBJECT XMLport 1231 Export Generic Fixed Width
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -27,10 +27,6 @@ OBJECT XMLport 1231 Export Generic Fixed Width
                       ERROR(ErrorText);
 
                     Window.CLOSE;
-
-                    IF DataExch.GET(DataExchEntryNo) THEN
-                      IF DataExchDef.GET(DataExch."Data Exch. Def Code") THEN
-                        currXMLport.FILENAME := DataExchDef.Name + '.txt';
                   END;
 
     Format=Variable Text;
@@ -106,6 +102,12 @@ OBJECT XMLport 1231 Export Generic Fixed Width
       LastLineNo := 1;
       PrevColumnNo := 0;
       QuitLoop := FALSE;
+
+      IF DataExch.GET(DataExchEntryNo) AND DataExchDef.GET(DataExch."Data Exch. Def Code") THEN BEGIN
+        currXMLport.FILENAME := DataExchDef.Name + '.txt';
+        IF DataExchDef."File Type" = DataExchDef."File Type"::"Variable Text" THEN
+          currXMLport.FIELDSEPARATOR(DataExchDef.ColumnSeparatorChar)
+      END;
     END;
 
     PROCEDURE CheckColumnSequence@3();

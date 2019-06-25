@@ -2,9 +2,9 @@ OBJECT Table 60 Document Sending Profile
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -128,6 +128,8 @@ OBJECT Table 60 Document Sending Profile
       UpdateAssCustomerQst@1005 : TextConst 'DAN=Hvis du sletter dokumentafsendelsesprofilen %1, slettes den også på de debitorkort, der bruger profilen.\\Vil du fortsætte?;ENU=If you delete document sending profile %1, it will also be deleted on customer cards that use the profile.\\Do you want to continue?';
       CannotDeleteErr@1006 : TextConst 'DAN=Dokumentafsendelsesprofilen kan ikke slettes.;ENU=Cannot delete the document sending profile.';
       CannotSendMultipleSalesDocsErr@1008 : TextConst 'DAN=Du kan kun send ét elektronisk salgsdokument ad gangen.;ENU=You can only send one electronic sales document at a time.';
+      ProfileSelectionQst@1015 : TextConst 'DAN=Bekræft den første profil, og brug den til alle valgte dokumenter.,Bekræft profilen for hvert enkelt dokument.,Brug standardprofilen til alle valgte dokumenter uden bekræftelse.;ENU=Confirm the first profile and use it for all selected documents.,Confirm the profile for each document.,Use the default profile for all selected documents without confimation.';
+      CustomerProfileSelectionInstrTxt@1016 : TextConst 'DAN="Debitorerne på de valgte dokumenter anvender forskellige dokumentafsendelsesprofiler. Vælg én af følgende indstillinger: ";ENU="Customers on the selected documents use different document sending profiles. Choose one of the following options: "';
 
     PROCEDURE GetDefaultForCustomer@4(CustomerNo@1000 : Code[20];VAR DocumentSendingProfile@1002 : Record 60);
     VAR
@@ -210,6 +212,101 @@ OBJECT Table 60 Document Sending Profile
 
       IF "Electronic Document" > "Electronic Document"::No THEN
         ERROR(CannotSendMultipleSalesDocsErr);
+    END;
+
+    PROCEDURE LookupProfile@7(CustNo@1000 : Code[20];Multiselection@1002 : Boolean;ShowDialog@1005 : Boolean) : Boolean;
+    VAR
+      DocumentSendingProfile@1001 : Record 60;
+    BEGIN
+      GetDefaultForCustomer(CustNo,DocumentSendingProfile);
+      IF ShowDialog THEN
+        EXIT(RunSelectSendingOptionsPage(DocumentSendingProfile.Code,Multiselection));
+
+      Rec := DocumentSendingProfile;
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE RunSelectSendingOptionsPage@32(DocumentSendingProfileCode@1002 : Code[20];OneRelatedPartySelected@1001 : Boolean) : Boolean;
+    VAR
+      TempDocumentSendingProfile@1000 : TEMPORARY Record 60;
+    BEGIN
+      TempDocumentSendingProfile.INIT;
+      TempDocumentSendingProfile.Code := DocumentSendingProfileCode;
+      TempDocumentSendingProfile.VALIDATE("One Related Party Selected",OneRelatedPartySelected);
+      TempDocumentSendingProfile.INSERT;
+
+      COMMIT;
+      IF PAGE.RUNMODAL(PAGE::"Select Sending Options",TempDocumentSendingProfile) = ACTION::LookupOK THEN BEGIN
+        Rec := TempDocumentSendingProfile;
+        EXIT(TRUE);
+      END;
+
+      EXIT(FALSE);
+    END;
+
+    PROCEDURE SendCustomerRecords@33(RecordVariant@1011 : Variant;CustomerNo@1013 : Code[20];CustomerFieldNo@1007 : Integer);
+    VAR
+      DocumentSendingProfile@1001 : Record 60;
+      ReportDistributionManagement@1003 : Codeunit 452;
+      RecRefSource@1000 : RecordRef;
+      RecRefToSend@1009 : RecordRef;
+      ProfileSelectionMethod@1002 : 'ConfirmDefault,ConfirmPerEach,UseDefault';
+      SingleCustomerSelected@1005 : Boolean;
+      ShowDialog@1010 : Boolean;
+    BEGIN
+      SingleCustomerSelected := IsSingleRecordSelected(RecordVariant,CustomerNo,CustomerFieldNo);
+
+      IF NOT SingleCustomerSelected THEN
+        IF NOT DocumentSendingProfile.ProfileSelectionMethodDialog(ProfileSelectionMethod) THEN
+          EXIT;
+
+      IF SingleCustomerSelected OR (ProfileSelectionMethod = ProfileSelectionMethod::ConfirmDefault) THEN BEGIN
+        IF DocumentSendingProfile.LookupProfile(CustomerNo,TRUE,TRUE) THEN
+          ReportDistributionManagement.SendDocumentReport(DocumentSendingProfile,RecordVariant);
+      END ELSE BEGIN
+        ShowDialog := ProfileSelectionMethod = ProfileSelectionMethod::ConfirmPerEach;
+        RecRefSource.GETTABLE(RecordVariant);
+        IF RecRefSource.FINDSET THEN
+          REPEAT
+            RecRefToSend := RecRefSource.DUPLICATE;
+            RecRefToSend.SETRECFILTER;
+            CustomerNo := RecRefToSend.FIELD(CustomerFieldNo).VALUE;
+            IF DocumentSendingProfile.LookupProfile(CustomerNo,TRUE,ShowDialog) THEN
+              ReportDistributionManagement.SendDocumentReport(DocumentSendingProfile,RecRefToSend);
+          UNTIL RecRefSource.NEXT = 0;
+      END;
+    END;
+
+    PROCEDURE ProfileSelectionMethodDialog@31(VAR ProfileSelectionMethod@1000 : 'ConfirmDefault,ConfirmPerEach,UseDefault') : Boolean;
+    BEGIN
+      CASE STRMENU(ProfileSelectionQst,3,CustomerProfileSelectionInstrTxt) OF
+        0:
+          EXIT(FALSE);
+        1:
+          ProfileSelectionMethod := ProfileSelectionMethod::ConfirmDefault;
+        2:
+          ProfileSelectionMethod := ProfileSelectionMethod::ConfirmPerEach;
+        3:
+          ProfileSelectionMethod := ProfileSelectionMethod::UseDefault;
+      END;
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE IsSingleRecordSelected@91(RecordVariant@1003 : Variant;CVNo@1007 : Code[20];CVFieldNo@1005 : Integer) : Boolean;
+    VAR
+      RecRef@1004 : RecordRef;
+      FieldRef@1006 : FieldRef;
+    BEGIN
+      RecRef.GETTABLE(RecordVariant);
+      IF NOT RecRef.FINDSET THEN
+        EXIT(FALSE);
+
+      IF RecRef.NEXT = 0 THEN
+        EXIT(TRUE);
+
+      FieldRef := RecRef.FIELD(CVFieldNo);
+      FieldRef.SETFILTER('<>%1',CVNo);
+      EXIT(RecRef.ISEMPTY);
     END;
 
     BEGIN

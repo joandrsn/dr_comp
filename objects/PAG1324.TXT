@@ -2,9 +2,9 @@ OBJECT Page 1324 Mini Sales Quote
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -99,11 +99,9 @@ OBJECT Page 1324 Mini Sales Quote
                       PromotedIsBig=Yes;
                       Image=Email;
                       PromotedCategory=Process;
-                      OnAction=VAR
-                                 ReportDistributionManagement@1000 : Codeunit 452;
-                               BEGIN
+                      OnAction=BEGIN
                                  MiniLinesInstructionMgt.SalesCheckAllLinesHaveQuantityAssigned(Rec);
-                                 ReportDistributionManagement.EmailDocumentReport(Rec);
+                                 DocPrint.EmailSalesHeader(Rec);
                                END;
                                 }
       { 16      ;2   ;Action    ;

@@ -2,13 +2,12 @@ OBJECT Page 438 Issued Reminder
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897,NAVDK9.00.00.43897;
+    Version List=NAVW19.00.00.46621,NAVDK9.00.00.46621;
   }
   PROPERTIES
   {
-    Editable=No;
     CaptionML=[DAN=Udstedt rykker;
                ENU=Issued Reminder];
     InsertAllowed=No;
@@ -131,7 +130,8 @@ OBJECT Page 438 Issued Reminder
 
     { 1   ;1   ;Group     ;
                 CaptionML=[DAN=Generelt;
-                           ENU=General] }
+                           ENU=General];
+                Editable=FALSE }
 
     { 2   ;2   ;Field     ;
                 SourceExpr="No." }
@@ -187,11 +187,13 @@ OBJECT Page 438 Issued Reminder
     { 29  ;1   ;Part      ;
                 Name=ReminderLines;
                 SubPageLink=Reminder No.=FIELD(No.);
-                PagePartID=Page439 }
+                PagePartID=Page439;
+                Editable=FALSE }
 
     { 1904784501;1;Group  ;
                 CaptionML=[DAN=Bogføring;
-                           ENU=Posting] }
+                           ENU=Posting];
+                Editable=FALSE }
 
     { 45  ;2   ;Field     ;
                 SourceExpr="Reminder Terms Code" }
@@ -239,7 +241,6 @@ OBJECT Page 438 Issued Reminder
                 SystemPartID=RecordLinks }
 
     { 1905767507;1;Part   ;
-                Visible=TRUE;
                 PartType=System;
                 SystemPartID=Notes }
 

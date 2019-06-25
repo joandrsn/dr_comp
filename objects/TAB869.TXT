@@ -2,9 +2,9 @@ OBJECT Table 869 Cash Flow Chart Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,7 +13,8 @@ OBJECT Table 869 Cash Flow Chart Setup
   }
   FIELDS
   {
-    { 1   ;   ;User ID             ;Text132       ;CaptionML=[DAN=Bruger-id;
+    { 1   ;   ;User ID             ;Text132       ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 2   ;   ;Period Length       ;Option        ;CaptionML=[DAN=Periodelængde;
                                                               ENU=Period Length];

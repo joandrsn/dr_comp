@@ -2,9 +2,9 @@ OBJECT Table 1294 Applied Payment Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -24,6 +24,7 @@ OBJECT Table 1294 Applied Payment Entry
                "Applied Amount" := 0;
                "Applied Pmt. Discount" := 0;
                UpdateParentBankAccReconLine(TRUE);
+               ClearCustVendEntryApplicationData;
              END;
 
     CaptionML=[DAN=Udlignet betalingspost;
@@ -355,9 +356,9 @@ OBJECT Table 1294 Applied Payment Entry
     BEGIN
       IF InclPmtDisc(UseAppliedAmt) THEN BEGIN
         GetDiscInfo(PmtDiscDueDate,PmtDiscToleranceDate,RemPmtDiscPossible);
-        EXIT(RemPmtDiscPossible);
+        EXIT(RemPmtDiscPossible + GetAcceptedPmtTolerance);
       END;
-      EXIT(0);
+      EXIT(GetAcceptedPmtTolerance);
     END;
 
     PROCEDURE GetDiscInfo@40(VAR PmtDiscDueDate@1000 : Date;VAR PmtDiscToleranceDate@1002 : Date;VAR RemPmtDiscPossible@1001 : Decimal);
@@ -424,6 +425,18 @@ OBJECT Table 1294 Applied Payment Entry
       END;
     END;
 
+    LOCAL PROCEDURE GetAcceptedPmtTolerance@37() : Decimal;
+    BEGIN
+      IF ("Account No." = '') OR ("Applies-to Entry No." = 0) THEN
+        EXIT(0);
+      CASE "Account Type" OF
+        "Account Type"::Customer:
+          EXIT(GetCustLedgEntryPmtTolAmt);
+        "Account Type"::Vendor:
+          EXIT(GetVendLedgEntryPmtTolAmt);
+      END;
+    END;
+
     LOCAL PROCEDURE GetCustLedgEntryRemAmt@30() : Decimal;
     VAR
       CustLedgEntry@1000 : Record 21;
@@ -463,6 +476,22 @@ OBJECT Table 1294 Applied Payment Entry
       EXIT(BankAccLedgEntry."Remaining Amount");
     END;
 
+    LOCAL PROCEDURE GetCustLedgEntryPmtTolAmt@46() : Decimal;
+    VAR
+      CustLedgEntry@1000 : Record 21;
+    BEGIN
+      CustLedgEntry.GET("Applies-to Entry No.");
+      EXIT(CustLedgEntry."Accepted Payment Tolerance");
+    END;
+
+    LOCAL PROCEDURE GetVendLedgEntryPmtTolAmt@45() : Decimal;
+    VAR
+      VendLedgEntry@1000 : Record 25;
+    BEGIN
+      VendLedgEntry.GET("Applies-to Entry No.");
+      EXIT(VendLedgEntry."Accepted Payment Tolerance");
+    END;
+
     PROCEDURE GetStmtLineRemAmtToApply@12() : Decimal;
     VAR
       BankAccReconLine@1000 : Record 274;
@@ -483,6 +512,34 @@ OBJECT Table 1294 Applied Payment Entry
       IF NOT OldAppliedPmtEntry.FIND THEN
         EXIT(0);
       EXIT(OldAppliedPmtEntry."Applied Amount" - OldAppliedPmtEntry."Applied Pmt. Discount");
+    END;
+
+    LOCAL PROCEDURE IsAcceptedPmtDiscTolerance@49() : Boolean;
+    BEGIN
+      IF ("Account No." = '') OR ("Applies-to Entry No." = 0) THEN
+        EXIT(FALSE);
+      CASE "Account Type" OF
+        "Account Type"::Customer:
+          EXIT(IsCustLedgEntryPmtDiscTol);
+        "Account Type"::Vendor:
+          EXIT(IsVendLedgEntryPmtDiscTol);
+      END;
+    END;
+
+    LOCAL PROCEDURE IsCustLedgEntryPmtDiscTol@50() : Boolean;
+    VAR
+      CustLedgEntry@1000 : Record 21;
+    BEGIN
+      CustLedgEntry.GET("Applies-to Entry No.");
+      EXIT(CustLedgEntry."Accepted Pmt. Disc. Tolerance");
+    END;
+
+    LOCAL PROCEDURE IsVendLedgEntryPmtDiscTol@51() : Boolean;
+    VAR
+      VendLedgEntry@1000 : Record 25;
+    BEGIN
+      VendLedgEntry.GET("Applies-to Entry No.");
+      EXIT(VendLedgEntry."Accepted Pmt. Disc. Tolerance");
     END;
 
     LOCAL PROCEDURE AbsMin@15(Amt1@1000 : Decimal;Amt2@1001 : Decimal) : Decimal;
@@ -667,19 +724,26 @@ OBJECT Table 1294 Applied Payment Entry
 
     LOCAL PROCEDURE InclPmtDisc@20(UseAppliedAmt@1001 : Boolean) : Boolean;
     VAR
-      BankAccReconLine@1000 : Record 274;
+      BankAccReconLine@1007 : Record 274;
+      PaymentToleranceManagement@1006 : Codeunit 426;
+      UsePmtDisc@1008 : Boolean;
       AmtApplied@1002 : Decimal;
       PmtDiscDueDate@1004 : Date;
       PmtDiscToleranceDate@1005 : Date;
       RemPmtDiscPossible@1003 : Decimal;
     BEGIN
       GetDiscInfo(PmtDiscDueDate,PmtDiscToleranceDate,RemPmtDiscPossible);
-      IF RemPmtDiscPossible = 0 THEN
-        EXIT(FALSE);
       IF NOT ("Document Type" IN ["Document Type"::"Credit Memo","Document Type"::Invoice]) THEN
         EXIT(FALSE);
       BankAccReconLine.GET("Statement Type","Bank Account No.","Statement No.","Statement Line No.");
-      IF BankAccReconLine."Transaction Date" > PmtDiscDueDate THEN
+      IF (BankAccReconLine."Account Type" = 0) OR (BankAccReconLine."Account No." = '') THEN BEGIN
+        BankAccReconLine."Account Type" := "Account Type";
+        BankAccReconLine."Account No." := "Account No.";
+      END;
+      UsePmtDisc := (BankAccReconLine."Transaction Date" <= PmtDiscDueDate) AND (RemPmtDiscPossible <> 0);
+      IF UseAppliedAmt THEN
+        PaymentToleranceManagement.PmtTolPmtReconJnl(BankAccReconLine);
+      IF (NOT UsePmtDisc) AND (NOT IsAcceptedPmtDiscTolerance) THEN
         EXIT(FALSE);
 
       IF UseAppliedAmt THEN
@@ -687,7 +751,7 @@ OBJECT Table 1294 Applied Payment Entry
       ELSE
         AmtApplied := BankAccReconLine.Difference + GetOldAppliedAmtInclDisc + GetAmtAppliedToOtherStmtLines;
 
-      EXIT(ABS(AmtApplied) >= ABS(GetRemAmt - RemPmtDiscPossible));
+      EXIT(ABS(AmtApplied) >= ABS(GetRemAmt - RemPmtDiscPossible - GetAcceptedPmtTolerance));
     END;
 
     PROCEDURE GetTotalAppliedAmountInclPmtDisc@29(IsDelete@1002 : Boolean) : Decimal;
@@ -779,6 +843,76 @@ OBJECT Table 1294 Applied Payment Entry
       "Applied Amount" := "Applied Amount" - "Applied Pmt. Discount";
       "Applied Pmt. Discount" := 0;
       MODIFY(TRUE);
+    END;
+
+    LOCAL PROCEDURE ClearCustVendEntryApplicationData@44();
+    BEGIN
+      IF "Applies-to Entry No." = 0 THEN
+        EXIT;
+
+      CASE "Account Type" OF
+        "Account Type"::Customer:
+          ClearCustApplicationData("Applies-to Entry No.");
+        "Account Type"::Vendor:
+          ClearVendApplicationData("Applies-to Entry No.");
+      END;
+    END;
+
+    LOCAL PROCEDURE ClearCustApplicationData@43(EntryNo@1000 : Integer);
+    VAR
+      CustLedgEntry@1002 : Record 21;
+    BEGIN
+      CustLedgEntry.GET(EntryNo);
+      CustLedgEntry."Accepted Pmt. Disc. Tolerance" := FALSE;
+      CustLedgEntry."Accepted Payment Tolerance" := 0;
+      CustLedgEntry."Amount to Apply" := 0;
+      CustLedgEntry."Applies-to ID" := '';
+      CODEUNIT.RUN(CODEUNIT::"Cust. Entry-Edit",CustLedgEntry);
+    END;
+
+    LOCAL PROCEDURE ClearVendApplicationData@47(EntryNo@1000 : Integer);
+    VAR
+      VendLedgEntry@1001 : Record 25;
+    BEGIN
+      VendLedgEntry.GET(EntryNo);
+      VendLedgEntry."Accepted Pmt. Disc. Tolerance" := FALSE;
+      VendLedgEntry."Accepted Payment Tolerance" := 0;
+      VendLedgEntry."Amount to Apply" := 0;
+      VendLedgEntry."Applies-to ID" := '';
+      CODEUNIT.RUN(CODEUNIT::"Vend. Entry-Edit",VendLedgEntry);
+    END;
+
+    PROCEDURE CalcAmountToApply@48(PostingDate@1005 : Date) AmountToApply : Decimal;
+    VAR
+      BankAccount@1000 : Record 270;
+      CurrExchRate@1004 : Record 330;
+      CustLedgerEntry@1002 : Record 21;
+      VendorLedgerEntry@1001 : Record 25;
+      RemainingAmount@1003 : Decimal;
+    BEGIN
+      BankAccount.GET("Bank Account No.");
+      IF BankAccount.IsInLocalCurrency THEN BEGIN
+        AmountToApply :=
+          CurrExchRate.ExchangeAmount("Applied Amount",'',"Currency Code",PostingDate);
+        CASE "Account Type" OF
+          "Account Type"::Customer:
+            BEGIN
+              CustLedgerEntry.GET("Applies-to Entry No.");
+              CustLedgerEntry.CALCFIELDS("Remaining Amount");
+              RemainingAmount := CustLedgerEntry."Remaining Amount";
+            END;
+          "Account Type"::Vendor:
+            BEGIN
+              VendorLedgerEntry.GET("Applies-to Entry No.");
+              VendorLedgerEntry.CALCFIELDS("Remaining Amount");
+              RemainingAmount := VendorLedgerEntry."Remaining Amount";
+            END;
+        END;
+        IF ABS(AmountToApply) > ABS(RemainingAmount) THEN
+          AmountToApply := RemainingAmount;
+      END ELSE
+        EXIT("Applied Amount");
+      EXIT(AmountToApply);
     END;
 
     BEGIN

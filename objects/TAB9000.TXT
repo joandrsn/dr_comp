@@ -2,9 +2,9 @@ OBJECT Table 9000 User Group
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -26,6 +26,7 @@ OBJECT Table 9000 User Group
 
     CaptionML=[DAN=Brugergruppe;
                ENU=User Group];
+    LookupPageID=Page9830;
   }
   FIELDS
   {

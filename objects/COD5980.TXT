@@ -2,9 +2,9 @@ OBJECT Codeunit 5980 Service-Post
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-02-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974,NAVDK9.00.00.44974;
+    Version List=NAVW19.00.00.51103,NAVDK9.00.00.51103;
   }
   PROPERTIES
   {
@@ -41,7 +41,6 @@ OBJECT Codeunit 5980 Service-Post
       TempWarehouseShipmentHeader@1007 : TEMPORARY Record 7320;
       WarehouseShipmentHeader@1014 : Record 7320;
       TempWarehouseShipmentLine@1015 : TEMPORARY Record 7321;
-      TempReservationEntry@1018 : TEMPORARY Record 337;
       ServDocumentsMgt@1000 : Codeunit 5988;
       WhsePostShpt@1016 : Codeunit 5763;
       Window@1012 : Dialog;
@@ -81,8 +80,12 @@ OBJECT Codeunit 5980 Service-Post
       UpdateItemAnalysisView@1010 : Codeunit 7150;
       WhseServiceRelease@1017 : Codeunit 5770;
       GenJnlPostPreview@1019 : Codeunit 19;
+      NoSeriesManagement@1023 : Codeunit 396;
       ServDocNo@1015 : Code[20];
       ServDocType@1014 : Integer;
+      ServInvoiceNo@1020 : Code[20];
+      ServCrMemoNo@1021 : Code[20];
+      ServShipmentNo@1022 : Code[20];
     BEGIN
       ServiceHeader := PassedServHeader;
 
@@ -122,23 +125,35 @@ OBJECT Codeunit 5980 Service-Post
         // create posted documents (both header and lines).
         WhseShip := FALSE;
         IF Ship THEN BEGIN
-          ServDocumentsMgt.PrepareShipmentHeader;
+          ServShipmentNo := ServDocumentsMgt.PrepareShipmentHeader;
           WhseShip := NOT TempWarehouseShipmentHeader.ISEMPTY;
         END;
         IF Invoice THEN
           IF "Document Type" IN ["Document Type"::Order,"Document Type"::Invoice] THEN
-            ServDocumentsMgt.PrepareInvoiceHeader(Window)
+            ServInvoiceNo := ServDocumentsMgt.PrepareInvoiceHeader(Window)
           ELSE
-            ServDocumentsMgt.PrepareCrMemoHeader(Window);
+            ServCrMemoNo := ServDocumentsMgt.PrepareCrMemoHeader(Window);
 
         IF WhseShip THEN BEGIN
           WarehouseShipmentHeader.GET(TempWarehouseShipmentHeader."No.");
+          WarehouseShipmentHeader.TESTFIELD("Posting Date");
+          IF WarehouseShipmentHeader."Shipping No." = '' THEN BEGIN
+            WarehouseShipmentHeader.TESTFIELD("Shipping No. Series");
+            WarehouseShipmentHeader."Shipping No." :=
+              NoSeriesManagement.GetNextNo(
+                WarehouseShipmentHeader."Shipping No. Series",WarehouseShipmentHeader."Posting Date",TRUE);
+          END;
+
+          WarehouseShipmentHeader."Create Posted Header" := TRUE;
+          WarehouseShipmentHeader.MODIFY;
+
           WhsePostShpt.CreatePostedShptHeader(
             PostedWhseShipmentHeader,WarehouseShipmentHeader,"Shipping No.","Posting Date");
         END;
 
         // main lines posting routine via Journals
         ServDocumentsMgt.PostDocumentLines(Window);
+        ServDocumentsMgt.CollectTrackingSpecification(TempTrackingSpecification);
 
         ServDocumentsMgt.SetLastNos(ServiceHeader);
         MODIFY;
@@ -151,7 +166,6 @@ OBJECT Codeunit 5980 Service-Post
         IF WhseShip THEN BEGIN
           IF TempWarehouseShipmentLine.FINDSET THEN
             REPEAT
-              CollectItemTrackingInformationFromWhseShptLine(TempWarehouseShipmentLine,TempTrackingSpecification);
               WarehouseShipmentLine.GET(TempWarehouseShipmentLine."No.",TempWarehouseShipmentLine."Line No.");
               WhsePostShpt.CreatePostedShptLine(WarehouseShipmentLine,PostedWhseShipmentHeader,
                 PostedWhseShipmentLine,TempTrackingSpecification);
@@ -172,6 +186,9 @@ OBJECT Codeunit 5980 Service-Post
       IF WhseShip THEN
         WhseServiceRelease.Release(ServiceHeader);
       COMMIT;
+
+      OnAfterPostServiceDoc(ServiceHeader,ServShipmentNo,ServInvoiceNo,ServCrMemoNo);
+
       Window.CLOSE;
       UpdateAnalysisView.UpdateAll(0,TRUE);
       UpdateItemAnalysisView.UpdateAll(0,TRUE);
@@ -397,7 +414,6 @@ OBJECT Codeunit 5980 Service-Post
     BEGIN
       TempWarehouseShipmentHeader.DELETEALL;
       TempWarehouseShipmentLine.DELETEALL;
-      TempReservationEntry.DELETEALL;
       ServiceLine.SETRANGE("Document Type",ServiceHeader."Document Type");
       ServiceLine.SETRANGE("Document No.",ServiceHeader."No.");
       ServiceLine.SETRANGE(Type,ServiceLine.Type::Item);
@@ -412,63 +428,14 @@ OBJECT Codeunit 5980 Service-Post
         WarehouseShipmentLineLocal.SETRANGE("Source Line No.",ServiceLine."Line No.");
         IF WarehouseShipmentLineLocal.FINDSET THEN
           REPEAT
-            IF WarehouseShipmentLineLocal."Qty. to Ship" <> 0 THEN BEGIN
-              TempWarehouseShipmentLine := WarehouseShipmentLineLocal;
-              TempWarehouseShipmentLine.INSERT;
-              SaveItemTrackingInformationForWhseShptLine(TempWarehouseShipmentLine);
-              WarehouseShipmentHeaderLocal.GET(WarehouseShipmentLineLocal."No.");
-              TempWarehouseShipmentHeader := WarehouseShipmentHeaderLocal;
-              IF TempWarehouseShipmentHeader.INSERT THEN;
-            END;
+            WarehouseShipmentLineLocal.TESTFIELD("Qty. to Ship",ServiceLine."Qty. to Ship");
+            TempWarehouseShipmentLine := WarehouseShipmentLineLocal;
+            TempWarehouseShipmentLine.INSERT;
+            WarehouseShipmentHeaderLocal.GET(WarehouseShipmentLineLocal."No.");
+            TempWarehouseShipmentHeader := WarehouseShipmentHeaderLocal;
+            IF TempWarehouseShipmentHeader.INSERT THEN;
           UNTIL WarehouseShipmentLineLocal.NEXT = 0;
       UNTIL ServiceLine.NEXT = 0;
-    END;
-
-    LOCAL PROCEDURE CollectItemTrackingInformationFromWhseShptLine@105(WarehouseShipmentLine@1000 : Record 7321;VAR TempTrackingSpecification@1002 : TEMPORARY Record 336);
-    BEGIN
-      TempTrackingSpecification.DELETEALL;
-      WITH TempReservationEntry DO BEGIN
-        RESET;
-        SETCURRENTKEY("Source ID","Source Ref. No.","Source Type","Source Subtype");
-        SETRANGE("Source Type",WarehouseShipmentLine."Source Type");
-        SETRANGE("Source ID",WarehouseShipmentLine."Source No.");
-        SETRANGE("Source Subtype",WarehouseShipmentLine."Source Subtype");
-        SETRANGE("Source Ref. No.",WarehouseShipmentLine."Source Line No.");
-        IF NOT FINDSET THEN
-          EXIT;
-        REPEAT
-          TempTrackingSpecification.TRANSFERFIELDS(TempReservationEntry,TRUE);
-          TempTrackingSpecification."Quantity actual Handled (Base)" := "Qty. to Handle (Base)";
-          TempTrackingSpecification.INSERT;
-        UNTIL NEXT = 0;
-      END;
-    END;
-
-    LOCAL PROCEDURE SaveItemTrackingInformationForWhseShptLine@15(TempWarehouseShipmentLine@1000 : TEMPORARY Record 7321);
-    VAR
-      ReservationEntry@1001 : Record 337;
-      ItemTrackingManagement@1003 : Codeunit 6500;
-      ExpDate@1002 : Date;
-      EntriesExist@1004 : Boolean;
-    BEGIN
-      WITH ReservationEntry DO BEGIN
-        RESET;
-        SETCURRENTKEY("Source ID","Source Ref. No.","Source Type","Source Subtype");
-        SETRANGE("Source Type",TempWarehouseShipmentLine."Source Type");
-        SETRANGE("Source ID",TempWarehouseShipmentLine."Source No.");
-        SETRANGE("Source Subtype",TempWarehouseShipmentLine."Source Subtype");
-        SETRANGE("Source Ref. No.",TempWarehouseShipmentLine."Source Line No.");
-        IF NOT FINDSET THEN
-          EXIT;
-        REPEAT
-          TempReservationEntry := ReservationEntry;
-          ExpDate :=
-            ItemTrackingManagement.ExistingExpirationDate("Item No.","Variant Code","Lot No.","Serial No.",FALSE,EntriesExist);
-          IF EntriesExist THEN
-            TempReservationEntry."Expiration Date" := ExpDate;
-          TempReservationEntry.INSERT;
-        UNTIL NEXT = 0;
-      END;
     END;
 
     LOCAL PROCEDURE TestServLinePostingDate@11(ServHeaderDocType@1000 : Integer;ServHeaderNo@1001 : Code[20]);
@@ -528,6 +495,11 @@ OBJECT Codeunit 5980 Service-Post
           ELSE
             ERROR(STRSUBSTNO(NotSupportedDocumentTypeErr,"Document Type"));
         END;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterPostServiceDoc@13(VAR ServiceHeader@1000 : Record 5900;ServShipmentNo@1001 : Code[20];ServInvoiceNo@1002 : Code[20];ServCrMemoNo@1003 : Code[20]);
+    BEGIN
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Codeunit 249 VAT Registration Log Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
@@ -185,10 +185,10 @@ OBJECT Codeunit 249 VAT Registration Log Mgt.
       VATRegistrationLog@1001 : Record 249;
     BEGIN
       WITH VATRegistrationLog DO BEGIN
-        IF ISEMPTY THEN
-          LogUnloggedVATRegistrationNumbers;
         SETRANGE("Account Type","Account Type"::Customer);
         SETRANGE("Account No.",Customer."No.");
+        IF ISEMPTY THEN
+          LogUnloggedVATRegistrationNumbers;
         PAGE.RUNMODAL(PAGE::"VAT Registration Log",VATRegistrationLog);
       END;
     END;
@@ -198,10 +198,10 @@ OBJECT Codeunit 249 VAT Registration Log Mgt.
       VATRegistrationLog@1000 : Record 249;
     BEGIN
       WITH VATRegistrationLog DO BEGIN
-        IF ISEMPTY THEN
-          LogUnloggedVATRegistrationNumbers;
         SETRANGE("Account Type","Account Type"::Vendor);
         SETRANGE("Account No.",Vendor."No.");
+        IF ISEMPTY THEN
+          LogUnloggedVATRegistrationNumbers;
         PAGE.RUNMODAL(PAGE::"VAT Registration Log",VATRegistrationLog);
       END;
     END;
@@ -211,10 +211,10 @@ OBJECT Codeunit 249 VAT Registration Log Mgt.
       VATRegistrationLog@1000 : Record 249;
     BEGIN
       WITH VATRegistrationLog DO BEGIN
-        IF ISEMPTY THEN
-          LogUnloggedVATRegistrationNumbers;
         SETRANGE("Account Type","Account Type"::Contact);
         SETRANGE("Account No.",Contact."No.");
+        IF ISEMPTY THEN
+          LogUnloggedVATRegistrationNumbers;
         PAGE.RUNMODAL(PAGE::"VAT Registration Log",VATRegistrationLog);
       END;
     END;

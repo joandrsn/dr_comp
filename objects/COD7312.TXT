@@ -2,9 +2,9 @@ OBJECT Codeunit 7312 Create Pick
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -72,8 +72,10 @@ OBJECT Codeunit 7312 Create Pick
       CalledFromWksh@1051 : Boolean;
       ReqFEFOPick@1052 : Boolean;
       HasExpiredItems@1037 : Boolean;
-      ExpiredItemMessageText@1054 : Text[100];
+      CannotBeHandledMessage@1054 : Text[100];
       TotalQtyPickedBase@1056 : Decimal;
+      BinIsNotForPickTxt@1057 : TextConst '@@@=%1: Field("Bin Code");DAN=Det antal, der skal plukkes, er i placering %1, som ikke er konfigureret til plukning;ENU=The quantity to be picked is in bin %1, which is not set up for picking';
+      BinIsForReceiveOrShipTxt@1058 : TextConst '@@@=%1: Field("Bin Code");DAN=Det antal, der skal plukkes, er i placering %1, som er konfigureret til modtagelse eller levering;ENU=The quantity to be picked is in bin %1, which is set up for receiving or shipping';
 
     PROCEDURE CreateTempLine@29(LocationCode@1002 : Code[10];ItemNo@1003 : Code[20];VariantCode@1004 : Code[10];UnitofMeasureCode@1005 : Code[10];FromBinCode@1000 : Code[20];ToBinCode@1007 : Code[20];QtyPerUnitofMeasure@1010 : Decimal;VAR TotalQtytoPick@1001 : Decimal;VAR TotalQtytoPickBase@1000000000 : Decimal);
     VAR
@@ -195,7 +197,7 @@ OBJECT Codeunit 7312 Create Pick
               TotalQtytoPickBase := QtyAvailableBase;
             CalcBWPickBin(
               LocationCode,ItemNo,VariantCode,UnitofMeasureCode,
-              QtyPerUnitofMeasure,TotalQtytoPick,TotalQtytoPickBase,TempWhseItemTrkgLine,Location."Use Cross-Docking");
+              QtyPerUnitofMeasure,TotalQtytoPick,TotalQtytoPickBase,TempWhseItemTrkgLine);
           END;
           EXIT;
         END;
@@ -337,9 +339,12 @@ OBJECT Codeunit 7312 Create Pick
       TempWhseActivLine.COPY(TempWhseActivLine2);
     END;
 
-    LOCAL PROCEDURE CalcBWPickBin@36(LocationCode@1017 : Code[10];ItemNo@1016 : Code[20];VariantCode@1015 : Code[10];UnitofMeasureCode@1014 : Code[10];QtyPerUnitofMeasure@1012 : Decimal;VAR TotalQtyToPick@1000 : Decimal;VAR TotalQtytoPickBase@1010 : Decimal;VAR TempWhseItemTrkgLine@1009 : Record 6550;CrossDockFirst@1002 : Boolean);
+    LOCAL PROCEDURE CalcBWPickBin@36(LocationCode@1017 : Code[10];ItemNo@1016 : Code[20];VariantCode@1015 : Code[10];UnitofMeasureCode@1014 : Code[10];QtyPerUnitofMeasure@1012 : Decimal;VAR TotalQtyToPick@1000 : Decimal;VAR TotalQtytoPickBase@1010 : Decimal;VAR TempWhseItemTrkgLine@1009 : Record 6550);
     VAR
       WhseSource2@1001 : Option;
+      ToBinCode@1003 : Code[20];
+      DefaultBin@1005 : Boolean;
+      CrossDockBin@1004 : Boolean;
     BEGIN
       // Basic warehousing
 
@@ -348,83 +353,28 @@ OBJECT Codeunit 7312 Create Pick
       ELSE
         WhseSource2 := WhseSource;
 
-      // find pick qty. for bin code of source line
       IF TotalQtytoPickBase > 0 THEN
         CASE WhseSource2 OF
           WhseSource::"Pick Worksheet":
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              WhseWkshLine."To Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,FALSE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
+            ToBinCode := WhseWkshLine."To Bin Code";
           WhseSource::Shipment:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              WhseShptLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,FALSE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,CrossDockFirst);
+            ToBinCode := WhseShptLine."Bin Code";
           WhseSource::Production:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              ProdOrderCompLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,FALSE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
+            ToBinCode := ProdOrderCompLine."Bin Code";
           WhseSource::Assembly:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              AssemblyLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,FALSE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
+            ToBinCode := AssemblyLine."Bin Code";
         END;
 
-      // find pick qty. for default bin
-      IF TotalQtytoPickBase > 0 THEN
-        CASE WhseSource2 OF
-          WhseSource::"Pick Worksheet":
+      FOR CrossDockBin := TRUE DOWNTO FALSE DO
+        FOR DefaultBin := TRUE DOWNTO FALSE DO
+          IF TotalQtytoPickBase > 0 THEN
             FindBWPickBin(
               LocationCode,ItemNo,VariantCode,
-              WhseWkshLine."To Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,TRUE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
-          WhseSource::Shipment:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              WhseShptLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,TRUE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
-          WhseSource::Production:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              ProdOrderCompLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,TRUE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
-          WhseSource::Assembly:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              AssemblyLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,TRUE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
-        END;
-
-      // find pick qty. for other bins
-      IF TotalQtytoPickBase > 0 THEN
-        CASE WhseSource2 OF
-          WhseSource::"Pick Worksheet":
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              WhseWkshLine."To Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,FALSE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
-          WhseSource::Shipment:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              WhseShptLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,FALSE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,CrossDockFirst);
-          WhseSource::Production:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              ProdOrderCompLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,FALSE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
-          WhseSource::Assembly:
-            FindBWPickBin(
-              LocationCode,ItemNo,VariantCode,
-              AssemblyLine."Bin Code",UnitofMeasureCode,QtyPerUnitofMeasure,FALSE,
-              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine,FALSE);
-        END;
+              ToBinCode,UnitofMeasureCode,QtyPerUnitofMeasure,DefaultBin,CrossDockBin,
+              TotalQtyToPick,TotalQtytoPickBase,TempWhseItemTrkgLine);
     END;
 
-    LOCAL PROCEDURE FindBWPickBin@38(LocationCode@1012 : Code[10];ItemNo@1011 : Code[20];VariantCode@1010 : Code[10];ToBinCode@1008 : Code[20];UnitofMeasureCode@1005 : Code[10];QtyPerUnitofMeasure@1013 : Decimal;DefaultBin@1000 : Boolean;VAR TotalQtyToPick@1007 : Decimal;VAR TotalQtyToPickBase@1006 : Decimal;VAR TempWhseItemTrkgLine@1004 : Record 6550;CrossDockFirst@1014 : Boolean);
+    LOCAL PROCEDURE FindBWPickBin@38(LocationCode@1012 : Code[10];ItemNo@1011 : Code[20];VariantCode@1010 : Code[10];ToBinCode@1008 : Code[20];UnitofMeasureCode@1005 : Code[10];QtyPerUnitofMeasure@1013 : Decimal;DefaultBin@1000 : Boolean;CrossDockBin@1014 : Boolean;VAR TotalQtyToPick@1007 : Decimal;VAR TotalQtyToPickBase@1006 : Decimal;VAR TempWhseItemTrkgLine@1004 : Record 6550);
     VAR
       FromBinContent@1002 : Record 7302;
       QtyAvailableBase@1015 : Decimal;
@@ -434,12 +384,14 @@ OBJECT Codeunit 7312 Create Pick
     BEGIN
       // Basic warehousing
       WITH FromBinContent DO BEGIN
-        IF CrossDockFirst THEN BEGIN
+        IF CrossDockBin THEN BEGIN
           SETCURRENTKEY("Location Code","Item No.","Variant Code","Cross-Dock Bin","Qty. per Unit of Measure","Bin Ranking");
           ASCENDING(FALSE);
         END ELSE
           SETCURRENTKEY(Default,"Location Code","Item No.","Variant Code","Bin Code");
+
         SETRANGE(Default,DefaultBin);
+        SETRANGE("Cross-Dock Bin",CrossDockBin);
         SETRANGE("Location Code",LocationCode);
         SETRANGE("Item No.",ItemNo);
         SETRANGE("Variant Code",VariantCode);
@@ -460,7 +412,7 @@ OBJECT Codeunit 7312 Create Pick
           REPEAT
             QtyAvailableBase :=
               CalcQtyAvailToPick(0) -
-              CalcPickQtyAssigned(LocationCode,ItemNo,VariantCode,"Unit of Measure Code","Bin Code",TempWhseItemTrkgLine);
+              CalcPickQtyAssigned(LocationCode,ItemNo,VariantCode,'',"Bin Code",TempWhseItemTrkgLine);
 
             IF QtyAvailableBase > 0 THEN BEGIN
               IF SNRequired THEN
@@ -521,7 +473,18 @@ OBJECT Codeunit 7312 Create Pick
             SETFILTER("Serial No. Filter",'%1|%2',TempWhseItemTrkgLine."Serial No.",'');
         END;
         ASCENDING(FALSE);
-        EXIT(FIND('-'));
+        EXIT(FINDSET);
+      END;
+    END;
+
+    LOCAL PROCEDURE BinContentBlocked@78(LocationCode@1001 : Code[10];BinCode@1002 : Code[20];ItemNo@1003 : Code[20];VariantCode@1004 : Code[10];UnitOfMeasureCode@1005 : Code[10]) : Boolean;
+    VAR
+      BinContent@1000 : Record 7302;
+    BEGIN
+      WITH BinContent DO BEGIN
+        GET(LocationCode,BinCode,ItemNo,VariantCode,UnitOfMeasureCode);
+        IF "Block Movement" IN ["Block Movement"::Outbound,"Block Movement"::All] THEN
+          EXIT(TRUE);
       END;
     END;
 
@@ -599,6 +562,8 @@ OBJECT Codeunit 7312 Create Pick
       ToQtyToPickBase@1015 : Decimal;
       TotalAvailQtyToPickBase@1013 : Decimal;
       AvailableQtyBase@1010 : Decimal;
+      BinIsForPick@1012 : Boolean;
+      BinIsForReplenishment@1016 : Boolean;
     BEGIN
       // Directed put-away and pick
       GetBin(LocationCode,ToBinCode);
@@ -614,11 +579,11 @@ OBJECT Codeunit 7312 Create Pick
             TotalAvailQtyToPickBase := 0;
 
           REPEAT
-            IF ("Bin Code" <> ToBinCode) AND
-               ((UseForPick(FromBinContent) AND (WhseSource <> WhseSource::"Movement Worksheet")) OR
-                (UseForReplenishment(FromBinContent) AND (WhseSource = WhseSource::"Movement Worksheet")))
-            THEN BEGIN
+            BinIsForPick := UseForPick(FromBinContent) AND (WhseSource <> WhseSource::"Movement Worksheet");
+            BinIsForReplenishment := UseForReplenishment(FromBinContent) AND (WhseSource = WhseSource::"Movement Worksheet");
+            IF "Bin Code" <> ToBinCode THEN
               CalcBinAvailQtyToPick(AvailableQtyBase,FromBinContent,TempWhseActivLine2);
+            IF BinIsForPick OR BinIsForReplenishment THEN BEGIN
               IF TotalAvailQtyToPickBase < AvailableQtyBase THEN
                 AvailableQtyBase := TotalAvailQtyToPickBase;
 
@@ -643,7 +608,10 @@ OBJECT Codeunit 7312 Create Pick
 
                 TotalAvailQtyToPickBase := TotalAvailQtyToPickBase - ToQtyToPickBase;
               END;
-            END;
+            END ELSE
+              CannotBeHandledMessage :=
+                GetMessageForUnhandledQty(
+                  BinIsForPick,BinIsForReplenishment,WhseSource = WhseSource::"Movement Worksheet",AvailableQtyBase,"Bin Code");
           UNTIL (NEXT = 0) OR (TotalQtytoPickBase = 0);
         END;
     END;
@@ -1004,6 +972,7 @@ OBJECT Codeunit 7312 Create Pick
         SETFILTER("Breakbulk No.",'<>0');
         CALCSUMS("Qty. (Base)");
         AvailableQtyBase := AvailableQtyBase + "Qty. (Base)";
+        RESET;
       END;
     END;
 
@@ -1042,7 +1011,7 @@ OBJECT Codeunit 7312 Create Pick
       TempWhseActivLine.RESET;
       IF NOT TempWhseActivLine.FIND('-') THEN BEGIN
         IF ShowError THEN
-          ERROR(Text000,ExpiredItemMessageText);
+          ERROR(Text000,CannotBeHandledMessage);
         EXIT;
       END;
       WhseActivHeader.LOCKTABLE;
@@ -1202,14 +1171,16 @@ OBJECT Codeunit 7312 Create Pick
       ELSE
         TempWhseActivLine.DELETE;
 
-      WhseActivLine."Line No." := LineNo;
-      IF DoNotFillQtytoHandle THEN BEGIN
-        WhseActivLine."Qty. to Handle" := 0;
-        WhseActivLine."Qty. to Handle (Base)" := 0;
-        WhseActivLine.Cubage := 0;
-        WhseActivLine.Weight := 0;
+      IF WhseActivLine."Qty. (Base)" <> 0 THEN BEGIN
+        WhseActivLine."Line No." := LineNo;
+        IF DoNotFillQtytoHandle THEN BEGIN
+          WhseActivLine."Qty. to Handle" := 0;
+          WhseActivLine."Qty. to Handle (Base)" := 0;
+          WhseActivLine.Cubage := 0;
+          WhseActivLine.Weight := 0;
+        END;
+        WhseActivLine.INSERT;
       END;
-      WhseActivLine.INSERT;
 
       IF Location."Bin Mandatory" THEN
         CreateWhseDocPlaceLine(WhseActivLine.Quantity,WhseActivLine."Qty. (Base)",LineNo);
@@ -1540,7 +1511,7 @@ OBJECT Codeunit 7312 Create Pick
       EXIT(PickQtyAssigned);
     END;
 
-    LOCAL PROCEDURE CalcQtyAssignedToPick@73(ItemNo@1001 : Code[20];LocationCode@1002 : Code[10];VariantCode@1003 : Code[10];LotNo@1004 : Code[20];LNRequired@1005 : Boolean;SerialNo@1006 : Code[20];SNRequired@1007 : Boolean) : Decimal;
+    LOCAL PROCEDURE CalcQtyAssignedToPick@73(ItemNo@1001 : Code[20];LocationCode@1002 : Code[10];VariantCode@1003 : Code[10];BinCode@1008 : Code[20];LotNo@1004 : Code[20];LNRequired@1005 : Boolean;SerialNo@1006 : Code[20];SNRequired@1007 : Boolean) : Decimal;
     VAR
       WhseActivLine@1000 : Record 5767;
     BEGIN
@@ -1556,6 +1527,7 @@ OBJECT Codeunit 7312 Create Pick
         SETRANGE("Variant Code",VariantCode);
         SETRANGE("Breakbulk No.",0);
         SETFILTER("Action Type",'%1|%2',"Action Type"::" ","Action Type"::Take);
+        SETFILTER("Bin Code",BinCode);
         IF LotNo <> '' THEN
           IF LNRequired THEN
             SETRANGE("Lot No.",LotNo)
@@ -1792,6 +1764,7 @@ OBJECT Codeunit 7312 Create Pick
       QtyToPickBase@1008 : Decimal;
       QtyTracked@1000 : Decimal;
       FromBinContentQty@1102601000 : Decimal;
+      QtyCanBePicked@1003 : Decimal;
     BEGIN
       IF NOT HasExpiryDate THEN
         IF TotalQtytoPickBase <= 0 THEN
@@ -1819,7 +1792,6 @@ OBJECT Codeunit 7312 Create Pick
                   SourceType,SourceSubType,SourceNo,SourceLineNo,SourceSubLineNo,0,HasExpiryDate);
 
               IF CalledFromWksh AND (WhseWkshLine."From Bin Code" <> '') THEN BEGIN
-                FromBinContentQty := 0;
                 FromBinContentQty :=
                   GetFromBinContentQty(
                     WhseWkshLine."Location Code",WhseWkshLine."From Bin Code",WhseWkshLine."Item No.",
@@ -1828,6 +1800,11 @@ OBJECT Codeunit 7312 Create Pick
                 IF TotalAvailQtyToPickBase > FromBinContentQty THEN
                   TotalAvailQtyToPickBase := FromBinContentQty;
               END;
+
+              QtyCanBePicked :=
+                CalcQtyCanBePicked(Location.Code,ItemNo,VariantCode,
+                  EntrySummary."Lot No.",EntrySummary."Serial No.",HasExpiryDate);
+              TotalAvailQtyToPickBase := Minimum(TotalAvailQtyToPickBase,QtyCanBePicked);
 
               TotalAvailQtyToPickBase := TotalAvailQtyToPickBase - QtyTracked;
               QtyToPickBase := 0;
@@ -1857,7 +1834,7 @@ OBJECT Codeunit 7312 Create Pick
           END;
       IF NOT HasExpiredItems THEN BEGIN
         HasExpiredItems := ItemTrackingDataCollection.GetHasExpiredItems;
-        ExpiredItemMessageText := ItemTrackingDataCollection.GetResultMessageForExpiredItem;
+        CannotBeHandledMessage := ItemTrackingDataCollection.GetResultMessageForExpiredItem;
       END;
     END;
 
@@ -2003,7 +1980,6 @@ OBJECT Codeunit 7312 Create Pick
 
     PROCEDURE CalcTotalAvailQtyToPick@56(LocationCode@1003 : Code[10];ItemNo@1002 : Code[20];VariantCode@1001 : Code[10];LotNo@1013 : Code[20];SerialNo@1019 : Code[20];SourceType@1018 : Integer;SourceSubType@1017 : '0,1,2,3,4,5,6,7,8,9,10';SourceNo@1016 : Code[20];SourceLineNo@1015 : Integer;SourceSubLineNo@1014 : Integer;NeededQtyBase@1022 : Decimal;RespectLocationBins@1029 : Boolean) : Decimal;
     VAR
-      WhseEntry@1006 : Record 7312;
       WhseActivLine@1020 : Record 5767;
       TempWhseItemTrkgLine2@1100 : Record 6550;
       TotalAvailQtyBase@1004 : Decimal;
@@ -2021,6 +1997,7 @@ OBJECT Codeunit 7312 Create Pick
       QtyAssignedToPick@1021 : Decimal;
       AvailableAfterReshuffle@1024 : Decimal;
       QtyOnToBinsBase@1027 : Decimal;
+      QtyOnToBinsBaseInPicks@1031 : Decimal;
       ReservedQtyOnInventory@1030 : Decimal;
       ResetWhseItemTrkgExists@1101 : Boolean;
       BinTypeFilter@1028 : Text[1024];
@@ -2031,68 +2008,36 @@ OBJECT Codeunit 7312 Create Pick
       ItemTrackingMgt.CheckWhseItemTrkgSetup(ItemNo,SNRequired,LNRequired,FALSE);
       ReservedQtyOnInventory :=
         CalcReservedQtyOnInventory(ItemNo,LocationCode,VariantCode,LotNo,LNRequired,SerialNo,SNRequired);
-      QtyAssignedToPick := CalcQtyAssignedToPick(ItemNo,LocationCode,VariantCode,LotNo,LNRequired,SerialNo,SNRequired);
+      QtyAssignedToPick := CalcQtyAssignedToPick(ItemNo,LocationCode,VariantCode,'',LotNo,LNRequired,SerialNo,SNRequired);
 
-      WITH WhseEntry DO BEGIN
-        RESET;
-        SETCURRENTKEY("Item No.","Location Code","Variant Code","Bin Type Code");
-        SETRANGE("Item No.",ItemNo);
-        SETRANGE("Location Code",LocationCode);
-        SETRANGE("Variant Code",VariantCode);
-        IF LotNo <> '' THEN
-          IF LNRequired THEN
-            SETRANGE("Lot No.",LotNo)
-          ELSE
-            SETFILTER("Lot No.",'%1|%2',LotNo,'');
-        IF SerialNo <> '' THEN
-          IF SNRequired THEN
-            SETRANGE("Serial No.",SerialNo)
-          ELSE
-            SETFILTER("Serial No.",'%1|%2',SerialNo,'');
-        CALCSUMS("Qty. (Base)");
-        QtyInWhse := "Qty. (Base)";
+      QtyInWhse := SumWhseEntries(ItemNo,LocationCode,VariantCode,LNRequired,LotNo,SNRequired,SerialNo,'','');
 
-        BinTypeFilter := GetBinTypeFilter(0);
-        IF BinTypeFilter <> '' THEN BEGIN
-          IF RespectLocationBins AND (Location."Receipt Bin Code" <> '') THEN BEGIN
-            SETRANGE("Bin Code",Location."Receipt Bin Code");
-            CALCSUMS("Qty. (Base)");
-            QtyOnReceiveBins := "Qty. (Base)";
-            SETFILTER("Bin Code",'<>%1',Location."Receipt Bin Code");
+      // calculate quantity in receipt area and fixed receipt bin at location
+      // quantity in pick bins is considered as total quantity on the warehouse excluding receipt area and fixed receipt bin
+      CalcQtyOnPickAndReceiveBins(
+        QtyOnReceiveBins,QtyOnPickBins,
+        ItemNo,LocationCode,VariantCode,LNRequired,LotNo,SNRequired,SerialNo,RespectLocationBins);
+
+      IF CalledFromMoveWksh THEN BEGIN
+        BinTypeFilter := GetBinTypeFilter(4); // put-away only
+        IF BinTypeFilter <> '' THEN
+          QtyOnPutAwayBins :=
+            SumWhseEntries(ItemNo,LocationCode,VariantCode,LNRequired,LotNo,SNRequired,SerialNo,BinTypeFilter,'');
+
+        IF WhseWkshLine."To Bin Code" <> '' THEN
+          IF NOT IsShipZone(WhseWkshLine."Location Code",WhseWkshLine."To Zone Code") THEN BEGIN
+            QtyOnToBinsBase :=
+              SumWhseEntries(ItemNo,LocationCode,VariantCode,LNRequired,LotNo,SNRequired,SerialNo,'',WhseWkshLine."To Bin Code");
+            QtyOnToBinsBaseInPicks :=
+              CalcQtyAssignedToPick(
+                ItemNo,LocationCode,VariantCode,WhseWkshLine."To Bin Code",LotNo,LNRequired,SerialNo,SNRequired);
+            QtyOnToBinsBase -= Minimum(QtyOnToBinsBase,QtyOnToBinsBaseInPicks);
           END;
-          SETFILTER("Bin Type Code",BinTypeFilter); // Receive
-          CALCSUMS("Qty. (Base)");
-          QtyOnReceiveBins += "Qty. (Base)";
-
-          SETFILTER("Bin Type Code",'<>%1',BinTypeFilter); // Pick from all but Receive area
-        END;
-        CALCSUMS("Qty. (Base)");
-        QtyOnPickBins := "Qty. (Base)";
-        SETRANGE("Bin Code");
-
-        IF CalledFromMoveWksh THEN BEGIN
-          BinTypeFilter := GetBinTypeFilter(4);
-          IF BinTypeFilter <> '' THEN BEGIN
-            SETFILTER("Bin Type Code",BinTypeFilter); // Put-Away only
-            CALCSUMS("Qty. (Base)");
-            QtyOnPutAwayBins := "Qty. (Base)";
-          END;
-        END;
-
-        QtyOnOutboundBins :=
-          CalcQtyOnOutboundBins(
-            LocationCode,ItemNo,VariantCode,LotNo,SerialNo,TRUE);
-
-        QtyOnDedicatedBins := WhseAvailMgt.CalcQtyOnDedicatedBins(LocationCode,ItemNo,VariantCode,LotNo,SerialNo);
-
-        IF NOT IsShipZone(WhseWkshLine."Location Code",WhseWkshLine."To Zone Code") THEN BEGIN
-          SETCURRENTKEY("Item No.","Bin Code","Location Code","Variant Code");
-          SETRANGE("Bin Type Code");
-          SETRANGE("Bin Code",WhseWkshLine."To Bin Code");
-          CALCSUMS("Qty. (Base)");
-          QtyOnToBinsBase := "Qty. (Base)";
-        END;
       END;
+
+      QtyOnOutboundBins := CalcQtyOnOutboundBins(LocationCode,ItemNo,VariantCode,LotNo,SerialNo,TRUE);
+
+      QtyOnDedicatedBins := WhseAvailMgt.CalcQtyOnDedicatedBins(LocationCode,ItemNo,VariantCode,LotNo,SerialNo);
 
       QtyBlocked :=
         WhseAvailMgt.CalcQtyOnBlockedITOrOnBlockedOutbndBins(
@@ -2203,25 +2148,53 @@ OBJECT Codeunit 7312 Create Pick
       EXIT(TotalAvailQtyBase - QtyOnToBinsBase);
     END;
 
+    LOCAL PROCEDURE CalcQtyOnPickAndReceiveBins@109(VAR QtyOnReceiveBins@1009 : Decimal;VAR QtyOnPickBins@1010 : Decimal;ItemNo@1001 : Code[20];LocationCode@1002 : Code[10];VariantCode@1003 : Code[10];IsLNRequired@1004 : Boolean;LotNo@1005 : Code[20];IsSNRequired@1006 : Boolean;SerialNo@1007 : Code[20];RespectLocationBins@1008 : Boolean);
+    VAR
+      WhseEntry@1000 : Record 7312;
+      BinTypeFilter@1011 : Text;
+    BEGIN
+      GetLocation(LocationCode);
+
+      WITH WhseEntry DO BEGIN
+        FilterWhseEntry(WhseEntry,ItemNo,LocationCode,VariantCode,IsLNRequired,LotNo,IsSNRequired,SerialNo,FALSE);
+        BinTypeFilter := GetBinTypeFilter(0);
+        IF BinTypeFilter <> '' THEN BEGIN
+          IF RespectLocationBins AND (Location."Receipt Bin Code" <> '') THEN BEGIN
+            SETRANGE("Bin Code",Location."Receipt Bin Code");
+            CALCSUMS("Qty. (Base)");
+            QtyOnReceiveBins := "Qty. (Base)";
+
+            SETFILTER("Bin Code",'<>%1',Location."Receipt Bin Code");
+          END;
+          SETFILTER("Bin Type Code",BinTypeFilter); // Receive
+          CALCSUMS("Qty. (Base)");
+          QtyOnReceiveBins += "Qty. (Base)";
+
+          SETFILTER("Bin Type Code",'<>%1',BinTypeFilter);
+        END;
+        CALCSUMS("Qty. (Base)");
+        QtyOnPickBins := "Qty. (Base)";
+      END;
+    END;
+
     PROCEDURE CalcQtyOnOutboundBins@43(LocationCode@1003 : Code[10];ItemNo@1002 : Code[20];VariantCode@1001 : Code[10];LotNo@1000 : Code[20];SerialNo@1008 : Code[20];ExcludeDedicatedBinContent@1010 : Boolean) QtyOnOutboundBins : Decimal;
     VAR
       WhseEntry@1005 : Record 7312;
       WhseShptLine@1009 : Record 7321;
-      OutBoundFilter@1007 : Text[1024];
     BEGIN
       // Directed put-away and pick
       GetLocation(LocationCode);
 
       IF Location."Directed Put-away and Pick" THEN
         WITH WhseEntry DO BEGIN
-          FilterWhseEntry(WhseEntry,ItemNo,LocationCode,VariantCode,LotNo,SerialNo,ExcludeDedicatedBinContent);
+          FilterWhseEntry(
+            WhseEntry,ItemNo,LocationCode,VariantCode,TRUE,LotNo,TRUE,SerialNo,ExcludeDedicatedBinContent);
           SETFILTER("Bin Type Code",GetBinTypeFilter(1)); // Shipping area
           CALCSUMS("Qty. (Base)");
           QtyOnOutboundBins := "Qty. (Base)";
-          OutBoundFilter := SetOutBoundFilter(Location);
-          IF OutBoundFilter <> '' THEN BEGIN
+          IF Location."Adjustment Bin Code" <> '' THEN BEGIN
             SETRANGE("Bin Type Code");
-            SETFILTER("Bin Code",OutBoundFilter);
+            SETRANGE("Bin Code",Location."Adjustment Bin Code");
             CALCSUMS("Qty. (Base)");
             QtyOnOutboundBins += "Qty. (Base)";
           END
@@ -2229,7 +2202,7 @@ OBJECT Codeunit 7312 Create Pick
       ELSE
         IF Location."Require Pick" THEN
           IF Location."Bin Mandatory" AND ((LotNo <> '') OR (SerialNo <> '')) THEN BEGIN
-            FilterWhseEntry(WhseEntry,ItemNo,LocationCode,VariantCode,LotNo,SerialNo,FALSE);
+            FilterWhseEntry(WhseEntry,ItemNo,LocationCode,VariantCode,TRUE,LotNo,TRUE,SerialNo,FALSE);
             WITH WhseEntry DO BEGIN
               SETRANGE("Whse. Document Type","Whse. Document Type"::Shipment);
               SETRANGE("Reference Document","Reference Document"::Pick);
@@ -2244,6 +2217,30 @@ OBJECT Codeunit 7312 Create Pick
               CALCSUMS("Qty. Picked (Base)","Qty. Shipped (Base)");
               QtyOnOutboundBins := "Qty. Picked (Base)" - "Qty. Shipped (Base)";
             END;
+    END;
+
+    LOCAL PROCEDURE CalcQtyCanBePicked@79(LocationCode@1004 : Code[10];ItemNo@1005 : Code[20];VariantCode@1006 : Code[10];LotNo@1009 : Code[20];SerialNo@1010 : Code[20];HasExpiryDate@1011 : Boolean) : Decimal;
+    VAR
+      QtyOnPickBins@1003 : Decimal;
+      QtyOnReceiveBins@1002 : Decimal;
+      QtyOnOutboundBins@1001 : Decimal;
+      QtyOnDedicatedBins@1000 : Decimal;
+      IsLNRequired@1007 : Boolean;
+      IsSNRequired@1008 : Boolean;
+    BEGIN
+      ItemTrackingMgt.CheckWhseItemTrkgSetup(ItemNo,IsSNRequired,IsLNRequired,FALSE);
+
+      CalcQtyOnPickAndReceiveBins(
+        QtyOnReceiveBins,QtyOnPickBins,ItemNo,LocationCode,VariantCode,
+        IsLNRequired,LotNo,IsSNRequired,SerialNo,HasExpiryDate);
+
+      QtyOnOutboundBins :=
+        CalcQtyOnOutboundBins(LocationCode,ItemNo,VariantCode,LotNo,SerialNo,TRUE);
+
+      QtyOnDedicatedBins :=
+        WhseAvailMgt.CalcQtyOnDedicatedBins(Location.Code,ItemNo,VariantCode,LotNo,SerialNo);
+
+      EXIT(QtyOnPickBins - QtyOnOutboundBins - QtyOnDedicatedBins);
     END;
 
     PROCEDURE GetBinTypeFilter@41(Type@1000 : 'Receive,Ship,Put Away,Pick,Put Away only') : Text[1024];
@@ -2273,20 +2270,6 @@ OBJECT Codeunit 7312 Create Pick
           UNTIL NEXT = 0;
         IF Filter <> '' THEN
           Filter := COPYSTR(Filter,2);
-      END;
-      EXIT(Filter);
-    END;
-
-    LOCAL PROCEDURE SetOutBoundFilter@42(Location2@1000 : Record 14) : Text[1024];
-    VAR
-      Filter@1001 : Text[1024];
-    BEGIN
-      WITH Location2 DO BEGIN
-        IF "Adjustment Bin Code" <> '' THEN
-          IF Filter <> '' THEN
-            Filter := STRSUBSTNO('%1|%2',Filter,"Adjustment Bin Code")
-          ELSE
-            Filter := "Adjustment Bin Code";
       END;
       EXIT(Filter);
     END;
@@ -2757,16 +2740,20 @@ OBJECT Codeunit 7312 Create Pick
     END;
 
     LOCAL PROCEDURE CalcTotalQtyOnBinType@104(BinTypeFilter@1004 : Text[1024];LocationCode@1003 : Code[10];ItemNo@1002 : Code[20];VariantCode@1001 : Code[10]) : Decimal;
+    BEGIN
+      EXIT(SumWhseEntries(ItemNo,LocationCode,VariantCode,FALSE,'',FALSE,'',BinTypeFilter,''));
+    END;
+
+    LOCAL PROCEDURE SumWhseEntries@93(ItemNo@1001 : Code[20];LocationCode@1002 : Code[10];VariantCode@1003 : Code[10];IsLNRequired@1008 : Boolean;LotNo@1004 : Code[20];IsSNRequired@1009 : Boolean;SerialNo@1005 : Code[20];BinTypeCodeFilter@1006 : Text;BinCodeFilter@1007 : Text) : Decimal;
     VAR
       WhseEntry@1000 : Record 7312;
     BEGIN
       WITH WhseEntry DO BEGIN
-        SETCURRENTKEY("Item No.","Location Code","Variant Code","Bin Type Code");
-        SETRANGE("Item No.",ItemNo);
-        SETRANGE("Location Code",LocationCode);
-        SETRANGE("Variant Code",VariantCode);
-        IF BinTypeFilter <> '' THEN
-          SETFILTER("Bin Type Code",BinTypeFilter);
+        FilterWhseEntry(
+          WhseEntry,ItemNo,LocationCode,VariantCode,IsLNRequired,LotNo,IsSNRequired,SerialNo,FALSE);
+        SETFILTER("Bin Type Code",BinTypeCodeFilter);
+        SETFILTER("Bin Code",BinCodeFilter);
+
         CALCSUMS("Qty. (Base)");
         EXIT("Qty. (Base)");
       END;
@@ -2836,7 +2823,7 @@ OBJECT Codeunit 7312 Create Pick
 
     PROCEDURE GetExpiredItemMessage@32() : Text[100];
     BEGIN
-      EXIT(ExpiredItemMessageText);
+      EXIT(CannotBeHandledMessage);
     END;
 
     LOCAL PROCEDURE PickStrictExpirationPosting@47(ItemNo@1000 : Code[20]) : Boolean;
@@ -2934,49 +2921,70 @@ OBJECT Codeunit 7312 Create Pick
       EXIT(TotalQtyPickedBase);
     END;
 
-    PROCEDURE CalcReservedQtyOnInventory@275(ItemNo@1000 : Code[20];LocationCode@1001 : Code[10];VariantCode@1002 : Code[10];LotNo@1003 : Code[20];LNRequired@1004 : Boolean;SerialNo@1005 : Code[20];SNRequired@1006 : Boolean) : Decimal;
+    PROCEDURE CalcReservedQtyOnInventory@275(ItemNo@1000 : Code[20];LocationCode@1001 : Code[10];VariantCode@1002 : Code[10];LotNo@1003 : Code[20];LNRequired@1004 : Boolean;SerialNo@1005 : Code[20];SNRequired@1006 : Boolean) ReservedQty : Decimal;
+    VAR
+      ReservationEntry@1007 : Record 337;
+      TempBinContentBuffer@1008 : TEMPORARY Record 7330;
     BEGIN
-      GetItem(ItemNo);
-      WITH Item DO BEGIN
-        SETRANGE("Location Filter",LocationCode);
-        SETRANGE("Variant Filter",VariantCode);
+      ReservedQty := 0;
+
+      WITH ReservationEntry DO BEGIN
+        SETRANGE("Item No.",ItemNo);
+        SETRANGE("Source Type",DATABASE::"Item Ledger Entry");
+        SETRANGE("Source Subtype",0);
+        SETRANGE("Reservation Status","Reservation Status"::Reservation);
+        SETRANGE("Location Code",LocationCode);
+        SETRANGE("Variant Code",VariantCode);
         IF LotNo <> '' THEN BEGIN
           IF LNRequired THEN
-            SETRANGE("Lot No. Filter",LotNo)
+            SETRANGE("Lot No.",LotNo)
           ELSE
-            SETFILTER("Lot No. Filter",'%1|%2',LotNo,'')
-        END ELSE
-          SETRANGE("Lot No. Filter");
+            SETFILTER("Lot No.",'%1|%2',LotNo,'');
+        END;
         IF SerialNo <> '' THEN BEGIN
           IF SNRequired THEN
-            SETRANGE("Serial No. Filter",SerialNo)
+            SETRANGE("Serial No.",SerialNo)
           ELSE
-            SETFILTER("Serial No. Filter",'%1|%2',SerialNo,'');
-        END ELSE
-          SETRANGE("Serial No. Filter");
-        CALCFIELDS("Reserved Qty. on Inventory");
-        EXIT("Reserved Qty. on Inventory");
+            SETFILTER("Serial No.",'%1|%2',SerialNo,'');
+        END;
+
+        IF FINDSET THEN
+          REPEAT
+            InsertTempBinContentBuf(
+              TempBinContentBuffer,"Location Code",'',"Item No.","Variant Code",'',"Lot No.","Serial No.","Quantity (Base)");
+          UNTIL NEXT = 0;
+
+        DistrubuteReservedQtyByBins(TempBinContentBuffer);
+        TempBinContentBuffer.CALCSUMS("Qty. to Handle (Base)");
+        ReservedQty := TempBinContentBuffer."Qty. to Handle (Base)";
       END;
     END;
 
-    LOCAL PROCEDURE FilterWhseEntry@76(VAR WarehouseEntry@1000 : Record 7312;ItemNo@1001 : Code[20];LocationCode@1002 : Code[10];VariantCode@1003 : Code[10];LotNo@1004 : Code[20];SerialNo@1005 : Code[20];ExcludeDedicatedBinContent@1006 : Boolean);
+    LOCAL PROCEDURE FilterWhseEntry@76(VAR WarehouseEntry@1000 : Record 7312;ItemNo@1001 : Code[20];LocationCode@1002 : Code[10];VariantCode@1003 : Code[10];IsLNRequired@1007 : Boolean;LotNo@1004 : Code[20];IsSNRequired@1008 : Boolean;SerialNo@1005 : Code[20];ExcludeDedicatedBinContent@1006 : Boolean);
     BEGIN
       WITH WarehouseEntry DO BEGIN
         SETRANGE("Item No.",ItemNo);
         SETRANGE("Location Code",LocationCode);
         SETRANGE("Variant Code",VariantCode);
         IF LotNo <> '' THEN
-          SETRANGE("Lot No.",LotNo);
+          IF IsLNRequired THEN
+            SETRANGE("Lot No.",LotNo)
+          ELSE
+            SETFILTER("Lot No.",'%1|%2',LotNo,'');
         IF SerialNo <> '' THEN
-          SETRANGE("Serial No.",SerialNo);
+          IF IsSNRequired THEN
+            SETRANGE("Serial No.",SerialNo)
+          ELSE
+            SETFILTER("Serial No.",'%1|%2',SerialNo,'');
         IF ExcludeDedicatedBinContent THEN
           SETRANGE(Dedicated,FALSE);
-      END
+      END;
     END;
 
-    PROCEDURE CalcResidualPickedQty@90(VAR WhseEntry@1000 : Record 7312) Result : Decimal;
+    LOCAL PROCEDURE CalcResidualPickedQty@90(VAR WhseEntry@1000 : Record 7312) Result : Decimal;
     VAR
       WhseEntry2@1001 : Record 7312;
+      WarehouseShipmentHeader@1003 : Record 7320;
     BEGIN
       WhseEntry.SETCURRENTKEY("Source Type","Source Subtype","Source No.");
       IF NOT WhseEntry.FINDSET THEN
@@ -3006,10 +3014,142 @@ OBJECT Codeunit 7312 Create Pick
 
             CALCSUMS("Qty. (Base)");
             Result += "Qty. (Base)";
+            SETRANGE("Entry Type","Entry Type"::"Positive Adjmt.");
+            SETFILTER(
+              "Reference Document",'%1|%2',"Reference Document"::"Posted Shipment","Reference Document"::"Posted Rtrn. Shipment");
+            CALCSUMS("Qty. (Base)");
+            Result -= "Qty. (Base)";
+
+            IF "Qty. (Base)" > 0 THEN
+              IF NOT WarehouseShipmentHeader.GET(WhseEntry."Whse. Document No.") THEN
+                Result -= "Qty. (Base)";
 
             TRANSFERFIELDS(WhseEntry);
           END
       UNTIL WhseEntry.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE DistrubuteReservedQtyByBins@91(VAR TempBinContentBuffer@1000 : TEMPORARY Record 7330);
+    VAR
+      TempBinContentBufferByBins@1001 : TEMPORARY Record 7330;
+      TempBinContentBufferByBlockedBins@1005 : TEMPORARY Record 7330;
+      WarehouseEntry@1004 : Record 7312;
+      QtyLeftToDistribute@1003 : Decimal;
+      QtyInBin@1002 : Decimal;
+    BEGIN
+      WITH TempBinContentBuffer DO BEGIN
+        IF FINDSET THEN
+          REPEAT
+            QtyLeftToDistribute := "Qty. to Handle (Base)";
+            WarehouseEntry.SETCURRENTKEY(
+              "Item No.","Bin Code","Location Code","Variant Code","Unit of Measure Code","Lot No.","Serial No.",
+              "Entry Type",Dedicated);
+            WarehouseEntry.SETRANGE("Location Code","Location Code");
+            WarehouseEntry.SETRANGE("Item No.","Item No.");
+            WarehouseEntry.SETRANGE("Variant Code","Variant Code");
+            WarehouseEntry.SETRANGE("Lot No.","Lot No.");
+            WarehouseEntry.SETRANGE("Serial No.","Serial No.");
+            GetLocation("Location Code");
+            IF Location."Adjustment Bin Code" <> '' THEN BEGIN
+              WarehouseEntry.FILTERGROUP(2);
+              WarehouseEntry.SETFILTER("Bin Code",'<>%1',Location."Adjustment Bin Code");
+              WarehouseEntry.FILTERGROUP(0);
+            END;
+
+            IF WarehouseEntry.FINDSET THEN
+              REPEAT
+                WarehouseEntry.SETRANGE("Bin Code",WarehouseEntry."Bin Code");
+                WarehouseEntry.SETRANGE("Unit of Measure Code",WarehouseEntry."Unit of Measure Code");
+                WarehouseEntry.CALCSUMS("Qty. (Base)");
+                IF WarehouseEntry."Qty. (Base)" > 0 THEN
+                  IF NOT BinContentBlocked(
+                       "Location Code",WarehouseEntry."Bin Code","Item No.","Variant Code",WarehouseEntry."Unit of Measure Code")
+                  THEN BEGIN
+                    QtyInBin := Minimum(QtyLeftToDistribute,WarehouseEntry."Qty. (Base)");
+                    QtyLeftToDistribute -= QtyInBin;
+                    InsertTempBinContentBuf(
+                      TempBinContentBufferByBins,
+                      "Location Code",WarehouseEntry."Bin Code","Item No.","Variant Code",
+                      WarehouseEntry."Unit of Measure Code","Lot No.","Serial No.",QtyInBin);
+                  END ELSE
+                    InsertTempBinContentBuf(
+                      TempBinContentBufferByBlockedBins,
+                      "Location Code",WarehouseEntry."Bin Code","Item No.","Variant Code",
+                      WarehouseEntry."Unit of Measure Code","Lot No.","Serial No.",WarehouseEntry."Qty. (Base)");
+                WarehouseEntry.FINDLAST;
+                WarehouseEntry.SETRANGE("Unit of Measure Code");
+                WarehouseEntry.SETRANGE("Bin Code");
+              UNTIL (WarehouseEntry.NEXT = 0) OR (QtyLeftToDistribute = 0);
+
+            IF (QtyLeftToDistribute > 0) AND TempBinContentBufferByBlockedBins.FINDSET THEN
+              REPEAT
+                QtyInBin := Minimum(QtyLeftToDistribute,TempBinContentBufferByBlockedBins."Qty. to Handle (Base)");
+                QtyLeftToDistribute -= QtyInBin;
+                InsertTempBinContentBuf(
+                  TempBinContentBufferByBins,
+                  "Location Code",TempBinContentBufferByBlockedBins."Bin Code","Item No.","Variant Code",
+                  TempBinContentBufferByBlockedBins."Unit of Measure Code","Lot No.","Serial No.",QtyInBin);
+              UNTIL (TempBinContentBufferByBlockedBins.NEXT = 0) OR (QtyLeftToDistribute = 0);
+          UNTIL NEXT = 0;
+
+        DELETEALL;
+        IF TempBinContentBufferByBins.FINDSET THEN
+          REPEAT
+            IF NOT BlockedBinOrLotOrSerial(TempBinContentBufferByBins) THEN BEGIN
+              TempBinContentBuffer := TempBinContentBufferByBins;
+              INSERT;
+            END;
+          UNTIL TempBinContentBufferByBins.NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE InsertTempBinContentBuf@81(VAR TempBinContentBuffer@1000 : TEMPORARY Record 7330;LocationCode@1001 : Code[10];BinCode@1002 : Code[20];ItemNo@1003 : Code[20];VariantCode@1004 : Code[10];UnitOfMeasureCode@1008 : Code[10];LotNo@1005 : Code[20];SerialNo@1006 : Code[20];QtyBase@1007 : Decimal);
+    BEGIN
+      WITH TempBinContentBuffer DO
+        IF GET(LocationCode,BinCode,ItemNo,VariantCode,UnitOfMeasureCode,LotNo,SerialNo) THEN BEGIN
+          "Qty. to Handle (Base)" += QtyBase;
+          MODIFY;
+        END ELSE BEGIN
+          INIT;
+          "Location Code" := LocationCode;
+          "Bin Code" := BinCode;
+          "Item No." := ItemNo;
+          "Variant Code" := VariantCode;
+          "Unit of Measure Code" := UnitOfMeasureCode;
+          "Lot No." := LotNo;
+          "Serial No." := SerialNo;
+          "Qty. to Handle (Base)" := QtyBase;
+          INSERT;
+        END;
+    END;
+
+    LOCAL PROCEDURE BlockedBinOrLotOrSerial@102(BinContentBuffer@1000 : Record 7330) : Boolean;
+    VAR
+      LotNoInformation@1003 : Record 6505;
+      SerialNoInformation@1004 : Record 6504;
+    BEGIN
+      WITH BinContentBuffer DO BEGIN
+        IF BinContentBlocked("Location Code","Bin Code","Item No.","Variant Code","Unit of Measure Code") THEN
+          EXIT(TRUE);
+        IF LotNoInformation.GET("Item No.","Variant Code","Lot No.") THEN
+          IF LotNoInformation.Blocked THEN
+            EXIT(TRUE);
+        IF SerialNoInformation.GET("Item No.","Variant Code","Serial No.") THEN
+          IF SerialNoInformation.Blocked THEN
+            EXIT(TRUE);
+      END;
+
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE GetMessageForUnhandledQty@84(BinIsForPick@1000 : Boolean;BinIsForReplenishment@1001 : Boolean;IsMoveWksh@1002 : Boolean;AvailableQtyBase@1003 : Decimal;BinCode@1004 : Code[20]) : Text[100];
+    BEGIN
+      IF AvailableQtyBase <= 0 THEN
+        EXIT('');
+      IF NOT BinIsForPick AND NOT IsMoveWksh THEN
+        EXIT(STRSUBSTNO(BinIsNotForPickTxt,BinCode));
+      IF NOT BinIsForReplenishment AND IsMoveWksh THEN
+        EXIT(STRSUBSTNO(BinIsForReceiveOrShipTxt,BinCode));
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Table 5700 Stockkeeping Unit
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -184,7 +184,11 @@ OBJECT Table 5700 Stockkeeping Unit
                                                               ENU=Vendor No.] }
     { 32  ;   ;Vendor Item No.     ;Text20        ;CaptionML=[DAN=Leverandørs varenr.;
                                                               ENU=Vendor Item No.] }
-    { 33  ;   ;Lead Time Calculation;DateFormula  ;CaptionML=[DAN=Leveringstid;
+    { 33  ;   ;Lead Time Calculation;DateFormula  ;OnValidate=BEGIN
+                                                                LeadTimeMgt.CheckLeadTimeIsNotNegative("Lead Time Calculation");
+                                                              END;
+
+                                                   CaptionML=[DAN=Leveringstid;
                                                               ENU=Lead Time Calculation] }
     { 34  ;   ;Reorder Point       ;Decimal       ;CaptionML=[DAN=Genbestillingspunkt;
                                                               ENU=Reorder Point];
@@ -561,15 +565,17 @@ OBJECT Table 5700 Stockkeeping Unit
                                                                       THEN
                                                                         ERROR(Text7381);
 
-                                                                    PhysInvtCountPeriodMgt.CalcPeriod(
-                                                                      "Last Counting Period Update","Next Counting Start Date","Next Counting End Date",
-                                                                      PhysInvtCountPeriod."Count Frequency per Year",
-                                                                      ("Last Counting Period Update" = 0D) OR
-                                                                      ("Phys Invt Counting Period Code" <> xRec."Phys Invt Counting Period Code"));
+                                                                    IF ("Last Counting Period Update" = 0D) OR
+                                                                       ("Phys Invt Counting Period Code" <> xRec."Phys Invt Counting Period Code")
+                                                                    THEN
+                                                                      PhysInvtCountPeriodMgt.CalcPeriod(
+                                                                        "Last Counting Period Update","Next Counting Start Date","Next Counting End Date",
+                                                                        PhysInvtCountPeriod."Count Frequency per Year");
                                                                   END;
                                                                 END ELSE BEGIN
-                                                                  IF NOT CONFIRM(Text003,FALSE,FIELDCAPTION("Phys Invt Counting Period Code")) THEN
-                                                                    ERROR(Text7381);
+                                                                  IF NOT HideValidationDialog THEN
+                                                                    IF NOT CONFIRM(Text003,FALSE,FIELDCAPTION("Phys Invt Counting Period Code")) THEN
+                                                                      ERROR(Text7381);
                                                                   "Next Counting Start Date" := 0D;
                                                                   "Next Counting End Date" := 0D;
                                                                   "Last Counting Period Update" := 0D;
@@ -719,12 +725,14 @@ OBJECT Table 5700 Stockkeeping Unit
       PlanningAssignment@1009 : Record 99000850;
       ItemCostMgt@1012 : Codeunit 5804;
       CalendarMgt@1017 : Codeunit 7600;
+      LeadTimeMgt@1018 : Codeunit 5404;
       FromLocation@1010 : Code[10];
       ErrorString@1011 : Text[80];
       Text008@1013 : TextConst 'DAN=Du kan ikke ændre %1, fordi der er en eller flere poster på denne lagervare.;ENU=You cannot change %1 because there are one or more ledger entries for this SKU.';
       Text7380@1015 : TextConst '@@@=If you change the Phys Invt Counting Period Code, the Next Counting Start Date and Next Counting End Date are calculated.\Do you still want to change the Phys Invt Counting Period Code?;DAN=Hvis du ændrer %1, beregnes %2 og %3.\Vil du stadig ændre %1?;ENU=If you change the %1, the %2 and %3 are calculated.\Do you still want to change the %1?';
       Text7381@1014 : TextConst 'DAN=Annulleret.;ENU=Cancelled.';
       Vend@1016 : Record 23;
+      HideValidationDialog@1019 : Boolean;
 
     LOCAL PROCEDURE TransferRouteExists@1(TransferFromCode@1000 : Code[10];TransferToCode@1001 : Code[10]) : Boolean;
     BEGIN
@@ -835,6 +843,11 @@ OBJECT Table 5700 Stockkeeping Unit
             FIELDCAPTION("Location Code"),
             "Transfer-from Code",
             "Location Code");
+    END;
+
+    PROCEDURE SetHideValidationDialog@14(NewHideValidationDialog@1000 : Boolean);
+    BEGIN
+      HideValidationDialog := NewHideValidationDialog;
     END;
 
     BEGIN

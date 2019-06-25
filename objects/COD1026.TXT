@@ -2,9 +2,9 @@ OBJECT Codeunit 1026 Job Link Usage
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -17,6 +17,7 @@ OBJECT Codeunit 1026 Job Link Usage
   {
     VAR
       Text001@1002 : TextConst '@@@=The specified Job Planning Line does not have Usage Link enabled.;DAN=%2 er ikke aktiveret for den angivne %1.;ENU=The specified %1 does not have %2 enabled.';
+      ConfirmUsageWithBlankLineTypeQst@1000 : TextConst 'DAN=Forbruget knyttes ikke til sagsplanlægningslinjen, fordi feltet Linjetype er tomt.\\Vil du fortsætte?;ENU=Usage will not be linked to the job planning line because the Line Type field is empty.\\Do you want to continue?';
 
     PROCEDURE ApplyUsage@1(JobLedgerEntry@1001 : Record 169;JobJournalLine@1004 : Record 210);
     BEGIN
@@ -30,6 +31,7 @@ OBJECT Codeunit 1026 Job Link Usage
     VAR
       JobPlanningLine@1001 : Record 1003;
       JobUsageLink@1004 : Record 1020;
+      Confirmed@1008 : Boolean;
       MatchedQty@1006 : Decimal;
       MatchedTotalCost@1002 : Decimal;
       MatchedLineAmount@1003 : Decimal;
@@ -38,9 +40,12 @@ OBJECT Codeunit 1026 Job Link Usage
       RemainingQtyToMatch := JobLedgerEntry."Quantity (Base)";
       REPEAT
         IF NOT FindMatchingJobPlanningLine(JobPlanningLine,JobLedgerEntry) THEN
-          IF EmptyLineType THEN
-            RemainingQtyToMatch := 0
-          ELSE
+          IF EmptyLineType THEN BEGIN
+            Confirmed := CONFIRM(ConfirmUsageWithBlankLineTypeQst,FALSE);
+            IF NOT Confirmed THEN
+              ERROR('');
+            RemainingQtyToMatch := 0;
+          END ELSE
             CreateJobPlanningLine(JobPlanningLine,JobLedgerEntry,RemainingQtyToMatch);
 
         IF RemainingQtyToMatch <> 0 THEN BEGIN
@@ -75,6 +80,8 @@ OBJECT Codeunit 1026 Job Link Usage
       TotalQtyBase := PostedQtyBase + TotalRemainingQtyPrePostBase;
       JobPlanningLine.SetBypassQtyValidation(TRUE);
       JobPlanningLine.VALIDATE(Quantity,CalcQtyFromBaseQty(TotalQtyBase,JobPlanningLine."Qty. per Unit of Measure"));
+      JobPlanningLine.VALIDATE("Serial No.",JobLedgerEntry."Serial No.");
+      JobPlanningLine.VALIDATE("Lot No.",JobLedgerEntry."Lot No.");
       JobPlanningLine.Use(CalcQtyFromBaseQty(JobLedgerEntry."Quantity (Base)",JobPlanningLine."Qty. per Unit of Measure"),
         JobLedgerEntry."Total Cost",JobLedgerEntry."Line Amount");
       JobUsageLink.Create(JobPlanningLine,JobLedgerEntry);

@@ -2,9 +2,9 @@ OBJECT Report 5808 Item Age Composition - Value
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -33,8 +33,15 @@ OBJECT Report 5808 Item Age Composition - Value
                              END;
 
                OnAfterGetRecord=BEGIN
-                                  IF "Costing Method" = "Costing Method"::Average THEN
-                                    ItemCostMgt.CalculateAverageCost(Item,AverageCost,AverageCostACY);
+                                  IF "Costing Method" = "Costing Method"::Average THEN BEGIN
+                                    FOR i := 2 TO 5 DO BEGIN
+                                      SETRANGE("Date Filter",PeriodStartDate[i] + 1,PeriodStartDate[i + 1]);
+                                      ItemCostMgt.CalculateAverageCost(Item,AverageCost[i],AverageCostACY[i]);
+                                    END;
+
+                                    SETRANGE("Date Filter",0D,PeriodStartDate[2]);
+                                    ItemCostMgt.CalculateAverageCost(Item,AverageCost[1],AverageCostACY[1]);
+                                  END;
 
                                   PrintLine := FALSE;
                                 END;
@@ -148,6 +155,7 @@ OBJECT Report 5808 Item Age Composition - Value
                                TotalInvtValue_Item := 0;
                                FOR i := 1 TO 5 DO
                                  InvtValue[i] := 0;
+                               RemainingQty := 0;
                              END;
 
                OnAfterGetRecord=BEGIN
@@ -155,13 +163,11 @@ OBJECT Report 5808 Item Age Composition - Value
                                     CurrReport.SKIP;
                                   PrintLine := TRUE;
                                   CalcRemainingQty;
+                                  RemainingQty += TotalInvtQty;
 
                                   IF Item."Costing Method" = Item."Costing Method"::Average THEN BEGIN
-                                    TotalInvtValue_Item += AverageCost * TotalInvtQty;
-                                    InvtValue[i] += AverageCost * InvtQty[i];
-
-                                    TotalInvtValueRTC += AverageCost * TotalInvtQty;
-                                    InvtValueRTC[i] += AverageCost * InvtQty[i];
+                                    InvtValue[i] += AverageCost[i] * InvtQty[i];
+                                    InvtValueRTC[i] += AverageCost[i] * InvtQty[i];
                                   END ELSE BEGIN
                                     CalcUnitCost;
                                     TotalInvtValue_Item += UnitCost * ABS(TotalInvtQty);
@@ -171,6 +177,16 @@ OBJECT Report 5808 Item Age Composition - Value
                                     InvtValueRTC[i] += UnitCost * ABS(InvtQty[i]);
                                   END
                                 END;
+
+               OnPostDataItem=VAR
+                                AvgCostCurr@1000 : Decimal;
+                                AvgCostCurrLCY@1001 : Decimal;
+                              BEGIN
+                                Item.SETRANGE("Date Filter");
+                                ItemCostMgt.CalculateAverageCost(Item,AvgCostCurr,AvgCostCurrLCY);
+                                TotalInvtValue_Item := AvgCostCurr * RemainingQty;
+                                TotalInvtValueRTC := TotalInvtValue_Item;
+                              END;
 
                DataItemLink=Item No.=FIELD(No.),
                             Location Code=FIELD(Location Filter),
@@ -280,8 +296,8 @@ OBJECT Report 5808 Item Age Composition - Value
       TotalInvtValueRTC@1002 : Decimal;
       TotalInvtQty@1014 : Decimal;
       PrintLine@1015 : Boolean;
-      AverageCost@1016 : Decimal;
-      AverageCostACY@1017 : Decimal;
+      AverageCost@1016 : ARRAY [5] OF Decimal;
+      AverageCostACY@1017 : ARRAY [5] OF Decimal;
       ItemAgeCompositionValueCaptionLbl@3756 : TextConst 'DAN=Beholdningsændring - værdi;ENU=Item Age Composition - Value';
       CurrReportPageNoCaptionLbl@2595 : TextConst 'DAN=Side;ENU=Page';
       AfterCaptionLbl@7202 : TextConst 'DAN=Efter...;ENU=After...';
@@ -290,6 +306,7 @@ OBJECT Report 5808 Item Age Composition - Value
       ItemDescriptionCaptionLbl@5694 : TextConst 'DAN=Beskrivelse;ENU=Description';
       ItemNoCaptionLbl@7986 : TextConst 'DAN=Varenr.;ENU=Item No.';
       TotalCaptionLbl@1909 : TextConst 'DAN=I alt;ENU=Total';
+      RemainingQty@1003 : Decimal;
 
     LOCAL PROCEDURE CalcRemainingQty@1();
     BEGIN
@@ -1785,6 +1802,7 @@ OBJECT Report 5808 Item Age Composition - Value
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

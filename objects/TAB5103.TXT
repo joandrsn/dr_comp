@@ -2,9 +2,9 @@ OBJECT Table 5103 Interaction Tmpl. Language
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -71,7 +71,12 @@ OBJECT Table 5103 Interaction Tmpl. Language
           EXIT;
       END;
 
-      NewAttachNo := WordManagement.CreateWordAttachment("Interaction Template Code" + ' ' + Description,"Language Code");
+      IF CURRENTCLIENTTYPE IN [CLIENTTYPE::Web,CLIENTTYPE::Tablet,CLIENTTYPE::Phone] THEN BEGIN
+        IF Attachment.ImportAttachmentFromClientFile('',FALSE,FALSE) THEN
+          NewAttachNo := Attachment."No.";
+      END ELSE
+        NewAttachNo :=
+          WordManagement.CreateWordAttachment("Interaction Template Code" + ' ' + Description,"Language Code");
       IF NewAttachNo <> 0 THEN BEGIN
         IF "Attachment No." <> 0 THEN
           RemoveAttachment(FALSE);

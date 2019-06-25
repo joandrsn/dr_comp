@@ -2,9 +2,9 @@ OBJECT Codeunit 1242 Set Up Curr Exch Rate Service
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -19,8 +19,6 @@ OBJECT Codeunit 1242 Set Up Curr Exch Rate Service
               EXIT;
 
             GLSetup.GET;
-            IF GLSetup."LCY Code" <> '' THEN
-              SetupYahooDataExchange(CurrExchRateUpdateSetup,GetYahooURI);
             IF GLSetup."LCY Code" = 'EUR' THEN
               SetupECBDataExchange(CurrExchRateUpdateSetup,GetECB_URI);
             COMMIT;
@@ -32,39 +30,10 @@ OBJECT Codeunit 1242 Set Up Curr Exch Rate Service
     VAR
       DummyDataExchColumnDef@1000 : Record 1223;
       DummyCurrExchRate@1001 : Record 330;
-      YAHOO_EXCH_RATESTxt@1003 : TextConst '@@@=Yahoo Currency Exchange Rate Code;DAN=YAHOO-VALUTAKURSER;ENU=YAHOO-EXCHANGE-RATES';
       ECB_EXCH_RATESTxt@1004 : TextConst '@@@=European Central Bank Currency Exchange Rate Code;DAN=ECB-VALUTAKURSER;ENU=ECB-EXCHANGE-RATES';
-      YAHOO_EXCH_RATESDescTxt@1006 : TextConst 'DAN=Yahoo valutakurser;ENU=Yahoo Currency Exchange Rates';
       ECB_EXCH_RATESDescTxt@1005 : TextConst 'DAN=Den Europæiske Centralbank valutakurser;ENU=European Central Bank Currency Exchange Rates';
-      YahooFinanceURLTxt@1007 : TextConst '@@@={Locked};DAN="http://query.yahooapis.com/v1/public/yql?%1&env=store://datatables.org/alltableswithkeys";ENU="http://query.yahooapis.com/v1/public/yql?%1&env=store://datatables.org/alltableswithkeys"';
       ECB_URLTxt@1008 : TextConst '@@@={Locked};DAN=http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml;ENU=http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml';
-      YahooFinanceTermsOfUseTxt@1009 : TextConst '@@@={Locked};DAN=https://policies.yahoo.com/us/en/yahoo/terms/product-atos/yql/index.htm;ENU=https://policies.yahoo.com/us/en/yahoo/terms/product-atos/yql/index.htm';
-      YahooServiceProviderTxt@1010 : TextConst '@@@={Locked};DAN=Yahoo!;ENU=Yahoo!';
       ECBServiceProviderTxt@1011 : TextConst 'DAN=Den Europæiske Centralbank;ENU=European Central Bank';
-
-    PROCEDURE SetupYahooDataExchange@4(VAR CurrExchRateUpdateSetup@1003 : Record 1650;PathToYahooService@1002 : Text);
-    VAR
-      DataExchLineDef@1000 : Record 1227;
-      SuggestColDefinitionXML@1001 : Codeunit 1236;
-    BEGIN
-      DataExchLineDef.SETRANGE("Data Exch. Def Code",YAHOO_EXCH_RATESTxt);
-      IF DataExchLineDef.FINDFIRST THEN;
-
-      CreateCurrencyExchangeSetup(
-        CurrExchRateUpdateSetup,YAHOO_EXCH_RATESTxt,YAHOO_EXCH_RATESDescTxt,
-        DataExchLineDef."Data Exch. Def Code",YahooServiceProviderTxt,YahooFinanceTermsOfUseTxt);
-
-      IF STRPOS(PathToYahooService,'http') = 1 THEN
-        CurrExchRateUpdateSetup.SetWebServiceURL(PathToYahooService);
-
-      IF DataExchLineDef."Data Exch. Def Code" = '' THEN BEGIN
-        CreateExchLineDef(DataExchLineDef,CurrExchRateUpdateSetup."Data Exch. Def Code",GetYahooRepeaterPath);
-        SuggestColDefinitionXML.GenerateDataExchColDef(PathToYahooService,DataExchLineDef);
-
-        MapYahooDataExch(DataExchLineDef);
-      END;
-      COMMIT;
-    END;
 
     PROCEDURE SetupECBDataExchange@5(VAR CurrExchRateUpdateSetup@1001 : Record 1650;PathToECBService@1002 : Text);
     VAR
@@ -99,30 +68,6 @@ OBJECT Codeunit 1242 Set Up Curr Exch Rate Service
       CurrExchRateUpdateSetup.VALIDATE("Service Provider",NewServiceProvider);
       CurrExchRateUpdateSetup.VALIDATE("Terms of Service",NewTermOfUse);
       CurrExchRateUpdateSetup.INSERT(TRUE);
-    END;
-
-    PROCEDURE GetYahooURI@6() : Text;
-    VAR
-      Currency@1005 : Record 4;
-      GLSetup@1007 : Record 98;
-      QueryText@1002 : Text;
-      CurrencyPairText@1001 : Text;
-    BEGIN
-      GLSetup.GET;
-      GLSetup.TESTFIELD("LCY Code");
-      Currency.SETFILTER(Code,'<>%1',GLSetup."LCY Code");
-      Currency.FINDSET;
-      REPEAT
-        IF CurrencyPairText <> '' THEN
-          CurrencyPairText := CurrencyPairText + ',';
-        CurrencyPairText := CurrencyPairText + STRSUBSTNO('"%1%2"',GLSetup."LCY Code",Currency.Code);
-      UNTIL Currency.NEXT = 0;
-
-      QueryText :=
-        STRSUBSTNO(
-          'q=select * from yahoo.finance.xchange where pair in (%1)',CurrencyPairText);
-
-      EXIT(STRSUBSTNO(YahooFinanceURLTxt,QueryText));
     END;
 
     PROCEDURE GetECB_URI@9() : Text;
@@ -179,29 +124,6 @@ OBJECT Codeunit 1242 Set Up Curr Exch Rate Service
       END;
     END;
 
-    LOCAL PROCEDURE MapYahooDataExch@53(VAR DataExchLineDef@1001 : Record 1227);
-    VAR
-      DataExchMapping@1000 : Record 1224;
-      TransformationRule@1002 : Record 1237;
-    BEGIN
-      DataExchMapping.GET(DataExchLineDef."Data Exch. Def Code",DataExchLineDef.Code,GetMappingTable);
-
-      TransformationRule.CreateDefaultTransformations;
-      CreateExchMappingLine(
-        DataExchMapping,GetYahooCurrencyCodeXMLElement,GetCurrencyCodeFieldNo,
-        DummyDataExchColumnDef."Data Type"::Text,1,'',TransformationRule.GetFourthToSixthSubstringCode,'');
-      CreateExchMappingLine(
-        DataExchMapping,GetYahooStartingDateXMLElement,GetStartingDateFieldNo,
-        DummyDataExchColumnDef."Data Type"::Date,1,'',TransformationRule.GetUSDateFormatCode,'');
-
-      CreateExchMappingLine(
-        DataExchMapping,GetYahooExchRateAmtXMLElement,GetExchRateAmtFieldNo,
-        DummyDataExchColumnDef."Data Type"::Decimal,1,'','','');
-      CreateExchMappingLine(
-        DataExchMapping,'',GetRelationalExchRateFieldNo,
-        DummyDataExchColumnDef."Data Type"::Decimal,1,'','','1');
-    END;
-
     LOCAL PROCEDURE MapECBDataExch@52(VAR DataExchLineDef@1001 : Record 1227);
     VAR
       DataExchMapping@1000 : Record 1224;
@@ -223,11 +145,6 @@ OBJECT Codeunit 1242 Set Up Curr Exch Rate Service
         DummyDataExchColumnDef."Data Type"::Decimal,1,'','','1');
     END;
 
-    LOCAL PROCEDURE GetYahooRepeaterPath@56() : Text[250];
-    BEGIN
-      EXIT('/query/results/rate');
-    END;
-
     LOCAL PROCEDURE GetECBRepeaterPath@44() : Text[250];
     BEGIN
       EXIT('/gesmes:Envelope/Cube/Cube/Cube');
@@ -236,21 +153,6 @@ OBJECT Codeunit 1242 Set Up Curr Exch Rate Service
     LOCAL PROCEDURE GetMappingTable@16() : Integer;
     BEGIN
       EXIT(DATABASE::"Currency Exchange Rate")
-    END;
-
-    LOCAL PROCEDURE GetYahooCurrencyCodeXMLElement@63() : Text[250];
-    BEGIN
-      EXIT('id');
-    END;
-
-    LOCAL PROCEDURE GetYahooExchRateAmtXMLElement@60() : Text[250];
-    BEGIN
-      EXIT('Rate');
-    END;
-
-    LOCAL PROCEDURE GetYahooStartingDateXMLElement@58() : Text[250];
-    BEGIN
-      EXIT('Date');
     END;
 
     LOCAL PROCEDURE GetECBCurrencyCodeXMLElement@69() : Text[250];

@@ -2,9 +2,9 @@ OBJECT Report 113 Customer/Item Sales
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -12,8 +12,8 @@ OBJECT Report 113 Customer/Item Sales
                ENU=Customer/Item Sales];
     OnPreReport=BEGIN
                   CustFilter := Customer.GETFILTERS;
-                  ItemLedgEntryFilter := "Item Ledger Entry".GETFILTERS;
-                  PeriodText := "Item Ledger Entry".GETFILTER("Posting Date");
+                  ValueEntryFilter := "Value Entry".GETFILTERS;
+                  PeriodText := "Value Entry".GETFILTER("Posting Date");
                 END;
 
   }
@@ -52,10 +52,10 @@ OBJECT Report 113 Customer/Item Sales
                SourceExpr=CustFilter }
 
     { 10  ;1   ;Column  ;Value_Entry__TABLECAPTION__________ItemLedgEntryFilter;
-               SourceExpr="Item Ledger Entry".TABLECAPTION + ': ' + ItemLedgEntryFilter }
+               SourceExpr="Value Entry".TABLECAPTION + ': ' + ValueEntryFilter }
 
     { 30  ;1   ;Column  ;ItemLedgEntryFilter ;
-               SourceExpr=ItemLedgEntryFilter }
+               SourceExpr=ValueEntryFilter }
 
     { 19  ;1   ;Column  ;Customer__No__      ;
                SourceExpr="No." }
@@ -119,42 +119,36 @@ OBJECT Report 113 Customer/Item Sales
     { 23  ;1   ;Column  ;TotalCaption        ;
                SourceExpr=TotalCaptionLbl }
 
-    { 7209;1   ;DataItem;                    ;
-               DataItemTable=Table32;
+    { 2   ;1   ;DataItem;                    ;
+               DataItemTable=Table5802;
                DataItemTableView=SORTING(Source Type,Source No.,Item No.,Variant Code,Posting Date)
-                                 WHERE(Source Type=CONST(Customer));
+                                 WHERE(Source Type=CONST(Customer),
+                                       Item Charge No.=CONST(),
+                                       Expected Cost=CONST(No));
                OnPreDataItem=BEGIN
                                ValueEntryBuffer.RESET;
                                ValueEntryBuffer.DELETEALL;
-
-                               NextEntryNo := 1;
                              END;
 
-               OnAfterGetRecord=BEGIN
+               OnAfterGetRecord=VAR
+                                  EntryInBufferExists@1000 : Boolean;
+                                BEGIN
+                                  ValueEntryBuffer.INIT;
                                   ValueEntryBuffer.SETRANGE("Item No.","Item No.");
+                                  EntryInBufferExists := ValueEntryBuffer.FINDFIRST;
 
-                                  IF NOT ValueEntryBuffer.FIND('-') THEN BEGIN
-                                    ValueEntryBuffer.INIT;
-                                    ValueEntryBuffer."Entry No." := NextEntryNo;
-                                    ValueEntryBuffer."Item No." := "Item No.";
+                                  IF NOT EntryInBufferExists THEN
+                                    ValueEntryBuffer."Entry No." := "Item Ledger Entry No.";
+                                  ValueEntryBuffer."Item No." := "Item No.";
+                                  ValueEntryBuffer."Invoiced Quantity" += "Invoiced Quantity";
+                                  ValueEntryBuffer."Sales Amount (Actual)" += "Sales Amount (Actual)";
+                                  ValueEntryBuffer."Cost Amount (Actual)" += "Cost Amount (Actual)";
+                                  ValueEntryBuffer."Cost Amount (Non-Invtbl.)" += "Cost Amount (Non-Invtbl.)";
+                                  ValueEntryBuffer."Discount Amount" += "Discount Amount";
+                                  IF EntryInBufferExists THEN
+                                    ValueEntryBuffer.MODIFY
+                                  ELSE
                                     ValueEntryBuffer.INSERT;
-
-                                    NextEntryNo := NextEntryNo + 1;
-                                  END;
-                                  CALCFIELDS("Sales Amount (Actual)","Cost Amount (Actual)","Cost Amount (Non-Invtbl.)");
-                                  ValueEntryBuffer."Invoiced Quantity" := ValueEntryBuffer."Invoiced Quantity" + "Invoiced Quantity";
-                                  ValueEntryBuffer."Sales Amount (Actual)" := ValueEntryBuffer."Sales Amount (Actual)" + "Sales Amount (Actual)";
-                                  ValueEntryBuffer."Cost Amount (Actual)" := ValueEntryBuffer."Cost Amount (Actual)" + "Cost Amount (Actual)";
-
-                                  ValueEntry.SETCURRENTKEY("Item Ledger Entry No.");
-                                  ValueEntry.SETRANGE("Item Ledger Entry No.","Entry No.");
-                                  IF ValueEntry.FINDSET THEN
-                                    REPEAT
-                                      ValueEntryBuffer."Discount Amount" := ValueEntryBuffer."Discount Amount" + ValueEntry."Discount Amount";
-                                    UNTIL ValueEntry.NEXT = 0;
-
-                                  ValueEntryBuffer."Cost Amount (Non-Invtbl.)" := ValueEntryBuffer."Cost Amount (Non-Invtbl.)" + "Cost Amount (Non-Invtbl.)";
-                                  ValueEntryBuffer.MODIFY;
                                 END;
 
                ReqFilterFields=Item No.,Posting Date;
@@ -176,11 +170,23 @@ OBJECT Report 113 Customer/Item Sales
                                SETRANGE(Number,1,ValueEntryBuffer.COUNT);
                              END;
 
-               OnAfterGetRecord=BEGIN
+               OnAfterGetRecord=VAR
+                                  ValueEntry@1000 : Record 5802;
+                                BEGIN
                                   IF Number = 1 THEN
                                     ValueEntryBuffer.FIND('-')
                                   ELSE
                                     ValueEntryBuffer.NEXT;
+
+                                  "Value Entry".COPYFILTER("Posting Date",ValueEntry."Posting Date");
+                                  ValueEntry.SETRANGE("Item Ledger Entry No.",ValueEntryBuffer."Entry No.");
+                                  ValueEntry.SETFILTER("Item Charge No.",'<>%1','');
+                                  ValueEntry.CALCSUMS("Sales Amount (Actual)","Cost Amount (Actual)","Cost Amount (Non-Invtbl.)","Discount Amount");
+
+                                  ValueEntryBuffer."Sales Amount (Actual)" += ValueEntry."Sales Amount (Actual)";
+                                  ValueEntryBuffer."Cost Amount (Actual)" += ValueEntry."Cost Amount (Actual)";
+                                  ValueEntryBuffer."Cost Amount (Non-Invtbl.)" += ValueEntry."Cost Amount (Non-Invtbl.)";
+                                  ValueEntryBuffer."Discount Amount" += ValueEntry."Discount Amount";
 
                                   Profit :=
                                     ValueEntryBuffer."Sales Amount (Actual)" +
@@ -251,12 +257,10 @@ OBJECT Report 113 Customer/Item Sales
     VAR
       Text000@1000 : TextConst 'DAN=Periode: %1;ENU=Period: %1';
       Item@1001 : Record 27;
-      ValueEntry@1023 : Record 5802;
       ValueEntryBuffer@1008 : TEMPORARY Record 5802;
       CustFilter@1002 : Text;
-      ItemLedgEntryFilter@1003 : Text;
-      PeriodText@1004 : Text[30];
-      NextEntryNo@1009 : Integer;
+      ValueEntryFilter@1003 : Text;
+      PeriodText@1004 : Text;
       PrintOnlyOnePerPage@1005 : Boolean;
       Profit@1006 : Decimal;
       ProfitPct@1007 : Decimal;
@@ -3689,6 +3693,7 @@ OBJECT Report 113 Customer/Item Sales
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

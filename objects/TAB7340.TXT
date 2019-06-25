@@ -2,9 +2,9 @@ OBJECT Table 7340 Posted Invt. Put-away Header
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -21,6 +21,8 @@ OBJECT Table 7340 Posted Invt. Put-away Header
                PostedInvtPutAwayLine@1001 : Record 7341;
                WhseCommentLine@1000 : Record 5770;
              BEGIN
+               CheckLocation;
+
                PostedInvtPutAwayLine.SETRANGE("No.","No.");
                PostedInvtPutAwayLine.DELETEALL;
 
@@ -43,6 +45,7 @@ OBJECT Table 7340 Posted Invt. Put-away Header
                                                               ENU=Location Code];
                                                    NotBlank=Yes }
     { 4   ;   ;Assigned User ID    ;Code50        ;TableRelation="Warehouse Employee" WHERE (Location Code=FIELD(Location Code));
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
     { 5   ;   ;Assignment Date     ;Date          ;CaptionML=[DAN=Tildelt den;
@@ -145,6 +148,14 @@ OBJECT Table 7340 Posted Invt. Put-away Header
     BEGIN
       NavigateForm.SetDoc("Posting Date","Source No.");
       NavigateForm.RUN;
+    END;
+
+    LOCAL PROCEDURE CheckLocation@1();
+    VAR
+      Location@1000 : Record 14;
+    BEGIN
+      Location.GET("Location Code");
+      Location.TESTFIELD("Bin Mandatory",FALSE);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Report 99000766 Prod. Order - Picking List
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -2154,6 +2154,7 @@ OBJECT Report 99000766 Prod. Order - Picking List
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

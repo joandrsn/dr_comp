@@ -2,9 +2,9 @@ OBJECT Table 249 VAT Registration Log
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -40,6 +40,7 @@ OBJECT Table 249 VAT Registration Log
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 10  ;   ;Status              ;Option        ;CaptionML=[DAN=Status;
@@ -68,13 +69,17 @@ OBJECT Table 249 VAT Registration Log
     PROCEDURE GetCountryCode@2() : Code[10];
     VAR
       CompanyInformation@1000 : Record 79;
+      CountryRegion@1001 : Record 9;
     BEGIN
       IF "Country/Region Code" = '' THEN BEGIN
         IF NOT CompanyInformation.GET THEN
           EXIT('');
         EXIT(CompanyInformation."Country/Region Code");
       END;
-      EXIT("Country/Region Code");
+      CountryRegion.GET("Country/Region Code");
+      IF CountryRegion."EU Country/Region Code" = '' THEN
+        EXIT("Country/Region Code");
+      EXIT(CountryRegion."EU Country/Region Code");
     END;
 
     PROCEDURE GetVATRegNo@12() : Code[20];
@@ -84,7 +89,7 @@ OBJECT Table 249 VAT Registration Log
       VatRegNo := UPPERCASE("VAT Registration No.");
       VatRegNo := DELCHR(VatRegNo,'=',DELCHR(VatRegNo,'=','ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'));
       IF STRPOS(VatRegNo,UPPERCASE(GetCountryCode)) = 1 THEN
-        VatRegNo := DELSTR(VatRegNo,1,STRLEN("Country/Region Code"));
+        VatRegNo := DELSTR(VatRegNo,1,STRLEN(GetCountryCode));
       EXIT(VatRegNo);
     END;
 

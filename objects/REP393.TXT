@@ -2,9 +2,9 @@ OBJECT Report 393 Suggest Vendor Payments
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.49575,NAVDK9.00.00.49575;
   }
   PROPERTIES
   {
@@ -785,6 +785,7 @@ OBJECT Report 393 Suggest Vendor Payments
             "Applies-to Ext. Doc. No." := TempPaymentBuffer."Applies-to Ext. Doc. No.";
             UpdateVendorPaymentDetails;
 
+            OnBeforeUpdateGnlJnlLineDimensionsFromTempBuffer(GenJnlLine,TempPaymentBuffer);
             UpdateDimensions(GenJnlLine);
             INSERT;
             GenJnlLineInserted := TRUE;
@@ -861,6 +862,11 @@ OBJECT Report 393 Suggest Vendor Payments
             Text016,
             VendLedgEntry2."Document Type",VendLedgEntry2."Document No.",
             VendLedgEntry2."Vendor No."));
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeUpdateGnlJnlLineDimensionsFromTempBuffer@1090(VAR GenJournalLine@1091 : Record 81;TempPaymentBuffer@1092 : TEMPORARY Record 372);
+    BEGIN
     END;
 
     LOCAL PROCEDURE SetBankAccCurrencyFilter@11(BalAccType@1000 : 'G/L Account,Customer,Vendor,Bank Account';BalAccNo@1001 : Code[20];VAR TmpPayableVendLedgEntry@1002 : Record 317);

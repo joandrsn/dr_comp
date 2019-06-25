@@ -2,9 +2,9 @@ OBJECT Report 1002 Post Inventory Cost to G/L
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -1170,7 +1170,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             </Paragraphs>
             <Top>1.05834cm</Top>
             <Height>10pt</Height>
-            <Width>25.35597cm</Width>
+            <Width>27.58cm</Width>
             <Visibility>
               <Hidden>=IIF(Fields!ValueEntryFilter.Value="",True,False)</Hidden>
             </Visibility>
@@ -1183,55 +1183,55 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1.02136cm</Width>
+                  <Width>1.14242cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.18522cm</Width>
+                  <Width>0.30628cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.38521cm</Width>
+                  <Width>1.74775cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.51381cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.3304cm</Width>
+                  <Width>1.45146cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.70205cm</Width>
+                  <Width>1.82311cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.63944cm</Width>
+                  <Width>1.51902cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.10134cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.76662cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.63944cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.63944cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.63944cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.73391cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.29232cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.69235cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.63944cm</Width>
+                  <Width>1.81341cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.43416cm</Width>
+                  <Width>1.45585cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -1921,9 +1921,10 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                             <PaddingRight>5pt</PaddingRight>
                           </Style>
                         </Textbox>
-                        <ColSpan>2</ColSpan>
+                        <ColSpan>3</ColSpan>
                       </CellContents>
                     </TablixCell>
+                    <TablixCell />
                     <TablixCell />
                     <TablixCell>
                       <CellContents>
@@ -1952,9 +1953,10 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                             <PaddingRight>5pt</PaddingRight>
                           </Style>
                         </Textbox>
-                        <ColSpan>3</ColSpan>
+                        <ColSpan>4</ColSpan>
                       </CellContents>
                     </TablixCell>
+                    <TablixCell />
                     <TablixCell />
                     <TablixCell />
                     <TablixCell>
@@ -1983,11 +1985,9 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                             <PaddingRight>5pt</PaddingRight>
                           </Style>
                         </Textbox>
-                        <ColSpan>12</ColSpan>
+                        <ColSpan>10</ColSpan>
                       </CellContents>
                     </TablixCell>
-                    <TablixCell />
-                    <TablixCell />
                     <TablixCell />
                     <TablixCell />
                     <TablixCell />
@@ -2030,9 +2030,10 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                             <PaddingRight>5pt</PaddingRight>
                           </Style>
                         </Textbox>
-                        <ColSpan>2</ColSpan>
+                        <ColSpan>3</ColSpan>
                       </CellContents>
                     </TablixCell>
+                    <TablixCell />
                     <TablixCell />
                     <TablixCell>
                       <CellContents>
@@ -2057,10 +2058,9 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                             <PaddingRight>5pt</PaddingRight>
                           </Style>
                         </Textbox>
-                        <ColSpan>15</ColSpan>
+                        <ColSpan>14</ColSpan>
                       </CellContents>
                     </TablixCell>
-                    <TablixCell />
                     <TablixCell />
                     <TablixCell />
                     <TablixCell />
@@ -3244,7 +3244,9 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                                   </Style>
                                 </TextRun>
                               </TextRuns>
-                              <Style />
+                              <Style>
+                                <TextAlign>Right</TextAlign>
+                              </Style>
                             </Paragraph>
                           </Paragraphs>
                           <ZIndex>59</ZIndex>
@@ -4072,7 +4074,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             <DataSetName>DataSet_Result</DataSetName>
             <Top>1.45575cm</Top>
             <Height>3.3426cm</Height>
-            <Width>25.35598cm</Width>
+            <Width>27.58cm</Width>
             <ZIndex>1</ZIndex>
             <Style />
           </Tablix>
@@ -4080,22 +4082,22 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>2.24269cm</Width>
+                  <Width>2.61337cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.56017cm</Width>
+                  <Width>2.93085cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>3.19507cm</Width>
+                  <Width>3.56575cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>11.00539cm</Width>
+                  <Width>11.37607cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>3.65539cm</Width>
+                  <Width>4.02607cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.6972cm</Width>
+                  <Width>3.06788cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -4583,7 +4585,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             </Filters>
             <Top>5.03648cm</Top>
             <Height>0.98779cm</Height>
-            <Width>25.35591cm</Width>
+            <Width>27.58cm</Width>
             <ZIndex>2</ZIndex>
             <Visibility>
               <Hidden>=IIF(Fields!InvtPostBufAccTypeFormatted.Value="",TRUE,FALSE)</Hidden>
@@ -4595,40 +4597,40 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1.69601cm</Width>
+                  <Width>1.88135cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.33093cm</Width>
+                  <Width>2.51627cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.01346cm</Width>
+                  <Width>2.1988cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.01346cm</Width>
+                  <Width>2.1988cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.01346cm</Width>
+                  <Width>2.1988cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.33093cm</Width>
+                  <Width>2.51627cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.33093cm</Width>
+                  <Width>2.51627cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.33093cm</Width>
+                  <Width>2.51627cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.33093cm</Width>
+                  <Width>2.51627cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.33093cm</Width>
+                  <Width>2.51627cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.33093cm</Width>
+                  <Width>2.51627cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.30299cm</Width>
+                  <Width>1.48833cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -5363,13 +5365,13 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="GenProdPostingGroup_SkippedValueEntry">
+                        <Textbox Name="GenBusPostingGroup_SkippedValueEntry">
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!GenProdPostingGroup_SkippedValueEntry.Value</Value>
+                                  <Value>=Fields!GenBusPostingGroup_SkippedValueEntry.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -5378,7 +5380,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>GenProdPostingGroup_SkippedValueEntry</rd:DefaultName>
+                          <rd:DefaultName>GenBusPostingGroup_SkippedValueEntry</rd:DefaultName>
                           <ZIndex>3</ZIndex>
                           <Style>
                             <VerticalAlign>Top</VerticalAlign>
@@ -5596,7 +5598,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             </Filters>
             <Top>6.19183cm</Top>
             <Height>1.7639cm</Height>
-            <Width>25.35591cm</Width>
+            <Width>27.58cm</Width>
             <ZIndex>3</ZIndex>
             <Visibility>
               <Hidden>=IIF(Fields!SkippedItemsCaption.Value="",TRUE,FALSE)</Hidden>
@@ -5608,10 +5610,10 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>3.86545cm</Width>
+                  <Width>4.97746cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>21.49053cm</Width>
+                  <Width>22.60254cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -5694,7 +5696,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             </TablixRowHierarchy>
             <Top>0.70556cm</Top>
             <Height>0.35278cm</Height>
-            <Width>25.35598cm</Width>
+            <Width>27.58cm</Width>
             <ZIndex>4</ZIndex>
             <Visibility>
               <Hidden>=IIF(Fields!PostMethodInt.Value = 0,False,True)</Hidden>
@@ -5706,7 +5708,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>25.35598cm</Width>
+                  <Width>27.58cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -5797,7 +5799,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
               </TablixMembers>
             </TablixRowHierarchy>
             <Height>0.70556cm</Height>
-            <Width>25.35598cm</Width>
+            <Width>27.58cm</Width>
             <ZIndex>5</ZIndex>
             <Visibility>
               <Hidden>=IIF(Fields!Post.Value,True,False)</Hidden>
@@ -5809,7 +5811,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
         <Height>7.95573cm</Height>
         <Style />
       </Body>
-      <Width>25.41153cm</Width>
+      <Width>27.58cm</Width>
       <Page>
         <PageHeader>
           <Height>2.1704cm</Height>
@@ -5858,7 +5860,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
               </Paragraphs>
               <Top>1.05833cm</Top>
               <Height>10pt</Height>
-              <Width>25.35597cm</Width>
+              <Width>27.58cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <VerticalAlign>Top</VerticalAlign>
@@ -5906,9 +5908,9 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                   </Style>
                 </Paragraph>
               </Paragraphs>
-              <Left>16.81704cm</Left>
+              <Left>16.98538cm</Left>
               <Height>10pt</Height>
-              <Width>8.59449cm</Width>
+              <Width>10.59449cm</Width>
               <ZIndex>3</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -5933,9 +5935,9 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                 </Paragraph>
               </Paragraphs>
               <Top>0.70556cm</Top>
-              <Left>16.81704cm</Left>
+              <Left>16.98551cm</Left>
               <Height>10pt</Height>
-              <Width>8.59449cm</Width>
+              <Width>10.59449cm</Width>
               <ZIndex>4</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -5960,9 +5962,9 @@ OBJECT Report 1002 Post Inventory Cost to G/L
                 </Paragraph>
               </Paragraphs>
               <Top>0.35278cm</Top>
-              <Left>16.81704cm</Left>
+              <Left>16.98538cm</Left>
               <Height>10pt</Height>
-              <Width>8.59449cm</Width>
+              <Width>10.59449cm</Width>
               <ZIndex>5</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -5985,7 +5987,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
               <rd:DefaultName>Textbox25</rd:DefaultName>
               <Top>1.76389cm</Top>
               <Height>10pt</Height>
-              <Width>25.35597cm</Width>
+              <Width>27.58cm</Width>
               <ZIndex>6</ZIndex>
               <Style>
                 <Border>
@@ -6015,7 +6017,7 @@ OBJECT Report 1002 Post Inventory Cost to G/L
               <rd:DefaultName>Textbox103</rd:DefaultName>
               <Top>1.41111cm</Top>
               <Height>10pt</Height>
-              <Width>25.35597cm</Width>
+              <Width>27.58cm</Width>
               <ZIndex>7</ZIndex>
               <Style>
                 <Border>
@@ -6035,8 +6037,8 @@ OBJECT Report 1002 Post Inventory Cost to G/L
         <PageWidth>29.7cm</PageWidth>
         <InteractiveHeight>11in</InteractiveHeight>
         <InteractiveWidth>8.5in</InteractiveWidth>
-        <LeftMargin>1.05834cm</LeftMargin>
-        <RightMargin>1.05834cm</RightMargin>
+        <LeftMargin>1cm</LeftMargin>
+        <RightMargin>1cm</RightMargin>
         <TopMargin>1.05834cm</TopMargin>
         <BottomMargin>1.48166cm</BottomMargin>
         <ColumnSpacing>1.27cm</ColumnSpacing>

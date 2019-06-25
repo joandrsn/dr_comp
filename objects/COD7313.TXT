@@ -2,9 +2,9 @@ OBJECT Codeunit 7313 Create Put-away
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=21-12-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.49741;
   }
   PROPERTIES
   {
@@ -132,18 +132,8 @@ OBJECT Codeunit 7313 Create Put-away
                         (BinContentQtyBase < BinContent."Min. Qty." * BinContent."Qty. per Unit of Measure")) AND
                        (NOT PutAwayTemplLine."Find Empty Bin" OR (BinContentQtyBase <= 0))
                     THEN BEGIN
-                      IF (BinContent."Max. Qty." <> 0) AND
-                         (BinContent."Max. Qty." * BinContent."Qty. per Unit of Measure" >= BinContentQtyBase)
-                      THEN BEGIN
-                        QtyToPutAwayBase := BinContent."Max. Qty." * BinContent."Qty. per Unit of Measure" - BinContentQtyBase;
-                        IF QtyToPutAwayBase > RemQtyToPutAwayBase THEN
-                          QtyToPutAwayBase := RemQtyToPutAwayBase;
-                      END;
-                      IF (BinContent."Max. Qty." <> 0) AND
-                         (BinContent."Max. Qty." * BinContent."Qty. per Unit of Measure" >= BinContentQtyBase)
-                      THEN BEGIN
-                        QtyToPutAwayBase :=
-                          BinContent."Max. Qty." * BinContent."Qty. per Unit of Measure" - BinContentQtyBase;
+                      IF BinContent."Max. Qty." <> 0 THEN BEGIN
+                        QtyToPutAwayBase := Max(BinContent."Max. Qty." * BinContent."Qty. per Unit of Measure" - BinContentQtyBase,0);
                         IF QtyToPutAwayBase > RemQtyToPutAwayBase THEN
                           QtyToPutAwayBase := RemQtyToPutAwayBase;
                       END;
@@ -487,7 +477,8 @@ OBJECT Codeunit 7313 Create Put-away
     BEGIN
       WITH Bin DO BEGIN
         IF ("Maximum Cubage" <> 0) OR ("Maximum Weight" <> 0) THEN BEGIN
-          CalcCubageAndWeight(AvailPerCubageBase,AvailPerWeightBase,FALSE);
+          IF (PutAwayItemUOM.Cubage <> 0) OR (PutAwayItemUOM.Weight <> 0) THEN
+            CalcCubageAndWeight(AvailPerCubageBase,AvailPerWeightBase,FALSE);
           IF ("Maximum Cubage" <> 0) AND (PutAwayItemUOM.Cubage <> 0) THEN BEGIN
             AvailPerCubageBase := AvailPerCubageBase DIV PutAwayItemUOM.Cubage * PutAwayItemUOM."Qty. per Unit of Measure";
             IF AvailPerCubageBase < 0 THEN
@@ -799,6 +790,19 @@ OBJECT Codeunit 7313 Create Put-away
       CrossDock := NewCrossDock;
     END;
 
+    PROCEDURE DeleteBlankBinContent@27(WarehouseActivityHeader@1000 : Record 5766);
+    VAR
+      WarehouseActivityLine@1001 : Record 5767;
+    BEGIN
+      WarehouseActivityLine.SETRANGE("Activity Type",WarehouseActivityHeader.Type);
+      WarehouseActivityLine.SETRANGE("No.",WarehouseActivityHeader."No.");
+      WarehouseActivityLine.SETRANGE("Action Type",WarehouseActivityLine."Action Type"::Place);
+      IF WarehouseActivityLine.FINDSET THEN
+        REPEAT
+          WarehouseActivityLine.DeleteBinContent(WarehouseActivityLine."Action Type"::Place);
+        UNTIL WarehouseActivityLine.NEXT = 0;
+    END;
+
     LOCAL PROCEDURE IsFloatingBin@23() : Boolean;
     BEGIN
       IF Bin.Dedicated = TRUE THEN
@@ -815,6 +819,13 @@ OBJECT Codeunit 7313 Create Put-away
           UNTIL NEXT = 0;
         EXIT(TRUE);
       END;
+    END;
+
+    LOCAL PROCEDURE Max@26(Value1@1000 : Decimal;Value2@1001 : Decimal) : Decimal;
+    BEGIN
+      IF Value1 >= Value2 THEN
+        EXIT(Value1);
+      EXIT(Value2);
     END;
 
     BEGIN

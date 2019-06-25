@@ -2,9 +2,9 @@ OBJECT Report 212 Sales Prepmt. Document Test
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -902,6 +902,8 @@ OBJECT Report 212 Sales Prepmt. Document Test
         AddError(STRSUBSTNO(Text007,Cust.TABLECAPTION,CustNo));
         EXIT;
       END;
+      IF Cust."Privacy Blocked" THEN
+        AddError(Cust.GetPrivacyBlockedGenericErrorText(Cust));
       IF Cust.Blocked IN [Cust.Blocked::All,Cust.Blocked::Invoice] THEN
         AddError(
           STRSUBSTNO(Text008,Cust.FIELDCAPTION(Blocked),Cust.Blocked,Cust.TABLECAPTION,CustNo));
@@ -10187,6 +10189,7 @@ OBJECT Report 212 Sales Prepmt. Document Test
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

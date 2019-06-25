@@ -2,9 +2,9 @@ OBJECT Codeunit 5819 Undo Service Consumption Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -59,6 +59,7 @@ OBJECT Codeunit 5819 Undo Service Consumption Line
       Text003@1006 : TextConst 'DAN=Kontrollerer linjer...;ENU=Checking lines...';
       Text004@1016 : TextConst 'DAN=Du kan ikke annullere forbruget på linjen, fordi det allerede er bogført i de relevante sager.;ENU=You cannot undo consumption on the line because it has been already posted to Jobs.';
       Text005@1013 : TextConst 'DAN=Du kan ikke annullere forbruget, fordi den oprindelige serviceordre %1 allerede er lukket.;ENU=You cannot undo consumption because the original service order %1 is already closed.';
+      NextLineNo@1020 : Integer;
 
     PROCEDURE SetHideDialog@8(NewHideDialog@1000 : Boolean);
     BEGIN
@@ -102,8 +103,6 @@ OBJECT Codeunit 5819 Undo Service Consumption Line
             END;
             IF Type = Type::Resource THEN
               PostResourceJnlLine(ServShptLine);
-            IF Type IN [Type::Cost,Type::"G/L Account"] THEN
-              PostGenJnlLine(ServShptLine);
             InsertCorrectiveShipmentLine(ServShptLine,ItemShptEntryNo);
             ReverseCnsmServLedgEntries(ServShptLine);
             IF Type IN [Type::Item,Type::Resource] THEN
@@ -173,7 +172,6 @@ OBJECT Codeunit 5819 Undo Service Consumption Line
       ItemJnlLine@1001 : Record 83;
       ServiceLine@1002 : Record 5902;
       SignFactor@1013 : Integer;
-      NextLineNo@1005 : Integer;
     BEGIN
       WITH ServShptLine DO BEGIN
         SourceCodeSetup.GET;
@@ -185,7 +183,7 @@ OBJECT Codeunit 5819 Undo Service Consumption Line
         ItemJnlLine."Document Line No." := "Line No." + GetCorrectiveShptLineNoStep("Document No.","Line No.");
         ItemJnlLine."Item No." := "No.";
         ItemJnlLine.Description := Description;
-        ItemJnlLine."Posting Date" := ServShptHeader."Posting Date";
+        ItemJnlLine."Posting Date" := "Posting Date";
         ItemJnlLine."Order Date" := ServShptHeader."Order Date";
         ItemJnlLine."Document No." := "Document No.";
         ItemJnlLine."Gen. Bus. Posting Group" := "Gen. Bus. Posting Group";
@@ -255,7 +253,7 @@ OBJECT Codeunit 5819 Undo Service Consumption Line
       WITH ServiceShptLine DO BEGIN
         SourceCodeSetup.GET;
         ServShptHeader.GET("Document No.");
-        ResJnlLine."Posting Date" := ServShptHeader."Posting Date";
+        ResJnlLine."Posting Date" := "Posting Date";
         ResJnlLine."Document Date" := ServShptHeader."Document Date";
         ResJnlLine."Reason Code" := ServShptHeader."Reason Code";
         ResJnlLine."Resource No." := "No.";
@@ -352,62 +350,6 @@ OBJECT Codeunit 5819 Undo Service Consumption Line
           "Document No.","Line No.","Quantity (Base)","Item Shpt. Entry No.");
         UndoPostingMgt.PostItemJnlLineAppliedToList(ItemJnlLine,TempItemLedgerEntry,
           Quantity,"Quantity (Base)",TempGlobalItemLedgEntry,TempGlobalItemEntryRelation);
-      END;
-    END;
-
-    LOCAL PROCEDURE PostGenJnlLine@19(ServiceShptLine@1001 : Record 5991);
-    VAR
-      GenJnlLine@1000 : Record 81;
-      ServiceCost@1003 : Record 5905;
-      GeneralPostingSetup@1004 : Record 252;
-      ServiceLine@1005 : Record 5902;
-      CustomerPostingGroup@1006 : Record 92;
-      GenJnlPostLine@1002 : Codeunit 12;
-    BEGIN
-      GenJnlLine.INIT;
-      SourceCodeSetup.GET;
-      WITH ServiceShptLine DO BEGIN
-        ServShptHeader.GET("Document No.");
-        ServiceLine.GET(ServiceLine."Document Type"::Order,"Order No.","Order Line No.");
-        GenJnlLine."Posting Date" := "Posting Date";
-        GenJnlLine."Document Date" := ServShptHeader."Document Date";
-        GenJnlLine.Description := Description;
-        GenJnlLine."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
-        GenJnlLine."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
-        GenJnlLine."Dimension Set ID" := "Dimension Set ID";
-        GenJnlLine."Reason Code" := ServShptHeader."Reason Code";
-        GenJnlLine."Account Type" := GenJnlLine."Account Type"::"G/L Account";
-        IF ServiceLine.Type = ServiceLine.Type::"G/L Account" THEN
-          GenJnlLine."Account No." := ServiceLine."No."
-        ELSE BEGIN
-          ServiceCost.GET(ServiceLine."No.");
-          GenJnlLine."Account No." := ServiceCost."Account No.";
-        END;
-        GenJnlLine."Document No." := "Document No.";
-        GenJnlLine."Bal. Account Type" := GenJnlLine."Bal. Account Type"::"G/L Account";
-        IF ServiceLine.Type IN [ServiceLine.Type::Cost,ServiceLine.Type::"G/L Account"] THEN BEGIN
-          GeneralPostingSetup.GET(ServiceLine."Gen. Bus. Posting Group",ServiceLine."Gen. Prod. Posting Group");
-          GeneralPostingSetup.TESTFIELD("Sales Line Disc. Account");
-          GenJnlLine."Bal. Account No." := GeneralPostingSetup."Sales Line Disc. Account";
-        END ELSE BEGIN
-          CustomerPostingGroup.GET(ServShptHeader."Customer Posting Group");
-          GenJnlLine."Bal. Account No." := CustomerPostingGroup."Receivables Account";
-        END;
-        GenJnlLine."Currency Code" := "Currency Code";
-        GenJnlLine.Amount := "Quantity Consumed" * "Unit Price";
-        GenJnlLine."Source Currency Code" := "Currency Code";
-        GenJnlLine."Source Currency Amount" := GenJnlLine.Amount;
-        IF "Currency Code" = '' THEN
-          GenJnlLine."Currency Factor" := 1
-        ELSE
-          GenJnlLine.VALIDATE("Currency Factor",ServShptHeader."Currency Factor");
-        GenJnlLine."Job No." := ServiceLine."Job No.";
-        GenJnlLine."Source Type" := GenJnlLine."Source Type"::Customer;
-        GenJnlLine."Source No." := "Bill-to Customer No.";
-        GenJnlLine."Source Code" := ServShptHeader."Source Code";
-        GenJnlLine."Posting No. Series" := ServShptHeader."No. Series";
-        GenJnlLine."System-Created Entry" := TRUE;
-        GenJnlPostLine.RunWithCheck(GenJnlLine);
       END;
     END;
 

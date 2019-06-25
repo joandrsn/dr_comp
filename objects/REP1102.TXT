@@ -2,9 +2,9 @@ OBJECT Report 1102 Resource Journal - Test
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -72,12 +72,15 @@ OBJECT Report 1102 Resource Journal - Test
                                         STRSUBSTNO(
                                           Text002,
                                           Res.TABLECAPTION,"Resource No."))
-                                    ELSE
+                                    ELSE BEGIN
+                                      IF Res."Privacy Blocked" THEN
+                                        AddError(STRSUBSTNO(Text003,Res.FIELDCAPTION("Privacy Blocked"),FALSE,Res.TABLECAPTION,"Resource No."));
                                       IF Res.Blocked THEN
                                         AddError(
                                           STRSUBSTNO(
                                             Text003,
                                             Res.FIELDCAPTION(Blocked),FALSE,Res.TABLECAPTION,"Resource No."));
+                                    END;
 
                                   IF "Gen. Prod. Posting Group" = '' THEN
                                     AddError(STRSUBSTNO(Text001,FIELDCAPTION("Gen. Prod. Posting Group")))
@@ -157,7 +160,7 @@ OBJECT Report 1102 Resource Journal - Test
                SourceExpr=COMPANYNAME }
 
     { 40  ;2   ;Column  ;ResJnlLineTableCaption;
-               SourceExpr="Res. Journal Line".TABLECAPTION + ': ' + ResJnlLineFilter }
+               SourceExpr=TABLECAPTION + ': ' + ResJnlLineFilter }
 
     { 44  ;2   ;Column  ;ResJnlLineFilter    ;
                SourceExpr=ResJnlLineFilter }
@@ -2157,6 +2160,7 @@ OBJECT Report 1102 Resource Journal - Test
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

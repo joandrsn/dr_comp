@@ -2,17 +2,19 @@ OBJECT Table 114 Sales Cr.Memo Header
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897,NAVDK9.00.00.43897;
+    Version List=NAVW19.00.00.50221,NAVDK9.00.00.50221;
   }
   PROPERTIES
   {
     DataCaptionFields=No.,Sell-to Customer Name;
     OnDelete=VAR
                PostedDeferralHeader@1002 : Record 1704;
+               PostSalesLinesDelete@1000 : Codeunit 363;
                DeferralUtilities@1001 : Codeunit 1720;
              BEGIN
+               PostSalesLinesDelete.IsDocumentDeletionAllowed("Posting Date");
                TESTFIELD("No. Printed");
                LOCKTABLE;
                PostSalesLinesDelete.DeleteSalesCrMemoLines(Rec);
@@ -135,7 +137,7 @@ OBJECT Table 114 Sales Cr.Memo Header
     { 41  ;   ;Language Code       ;Code10        ;TableRelation=Language;
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code] }
-    { 43  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 43  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 46  ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
@@ -286,6 +288,7 @@ OBJECT Table 114 Sales Cr.Memo Header
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 113 ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
@@ -426,32 +429,19 @@ OBJECT Table 114 Sales Cr.Memo Header
     VAR
       SalesCommentLine@1001 : Record 44;
       CustLedgEntry@1002 : Record 21;
-      PostSalesLinesDelete@1003 : Codeunit 363;
       ApprovalsMgmt@1004 : Codeunit 1535;
       DimMgt@1005 : Codeunit 408;
       UserSetupMgt@1006 : Codeunit 5700;
       CheckLatestQst@1007 : TextConst '@@@=%1 is Document Exchange Status;DAN=Vil du kontrollere den seneste status for det elektroniske dokument?;ENU=Do you want to check the latest status of the electronic document?';
 
-    PROCEDURE SendRecords@11();
+    PROCEDURE SendRecords@12();
     VAR
       DocumentSendingProfile@1001 : Record 60;
-      TempDocumentSendingProfile@1000 : TEMPORARY Record 60;
-      ReportDistributionManagement@1002 : Codeunit 452;
     BEGIN
-      DocumentSendingProfile.GetDefaultForCustomer("Bill-to Customer No.",DocumentSendingProfile);
-      COMMIT;
-
-      TempDocumentSendingProfile.INIT;
-      TempDocumentSendingProfile.Code := DocumentSendingProfile.Code;
-      TempDocumentSendingProfile.VALIDATE("One Related Party Selected",IsSingleCustomerSelected);
-      TempDocumentSendingProfile.SetDocumentUsage(Rec);
-      TempDocumentSendingProfile.INSERT;
-
-      IF PAGE.RUNMODAL(PAGE::"Select Sending Options",TempDocumentSendingProfile) = ACTION::LookupOK THEN
-        ReportDistributionManagement.SendDocumentReport(TempDocumentSendingProfile,Rec);
+      DocumentSendingProfile.SendCustomerRecords(Rec,"Bill-to Customer No.",FIELDNO("Bill-to Customer No."));
     END;
 
-    PROCEDURE PrintRecords@9(ShowRequestForm@1000 : Boolean);
+    PROCEDURE PrintRecords@1(ShowRequestForm@1000 : Boolean);
     VAR
       TempDocumentSendingProfile@1001 : TEMPORARY Record 60;
       ReportDistributionManagement@1002 : Codeunit 452;
@@ -468,7 +458,7 @@ OBJECT Table 114 Sales Cr.Memo Header
       ReportDistributionManagement.SendDocumentReport(TempDocumentSendingProfile,Rec);
     END;
 
-    PROCEDURE EmailRecords@7(ShowRequestForm@1000 : Boolean);
+    PROCEDURE EmailRecords@17(ShowRequestForm@1000 : Boolean);
     VAR
       TempDocumentSendingProfile@1002 : TEMPORARY Record 60;
       ReportDistributionManagement@1001 : Codeunit 452;
@@ -578,28 +568,6 @@ OBJECT Table 114 Sales Cr.Memo Header
       SalesCrMemoLine.FIND('-');
       SalesCrMemoLine.SETFILTER("VAT %", '<>%1', SalesCrMemoLine."VAT %");
       EXIT(NOT SalesCrMemoLine.ISEMPTY);
-    END;
-
-    LOCAL PROCEDURE IsSingleCustomerSelected@1() : Boolean;
-    VAR
-      SelectedCount@1001 : Integer;
-      CustomerCount@1000 : Integer;
-      BillToCustomerNoFilter@1002 : Text;
-    BEGIN
-      SelectedCount := COUNT;
-
-      IF SelectedCount < 1 THEN
-        EXIT(FALSE);
-
-      IF SelectedCount = 1 THEN
-        EXIT(TRUE);
-
-      BillToCustomerNoFilter := GETFILTER("Bill-to Customer No.");
-      SETRANGE("Bill-to Customer No.","Bill-to Customer No.");
-      CustomerCount := COUNT;
-      SETFILTER("Bill-to Customer No.",BillToCustomerNoFilter);
-
-      EXIT(SelectedCount = CustomerCount);
     END;
 
     PROCEDURE GetDocExchStatusStyle@13() : Text;

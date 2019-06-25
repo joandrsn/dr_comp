@@ -2,9 +2,9 @@ OBJECT Table 354 Default Dimension Priority
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -21,7 +21,7 @@ OBJECT Table 354 Default Dimension Priority
     { 1   ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
                                                    CaptionML=[DAN=Kildespor;
                                                               ENU=Source Code] }
-    { 2   ;   ;Table ID            ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 2   ;   ;Table ID            ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    OnValidate=VAR
                                                                 TempAllObjWithCaption@1000 : TEMPORARY Record 2000000058;
                                                               BEGIN

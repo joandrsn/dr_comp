@@ -2,9 +2,9 @@ OBJECT Page 354 Item Turnover Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -70,7 +70,7 @@ OBJECT Page 354 Item Turnover Lines
                 SourceExpr=Item."Purchases (LCY)";
                 AutoFormatType=1;
                 OnDrillDown=BEGIN
-                              ShowItemEntries(FALSE);
+                              ShowValueEntries(FALSE);
                             END;
                              }
 
@@ -94,7 +94,7 @@ OBJECT Page 354 Item Turnover Lines
                 SourceExpr=Item."Sales (LCY)";
                 AutoFormatType=1;
                 OnDrillDown=BEGIN
-                              ShowItemEntries(TRUE);
+                              ShowValueEntries(TRUE);
                             END;
                              }
 
@@ -103,7 +103,6 @@ OBJECT Page 354 Item Turnover Lines
   {
     VAR
       Item@1000 : Record 27;
-      ItemLedgEntry@1001 : Record 32;
       PeriodFormMgt@1002 : Codeunit 359;
       ItemPeriodLength@1003 : 'Day,Week,Month,Quarter,Year,Period';
       AmountType@1004 : 'Net Change,Balance at Date';
@@ -117,6 +116,8 @@ OBJECT Page 354 Item Turnover Lines
     END;
 
     LOCAL PROCEDURE ShowItemEntries@2(ShowSales@1000 : Boolean);
+    VAR
+      ItemLedgEntry@1001 : Record 32;
     BEGIN
       SetDateFilter;
       ItemLedgEntry.RESET;
@@ -133,6 +134,29 @@ OBJECT Page 354 Item Turnover Lines
       ELSE
         ItemLedgEntry.SETRANGE("Entry Type",ItemLedgEntry."Entry Type"::Purchase);
       PAGE.RUN(0,ItemLedgEntry);
+    END;
+
+    LOCAL PROCEDURE ShowValueEntries@3(ShowSales@1000 : Boolean);
+    VAR
+      ValueEntry@1001 : Record 5802;
+    BEGIN
+      SetDateFilter;
+      ValueEntry.RESET;
+      ValueEntry.SETCURRENTKEY(
+        "Item No.","Posting Date","Item Ledger Entry Type","Entry Type","Variance Type","Item Charge No.",
+        "Location Code","Variant Code","Global Dimension 1 Code","Global Dimension 2 Code","Source Type","Source No.");
+      ValueEntry.SETRANGE("Item No.",Item."No.");
+      ValueEntry.SETFILTER("Variant Code",Item.GETFILTER("Variant Filter"));
+      ValueEntry.SETFILTER("Drop Shipment",Item.GETFILTER("Drop Shipment Filter"));
+      ValueEntry.SETFILTER("Location Code",Item.GETFILTER("Location Filter"));
+      ValueEntry.SETFILTER("Global Dimension 1 Code",Item.GETFILTER("Global Dimension 1 Filter"));
+      ValueEntry.SETFILTER("Global Dimension 2 Code",Item.GETFILTER("Global Dimension 2 Filter"));
+      ValueEntry.SETFILTER("Posting Date",Item.GETFILTER("Date Filter"));
+      IF ShowSales THEN
+        ValueEntry.SETRANGE("Item Ledger Entry Type",ValueEntry."Item Ledger Entry Type"::Sale)
+      ELSE
+        ValueEntry.SETRANGE("Item Ledger Entry Type",ValueEntry."Item Ledger Entry Type"::Purchase);
+      PAGE.RUN(0,ValueEntry);
     END;
 
     LOCAL PROCEDURE SetDateFilter@4();

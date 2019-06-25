@@ -2,9 +2,9 @@ OBJECT Table 5077 Segment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -132,7 +132,7 @@ OBJECT Table 5077 Segment Line
 
                                                    CaptionML=[DAN=Kampagnenr.;
                                                               ENU=Campaign No.] }
-    { 5   ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 5   ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 6   ;   ;Correspondence Type ;Option        ;OnValidate=VAR
@@ -555,7 +555,7 @@ OBJECT Table 5077 Segment Line
       Attachment.GET("Attachment No.");
       Attachment2 := Attachment;
 
-      Attachment2.ShowAttachment(Rec,"Segment No." + ' ' + Description,FALSE);
+      Attachment2.ShowAttachment(Rec,"Segment No." + ' ' + Description,FALSE,TRUE);
 
       IF AttachmentInherited THEN BEGIN
         NewAttachmentNo := Attachment2."No.";
@@ -894,8 +894,10 @@ OBJECT Table 5077 Segment Line
             InteractTmpl.GET("Interaction Template Code");
             IF InteractTmpl."Wizard Action" <> InteractTmpl."Wizard Action"::" " THEN
               "Wizard Step" := "Wizard Step"::"2"
-            ELSE
+            ELSE BEGIN
+              HandleTrigger(AttachmentTmp);
               "Wizard Step" := "Wizard Step"::"3";
+            END;
           END;
         "Wizard Step"::"2":
           BEGIN
@@ -905,8 +907,6 @@ OBJECT Table 5077 Segment Line
         "Wizard Step"::"3".."Wizard Step"::"4":
           "Wizard Step" := "Wizard Step" + 1;
       END;
-
-      IF "Wizard Step" = "Wizard Step"::"4" THEN
     END;
 
     PROCEDURE PerformPrevWizardStatus@32();
@@ -985,7 +985,9 @@ OBJECT Table 5077 Segment Line
         send := (IsFinish AND ("Correspondence Type" <> "Correspondence Type"::" "));
         SegManagement.LogInteraction(Rec,AttachmentTemp,InterLogEntryCommentLineTmp,send,NOT IsFinish);
         InteractLogEntry.FINDLAST;
-        IF InteractLogEntry."Delivery Status" = InteractLogEntry."Delivery Status"::Error THEN
+        IF (InteractLogEntry."Delivery Status" = InteractLogEntry."Delivery Status"::Error) AND
+           NOT (CURRENTCLIENTTYPE IN [CLIENTTYPE::Web,CLIENTTYPE::Tablet,CLIENTTYPE::Phone])
+        THEN
           ERROR(Text025,Mail.GetErrorDesc);
       END;
       DELETE
@@ -1021,12 +1023,19 @@ OBJECT Table 5077 Segment Line
         AttachmentTemp.COPY(AttachmentTmp);
 
       CASE InteractTmpl."Wizard Action" OF
+        InteractTmpl."Wizard Action"::" ":
+          IF "Attachment No." <> 0 THEN BEGIN
+            LoadTempAttachment;
+            Subject := Description;
+            AttachmentTemp.RunAttachment(Rec,Description,TRUE,FALSE,FALSE);
+            AttachmentTmp.COPY(AttachmentTemp);
+          END;
         InteractTmpl."Wizard Action"::Open:
           BEGIN
             TESTFIELD("Attachment No.");
             LoadTempAttachment;
             Subject := Description;
-            AttachmentTemp.ShowAttachment(Rec,Description,TRUE);
+            AttachmentTemp.ShowAttachment(Rec,Description,TRUE,FALSE);
             AttachmentTmp.COPY(AttachmentTemp);
           END;
         InteractTmpl."Wizard Action"::Import:

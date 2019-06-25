@@ -2,13 +2,15 @@ OBJECT Codeunit 5804 ItemCostManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
-    Permissions=TableData 5802=r;
+    Permissions=TableData 27=rm,
+                TableData 5700=rm,
+                TableData 5802=r;
     OnRun=BEGIN
           END;
 
@@ -68,7 +70,7 @@ OBJECT Codeunit 5804 ItemCostManagement
           MODIFY;
 
         IF UpdateSKU THEN
-          FindUpdateUnitCostSKU(Item,LocationCode,VariantCode,FilterSKU);
+          FindUpdateUnitCostSKU(Item,LocationCode,VariantCode,FilterSKU,LastDirectCost);
       END;
     END;
 
@@ -216,6 +218,10 @@ OBJECT Codeunit 5804 ItemCostManagement
     PROCEDURE CalculateAverageCost@5801(VAR Item@1000 : Record 27;VAR AverageCost@1001 : Decimal;VAR AverageCostACY@1002 : Decimal) : Boolean;
     VAR
       AverageQty@1004 : Decimal;
+      CostAmt@1003 : Decimal;
+      CostAmtACY@1005 : Decimal;
+      NeedCalcPreciseAmt@1006 : Boolean;
+      NeedCalcPreciseAmtACY@1007 : Boolean;
     BEGIN
       AverageCost := 0;
       AverageCostACY := 0;
@@ -225,13 +231,31 @@ OBJECT Codeunit 5804 ItemCostManagement
       AverageQty := AverageQty + CalculateQuantity(Item);
 
       IF AverageQty <> 0 THEN BEGIN
-        AverageCost := (AverageCost + CalculateCostAmt(Item,TRUE) + CalculateCostAmt(Item,FALSE)) / AverageQty;
+        GetGLSetup;
+        CostAmt := AverageCost + CalculateCostAmt(Item,TRUE) + CalculateCostAmt(Item,FALSE);
+        IF (CostAmt <> 0) AND (ABS(CostAmt) = GLSetup."Amount Rounding Precision") THEN BEGIN
+          NeedCalcPreciseAmt := TRUE;
+          CostAmt := AverageCost;
+        END;
+
+        IF GLSetup."Additional Reporting Currency" <> '' THEN BEGIN
+          Currency.GET(GLSetup."Additional Reporting Currency");
+          CostAmtACY := AverageCostACY + CalculateCostAmtACY(Item,TRUE) + CalculateCostAmtACY(Item,FALSE);
+          IF (CostAmtACY <> 0) AND (ABS(CostAmtACY) = Currency."Amount Rounding Precision") THEN BEGIN
+            NeedCalcPreciseAmtACY := TRUE;
+            CostAmtACY := AverageCostACY;
+          END;
+        END;
+
+        IF NeedCalcPreciseAmt OR NeedCalcPreciseAmtACY THEN
+          CalculatePreciseCostAmounts(Item,NeedCalcPreciseAmt,NeedCalcPreciseAmtACY,CostAmt,CostAmtACY);
+
+        AverageCost := CostAmt / AverageQty;
+        AverageCostACY := CostAmtACY / AverageQty;
+
         IF AverageCost < 0 THEN
           AverageCost := 0;
-
-        AverageCostACY := (AverageCostACY + CalculateCostAmtACY(Item,TRUE) + CalculateCostAmtACY(Item,FALSE)) / AverageQty;
-        GetGLSetup;
-        IF (GLSetup."Additional Reporting Currency" = '') OR (AverageCostACY < 0) THEN
+        IF AverageCostACY < 0 THEN
           AverageCostACY := 0;
       END ELSE BEGIN
         AverageCost := 0;
@@ -296,6 +320,30 @@ OBJECT Codeunit 5804 ItemCostManagement
       END;
     END;
 
+    LOCAL PROCEDURE CalculatePreciseCostAmounts@14(VAR Item@1000 : Record 27;NeedCalcPreciseAmt@1002 : Boolean;NeedCalcPreciseAmtACY@1003 : Boolean;VAR PreciseAmt@1004 : Decimal;VAR PreciseAmtACY@1005 : Decimal);
+    VAR
+      ItemLedgerEntry@1001 : Record 32;
+    BEGIN
+      WITH ItemLedgerEntry DO BEGIN
+        SETRANGE("Item No.",Item."No.");
+        SETRANGE(Open,TRUE);
+        SETRANGE(Positive,TRUE);
+        SETFILTER("Location Code",Item.GETFILTER("Location Filter"));
+        SETFILTER("Variant Code",Item.GETFILTER("Variant Filter"));
+        IF FINDSET THEN
+          REPEAT
+            IF NeedCalcPreciseAmt THEN BEGIN
+              CALCFIELDS("Cost Amount (Actual)","Cost Amount (Expected)");
+              PreciseAmt += ("Cost Amount (Actual)" + "Cost Amount (Expected)") / Quantity * "Remaining Quantity";
+            END;
+            IF NeedCalcPreciseAmtACY THEN BEGIN
+              CALCFIELDS("Cost Amount (Actual) (ACY)","Cost Amount (Expected) (ACY)");
+              PreciseAmtACY += ("Cost Amount (Actual) (ACY)" + "Cost Amount (Expected) (ACY)") / Quantity * "Remaining Quantity";
+            END;
+          UNTIL NEXT = 0;
+      END;
+    END;
+
     LOCAL PROCEDURE ExcludeOpenOutbndCosts@3(VAR Item@1000 : Record 27;VAR CostAmt@1001 : Decimal;VAR CostAmtACY@1002 : Decimal;VAR Quantity@1003 : Decimal);
     VAR
       OpenItemLedgEntry@1004 : Record 32;
@@ -357,7 +405,7 @@ OBJECT Codeunit 5804 ItemCostManagement
       GLSetupRead := TRUE;
     END;
 
-    PROCEDURE FindUpdateUnitCostSKU@12(Item@1000 : Record 27;LocationCode@1001 : Code[10];VariantCode@1002 : Code[10];FilterSKU@1003 : Boolean);
+    PROCEDURE FindUpdateUnitCostSKU@12(Item@1000 : Record 27;LocationCode@1001 : Code[10];VariantCode@1002 : Code[10];FilterSKU@1003 : Boolean;LastDirectCost@1004 : Decimal);
     VAR
       SKU@1005 : Record 5700;
     BEGIN
@@ -375,7 +423,7 @@ OBJECT Codeunit 5804 ItemCostManagement
         IF FIND('-') THEN
           REPEAT
             UpdateUnitCostSKU(
-              Item,SKU,Item."Last Direct Cost",0,
+              Item,SKU,LastDirectCost,0,
               ("Location Code" = LocationCode) AND ("Variant Code" = VariantCode),0);
           UNTIL NEXT = 0;
       END;

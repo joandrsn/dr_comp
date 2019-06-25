@@ -2,9 +2,9 @@ OBJECT Table 5715 Item Substitution
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -154,7 +154,8 @@ OBJECT Table 5715 Item Substitution
                                                                       "Substitute Type",
                                                                       "Substitute No.",
                                                                       "Substitute Variant Code");
-                                                                  VALIDATE("No.",'');
+                                                                  IF xRec."No." <> '' THEN
+                                                                    VALIDATE("No.",'');
                                                                   VALIDATE("Substitute No.",'');
                                                                 END;
                                                               END;

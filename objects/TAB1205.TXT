@@ -2,9 +2,9 @@ OBJECT Table 1205 Credit Transfer Register
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -23,6 +23,7 @@ OBJECT Table 1205 Credit Transfer Register
     { 3   ;   ;Created Date-Time   ;DateTime      ;CaptionML=[DAN=Oprettet dato/klokkeslæt;
                                                               ENU=Created Date-Time] }
     { 4   ;   ;Created by User     ;Code50        ;TableRelation=User."User Name";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Oprettet af bruger;
                                                               ENU=Created by User] }
     { 5   ;   ;Status              ;Option        ;CaptionML=[DAN=Status;

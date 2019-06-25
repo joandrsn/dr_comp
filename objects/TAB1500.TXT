@@ -2,9 +2,9 @@ OBJECT Table 1500 Workflow Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -35,15 +35,19 @@ OBJECT Table 1500 Workflow Buffer
   FIELDS
   {
     { 1   ;   ;Category Code       ;Code20        ;TableRelation="Workflow Category".Code;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Kategorikode;
                                                               ENU=Category Code] }
     { 2   ;   ;Workflow Code       ;Code20        ;TableRelation=Workflow.Code;
                                                    TestTableRelation=No;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Workflowkode;
                                                               ENU=Workflow Code] }
-    { 3   ;   ;Indentation         ;Integer       ;CaptionML=[DAN=Indrykning;
+    { 3   ;   ;Indentation         ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Indrykning;
                                                               ENU=Indentation] }
-    { 4   ;   ;Description         ;Text100       ;CaptionML=[DAN=Beskrivelse;
+    { 4   ;   ;Description         ;Text100       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description];
                                                    Editable=No }
     { 6   ;   ;Template            ;Boolean       ;FieldClass=FlowField;

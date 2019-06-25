@@ -2,9 +2,9 @@ OBJECT Page 7012 Purchase Prices
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -17,8 +17,27 @@ OBJECT Page 7012 Purchase Prices
     OnOpenPage=BEGIN
                  GetRecFilters;
                  SetRecFilters;
+                 IsLookupMode := CurrPage.LOOKUPMODE;
                END;
 
+    ActionList=ACTIONS
+    {
+      { 3       ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 5       ;1   ;Action    ;
+                      Name=CopyPrices;
+                      CaptionML=[DAN=Kopiér priser;
+                                 ENU=Copy Prices];
+                      ToolTipML=[DAN=Vælg priser, og tryk på OK for at kopiere dem til Kreditornr.;
+                                 ENU=Select prices and press OK to copy them to Vendor No.];
+                      Visible=NOT IsLookupMode;
+                      Image=Copy;
+                      OnAction=BEGIN
+                                 CopyPrices;
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+    }
   }
   CONTROLS
   {
@@ -138,6 +157,9 @@ OBJECT Page 7012 Purchase Prices
       ItemNoFilter@1001 : Code[30];
       StartingDateFilter@1002 : Text[30];
       Vend@1003 : Record 23;
+      NoDataWithinFilterErr@1004 : TextConst '@@@=%1: Field(Code), %2: GetFilter(Code);DAN=Der er ikke %1 i filteret %2.;ENU=There is no %1 within the filter %2.';
+      IsLookupMode@1005 : Boolean;
+      MultipleVendorsSelectedErr@1006 : TextConst 'DAN=Mere end én kreditor bruger købspriserne. Hvis du vil kopiere priser, må feltet Leverandørnr.filter kun indeholde én kreditor.;ENU=More than one vendor uses these purchase prices. To copy prices, the Vendor No. Filter field must contain one vendor only.';
 
     LOCAL PROCEDURE GetRecFilters@2();
     BEGIN
@@ -165,6 +187,9 @@ OBJECT Page 7012 Purchase Prices
       END ELSE
         SETRANGE("Item No.");
 
+      CheckFilters(DATABASE::Vendor,VendNoFilter);
+      CheckFilters(DATABASE::Item,ItemNoFilter);
+
       CurrPage.UPDATE(FALSE);
     END;
 
@@ -181,7 +206,7 @@ OBJECT Page 7012 Purchase Prices
       ELSE
         SourceTableName := '';
 
-      Vend."No." := VendNoFilter;
+      Vend."No." := COPYSTR(VendNoFilter,1,MAXSTRLEN(Vend."No."));
       IF Vend.FIND THEN
         Description := Vend.Name;
 
@@ -189,8 +214,11 @@ OBJECT Page 7012 Purchase Prices
     END;
 
     LOCAL PROCEDURE VendNoFilterOnAfterValidate@19075608();
+    VAR
+      Item@1000 : Record 27;
     BEGIN
-      CurrPage.SAVERECORD;
+      IF Item.GET("Item No.") THEN
+        CurrPage.SAVERECORD;
       SetRecFilters;
     END;
 
@@ -204,6 +232,49 @@ OBJECT Page 7012 Purchase Prices
     BEGIN
       CurrPage.SAVERECORD;
       SetRecFilters;
+    END;
+
+    PROCEDURE CheckFilters@4(TableNo@1000 : Integer;FilterTxt@1001 : Text[250]);
+    VAR
+      FilterRecordRef@1002 : RecordRef;
+      FilterFieldRef@1003 : FieldRef;
+    BEGIN
+      IF FilterTxt = '' THEN
+        EXIT;
+      CLEAR(FilterRecordRef);
+      CLEAR(FilterFieldRef);
+      FilterRecordRef.OPEN(TableNo);
+      FilterFieldRef := FilterRecordRef.FIELD(1);
+      FilterFieldRef.SETFILTER(FilterTxt);
+      IF FilterRecordRef.ISEMPTY THEN
+        ERROR(NoDataWithinFilterErr,FilterRecordRef.CAPTION,FilterTxt);
+    END;
+
+    LOCAL PROCEDURE CopyPrices@6();
+    VAR
+      Vendor@1001 : Record 23;
+      PurchasePrice@1004 : Record 7012;
+      SelectedPurchasePrice@1005 : Record 7012;
+      PurchasePrices@1002 : Page 7012;
+      CopyToVendorNo@1003 : Code[20];
+    BEGIN
+      Vendor.SETFILTER("No.",VendNoFilter);
+      IF Vendor.COUNT <> 1 THEN
+        ERROR(MultipleVendorsSelectedErr);
+      CopyToVendorNo := COPYSTR(VendNoFilter,1,MAXSTRLEN(CopyToVendorNo));
+
+      PurchasePrice.SETFILTER("Vendor No.",'<>%1',VendNoFilter);
+      PurchasePrices.LOOKUPMODE(TRUE);
+      PurchasePrices.SETTABLEVIEW(PurchasePrice);
+      IF PurchasePrices.RUNMODAL = ACTION::LookupOK THEN BEGIN
+        PurchasePrices.GetSelectionFilter(SelectedPurchasePrice);
+        CopyPurchPriceToVendorsPurchPrice(SelectedPurchasePrice,CopyToVendorNo);
+      END;
+    END;
+
+    PROCEDURE GetSelectionFilter@5(VAR PurchasePrice@1001 : Record 7012);
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(PurchasePrice);
     END;
 
     BEGIN

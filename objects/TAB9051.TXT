@@ -2,9 +2,9 @@ OBJECT Table 9051 Warehouse WMS Cue
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -32,7 +32,7 @@ OBJECT Table 9051 Warehouse WMS Cue
                                                               ENU=Shipments - Today];
                                                    Editable=No }
     { 4   ;   ;Posted Shipments - Today;Integer   ;FieldClass=FlowField;
-                                                   CalcFormula=Count("Posted Whse. Shipment Header" WHERE (Posting Date=FIELD(Date Filter),
+                                                   CalcFormula=Count("Posted Whse. Shipment Header" WHERE (Posting Date=FIELD(Date Filter2),
                                                                                                            Location Code=FIELD(Location Filter)));
                                                    CaptionML=[DAN=Bogførte leverancer - i dag;
                                                               ENU=Posted Shipments - Today];

@@ -2,9 +2,9 @@ OBJECT Page 710 Activity Log
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -16,7 +16,21 @@ OBJECT Page 710 Activity Log
     ModifyAllowed=No;
     SourceTable=Table710;
     DelayedInsert=No;
+    SourceTableView=SORTING(Activity Date)
+                    ORDER(Descending);
     PageType=List;
+    OnOpenPage=BEGIN
+                 SETAUTOCALCFIELDS("Detailed Info");
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       HasDetailedInfo := "Detailed Info".HASVALUE;
+                     END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           HasDetailedInfo := "Detailed Info".HASVALUE;
+                         END;
+
     ActionList=ACTIONS
     {
       { 9       ;    ;ActionContainer;
@@ -25,6 +39,8 @@ OBJECT Page 710 Activity Log
                       Name=OpenRelatedRecord;
                       CaptionML=[DAN=Åbn relateret post;
                                  ENU=Open Related Record];
+                      ToolTipML=[DAN=Åbner den record, som er knyttet til denne aktivitet.;
+                                 ENU=Open the record that is associated with this activity.];
                       Promoted=Yes;
                       PromotedIsBig=Yes;
                       Image=View;
@@ -32,7 +48,23 @@ OBJECT Page 710 Activity Log
                       OnAction=VAR
                                  PageManagement@1000 : Codeunit 700;
                                BEGIN
-                                 PageManagement.PageRun("Record ID");
+                                 IF NOT PageManagement.PageRun("Record ID") THEN
+                                   MESSAGE(NoRelatedRecordMsg);
+                               END;
+                                }
+      { 12      ;1   ;Action    ;
+                      Name=ViewDetails;
+                      Ellipsis=Yes;
+                      CaptionML=[DAN=Vis detaljer;
+                                 ENU=View Details];
+                      ToolTipML=[DAN=Vis flere oplysninger om denne aktivitet.;
+                                 ENU=Show more information about this activity.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=GetSourceDoc;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 Export('',TRUE);
                                END;
                                 }
     }
@@ -47,26 +79,52 @@ OBJECT Page 710 Activity Log
                 GroupType=Repeater }
 
     { 3   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver aktivitetsdata.;
+                           ENU=Specifies the data of the activity.];
                 SourceExpr="Activity Date" }
 
     { 4   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver id'et for den bruger, der har bogført posten, der skal bruges, f.eks. i ændringsloggen.;
+                           ENU=Specifies the ID of the user who posted the entry, to be used, for example, in the change log.];
                 SourceExpr="User ID" }
 
     { 10  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver den kontekst, hvori aktiviteten opstod.;
+                           ENU=Specifies the context in which the activity occurred.];
                 SourceExpr=Context }
 
     { 5   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver aktivitetsstatus.;
+                           ENU=Specifies the status of the activity.];
                 SourceExpr=Status }
 
     { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver aktiviteten.;
+                           ENU=Specifies the activity.];
                 SourceExpr=Description }
 
     { 7   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver status eller fejlmeddelelse for aktiviteten.;
+                           ENU=Specifies the status or error message for the activity.];
                 SourceExpr="Activity Message" }
+
+    { 11  ;2   ;Field     ;
+                CaptionML=[DAN=Detaljerede oplysninger tilgængelige;
+                           ENU=Detailed Info Available];
+                ToolTipML=[DAN=Angiver, om der findes detaljerede aktivitetslogoplysninger. Hvis det er tilfældet, skal du vælge handlingen Vis detaljer.;
+                           ENU=Specifies if detailed activity log details exist. If so, choose the View Details action.];
+                SourceExpr=HasDetailedInfo;
+                OnDrillDown=BEGIN
+                              Export('',TRUE);
+                            END;
+                             }
 
   }
   CODE
   {
+    VAR
+      HasDetailedInfo@1000 : Boolean;
+      NoRelatedRecordMsg@1001 : TextConst 'DAN=Der er ingen relaterede records at vise.;ENU=There are no related records to display.';
 
     BEGIN
     END.

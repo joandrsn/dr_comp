@@ -2,9 +2,9 @@ OBJECT Table 5600 Fixed Asset
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -81,8 +81,7 @@ OBJECT Table 5600 Fixed Asset
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Description;
-                                                   OnValidate=BEGIN
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   FASetup.GET;
                                                                   NoSeriesMgt.TestManual(FASetup."Fixed Asset Nos.");
@@ -90,6 +89,7 @@ OBJECT Table 5600 Fixed Asset
                                                                 END;
                                                               END;
 
+                                                   AltSearchField=Search Description;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 2   ;   ;Description         ;Text50        ;OnValidate=BEGIN

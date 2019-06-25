@@ -2,9 +2,9 @@ OBJECT Codeunit 5760 Whse.-Post Receipt
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -152,7 +152,7 @@ OBJECT Codeunit 5760 Whse.-Post Receipt
           DATABASE::"Purchase Line":
             BEGIN
               IF (PurchHeader."Posting Date" = 0D) OR
-                 (PurchHeader."Posting Date" < WhseRcptHeader."Posting Date")
+                 (PurchHeader."Posting Date" <> WhseRcptHeader."Posting Date")
               THEN BEGIN
                 PurchRelease.Reopen(PurchHeader);
                 PurchHeader.SetHideValidationDialog(TRUE);
@@ -170,16 +170,12 @@ OBJECT Codeunit 5760 Whse.-Post Receipt
           DATABASE::"Sales Line": // Return Order
             BEGIN
               IF (SalesHeader."Posting Date" = 0D) OR
-                 (SalesHeader."Posting Date" < WhseRcptHeader."Posting Date")
+                 (SalesHeader."Posting Date" <> WhseRcptHeader."Posting Date")
               THEN BEGIN
                 SalesRelease.Reopen(SalesHeader);
                 SalesHeader.SetHideValidationDialog(TRUE);
                 SalesHeader.VALIDATE("Posting Date",WhseRcptHeader."Posting Date");
                 SalesRelease.RUN(SalesHeader);
-                ModifyHeader := TRUE;
-              END;
-              IF WhseRcptHeader."Vendor Shipment No." <> '' THEN BEGIN
-                SalesHeader."External Document No." := WhseRcptHeader."Vendor Shipment No.";
                 ModifyHeader := TRUE;
               END;
               IF ModifyHeader THEN
@@ -188,7 +184,7 @@ OBJECT Codeunit 5760 Whse.-Post Receipt
           DATABASE::"Transfer Line":
             BEGIN
               IF (TransHeader."Posting Date" = 0D) OR
-                 (TransHeader."Posting Date" < WhseRcptHeader."Posting Date")
+                 (TransHeader."Posting Date" <> WhseRcptHeader."Posting Date")
               THEN BEGIN
                 TransHeader.CalledFromWarehouse(TRUE);
                 TransHeader.VALIDATE("Posting Date",WhseRcptHeader."Posting Date");
@@ -710,34 +706,37 @@ OBJECT Codeunit 5760 Whse.-Post Receipt
       IF NOT PostedWhseRcptLine.FIND('-') THEN
         EXIT;
 
-      IF PostedWhseRcptLine.FIND('-') THEN
-        REPEAT
-          RemQtyToHandleBase := PostedWhseRcptLine."Qty. (Base)";
-          CreatePutAway.SetCrossDockValues(TRUE);
+      REPEAT
+        RemQtyToHandleBase := PostedWhseRcptLine."Qty. (Base)";
+        CreatePutAway.SetCrossDockValues(TRUE);
 
-          ItemTrackingMgt.CheckWhseItemTrkgSetup(PostedWhseRcptLine."Item No.",WhseSNRequired,WhseLNRequired,FALSE);
-          IF WhseSNRequired OR WhseLNRequired THEN
-            ItemTrackingMgt.InitItemTrkgForTempWkshLine(
-              WhseWkshLine."Whse. Document Type"::Receipt,
-              PostedWhseRcptLine."No.",
-              PostedWhseRcptLine."Line No.",
-              PostedWhseRcptLine."Source Type",
-              PostedWhseRcptLine."Source Subtype",
-              PostedWhseRcptLine."Source No.",
-              PostedWhseRcptLine."Source Line No.",
-              0);
+        ItemTrackingMgt.CheckWhseItemTrkgSetup(PostedWhseRcptLine."Item No.",WhseSNRequired,WhseLNRequired,FALSE);
+        IF WhseSNRequired OR WhseLNRequired THEN
+          ItemTrackingMgt.InitItemTrkgForTempWkshLine(
+            WhseWkshLine."Whse. Document Type"::Receipt,
+            PostedWhseRcptLine."No.",
+            PostedWhseRcptLine."Line No.",
+            PostedWhseRcptLine."Source Type",
+            PostedWhseRcptLine."Source Subtype",
+            PostedWhseRcptLine."Source No.",
+            PostedWhseRcptLine."Source Line No.",
+            0);
 
-          ItemTrackingMgt.SplitPostedWhseRcptLine(PostedWhseRcptLine,TempPostedWhseRcptLine);
-          IF TempPostedWhseRcptLine.FIND('-') THEN
-            REPEAT
-              TempPostedWhseRcptLine2 := TempPostedWhseRcptLine;
-              TempPostedWhseRcptLine2."Line No." := PostedWhseRcptLine."Line No.";
-              WhseSourceCreateDocument.SetQuantity(TempPostedWhseRcptLine2,DATABASE::"Posted Whse. Receipt Line",RemQtyToHandleBase);
-              CreatePutAway.RUN(TempPostedWhseRcptLine2);
-            UNTIL TempPostedWhseRcptLine.NEXT = 0;
-        UNTIL PostedWhseRcptLine.NEXT = 0;
+        ItemTrackingMgt.SplitPostedWhseRcptLine(PostedWhseRcptLine,TempPostedWhseRcptLine);
+
+        TempPostedWhseRcptLine.RESET;
+        IF TempPostedWhseRcptLine.FIND('-') THEN
+          REPEAT
+            TempPostedWhseRcptLine2 := TempPostedWhseRcptLine;
+            TempPostedWhseRcptLine2."Line No." := PostedWhseRcptLine."Line No.";
+            WhseSourceCreateDocument.SetQuantity(TempPostedWhseRcptLine2,DATABASE::"Posted Whse. Receipt Line",RemQtyToHandleBase);
+            CreatePutAway.RUN(TempPostedWhseRcptLine2);
+          UNTIL TempPostedWhseRcptLine.NEXT = 0;
+      UNTIL PostedWhseRcptLine.NEXT = 0;
+
       IF GetFirstPutAwayDocument(WhseActivHeader) THEN
         REPEAT
+          CreatePutAway.DeleteBlankBinContent(WhseActivHeader);
           CounterPutAways := CounterPutAways + 1;
         UNTIL NOT GetNextPutAwayDocument(WhseActivHeader);
     END;

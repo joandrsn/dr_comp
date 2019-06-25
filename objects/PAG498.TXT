@@ -2,9 +2,9 @@ OBJECT Page 498 Reservation
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -768,144 +768,7 @@ OBJECT Page 498 Reservation
       IF NOT FormIsOpen THEN
         GetSerialLotNo(ItemTrackingQtyToReserve,ItemTrackingQtyToReserveBase);
 
-      CASE ReservEntry."Source Type" OF
-        DATABASE::"Sales Line":
-          BEGIN
-            SalesLine.FIND;
-            SalesLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            IF SalesLine."Document Type" = SalesLine."Document Type"::"Return Order" THEN BEGIN
-              SalesLine."Reserved Quantity" := -SalesLine."Reserved Quantity";
-              SalesLine."Reserved Qty. (Base)" := -SalesLine."Reserved Qty. (Base)";
-            END;
-            QtyReserved := SalesLine."Reserved Quantity";
-            QtyReservedBase := SalesLine."Reserved Qty. (Base)";
-            QtyToReserve := SalesLine."Outstanding Quantity";
-            QtyToReserveBase := SalesLine."Outstanding Qty. (Base)";
-            QtyPerUOM := SalesLine."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Requisition Line":
-          BEGIN
-            ReqLine.FIND;
-            ReqLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := ReqLine."Reserved Quantity";
-            QtyReservedBase := ReqLine."Reserved Qty. (Base)";
-            QtyToReserve := ReqLine.Quantity;
-            QtyToReserveBase := ReqLine."Quantity (Base)";
-            QtyPerUOM := ReqLine."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Purchase Line":
-          BEGIN
-            PurchLine.FIND;
-            PurchLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            IF PurchLine."Document Type" = PurchLine."Document Type"::"Return Order" THEN BEGIN
-              PurchLine."Reserved Quantity" := -PurchLine."Reserved Quantity";
-              PurchLine."Reserved Qty. (Base)" := -PurchLine."Reserved Qty. (Base)";
-            END;
-            QtyReserved := PurchLine."Reserved Quantity";
-            QtyReservedBase := PurchLine."Reserved Qty. (Base)";
-            QtyToReserve := PurchLine."Outstanding Quantity";
-            QtyToReserveBase := PurchLine."Outstanding Qty. (Base)";
-            QtyPerUOM := PurchLine."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Item Journal Line":
-          BEGIN
-            ItemJnlLine.FIND;
-            ItemJnlLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := ItemJnlLine."Reserved Quantity";
-            QtyReservedBase := ItemJnlLine."Reserved Qty. (Base)";
-            QtyToReserve := ItemJnlLine.Quantity;
-            QtyToReserveBase := ItemJnlLine."Quantity (Base)";
-            QtyPerUOM := ItemJnlLine."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Prod. Order Line":
-          BEGIN
-            ProdOrderLine.FIND;
-            ProdOrderLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := ProdOrderLine."Reserved Quantity";
-            QtyReservedBase := ProdOrderLine."Reserved Qty. (Base)";
-            QtyToReserve := ProdOrderLine."Remaining Quantity";
-            QtyToReserveBase := ProdOrderLine."Remaining Qty. (Base)";
-            QtyPerUOM := ProdOrderLine."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Prod. Order Component":
-          BEGIN
-            ProdOrderComp.FIND;
-            ProdOrderComp.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := ProdOrderComp."Reserved Quantity";
-            QtyReservedBase := ProdOrderComp."Reserved Qty. (Base)";
-            QtyToReserve := ProdOrderComp."Remaining Quantity";
-            QtyToReserveBase := ProdOrderComp."Remaining Qty. (Base)";
-            QtyPerUOM := ProdOrderComp."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Assembly Header":
-          BEGIN
-            AssemblyHeader.FIND;
-            AssemblyHeader.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := AssemblyHeader."Reserved Quantity";
-            QtyReservedBase := AssemblyHeader."Reserved Qty. (Base)";
-            QtyToReserve := AssemblyHeader."Remaining Quantity";
-            QtyToReserveBase := AssemblyHeader."Remaining Quantity (Base)";
-            QtyPerUOM := AssemblyHeader."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Assembly Line":
-          BEGIN
-            AssemblyLine.FIND;
-            AssemblyLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := AssemblyLine."Reserved Quantity";
-            QtyReservedBase := AssemblyLine."Reserved Qty. (Base)";
-            QtyToReserve := AssemblyLine."Remaining Quantity";
-            QtyToReserveBase := AssemblyLine."Remaining Quantity (Base)";
-            QtyPerUOM := AssemblyLine."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Planning Component":
-          BEGIN
-            PlanningComponent.FIND;
-            PlanningComponent.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := PlanningComponent."Reserved Quantity";
-            QtyReservedBase := PlanningComponent."Reserved Qty. (Base)";
-            QtyToReserve := PlanningComponent.Quantity;
-            QtyToReserveBase := PlanningComponent."Quantity (Base)";
-            QtyPerUOM := PlanningComponent."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Transfer Line":
-          BEGIN
-            TransLine.FIND;
-            IF ReservEntry."Source Subtype" = 0 THEN BEGIN // Outbound
-              TransLine.CALCFIELDS("Reserved Quantity Outbnd.","Reserved Qty. Outbnd. (Base)");
-              QtyReserved := TransLine."Reserved Quantity Outbnd.";
-              QtyReservedBase := TransLine."Reserved Qty. Outbnd. (Base)";
-              QtyToReserve := TransLine."Outstanding Quantity";
-              QtyToReserveBase := TransLine."Outstanding Qty. (Base)";
-            END ELSE BEGIN // Inbound
-              TransLine.CALCFIELDS("Reserved Quantity Inbnd.","Reserved Qty. Inbnd. (Base)");
-              QtyReserved := TransLine."Reserved Quantity Inbnd.";
-              QtyReservedBase := TransLine."Reserved Qty. Inbnd. (Base)";
-              QtyToReserve := TransLine."Outstanding Quantity";
-              QtyToReserveBase := TransLine."Outstanding Qty. (Base)";
-            END;
-            QtyPerUOM := TransLine."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Service Line":
-          BEGIN
-            ServiceLine.FIND;
-            ServiceLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := ServiceLine."Reserved Quantity";
-            QtyReservedBase := ServiceLine."Reserved Qty. (Base)";
-            QtyToReserve := ServiceLine."Outstanding Quantity";
-            QtyToReserveBase := ServiceLine."Outstanding Qty. (Base)";
-            QtyPerUOM := ServiceLine."Qty. per Unit of Measure";
-          END;
-        DATABASE::"Job Planning Line":
-          BEGIN
-            JobPlanningLine.FIND;
-            JobPlanningLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
-            QtyReserved := JobPlanningLine."Reserved Quantity";
-            QtyReservedBase := JobPlanningLine."Reserved Qty. (Base)";
-            QtyToReserve := JobPlanningLine."Remaining Qty.";
-            QtyToReserveBase := JobPlanningLine."Remaining Qty. (Base)";
-            QtyPerUOM := JobPlanningLine."Qty. per Unit of Measure";
-          END;
-      END;
+      QtyPerUOM := GetQtyPerUOMFromSource;
 
       UpdateReservMgt;
       ReservMgt.UpdateStatistics(
@@ -1915,6 +1778,192 @@ OBJECT Page 498 Reservation
       IF NOT FullAutoReservation THEN
         MESSAGE(Text001);
       UpdateReservFrom;
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUOMFromSource@24() : Decimal;
+    BEGIN
+      CASE ReservEntry."Source Type" OF
+        DATABASE::"Sales Line":
+          EXIT(GetQtyPerUomFromSalesLine);
+        DATABASE::"Requisition Line":
+          EXIT(GetQtyPerUomFromReqLine);
+        DATABASE::"Purchase Line":
+          EXIT(GetQtyPerUomFromPurchLine);
+        DATABASE::"Item Journal Line":
+          EXIT(GetQtyPerUomFromItemJnlLine);
+        DATABASE::"Prod. Order Line":
+          EXIT(GetQtyPerUomFromProdOrderLine);
+        DATABASE::"Prod. Order Component":
+          EXIT(GetQtyPerUomFromProdOrderComponent);
+        DATABASE::"Assembly Header":
+          EXIT(GetQtyPerUomFromAssemblyHeader);
+        DATABASE::"Assembly Line":
+          EXIT(GetQtyPerUomFromAssemblyLine);
+        DATABASE::"Planning Component":
+          EXIT(GetQtyPerUomFromPlanningComponent);
+        DATABASE::"Transfer Line":
+          EXIT(GetQtyPerUomFromTransferLine);
+        DATABASE::"Service Line":
+          EXIT(GetQtyPerUomFromServiceLine);
+        DATABASE::"Job Planning Line":
+          EXIT(GetQtyPerUomFromJobPlanningLine);
+      END;
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromSalesLine@25() : Decimal;
+    BEGIN
+      SalesLine.FIND;
+      SalesLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      IF SalesLine."Document Type" = SalesLine."Document Type"::"Return Order" THEN BEGIN
+        SalesLine."Reserved Quantity" := -SalesLine."Reserved Quantity";
+        SalesLine."Reserved Qty. (Base)" := -SalesLine."Reserved Qty. (Base)";
+      END;
+      QtyReserved := SalesLine."Reserved Quantity";
+      QtyReservedBase := SalesLine."Reserved Qty. (Base)";
+      QtyToReserve := SalesLine."Outstanding Quantity";
+      QtyToReserveBase := SalesLine."Outstanding Qty. (Base)";
+      EXIT(SalesLine."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromReqLine@26() : Decimal;
+    BEGIN
+      ReqLine.FIND;
+      ReqLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := ReqLine."Reserved Quantity";
+      QtyReservedBase := ReqLine."Reserved Qty. (Base)";
+      QtyToReserve := ReqLine.Quantity;
+      QtyToReserveBase := ReqLine."Quantity (Base)";
+      EXIT(ReqLine."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromPurchLine@27() : Decimal;
+    BEGIN
+      PurchLine.FIND;
+      PurchLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      IF PurchLine."Document Type" = PurchLine."Document Type"::"Return Order" THEN BEGIN
+        PurchLine."Reserved Quantity" := -PurchLine."Reserved Quantity";
+        PurchLine."Reserved Qty. (Base)" := -PurchLine."Reserved Qty. (Base)";
+      END;
+      QtyReserved := PurchLine."Reserved Quantity";
+      QtyReservedBase := PurchLine."Reserved Qty. (Base)";
+      QtyToReserve := PurchLine."Outstanding Quantity";
+      QtyToReserveBase := PurchLine."Outstanding Qty. (Base)";
+      EXIT(PurchLine."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromItemJnlLine@28() : Decimal;
+    BEGIN
+      ItemJnlLine.FIND;
+      ItemJnlLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := ItemJnlLine."Reserved Quantity";
+      QtyReservedBase := ItemJnlLine."Reserved Qty. (Base)";
+      QtyToReserve := ItemJnlLine.Quantity;
+      QtyToReserveBase := ItemJnlLine."Quantity (Base)";
+      EXIT(ItemJnlLine."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromProdOrderLine@29() : Decimal;
+    BEGIN
+      ProdOrderLine.FIND;
+      ProdOrderLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := ProdOrderLine."Reserved Quantity";
+      QtyReservedBase := ProdOrderLine."Reserved Qty. (Base)";
+      QtyToReserve := ProdOrderLine."Remaining Quantity";
+      QtyToReserveBase := ProdOrderLine."Remaining Qty. (Base)";
+      EXIT(ProdOrderLine."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromProdOrderComponent@30() : Decimal;
+    BEGIN
+      ProdOrderComp.FIND;
+      ProdOrderComp.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := ProdOrderComp."Reserved Quantity";
+      QtyReservedBase := ProdOrderComp."Reserved Qty. (Base)";
+      QtyToReserve := ProdOrderComp."Remaining Quantity";
+      QtyToReserveBase := ProdOrderComp."Remaining Qty. (Base)";
+      EXIT(ProdOrderComp."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromAssemblyHeader@31() : Decimal;
+    BEGIN
+      AssemblyHeader.FIND;
+      AssemblyHeader.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := AssemblyHeader."Reserved Quantity";
+      QtyReservedBase := AssemblyHeader."Reserved Qty. (Base)";
+      QtyToReserve := AssemblyHeader."Remaining Quantity";
+      QtyToReserveBase := AssemblyHeader."Remaining Quantity (Base)";
+      EXIT(AssemblyHeader."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromAssemblyLine@32() : Decimal;
+    BEGIN
+      AssemblyLine.FIND;
+      AssemblyLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := AssemblyLine."Reserved Quantity";
+      QtyReservedBase := AssemblyLine."Reserved Qty. (Base)";
+      QtyToReserve := AssemblyLine."Remaining Quantity";
+      QtyToReserveBase := AssemblyLine."Remaining Quantity (Base)";
+      EXIT(AssemblyLine."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromPlanningComponent@33() : Decimal;
+    BEGIN
+      PlanningComponent.FIND;
+      PlanningComponent.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := PlanningComponent."Reserved Quantity";
+      QtyReservedBase := PlanningComponent."Reserved Qty. (Base)";
+      QtyToReserve := PlanningComponent.Quantity;
+      QtyToReserveBase := PlanningComponent."Quantity (Base)";
+      EXIT(PlanningComponent."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromTransferLine@34() : Decimal;
+    BEGIN
+      TransLine.FIND;
+      IF ReservEntry."Source Subtype" = 0 THEN BEGIN // Outbound
+        TransLine.CALCFIELDS("Reserved Quantity Outbnd.","Reserved Qty. Outbnd. (Base)");
+        QtyReserved := TransLine."Reserved Quantity Outbnd.";
+        QtyReservedBase := TransLine."Reserved Qty. Outbnd. (Base)";
+        QtyToReserve := TransLine."Outstanding Quantity";
+        QtyToReserveBase := TransLine."Outstanding Qty. (Base)";
+      END ELSE BEGIN // Inbound
+        TransLine.CALCFIELDS("Reserved Quantity Inbnd.","Reserved Qty. Inbnd. (Base)");
+        QtyReserved := TransLine."Reserved Quantity Inbnd.";
+        QtyReservedBase := TransLine."Reserved Qty. Inbnd. (Base)";
+        QtyToReserve := TransLine."Outstanding Quantity";
+        QtyToReserveBase := TransLine."Outstanding Qty. (Base)";
+      END;
+      EXIT(TransLine."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromServiceLine@35() : Decimal;
+    BEGIN
+      ServiceLine.FIND;
+      ServiceLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := ServiceLine."Reserved Quantity";
+      QtyReservedBase := ServiceLine."Reserved Qty. (Base)";
+      QtyToReserve := ServiceLine."Outstanding Quantity";
+      QtyToReserveBase := ServiceLine."Outstanding Qty. (Base)";
+      EXIT(ServiceLine."Qty. per Unit of Measure");
+    END;
+
+    LOCAL PROCEDURE GetQtyPerUomFromJobPlanningLine@36() : Decimal;
+    VAR
+      Planned@1000 : Boolean;
+    BEGIN
+      JobPlanningLine.FIND;
+      Planned := JobPlanningLine.Planned;
+      JobPlanningLine.UpdatePlanned;
+      IF Planned <> JobPlanningLine.Planned THEN BEGIN
+        JobPlanningLine.MODIFY(TRUE);
+        COMMIT;
+      END;
+      JobPlanningLine.CALCFIELDS("Reserved Quantity","Reserved Qty. (Base)");
+      QtyReserved := JobPlanningLine."Reserved Quantity";
+      QtyReservedBase := JobPlanningLine."Reserved Qty. (Base)";
+      QtyToReserve := JobPlanningLine."Remaining Qty.";
+      QtyToReserveBase := JobPlanningLine."Remaining Qty. (Base)";
+      EXIT(JobPlanningLine."Qty. per Unit of Measure");
     END;
 
     BEGIN

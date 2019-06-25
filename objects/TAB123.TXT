@@ -2,9 +2,9 @@ OBJECT Table 123 Purch. Inv. Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -652,13 +652,12 @@ OBJECT Table 123 Purch. Inv. Line
     BEGIN
       INIT;
       TRANSFERFIELDS(PurchLine);
+      IF ("No." = '') AND (Type IN [Type::"G/L Account"..Type::"Charge (Item)"]) THEN
+        Type := Type::" ";
       "Posting Date" := PurchInvHeader."Posting Date";
       "Document No." := PurchInvHeader."No.";
       Quantity := PurchLine."Qty. to Invoice";
       "Quantity (Base)" := PurchLine."Qty. to Invoice (Base)";
-
-      DeferralUtilities.CreateScheduleFromPurchDoc(PurchLine,GetDocumentType,
-        "Document No.","Line No.",PurchInvHeader."Currency Code",PurchInvHeader."Posting Date");
     END;
 
     PROCEDURE ShowDeferrals@13();

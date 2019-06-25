@@ -2,9 +2,9 @@ OBJECT Table 232 Gen. Journal Batch
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -76,6 +76,7 @@ OBJECT Table 232 Gen. Journal Batch
                                                    OnValidate=BEGIN
                                                                 IF "Bal. Account Type" = "Bal. Account Type"::"G/L Account" THEN
                                                                   CheckGLAcc("Bal. Account No.");
+                                                                CheckJnlIsNotRecurring;
                                                               END;
 
                                                    CaptionML=[DAN=Modkonto;
@@ -159,6 +160,7 @@ OBJECT Table 232 Gen. Journal Batch
       GenJnlAlloc@1004 : Record 221;
       BankStmtImpFormatBalAccErr@1005 : TextConst '@@@="FIELDERROR ex: Bank Statement Import Format must be blank. When Bal. Account Type = Bank Account, then Bank Statement Import Format on the Bank Account card will be used in Gen. Journal Batch Journal Template Name=''GENERAL'',Name=''CASH''.";DAN="skal være tom. Når Modkontotype = Bankkonto, bruges Format til import af bankkontoudtog på bankkontokortet";ENU="must be blank. When Bal. Account Type = Bank Account, then Bank Statement Import Format on the Bank Account card will be used"';
       ApprovalsMgmt@1006 : Codeunit 1535;
+      CannotBeSpecifiedForRecurrJnlErr@1007 : TextConst 'DAN=må ikke være udfyldt, når du bruger gentagelseskladder.;ENU=cannot be specified when using recurring journals';
 
     PROCEDURE SetupNewBatch@1();
     BEGIN
@@ -183,6 +185,16 @@ OBJECT Table 232 Gen. Journal Batch
       END;
     END;
 
+    LOCAL PROCEDURE CheckJnlIsNotRecurring@4();
+    BEGIN
+      IF "Bal. Account No." = '' THEN
+        EXIT;
+
+      GenJnlTemplate.GET("Journal Template Name");
+      IF GenJnlTemplate.Recurring THEN
+        FIELDERROR("Bal. Account No.",CannotBeSpecifiedForRecurrJnlErr);
+    END;
+
     LOCAL PROCEDURE ModifyLines@3(i@1000 : Integer);
     BEGIN
       GenJnlLine.LOCKTABLE;
@@ -197,18 +209,6 @@ OBJECT Table 232 Gen. Journal Batch
               GenJnlLine.VALIDATE("Posting No. Series","Posting No. Series");
           END;
           GenJnlLine.MODIFY(TRUE);
-        UNTIL GenJnlLine.NEXT = 0;
-    END;
-
-    PROCEDURE ClearDataExchEntries@4();
-    VAR
-      GenJnlLine@1000 : Record 81;
-    BEGIN
-      GenJnlLine.SETRANGE("Journal Template Name","Journal Template Name");
-      GenJnlLine.SETRANGE("Journal Batch Name",Name);
-      IF GenJnlLine.FINDSET THEN
-        REPEAT
-          GenJnlLine.ClearDataExchangeEntries(TRUE);
         UNTIL GenJnlLine.NEXT = 0;
     END;
 

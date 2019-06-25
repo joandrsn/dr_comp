@@ -2,9 +2,9 @@ OBJECT Codeunit 1230 SEPA DD-Export File
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -20,7 +20,6 @@ OBJECT Codeunit 1230 SEPA DD-Export File
             DirectDebitCollection.TESTFIELD("To Bank Account No.");
             BankAccount.GET(DirectDebitCollection."To Bank Account No.");
             BankAccount.TESTFIELD(IBAN);
-            BankAccount.TESTFIELD("SWIFT Code");
             DirectDebitCollection.LOCKTABLE;
             DirectDebitCollection.DeletePaymentFileErrors;
             COMMIT;
@@ -36,6 +35,8 @@ OBJECT Codeunit 1230 SEPA DD-Export File
   }
   CODE
   {
+    VAR
+      ExportToServerFile@1000 : Boolean;
 
     LOCAL PROCEDURE Export@2(VAR DirectDebitCollectionEntry@1006 : Record 1208;XMLPortID@1004 : Integer;FileName@1003 : Text) : Boolean;
     VAR
@@ -46,7 +47,12 @@ OBJECT Codeunit 1230 SEPA DD-Export File
       TempBlob.INIT;
       TempBlob.Blob.CREATEOUTSTREAM(OutStr);
       XMLPORT.EXPORT(XMLPortID,OutStr,DirectDebitCollectionEntry);
-      EXIT(FileManagement.BLOBExport(TempBlob,STRSUBSTNO('%1.XML',FileName),TRUE) <> '');
+      EXIT(FileManagement.BLOBExport(TempBlob,STRSUBSTNO('%1.XML',FileName),NOT ExportToServerFile) <> '');
+    END;
+
+    PROCEDURE EnableExportToServerFile@1();
+    BEGIN
+      ExportToServerFile := TRUE;
     END;
 
     BEGIN

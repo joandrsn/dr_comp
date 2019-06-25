@@ -2,9 +2,9 @@ OBJECT Page 6631 Sales Return Order Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365,NAVDK9.00.00.44365;
+    Version List=NAVW19.00.00.46621,NAVDK9.00.00.46621;
   }
   PROPERTIES
   {
@@ -19,6 +19,7 @@ OBJECT Page 6631 Sales Return Order Subform
     AutoSplitKey=Yes;
     OnAfterGetRecord=BEGIN
                        ShowShortcutDimCode(ShortcutDimCode);
+                       CLEAR(DocumentTotals);
                      END;
 
     OnNewRecord=BEGIN
@@ -40,7 +41,8 @@ OBJECT Page 6631 Sales Return Order Subform
     OnAfterGetCurrRecord=BEGIN
                            IF SalesHeader.GET("Document Type","Document No.") THEN;
 
-                           DocumentTotals.SalesUpdateTotalsControls(Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
+                           DocumentTotals.SalesUpdateTotalsControls(
+                             Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
                              TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,CurrPage.EDITABLE,VATAmount);
 
                            TypeChosen := HasTypeToFillMandatotyFields;
@@ -640,7 +642,9 @@ OBJECT Page 6631 Sales Return Order Subform
                 Editable=FALSE;
                 OnDrillDown=BEGIN
                               DocumentTotals.SalesRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalSalesLine);
-                              CurrPage.UPDATE(FALSE);
+                              DocumentTotals.SalesUpdateTotalsControls(
+                                Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
+                                TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,CurrPage.EDITABLE,VATAmount);
                             END;
 
                 ShowCaption=No }

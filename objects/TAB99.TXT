@@ -2,15 +2,14 @@ OBJECT Table 99 Item Vendor
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
     OnInsert=BEGIN
-               xRec.INIT;
-               UpdateItemCrossReference;
+               InsertItemCrossReference;
              END;
 
     OnModify=BEGIN
@@ -44,7 +43,11 @@ OBJECT Table 99 Item Vendor
                                                    CaptionML=[DAN=Kreditornr.;
                                                               ENU=Vendor No.];
                                                    NotBlank=Yes }
-    { 6   ;   ;Lead Time Calculation;DateFormula  ;CaptionML=[DAN=Leveringstid;
+    { 6   ;   ;Lead Time Calculation;DateFormula  ;OnValidate=BEGIN
+                                                                LeadTimeMgt.CheckLeadTimeIsNotNegative("Lead Time Calculation");
+                                                              END;
+
+                                                   CaptionML=[DAN=Leveringstid;
                                                               ENU=Lead Time Calculation] }
     { 7   ;   ;Vendor Item No.     ;Text20        ;CaptionML=[DAN=Leverandørs varenr.;
                                                               ENU=Vendor Item No.] }
@@ -67,6 +70,14 @@ OBJECT Table 99 Item Vendor
       Vend@1000 : Record 23;
       ItemCrossReference@1002 : Record 5717;
       DistIntegration@1001 : Codeunit 5702;
+      LeadTimeMgt@1003 : Codeunit 5404;
+
+    LOCAL PROCEDURE InsertItemCrossReference@1();
+    BEGIN
+      IF ItemCrossReference.WRITEPERMISSION THEN
+        IF ("Vendor No." <> '') AND ("Item No." <> '') THEN
+          DistIntegration.InsertItemCrossReference(Rec);
+    END;
 
     LOCAL PROCEDURE DeleteItemCrossReference@2();
     BEGIN
@@ -79,7 +90,10 @@ OBJECT Table 99 Item Vendor
     BEGIN
       IF ItemCrossReference.WRITEPERMISSION THEN
         IF ("Vendor No." <> '') AND ("Item No." <> '') THEN
-          DistIntegration.UpdateItemCrossReference(Rec,xRec);
+          IF ("Vendor No." <> xRec."Vendor No.") OR ("Item No." <> xRec."Item No.") OR
+             ("Variant Code" <> xRec."Variant Code") OR ("Vendor Item No." <> xRec."Vendor Item No.")
+          THEN
+            DistIntegration.UpdateItemCrossReference(Rec,xRec);
     END;
 
     BEGIN

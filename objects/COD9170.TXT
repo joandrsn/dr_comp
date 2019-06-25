@@ -2,9 +2,9 @@ OBJECT Codeunit 9170 Conf./Personalization Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -168,6 +168,15 @@ OBJECT Codeunit 9170 Conf./Personalization Mgt.
     PROCEDURE DefaultRoleCenterID@22() : Integer;
     BEGIN
       EXIT(9006);
+    END;
+
+    PROCEDURE GetProfileHavingDefaultRoleCenter@41() : Code[30];
+    VAR
+      Profile@1000 : Record 2000000072;
+    BEGIN
+      Profile.SETRANGE("Role Center ID",DefaultRoleCenterID);
+      IF Profile.FINDFIRST THEN;
+      EXIT(Profile."Profile ID");
     END;
 
     PROCEDURE CopyProfile@45(Profile@1035 : Record 2000000072;NewProfileID@1036 : Code[30]);
@@ -774,8 +783,7 @@ OBJECT Codeunit 9170 Conf./Personalization Mgt.
     BEGIN
       ProfileMetadata.CALCFIELDS("Page Metadata Delta");
       ProfileMetadata."Page Metadata Delta".CREATEINSTREAM(InStr);
-      ObjectDOM := ObjectDOM.XmlDocument;
-      ObjectDOM.Load(InStr);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(InStr,ObjectDOM);
     END;
 
     LOCAL PROCEDURE ParseConfiguration@113(VAR ProfileConfigurationDOM@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");

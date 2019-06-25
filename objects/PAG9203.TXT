@@ -2,9 +2,9 @@ OBJECT Page 9203 Budget Matrix
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -784,6 +784,7 @@ OBJECT Page 9203 Budget Matrix
     LOCAL PROCEDURE BudgetDrillDown@1172();
     VAR
       GLBudgetEntry@1173 : Record 96;
+      GLBudgetEntries@1000 : Page 120;
     BEGIN
       GLBudgetEntry.SETRANGE("Budget Name",GLBudgetName.Name);
       IF GLAccBudgetBuf.GETFILTER("G/L Account Filter") <> '' THEN
@@ -813,7 +814,9 @@ OBJECT Page 9203 Budget Matrix
           SETCURRENTKEY("Budget Name","G/L Account No.","Business Unit Code","Global Dimension 1 Code")
         ELSE
           SETCURRENTKEY("Budget Name","G/L Account No.",Date);
-      PAGE.RUN(0,GLBudgetEntry);
+      GLBudgetEntries.SetEditable(TRUE);
+      GLBudgetEntries.SETTABLEVIEW(GLBudgetEntry);
+      GLBudgetEntries.RUN;
     END;
 
     LOCAL PROCEDURE CalcAmount@1184(SetColumnFilter@1000 : Boolean) : Decimal;

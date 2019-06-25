@@ -2,9 +2,9 @@ OBJECT Table 295 Reminder Header
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365,NAVDK9.00.00.44365;
+    Version List=NAVW19.00.00.50221,NAVDK9.00.00.50221;
   }
   PROPERTIES
   {
@@ -87,6 +87,8 @@ OBJECT Table 295 Reminder Header
                                                                   EXIT;
                                                                 END;
                                                                 Cust.GET("Customer No.");
+                                                                IF Cust."Privacy Blocked" THEN
+                                                                  Cust.CustPrivacyBlockedErrorMessage(Cust,FALSE);
                                                                 IF Cust.Blocked = Cust.Blocked::All THEN
                                                                   Cust.CustBlockedErrorMessage(Cust,FALSE);
                                                                 Name := Cust.Name;
@@ -374,6 +376,7 @@ OBJECT Table 295 Reminder Header
                                                               ENU=Dimension Set ID];
                                                    Editable=No }
     { 9000;   ;Assigned User ID    ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
     { 13600;  ;EAN No.             ;Code13        ;OnValidate=BEGIN

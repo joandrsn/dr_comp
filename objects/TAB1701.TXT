@@ -2,9 +2,9 @@ OBJECT Table 1701 Deferral Header
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-07-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50528;
   }
   PROPERTIES
   {
@@ -13,12 +13,9 @@ OBJECT Table 1701 Deferral Header
                DeferralLine@1000 : Record 1702;
              BEGIN
                // If the user deletes the header, all associated lines should also be deleted
-               DeferralLine.SETRANGE("Deferral Doc. Type","Deferral Doc. Type");
-               DeferralLine.SETRANGE("Gen. Jnl. Template Name","Gen. Jnl. Template Name");
-               DeferralLine.SETRANGE("Gen. Jnl. Batch Name","Gen. Jnl. Batch Name");
-               DeferralLine.SETRANGE("Document Type","Document Type");
-               DeferralLine.SETRANGE("Document No.","Document No.");
-               DeferralLine.SETRANGE("Line No.","Line No.");
+               DeferralUtilities.FilterDeferralLines(
+                 DeferralLine,"Deferral Doc. Type","Gen. Jnl. Template Name","Gen. Jnl. Batch Name",
+                 "Document Type","Document No.","Line No.");
                DeferralLine.DELETEALL;
              END;
 

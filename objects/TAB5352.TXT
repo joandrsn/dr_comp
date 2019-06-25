@@ -2,16 +2,16 @@ OBJECT Table 5352 CRM Quotedetail
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=quotedetail;
-    CaptionML=[DAN=Quote Product;
-               ENU=Quote Product];
+    CaptionML=[DAN=CRM Quotedetail;
+               ENU=CRM Quotedetail];
     Description=Product line item in a quote. The details include such information as product ID, description, quantity, and cost.;
   }
   FIELDS

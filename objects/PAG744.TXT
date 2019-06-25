@@ -2,20 +2,50 @@ OBJECT Page 744 VAT Report List
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
     Editable=No;
-    CaptionML=[DAN=Momsrapportliste;
-               ENU=VAT Report List];
+    CaptionML=[DAN=Momsangivelser;
+               ENU=VAT Returns];
+    DeleteAllowed=No;
     SourceTable=Table740;
+    SourceTableView=WHERE(VAT Report Config. Code=CONST(VAT Return));
     PageType=List;
     CardPageID=VAT Report;
+    OnAfterGetRecord=BEGIN
+                       ReturnPeriodEnabled := "Return Period No." <> '';
+                     END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           ReturnPeriodEnabled := "Return Period No." <> '';
+                         END;
+
     ActionList=ACTIONS
     {
+      { 5       ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 7       ;1   ;Action    ;
+                      Name=Create From VAT Return Period;
+                      CaptionML=[DAN=Opret fra momsangivelsesperiode;
+                                 ENU=Create From VAT Return Period];
+                      ToolTipML=[DAN=Opret en ny momsangivelse fra en eksisterende momsangivelsesperiode.;
+                                 ENU=Create a new VAT return from an existing VAT return period.];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=GetLines;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 VATReturnPeriod@1000 : Record 737;
+                                 VATReportMgt@1001 : Codeunit 737;
+                               BEGIN
+                                 IF PAGE.RUNMODAL(0,VATReturnPeriod) = ACTION::LookupOK THEN
+                                   VATReportMgt.CreateVATReturnFromVATPeriod(VATReturnPeriod);
+                               END;
+                                }
       { 1900000003;0 ;ActionContainer;
                       ActionContainerType=RelatedInformation }
       { 17      ;1   ;ActionGroup;
@@ -23,14 +53,41 @@ OBJECT Page 744 VAT Report List
                                  ENU=&Line];
                       Image=Line }
       { 18      ;2   ;Action    ;
+                      Name=Card;
                       ShortCutKey=Shift+F7;
                       CaptionML=[DAN=Kort;
                                  ENU=Card];
+                      ToolTipML=[DAN=Vis eller rediger detaljerede oplysninger om den pågældende record på bilaget eller kladdelinjen.;
+                                 ENU=View or change detailed information about the record on the document or journal line.];
                       Image=EditLines;
                       OnAction=BEGIN
                                  PAGE.RUN(PAGE::"VAT Report",Rec);
                                END;
                                 }
+      { 11      ;2   ;Action    ;
+                      Name=Open VAT Return Period Card;
+                      CaptionML=[DAN=Åbn momsangivelsesperiodekort;
+                                 ENU=Open VAT Return Period Card];
+                      ToolTipML=[DAN=Åbn momsangivelsesperiodekortet for den valgte momsangivelse.;
+                                 ENU=Open the VAT return period card for the selected VAT return.];
+                      Visible=ReturnPeriodEnabled;
+                      Image=ShowList;
+                      OnAction=VAR
+                                 VATReportMgt@1000 : Codeunit 737;
+                               BEGIN
+                                 VATReportMgt.OpenVATPeriodCardFromVATReturn(Rec);
+                               END;
+                                }
+      { 3       ;1   ;Action    ;
+                      Name=Report Setup;
+                      CaptionML=[DAN=Rapportopsætning;
+                                 ENU=Report Setup];
+                      ToolTipML=[DAN=Angiver den opsætning, der skal bruges til afsendelse af momsrapporter.;
+                                 ENU=Specifies the setup that will be used for the VAT reports submission.];
+                      RunObject=Page 743;
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      Image=Setup }
     }
   }
   CONTROLS
@@ -42,26 +99,41 @@ OBJECT Page 744 VAT Report List
                 GroupType=Repeater }
 
     { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på den tilknyttede post eller record i overensstemmelse med den angivne nummerserie.;
+                           ENU=Specifies the number of the involved entry or record, according to the specified number series.];
                 SourceExpr="No." }
 
     { 4   ;2   ;Field     ;
-                SourceExpr="VAT Report Config. Code" }
+                ToolTipML=[DAN=Angiver den relevante konfigurationskode.;
+                           ENU=Specifies the appropriate configuration code.];
+                SourceExpr="VAT Report Config. Code";
+                Visible=FALSE }
 
     { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om momsrapporten er en standardrapport, eller hvis den er relateret til en tidligere afsendt momsrapport.;
+                           ENU=Specifies if the VAT report is a standard report, or if it is related to a previously submitted VAT report.];
                 SourceExpr="VAT Report Type" }
 
     { 8   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver startdatoen for rapportperioden i momsrapporten.;
+                           ENU=Specifies the start date of the report period for the VAT report.];
                 SourceExpr="Start Date" }
 
     { 10  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver slutdatoen for rapportperioden i momsrapporten.;
+                           ENU=Specifies the end date of the report period for the VAT report.];
                 SourceExpr="End Date" }
 
     { 12  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver status for momsrapporten.;
+                           ENU=Specifies the status of the VAT report.];
                 SourceExpr=Status }
 
   }
   CODE
   {
+    VAR
+      ReturnPeriodEnabled@1000 : Boolean;
 
     BEGIN
     END.

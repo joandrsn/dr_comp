@@ -2,9 +2,9 @@ OBJECT Report 206 Sales - Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.49741,NAVDK9.00.00.49741;
   }
   PROPERTIES
   {
@@ -50,7 +50,10 @@ OBJECT Report 206 Sales - Invoice
                ReqFilterHeadingML=[DAN=Bogført salgsfaktura;
                                    ENU=Posted Sales Invoice];
                OnAfterGetRecord=BEGIN
-                                  CurrReport.LANGUAGE := Language.GetLanguageID("Language Code");
+                                  IF GLOBALLANGUAGE = Language.GetLanguageID("Language Code") THEN
+                                    CurrReport.LANGUAGE := Language.GetLanguageID("Language Code")
+                                  ELSE
+                                    CurrReport.LANGUAGE := Language.GetLanguageID('ENU');
 
                                   IF RespCenter.GET("Responsibility Center") THEN BEGIN
                                     FormatAddr.RespCenter(CompanyAddr,RespCenter);
@@ -140,11 +143,11 @@ OBJECT Report 206 Sales - Invoice
                                     IF NOT CurrReport.PREVIEW THEN BEGIN
                                       IF "Bill-to Contact No." <> '' THEN
                                         SegManagement.LogDocument(
-                                          4,"No.",0,0,DATABASE::Contact,"Bill-to Contact No.","Salesperson Code",
+                                          SegManagement.SalesInvoiceInterDocType,"No.",0,0,DATABASE::Contact,"Bill-to Contact No.","Salesperson Code",
                                           "Campaign No.","Posting Description",'')
                                       ELSE
                                         SegManagement.LogDocument(
-                                          4,"No.",0,0,DATABASE::Customer,"Bill-to Customer No.","Salesperson Code",
+                                          SegManagement.SalesInvoiceInterDocType,"No.",0,0,DATABASE::Customer,"Bill-to Customer No.","Salesperson Code",
                                           "Campaign No.","Posting Description",'');
                                     END;
 
@@ -2113,7 +2116,7 @@ OBJECT Report 206 Sales - Invoice
               </TablixColumns>
               <TablixRows>
                 <TablixRow>
-                  <Height>20.0801cm</Height>
+                  <Height>22.71533cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -3579,7 +3582,7 @@ OBJECT Report 206 Sales - Invoice
                                   </FilterValues>
                                 </Filter>
                               </Filters>
-                              <Top>7.55cm</Top>
+                              <Top>7.58175cm</Top>
                               <Height>2.87582cm</Height>
                               <Width>18.15842cm</Width>
                               <Visibility>
@@ -4552,7 +4555,7 @@ OBJECT Report 206 Sales - Invoice
                                   </FilterValues>
                                 </Filter>
                               </Filters>
-                              <Top>10.54099cm</Top>
+                              <Top>10.50924cm</Top>
                               <Height>3.28222cm</Height>
                               <Width>18.15846cm</Width>
                               <ZIndex>1</ZIndex>
@@ -7879,6 +7882,9 @@ OBJECT Report 206 Sales - Invoice
                               <TablixRowHierarchy>
                                 <TablixMembers>
                                   <TablixMember>
+                                    <Visibility>
+                                      <Hidden>=IIF(Fields!DimensionLoop1Number.Value=1,False,True)</Hidden>
+                                    </Visibility>
                                     <KeepWithGroup>After</KeepWithGroup>
                                   </TablixMember>
                                   <TablixMember>
@@ -7913,7 +7919,7 @@ OBJECT Report 206 Sales - Invoice
                                   </FilterValues>
                                 </Filter>
                               </Filters>
-                              <Top>18.66896cm</Top>
+                              <Top>21.30421cm</Top>
                               <Height>1.41112cm</Height>
                               <Width>7.14899in</Width>
                               <ZIndex>3</ZIndex>
@@ -8055,7 +8061,7 @@ Cstr(Fields!CompanyInfoIBAN.Value)
                                 </TablixColumns>
                                 <TablixRows>
                                   <TablixRow>
-                                    <Height>1.83056in</Height>
+                                    <Height>1.80557in</Height>
                                     <TablixCells>
                                       <TablixCell>
                                         <CellContents>
@@ -8570,7 +8576,7 @@ Cstr(Fields!CompanyInfoIBAN.Value)
                                                     </FilterValues>
                                                   </Filter>
                                                 </Filters>
-                                                <Top>0.0125in</Top>
+                                                <Top>0in</Top>
                                                 <Height>1.80557in</Height>
                                                 <Width>7.14899in</Width>
                                                 <Visibility>
@@ -8608,10 +8614,13 @@ Cstr(Fields!CompanyInfoIBAN.Value)
                                 </TablixMembers>
                               </TablixRowHierarchy>
                               <KeepTogether>true</KeepTogether>
-                              <Top>5.4861in</Top>
-                              <Height>1.83056in</Height>
+                              <Top>6.5486in</Top>
+                              <Height>1.80557in</Height>
                               <Width>18.15843cm</Width>
                               <ZIndex>5</ZIndex>
+                              <Visibility>
+                                <Hidden>=(Fields!ShipToAddr1.Value = "")</Hidden>
+                              </Visibility>
                               <Style />
                             </Tablix>
                             <Tablix Name="TableVATClauses">
@@ -9200,7 +9209,7 @@ Cstr(Fields!CompanyInfoIBAN.Value)
                                   </FilterValues>
                                 </Filter>
                               </Filters>
-                              <Top>11.07368cm</Top>
+                              <Top>13.99468cm</Top>
                               <Left>0.00138cm</Left>
                               <Height>2.11666cm</Height>
                               <Width>18.02167cm</Width>
@@ -9314,7 +9323,7 @@ Cstr(Fields!CompanyInfoIBAN.Value)
                                   </FilterValues>
                                 </Filter>
                               </Filters>
-                              <Top>16.78869cm</Top>
+                              <Top>16.15369cm</Top>
                               <Left>0.16301cm</Left>
                               <Height>0.42333cm</Height>
                               <Width>17.88733cm</Width>
@@ -9368,7 +9377,7 @@ Cstr(Fields!CompanyInfoIBAN.Value)
             </TablixRowHierarchy>
             <DataSetName>DataSet_Result</DataSetName>
             <Left>0.06034cm</Left>
-            <Height>20.0801cm</Height>
+            <Height>22.71533cm</Height>
             <Width>18.15843cm</Width>
             <Style>
               <FontFamily>Segoe UI</FontFamily>
@@ -9376,7 +9385,7 @@ Cstr(Fields!CompanyInfoIBAN.Value)
             </Style>
           </Tablix>
         </ReportItems>
-        <Height>20.0801cm</Height>
+        <Height>22.71533cm</Height>
         <Style />
       </Body>
       <Width>18.22834cm</Width>
@@ -10802,9 +10811,8 @@ Cstr(Fields!CompanyInfoIBAN.Value)
                 </Image>
               </ReportItems>
               <KeepTogether>true</KeepTogether>
-              <Top>0.04639cm</Top>
-              <Height>1.42121cm</Height>
-              <Width>6cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>45</ZIndex>
               <Style />
             </Rectangle>
@@ -10815,9 +10823,8 @@ Cstr(Fields!CompanyInfoIBAN.Value)
                   <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Left>0.03528cm</Left>
-                  <Height>40pt</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(IsNothing(Fields!CompanyInfo1Picture.Value)= TRUE,TRUE,FALSE)</Hidden>
                   </Visibility>
@@ -10827,8 +10834,8 @@ Cstr(Fields!CompanyInfoIBAN.Value)
               </ReportItems>
               <KeepTogether>true</KeepTogether>
               <Left>6cm</Left>
-              <Height>1.51694cm</Height>
-              <Width>6.07056cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>46</ZIndex>
               <Style />
             </Rectangle>
@@ -10870,10 +10877,8 @@ Cstr(Fields!CompanyInfoIBAN.Value)
                   <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Top>0.03528cm</Top>
-                  <Left>0.07056cm</Left>
-                  <Height>40pt</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(IsNothing(Fields!CompanyInfo2Picture.Value) = TRUE,TRUE,FALSE)</Hidden>
                   </Visibility>
@@ -10883,8 +10888,8 @@ Cstr(Fields!CompanyInfoIBAN.Value)
               </ReportItems>
               <KeepTogether>true</KeepTogether>
               <Left>12cm</Left>
-              <Height>1.4676cm</Height>
-              <Width>6.07175cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>48</ZIndex>
               <Style />
             </Rectangle>

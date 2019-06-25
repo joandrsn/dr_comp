@@ -2,9 +2,9 @@ OBJECT Codeunit 5940 ServContractManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -35,6 +35,7 @@ OBJECT Codeunit 5940 ServContractManagement
       ServHeader@1032 : Record 5900;
       ServiceRegister@1060 : Record 5934;
       ServContractAccGr@1000 : Record 5973;
+      Salesperson@1924 : Record 13;
       NoSeriesMgt@1038 : Codeunit 396;
       DimMgt@1059 : Codeunit 408;
       NextLine@1041 : Integer;
@@ -384,6 +385,8 @@ OBJECT Codeunit 5940 ServContractManagement
       ServHeader2."Country/Region Code" := Cust."Country/Region Code";
       ServHeader2."Contact Name" := ServContract2."Contact Name";
       ServHeader2."Contact No." := ServContract2."Contact No.";
+      ServHeader2."Bill-to Contact No." := ServContract2."Bill-to Contact No.";
+      ServHeader2."Bill-to Contact" := ServContract2."Bill-to Contact";
 
       IF NOT ContractExists THEN
         IF ServHeader2."Customer No." = ServContract2."Customer No." THEN
@@ -404,7 +407,7 @@ OBJECT Codeunit 5940 ServContractManagement
           ServHeader2."Posting Date",ServHeader2."Currency Code");
       ServHeader2.VALIDATE("Payment Terms Code",ServContract2."Payment Terms Code");
       ServHeader2."Your Reference" := ServContract2."Your Reference";
-      ServHeader2."Salesperson Code" := ServContract2."Salesperson Code";
+      SetSalespersonCode(ServContract2."Salesperson Code",ServHeader2."Salesperson Code");
       ServHeader2."Shortcut Dimension 1 Code" := ServContract2."Shortcut Dimension 1 Code";
       ServHeader2."Shortcut Dimension 2 Code" := ServContract2."Shortcut Dimension 2 Code";
       ServHeader2."Dimension Set ID" := ServContract2."Dimension Set ID";
@@ -426,6 +429,8 @@ OBJECT Codeunit 5940 ServContractManagement
       ServContractHeader@1009 : Record 5965;
       ServDocReg@1008 : Record 5936;
       ServiceLedgerEntry@1012 : Record 5907;
+      TotalServLine@1004 : Record 5902;
+      TotalServLineLCY@1006 : Record 5902;
     BEGIN
       ServContractHeader.GET(ContractType,ContractNo);
       IF ServContractHeader."Invoice Period" = ServContractHeader."Invoice Period"::None THEN
@@ -461,6 +466,8 @@ OBJECT Codeunit 5940 ServContractManagement
               InvTo := CALCDATE('<CM>',InvFrom);
             END;
             ServLedgEntryToServiceLine(
+              TotalServLine,
+              TotalServLineLCY,
               ServHeader,
               ServiceLedgerEntry,
               ContractNo,
@@ -470,6 +477,8 @@ OBJECT Codeunit 5940 ServContractManagement
       END ELSE BEGIN
         CLEAR(ServiceLedgerEntry);
         ServLedgEntryToServiceLine(
+          TotalServLine,
+          TotalServLineLCY,
           ServHeader,
           ServiceLedgerEntry,
           ContractNo,
@@ -666,6 +675,8 @@ OBJECT Codeunit 5940 ServContractManagement
       ServHeader2."Country/Region Code" := Cust."Country/Region Code";
       ServHeader2."Contact Name" := ServContract."Contact Name";
       ServHeader2."Contact No." := ServContract."Contact No.";
+      ServHeader2."Bill-to Contact No." := ServContract."Bill-to Contact No.";
+      ServHeader2."Bill-to Contact" := ServContract."Bill-to Contact";
       ServHeader2."Gen. Bus. Posting Group" := Cust."Gen. Bus. Posting Group";
       IF GLSetup."Bill-to/Sell-to VAT Calc." = GLSetup."Bill-to/Sell-to VAT Calc."::"Sell-to/Buy-from No." THEN
         ServHeader2."VAT Bus. Posting Group" := Cust."VAT Bus. Posting Group";
@@ -842,6 +853,7 @@ OBJECT Codeunit 5940 ServContractManagement
                 "Invoiced to Date",
                 LineDescription,
                 "Service Item No.",
+                "Item No.",
                 ServContractHeader,
                 "Line Cost",
                 "Line Value",
@@ -873,7 +885,7 @@ OBJECT Codeunit 5940 ServContractManagement
       EXIT(0D);
     END;
 
-    LOCAL PROCEDURE CreateAllCreditLines@36(CreditNo@1000 : Code[20];ContractLineAmount@1001 : Decimal;PeriodStarts@1002 : Date;PeriodEnds@1003 : Date;LineDescription@1004 : Text[50];ServItemNo@1005 : Code[20];ServContract@1006 : Record 5965;ContractLineCost@1007 : Decimal;ContractLineUnitPrice@1008 : Decimal;LastIncomePostingDate@1009 : Date;ContractLineStartingDate@1010 : Date);
+    LOCAL PROCEDURE CreateAllCreditLines@36(CreditNo@1000 : Code[20];ContractLineAmount@1001 : Decimal;PeriodStarts@1002 : Date;PeriodEnds@1003 : Date;LineDescription@1004 : Text[50];ServItemNo@1005 : Code[20];ItemNo@1022 : Code[20];ServContract@1006 : Record 5965;ContractLineCost@1007 : Decimal;ContractLineUnitPrice@1008 : Decimal;LastIncomePostingDate@1009 : Date;ContractLineStartingDate@1010 : Date);
     VAR
       Currency@1011 : Record 4;
       ServContractAccGr@1012 : Record 5973;
@@ -935,6 +947,7 @@ OBJECT Codeunit 5940 ServContractManagement
             LookUpAmountToCredit(
               ServContract,
               ServItemNo,
+              ItemNo,
               WDate,
               AppliedCreditLineAmount,
               AppliedCreditLineCost,
@@ -1440,7 +1453,7 @@ OBJECT Codeunit 5940 ServContractManagement
       Cust@1014 : Record 18;
       ContractChangeLog@1011 : Record 5967;
       UserMgt@1003 : Codeunit 5700;
-      OldSalespersonCode@1004 : Code[10];
+      OldSalespersonCode@1004 : Code[20];
       OldCurrencyCode@1005 : Code[10];
     BEGIN
       IF NewCustomertNo = '' THEN
@@ -1614,7 +1627,7 @@ OBJECT Codeunit 5940 ServContractManagement
       EXIT(ServContrHeader."Expiration Date" = CALCDATE('<1Y-1D>',ServContrHeader."Starting Date"));
     END;
 
-    LOCAL PROCEDURE LookUpAmountToCredit@22(ServiceContractHeader@1000 : Record 5965;ServItemNo@1001 : Code[20];PostingDate@1002 : Date;VAR LineAmount@1003 : Decimal;VAR CostAmount@1004 : Decimal;VAR UnitPrice@1005 : Decimal;VAR DiscountAmt@1007 : Decimal;VAR ServLedgEntryNo@1008 : Integer) : Boolean;
+    LOCAL PROCEDURE LookUpAmountToCredit@22(ServiceContractHeader@1000 : Record 5965;ServItemNo@1001 : Code[20];ItemNo@1009 : Code[20];PostingDate@1002 : Date;VAR LineAmount@1003 : Decimal;VAR CostAmount@1004 : Decimal;VAR UnitPrice@1005 : Decimal;VAR DiscountAmt@1007 : Decimal;VAR ServLedgEntryNo@1008 : Integer) : Boolean;
     VAR
       ServiceLedgerEntry@1006 : Record 5907;
     BEGIN
@@ -1625,7 +1638,10 @@ OBJECT Codeunit 5940 ServContractManagement
       ServLedgEntryNo := 0;
       ServiceLedgerEntry.SETCURRENTKEY("Service Contract No.");
       ServiceLedgerEntry.SETRANGE("Service Contract No.",ServiceContractHeader."Contract No.");
-      ServiceLedgerEntry.SETRANGE("Service Item No. (Serviced)",ServItemNo);
+      IF ServItemNo <> '' THEN
+        ServiceLedgerEntry.SETRANGE("Service Item No. (Serviced)",ServItemNo);
+      IF ItemNo <> '' THEN
+        ServiceLedgerEntry.SETRANGE("Item No. (Serviced)",ItemNo);
       ServiceLedgerEntry.SETRANGE("Posting Date",PostingDate);
       IF NOT ServiceLedgerEntry.FINDFIRST THEN
         EXIT(FALSE);
@@ -1657,7 +1673,7 @@ OBJECT Codeunit 5940 ServContractManagement
           "Unit Cost" := "Cost Amount" / "Charged Qty.";
     END;
 
-    LOCAL PROCEDURE ServLedgEntryToServiceLine@38(ServHeader@1011 : Record 5900;ServiceLedgerEntry@1006 : Record 5907;ContractNo@1009 : Code[20];InvFrom@1008 : Date;InvTo@1007 : Date);
+    LOCAL PROCEDURE ServLedgEntryToServiceLine@38(VAR TotalServLine@1002 : Record 5902;VAR TotalServLineLCY@1001 : Record 5902;ServHeader@1011 : Record 5900;ServiceLedgerEntry@1006 : Record 5907;ContractNo@1009 : Code[20];InvFrom@1008 : Date;InvTo@1007 : Date);
     VAR
       StdText@1000 : Record 7;
     BEGIN
@@ -1698,14 +1714,20 @@ OBJECT Codeunit 5940 ServContractManagement
         "Unit Cost (LCY)" := ServiceLedgerEntry."Unit Cost";
         "Unit Price" := -ServiceLedgerEntry."Unit Price";
 
+        TotalServLine."Unit Price" += "Unit Price";
+        TotalServLine."Line Amount" += -ServiceLedgerEntry."Amount (LCY)";
         IF ServiceLedgerEntry."Amount (LCY)" <> 0 THEN
           IF ServHeader."Currency Code" <> '' THEN BEGIN
-            VALIDATE("Unit Price",AmountToFCY("Unit Price",ServHeader));
-            VALIDATE("Line Amount",AmountToFCY(-ServiceLedgerEntry."Amount (LCY)",ServHeader));
+            VALIDATE("Unit Price",
+              AmountToFCY(TotalServLine."Unit Price",ServHeader) - TotalServLineLCY."Unit Price");
+            VALIDATE("Line Amount",
+              AmountToFCY(TotalServLine."Line Amount",ServHeader) - TotalServLineLCY."Line Amount");
           END ELSE BEGIN
             VALIDATE("Unit Price");
             VALIDATE("Line Amount",-ServiceLedgerEntry."Amount (LCY)");
           END;
+        TotalServLineLCY."Unit Price" += "Unit Price";
+        TotalServLineLCY."Line Amount" += "Line Amount";
 
         "Shortcut Dimension 1 Code" := ServiceLedgerEntry."Global Dimension 1 Code";
         "Shortcut Dimension 2 Code" := ServiceLedgerEntry."Global Dimension 2 Code";
@@ -1996,14 +2018,19 @@ OBJECT Codeunit 5940 ServContractManagement
 
     LOCAL PROCEDURE InsertMultipleServLedgEntries@63(VAR NoOfPayments@1001 : Integer;VAR DueDate@1002 : Date;VAR NonDistrAmount@1005 : ARRAY [4] OF Decimal;VAR InvRoundedAmount@1011 : ARRAY [4] OF Decimal;VAR ServHeader@1004 : Record 5900;InvFrom@1006 : Date;NextInvDate@1007 : Date;AddingNewLines@1008 : Boolean;CountOfEntryLoop@1000 : Integer;ServContractLine@1003 : Record 5964;AmountRoundingPrecision@1010 : Decimal);
     VAR
+      ServContractHeader@1012 : Record 5965;
       Index@1009 : Integer;
     BEGIN
       IF CountOfEntryLoop = 0 THEN
         EXIT;
 
       CheckMParts := FALSE;
-      IF DueDate <> CALCDATE('<CM>',DueDate) THEN
+      IF DueDate <> CALCDATE('<CM>',DueDate) THEN BEGIN
         DueDate := CALCDATE('<-CM-1D>',DueDate);
+        ServContractHeader.GET(ServContractLine."Contract Type",ServContractLine."Contract No.");
+        IF ServContractHeader."Contract Lines on Invoice" THEN
+          CheckMParts := TRUE;
+      END;
       NonDistrAmount[AmountType::Amount] :=
         -CalcContractLineAmount(ServContractLine."Line Amount",InvFrom,DueDate);
       NonDistrAmount[AmountType::UnitPrice] :=
@@ -2044,6 +2071,16 @@ OBJECT Codeunit 5940 ServContractManagement
         NextEntry += 1;
         DueDate := CALCDATE('<1M>',DueDate);
       END;
+    END;
+
+    LOCAL PROCEDURE SetSalespersonCode@218(SalesPersonCodeToCheck@1000 : Code[20];VAR SalesPersonCodeToAssign@1001 : Code[20]);
+    BEGIN
+      IF SalesPersonCodeToCheck <> '' THEN
+        IF Salesperson.GET(SalesPersonCodeToCheck) THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN
+            SalesPersonCodeToAssign := ''
+          ELSE
+            SalesPersonCodeToAssign := SalesPersonCodeToCheck;
     END;
 
     LOCAL PROCEDURE GetMaxDate@47(FirstDate@1000 : Date;SecondDate@1001 : Date) : Date;

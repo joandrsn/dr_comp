@@ -2,17 +2,19 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
     TableNo=81;
     Permissions=TableData 232=imd;
-    OnRun=BEGIN
+    OnRun=VAR
+            GenJnlLine@1000 : Record 81;
+          BEGIN
             GenJnlLine.COPY(Rec);
-            Code;
+            Code(GenJnlLine);
             Rec := GenJnlLine;
           END;
 
@@ -28,7 +30,7 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
       PostingLinesMsg@1006 : TextConst 'DAN=Bogfører linjer;ENU=Posting lines';
       PostingReversLinesMsg@1007 : TextConst 'DAN=Bogf. tilb.f.linjer;ENU=Posting revers. lines';
       UpdatingLinesMsg@1036 : TextConst 'DAN=Opdaterer linjer;ENU=Updating lines';
-      Text008@1008 : TextConst 'DAN=skal være ens på alle linjer med samme bilagsnummer;ENU=must be the same on all lines for the same document.';
+      Text008@1008 : TextConst 'DAN=skal være ens på alle linjer for samme bilag;ENU=must be the same on all lines for the same document';
       Text009@1009 : TextConst 'DAN="%1 %2 med bogføringsdato %3 indeholder mere end en debitor eller kreditor. ";ENU="%1 %2 posted on %3 includes more than one customer or vendor. "';
       Text010@1010 : TextConst 'DAN=Hvis programmet skal beregne moms, skal posterne være adskilt af et andet dokumentnr. eller en tom linje.;ENU=In order for the program to calculate VAT, the entries must be separated by another document number or by an empty line.';
       Text012@1012 : TextConst 'DAN="%5 %2 stemmer ikke med %1. ";ENU="%5 %2 is out of balance by %1. "';
@@ -50,7 +52,6 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
       Text028@1028 : TextConst 'DAN=Gentagelsesmetoderne Balance og Omvendt balance kan kun anvendes i forbindelse med fordelinger.;ENU=The Balance and Reversing Balance recurring methods can be used only with Allocations.';
       GenJnlTemplate@1029 : Record 80;
       GenJnlBatch@1030 : Record 232;
-      GenJnlLine@1031 : Record 81;
       GenJnlLine2@1032 : Record 81;
       GenJnlLine3@1033 : Record 81;
       TempGenJnlLine4@1034 : TEMPORARY Record 81;
@@ -95,28 +96,17 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
       LastCurrencyCode@1075 : Code[10];
       CurrencyBalance@1076 : Decimal;
       "0DF"@1077 : DateFormula;
-      Text029@1041 : TextConst 'DAN="%1 %2 med bogføringsdato %3 indeholder mere end én debitor, kreditor eller IC-partner. ";ENU="%1 %2 posted on %3 includes more than one customer, vendor or IC Partner. "';
+      Text029@1041 : TextConst '@@@="%1 = Document Type;%2 = Document No.;%3=Posting Date";DAN=%1 %2 med bogføringsdato %3 indeholder mere end én debitor, kreditor eller IC-partner.;ENU=%1 %2 posted on %3 includes more than one customer, vendor or IC Partner.';
       Text030@1011 : TextConst 'DAN=Du kan ikke angive finanskonto eller bankkonto i både %1 og %2.;ENU=You cannot enter G/L Account or Bank Account in both %1 and %2.';
       Text031@1040 : TextConst 'DAN=Linjenr. %1 indeholder ikke en finanskonto eller bankkonto. Når feltet %2 indeholder et kontonummer, skal feltet %3 eller %4 indeholde en finanskonto eller bankkonto.;ENU=Line No. %1 does not contain a G/L Account or Bank Account. When the %2 field contains an account number, either the %3 field or the %4 field must contain a G/L Account or Bank Account.';
       GLSetupFound@1079 : Boolean;
       RefPostingState@1002 : 'Checking lines,Checking balance,Updating bal. lines,Posting Lines,Posting revers. lines,Updating lines';
       PreviewMode@1051 : Boolean;
+      SkippedLineMsg@1072 : TextConst 'DAN=Én eller flere linjer er ikke blevet bogført, fordi beløbet er nul.;ENU=One or more lines has not been posted because the amount is zero.';
 
-    LOCAL PROCEDURE Code@7();
+    LOCAL PROCEDURE Code@7(VAR GenJnlLine@1000 : Record 81);
     VAR
-      TempGenJnlLine@1010 : TEMPORARY Record 81;
-      GenJnlLineVATInfoSource@1008 : Record 81;
-      ICHandledInboxTransaction@1007 : Record 420;
-      VATPostingSetup@1006 : Record 325;
-      BalVatPostingSetup@1005 : Record 325;
-      UpdateAnalysisView@1003 : Codeunit 410;
-      ICLastDate@1014 : Date;
-      LastLineNo@1002 : Integer;
-      ICTransactionNo@1004 : Integer;
-      ICLastDocType@1013 : Integer;
-      CurrentICPartner@1009 : Code[20];
-      ICLastDocNo@1012 : Code[20];
-      VATInfoSourceLineIsInserted@1015 : Boolean;
+      TempMarkedGenJnlLine@1001 : TEMPORARY Record 81;
     BEGIN
       WITH GenJnlLine DO BEGIN
         SETRANGE("Journal Template Name","Journal Template Name");
@@ -133,11 +123,34 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
             STRSUBSTNO(Text000,MAXSTRLEN(GenJnlBatch.Name)));
 
         IF GenJnlTemplate.Recurring THEN BEGIN
-          CheckExpiredLine(GenJnlLine);
-          SETRANGE("Posting Date",0D,WORKDATE);
+          TempMarkedGenJnlLine.COPY(GenJnlLine);
+          CheckGenJnlLineDates(TempMarkedGenJnlLine,GenJnlLine);
           GLSetup.GET;
         END;
 
+        IF GenJnlTemplate.Recurring THEN BEGIN
+          ProcessLines(TempMarkedGenJnlLine);
+          COPY(TempMarkedGenJnlLine);
+        END ELSE
+          ProcessLines(GenJnlLine);
+      END;
+    END;
+
+    LOCAL PROCEDURE ProcessLines@143(VAR GenJnlLine@1000 : Record 81);
+    VAR
+      TempGenJnlLine@1015 : TEMPORARY Record 81;
+      GenJnlLineVATInfoSource@1014 : Record 81;
+      UpdateAnalysisView@1010 : Codeunit 410;
+      ICLastDocNo@1009 : Code[20];
+      CurrentICPartner@1005 : Code[20];
+      LastLineNo@1008 : Integer;
+      ICTransactionNo@1007 : Integer;
+      ICLastDocType@1004 : Integer;
+      ICLastDate@1006 : Date;
+      VATInfoSourceLineIsInserted@1003 : Boolean;
+      SkippedLine@1002 : Boolean;
+    BEGIN
+      WITH GenJnlLine DO BEGIN
         IF NOT FIND('=><') THEN BEGIN
           "Line No." := 0;
           IF PreviewMode THEN
@@ -153,6 +166,7 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
         LineCount := 0;
         StartLineNo := "Line No.";
         NoOfRecords := COUNT;
+        GenJnlCheckLine.SetBatchMode(TRUE);
         REPEAT
           LineCount := LineCount + 1;
           UpdateDialog(RefPostingState::"Checking lines",LineCount,NoOfRecords);
@@ -171,8 +185,75 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
         IF GenJnlTemplate.Type = GenJnlTemplate.Type::Intercompany THEN
           CheckICDocument(TempGenJnlLine);
 
-        // Check balance
-        IF (GenJnlBatch."No. Series" = '') AND GenJnlTemplate."Force Doc. Balance" THEN
+        ProcessBalanceOfLines(GenJnlLine,GenJnlLineVATInfoSource,VATInfoSourceLineIsInserted,LastLineNo,CurrentICPartner);
+
+        // Find next register no.
+        GLEntry.LOCKTABLE;
+        IF GLEntry.FINDLAST THEN;
+        FindNextGLRegisterNo;
+
+        // Post lines
+        LineCount := 0;
+        LastDocNo := '';
+        LastPostedDocNo := '';
+        TempGenJnlLine4.DELETEALL;
+        NoOfReversingRecords := 0;
+        FINDSET(TRUE,FALSE);
+        REPEAT
+          ProcessICLines(CurrentICPartner,ICTransactionNo,ICLastDocNo,ICLastDate,ICLastDocType,GenJnlLine,TempGenJnlLine);
+          GenJnlLine3 := GenJnlLine;
+          IF NOT PostGenJournalLine(GenJnlLine3,CurrentICPartner,ICTransactionNo) THEN
+            SkippedLine := TRUE;
+        UNTIL NEXT = 0;
+
+        // Post reversing lines
+        PostReversingLines(TempGenJnlLine4);
+
+        IF PreviewMode THEN
+          ERROR(GenJnlPostPreview.GetPreviewModeErrMessage);
+
+        // Copy register no. and current journal batch name to general journal
+        IF NOT GLReg.FINDLAST OR (GLReg."No." <> GLRegNo) THEN
+          GLRegNo := 0;
+
+        INIT;
+        "Line No." := GLRegNo;
+
+        // Update/delete lines
+        IF GLRegNo <> 0 THEN
+          UpdateAndDeleteLines(GenJnlLine);
+
+        IF GenJnlBatch."No. Series" <> '' THEN
+          NoSeriesMgt.SaveNoSeries;
+        IF NoSeries.FINDSET THEN
+          REPEAT
+            EVALUATE(PostingNoSeriesNo,NoSeries.Description);
+            NoSeriesMgt2[PostingNoSeriesNo].SaveNoSeries;
+          UNTIL NoSeries.NEXT = 0;
+        IF GLSetupFound THEN
+          GLSetup.MODIFY;
+
+        COMMIT;
+        CLEAR(GenJnlCheckLine);
+        CLEAR(GenJnlPostLine);
+        CLEARMARKS;
+      END;
+      UpdateAnalysisView.UpdateAll(0,TRUE);
+      GenJnlBatch.OnMoveGenJournalBatch(GLReg.RECORDID);
+      COMMIT;
+
+      IF SkippedLine AND GUIALLOWED THEN
+        MESSAGE(SkippedLineMsg);
+    END;
+
+    LOCAL PROCEDURE ProcessBalanceOfLines@42(VAR GenJnlLine@1000 : Record 81;VAR GenJnlLineVATInfoSource@1003 : Record 81;VAR VATInfoSourceLineIsInserted@1002 : Boolean;VAR LastLineNo@1004 : Integer;CurrentICPartner@1001 : Code[20]);
+    VAR
+      VATPostingSetup@1006 : Record 325;
+      BalVatPostingSetup@1005 : Record 325;
+      ErrorMessage@1007 : Text;
+    BEGIN
+      WITH GenJnlLine DO BEGIN
+        IF (GenJnlBatch."No. Series" = '') AND (GenJnlBatch."Posting No. Series" = '') AND GenJnlTemplate."Force Doc. Balance" THEN
           SETCURRENTKEY("Document No.");
         LineCount := 0;
         LastDate := 0D;
@@ -212,7 +293,7 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
              GenJnlTemplate."Force Doc. Balance" AND
              (("Document Type" <> LastDocType) OR ("Document No." <> LastDocNo))
           THEN BEGIN
-            CheckBalance;
+            CheckBalance(GenJnlLine);
             CurrencyBalance := 0;
             LastCurrencyCode := "Currency Code";
             GenJnlLineTemp.RESET;
@@ -221,7 +302,7 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
 
           IF Amount <> 0 THEN BEGIN
             IF LastFAAddCurrExchRate <> "FA Add.-Currency Factor" THEN
-              CheckAddExchRateBalance;
+              CheckAddExchRateBalance(GenJnlLine);
             IF (CurrentBalance = 0) AND (CurrentICPartner = '') THEN BEGIN
               GenJnlLineTemp.RESET;
               GenJnlLineTemp.DELETEALL;
@@ -238,17 +319,7 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
             IF "Recurring Method" >= "Recurring Method"::"RF Reversing Fixed" THEN
               CurrentBalanceReverse := CurrentBalanceReverse + "Balance (LCY)";
 
-            IF "Recurring Method" <> "Recurring Method"::" " THEN
-              CALCFIELDS("Allocated Amt. (LCY)");
-            IF ("Recurring Method" = "Recurring Method"::" ") OR ("Amount (LCY)" <> -"Allocated Amt. (LCY)") THEN
-              IF "Currency Code" <> LastCurrencyCode THEN
-                LastCurrencyCode := ''
-              ELSE
-                IF ("Currency Code" <> '') AND (("Account No." = '') XOR ("Bal. Account No." = '')) THEN
-                  IF "Account No." <> '' THEN
-                    CurrencyBalance := CurrencyBalance + Amount
-                  ELSE
-                    CurrencyBalance := CurrencyBalance - Amount;
+            UpdateCurrencyBalanceForRecurringLine(GenJnlLine);
           END;
 
           LastDate := "Posting Date";
@@ -269,15 +340,14 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
               (("Bal. Account Type" = "Bal. Account Type"::"G/L Account") AND ("Bal. Account No." <> '') AND
                ("Bal. Gen. Posting Type" IN ["Bal. Gen. Posting Type"::Purchase,"Bal. Gen. Posting Type"::Sale]) AND
                (BalVatPostingSetup."VAT %" <> 0));
-            IF IsCustVendICAdded(GenJnlLine) THEN BEGIN
+            IF GenJnlLineTemp.IsCustVendICAdded(GenJnlLine) THEN BEGIN
               GenJnlLineVATInfoSource := GenJnlLine;
               VATInfoSourceLineIsInserted := TRUE;
             END;
-            IF (GenJnlLineTemp.COUNT > 1) AND VATEntryCreated THEN
-              ERROR(
-                Text009 +
-                Text010,
-                "Document Type","Document No.","Posting Date");
+            IF (GenJnlLineTemp.COUNT > 1) AND VATEntryCreated THEN BEGIN
+              ErrorMessage := Text009 + Text010;
+              ERROR(ErrorMessage,"Document Type","Document No.","Posting Date");
+            END;
             IF (GenJnlLineTemp.COUNT > 1) AND (CurrentICPartner <> '') AND
                (GenJnlTemplate.Type = GenJnlTemplate.Type::Intercompany)
             THEN
@@ -287,123 +357,50 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
             LastLineNo := "Line No.";
           END;
         UNTIL NEXT = 0;
-        CheckBalance;
-        CopyFields;
+        CheckBalance(GenJnlLine);
+        CopyFields(GenJnlLine);
         IF VATEntryCreated AND VATInfoSourceLineIsInserted THEN
           UpdateGenJnlLineWithVATInfo(GenJnlLine,GenJnlLineVATInfoSource,StartLineNo,LastLineNo);
-
-        // Find next register no.
-        GLEntry.LOCKTABLE;
-        IF GLEntry.FINDLAST THEN;
-        FindNextGLRegisterNo;
-
-        // Post lines
-        LineCount := 0;
-        LastDocNo := '';
-        LastPostedDocNo := '';
-        TempGenJnlLine4.DELETEALL;
-        NoOfReversingRecords := 0;
-        FINDSET(TRUE,FALSE);
-        REPEAT
-          IF (GenJnlTemplate.Type = GenJnlTemplate.Type::Intercompany) AND NOT EmptyLine AND
-             (("Posting Date" <> ICLastDate) OR ("Document Type" <> ICLastDocType) OR ("Document No." <> ICLastDocNo))
-          THEN BEGIN
-            CurrentICPartner := '';
-            ICLastDate := "Posting Date";
-            ICLastDocType := "Document Type";
-            ICLastDocNo := "Document No.";
-            TempGenJnlLine.RESET;
-            TempGenJnlLine.SETCURRENTKEY("Journal Template Name","Journal Batch Name","Posting Date","Document No.");
-            TempGenJnlLine.SETRANGE("Journal Template Name","Journal Template Name");
-            TempGenJnlLine.SETRANGE("Journal Batch Name","Journal Batch Name");
-            TempGenJnlLine.SETRANGE("Posting Date","Posting Date");
-            TempGenJnlLine.SETRANGE("Document No.","Document No.");
-            TempGenJnlLine.SETFILTER("IC Partner Code",'<>%1','');
-            IF TempGenJnlLine.FINDFIRST AND (TempGenJnlLine."IC Partner Code" <> '') THEN BEGIN
-              CurrentICPartner := TempGenJnlLine."IC Partner Code";
-              IF TempGenJnlLine."IC Direction" = TempGenJnlLine."IC Direction"::Outgoing THEN BEGIN
-                ICTransactionNo := ICOutboxMgt.CreateOutboxJnlTransaction(TempGenJnlLine,FALSE);
-              END ELSE BEGIN
-                IF ICHandledInboxTransaction.GET(
-                     TempGenJnlLine."IC Partner Transaction No.",TempGenJnlLine."IC Partner Code",
-                     ICHandledInboxTransaction."Transaction Source"::"Created by Partner",TempGenJnlLine."Document Type")
-                THEN BEGIN
-                  ICHandledInboxTransaction.LOCKTABLE;
-                  ICHandledInboxTransaction.Status := ICHandledInboxTransaction.Status::Posted;
-                  ICHandledInboxTransaction.MODIFY;
-                END
-              END;
-            END
-          END;
-          GenJnlLine3 := GenJnlLine;
-          WITH GenJnlLine3 DO BEGIN
-            LineCount := LineCount + 1;
-            IF CurrentICPartner <> '' THEN
-              "IC Partner Code" := CurrentICPartner;
-            UpdateDialog(RefPostingState::"Posting Lines",LineCount,NoOfRecords);
-            MakeRecurringTexts(GenJnlLine3);
-            CheckDocumentNo(GenJnlLine3);
-            GenJnlLine5.COPY(GenJnlLine3);
-            PrepareGenJnlLineAddCurr(GenJnlLine5);
-            UpdateIncomingDocument(GenJnlLine5);
-            GenJnlPostLine.RunWithoutCheck(GenJnlLine5);
-            IF (GenJnlTemplate.Type = GenJnlTemplate.Type::Intercompany) AND (CurrentICPartner <> '') AND
-               ("IC Direction" = "IC Direction"::Outgoing) AND (ICTransactionNo > 0)
-            THEN
-              ICOutboxMgt.CreateOutboxJnlLine(ICTransactionNo,1,GenJnlLine5);
-            IF ("Recurring Method" >= "Recurring Method"::"RF Reversing Fixed") AND ("Posting Date" <> 0D) THEN BEGIN
-              "Posting Date" := "Posting Date" + 1;
-              "Document Date" := "Posting Date";
-              MultiplyAmounts(GenJnlLine3,-1);
-              TempGenJnlLine4 := GenJnlLine3;
-              TempGenJnlLine4."Reversing Entry" := TRUE;
-              TempGenJnlLine4.INSERT;
-              NoOfReversingRecords := NoOfReversingRecords + 1;
-              "Posting Date" := "Posting Date" - 1;
-              "Document Date" := "Posting Date";
-            END;
-            PostAllocations(GenJnlLine3,FALSE);
-          END;
-        UNTIL NEXT = 0;
-
-        // Post reversing lines
-        PostReversingLines(TempGenJnlLine4);
-
-        // Copy register no. and current journal batch name to general journal
-        IF NOT GLReg.FINDLAST OR (GLReg."No." <> GLRegNo) THEN
-          GLRegNo := 0;
-
-        INIT;
-        "Line No." := GLRegNo;
-
-        // Update/delete lines
-        IF GLRegNo <> 0 THEN
-          UpdateAndDeleteLines;
-
-        IF GenJnlBatch."No. Series" <> '' THEN
-          NoSeriesMgt.SaveNoSeries;
-        IF NoSeries.FINDSET THEN
-          REPEAT
-            EVALUATE(PostingNoSeriesNo,NoSeries.Description);
-            NoSeriesMgt2[PostingNoSeriesNo].SaveNoSeries;
-          UNTIL NoSeries.NEXT = 0;
-        IF GLSetupFound THEN
-          GLSetup.MODIFY;
-
-        IF PreviewMode THEN
-          ERROR(GenJnlPostPreview.GetPreviewModeErrMessage);
-
-        COMMIT;
-        CLEAR(GenJnlCheckLine);
-        CLEAR(GenJnlPostLine);
-        CLEARMARKS;
       END;
-      UpdateAnalysisView.UpdateAll(0,TRUE);
-      GenJnlBatch.OnMoveGenJournalBatch(GLReg.RECORDID);
-      COMMIT;
     END;
 
-    LOCAL PROCEDURE CheckBalance@8();
+    LOCAL PROCEDURE ProcessICLines@49(VAR CurrentICPartner@1001 : Code[20];VAR ICTransactionNo@1002 : Integer;VAR ICLastDocNo@1006 : Code[20];VAR ICLastDate@1005 : Date;VAR ICLastDocType@1003 : Integer;VAR GenJnlLine@1000 : Record 81;VAR TempGenJnlLine@1004 : TEMPORARY Record 81);
+    VAR
+      HandledICInboxTrans@1008 : Record 420;
+    BEGIN
+      WITH GenJnlLine DO
+        IF (GenJnlTemplate.Type = GenJnlTemplate.Type::Intercompany) AND NOT EmptyLine AND
+           (("Posting Date" <> ICLastDate) OR ("Document Type" <> ICLastDocType) OR ("Document No." <> ICLastDocNo))
+        THEN BEGIN
+          CurrentICPartner := '';
+          ICLastDate := "Posting Date";
+          ICLastDocType := "Document Type";
+          ICLastDocNo := "Document No.";
+          TempGenJnlLine.RESET;
+          TempGenJnlLine.SETCURRENTKEY("Journal Template Name","Journal Batch Name","Posting Date","Document No.");
+          TempGenJnlLine.SETRANGE("Journal Template Name","Journal Template Name");
+          TempGenJnlLine.SETRANGE("Journal Batch Name","Journal Batch Name");
+          TempGenJnlLine.SETRANGE("Posting Date","Posting Date");
+          TempGenJnlLine.SETRANGE("Document No.","Document No.");
+          TempGenJnlLine.SETFILTER("IC Partner Code",'<>%1','');
+          IF TempGenJnlLine.FINDFIRST AND (TempGenJnlLine."IC Partner Code" <> '') THEN BEGIN
+            CurrentICPartner := TempGenJnlLine."IC Partner Code";
+            IF TempGenJnlLine."IC Direction" = TempGenJnlLine."IC Direction"::Outgoing THEN
+              ICTransactionNo := ICOutboxMgt.CreateOutboxJnlTransaction(TempGenJnlLine,FALSE)
+            ELSE
+              IF HandledICInboxTrans.GET(
+                   TempGenJnlLine."IC Partner Transaction No.",TempGenJnlLine."IC Partner Code",
+                   HandledICInboxTrans."Transaction Source"::"Created by Partner",TempGenJnlLine."Document Type")
+              THEN BEGIN
+                HandledICInboxTrans.LOCKTABLE;
+                HandledICInboxTrans.Status := HandledICInboxTrans.Status::Posted;
+                HandledICInboxTrans.MODIFY;
+              END
+          END
+        END;
+    END;
+
+    LOCAL PROCEDURE CheckBalance@8(VAR GenJnlLine@1000 : Record 81);
     BEGIN
       WITH GenJnlLine DO BEGIN
         IF CurrentBalance <> 0 THEN BEGIN
@@ -448,7 +445,7 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
       END;
     END;
 
-    LOCAL PROCEDURE CheckAddExchRateBalance@9();
+    LOCAL PROCEDURE CheckAddExchRateBalance@9(GenJnlLine@1000 : Record 81);
     BEGIN
       WITH GenJnlLine DO
         IF CurrentBalance <> 0 THEN
@@ -725,7 +722,7 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
       END;
     END;
 
-    LOCAL PROCEDURE CopyFields@12();
+    LOCAL PROCEDURE CopyFields@12(VAR GenJnlLine@1004 : Record 81);
     VAR
       GenJnlLine4@1000 : Record 81;
       GenJnlLine6@1001 : Record 81;
@@ -824,25 +821,6 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
         IncomingDocument.UpdateIncomingDocumentFromPosting("Incoming Document Entry No.","Posting Date","Document No.");
     END;
 
-    LOCAL PROCEDURE AddCustVendIC@14(AccountType@1000 : Option;AccountNo@1001 : Code[20]) : Boolean;
-    BEGIN
-      GenJnlLineTemp.SETRANGE("Account Type",AccountType);
-      GenJnlLineTemp.SETRANGE("Account No.",AccountNo);
-      IF GenJnlLineTemp.FINDFIRST THEN
-        EXIT(FALSE);
-
-      GenJnlLineTemp.RESET;
-      IF GenJnlLineTemp.FINDLAST THEN
-        GenJnlLineTemp."Line No." := GenJnlLineTemp."Line No." + 10000
-      ELSE
-        GenJnlLineTemp."Line No." := 10000;
-
-      GenJnlLineTemp."Account Type" := AccountType;
-      GenJnlLineTemp."Account No." := AccountNo;
-      GenJnlLineTemp.INSERT;
-      EXIT(TRUE);
-    END;
-
     LOCAL PROCEDURE CopyGenJnlLineBalancingData@18(VAR GenJnlLineTo@1000 : Record 81;VAR GenJnlLineFrom@1002 : Record 81);
     BEGIN
       GenJnlLineTo."Bill-to/Pay-to No." := GenJnlLineFrom."Bill-to/Pay-to No.";
@@ -902,25 +880,6 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
         UNTIL GenJnlLine4.NEXT = 0;
     END;
 
-    LOCAL PROCEDURE IsCustVendICAdded@30(GenJournalLine@1000 : Record 81) : Boolean;
-    BEGIN
-      WITH GenJournalLine DO BEGIN
-        IF ("Account No." <> '') AND
-           ("Account Type" IN ["Account Type"::Customer,"Account Type"::Vendor,
-                               "Account Type"::"IC Partner"])
-        THEN
-          EXIT(AddCustVendIC("Account Type","Account No."));
-
-        IF ("Bal. Account No." <> '') AND
-           ("Bal. Account Type" IN ["Bal. Account Type"::Customer,"Bal. Account Type"::Vendor,
-                                    "Bal. Account Type"::"IC Partner"])
-        THEN
-          EXIT(AddCustVendIC("Bal. Account Type","Bal. Account No."));
-      END;
-
-      EXIT(FALSE);
-    END;
-
     LOCAL PROCEDURE UpdateGenJnlLineWithVATInfo@26(VAR GenJournalLineFiltersSource@1005 : Record 81;GenJournalLineVATInfoSource@1000 : Record 81;StartLineNo@1003 : Integer;LastLineNo@1004 : Integer);
     VAR
       GenJournalLine@1001 : Record 81;
@@ -968,6 +927,23 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
     LOCAL PROCEDURE UpdatePostingState@25(PostingState@1000 : Integer;LineNo@1002 : Integer);
     BEGIN
       Window.UPDATE(3,STRSUBSTNO('%1 (%2)',GetPostingStateMsg(PostingState),LineNo));
+    END;
+
+    LOCAL PROCEDURE UpdateCurrencyBalanceForRecurringLine@44(VAR GenJnlLine@1000 : Record 81);
+    BEGIN
+      WITH GenJnlLine DO BEGIN
+        IF "Recurring Method" <> "Recurring Method"::" " THEN
+          CALCFIELDS("Allocated Amt. (LCY)");
+        IF ("Recurring Method" = "Recurring Method"::" ") OR ("Amount (LCY)" <> -"Allocated Amt. (LCY)") THEN
+          IF "Currency Code" <> LastCurrencyCode THEN
+            LastCurrencyCode := ''
+          ELSE
+            IF ("Currency Code" <> '') AND (("Account No." = '') XOR ("Bal. Account No." = '')) THEN
+              IF "Account No." <> '' THEN
+                CurrencyBalance := CurrencyBalance + Amount
+              ELSE
+                CurrencyBalance := CurrencyBalance - Amount;
+      END;
     END;
 
     LOCAL PROCEDURE GetPostingStateMsg@29(PostingState@1000 : Integer) : Text;
@@ -1020,18 +996,36 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
         GLRegNo := 1;
     END;
 
-    LOCAL PROCEDURE CheckExpiredLine@36(VAR GenJournalLine@1000 : Record 81);
+    LOCAL PROCEDURE CheckGenJnlLineDates@36(VAR MarkedGenJnlLine@1001 : Record 81;VAR GenJournalLine@1000 : Record 81);
     BEGIN
       WITH GenJournalLine DO BEGIN
-        StartLineNo := "Line No.";
-        REPEAT
-          IF ("Expiration Date" = 0D) OR ("Expiration Date" >= "Posting Date") THEN
-            MARK(TRUE);
-          IF NEXT = 0 THEN
-            FINDFIRST;
-        UNTIL "Line No." = StartLineNo;
-        MARKEDONLY(TRUE);
+        IF NOT FIND THEN
+          FINDSET;
+        SETRANGE("Posting Date",0D,WORKDATE);
+        IF FINDSET THEN BEGIN
+          StartLineNo := "Line No.";
+          REPEAT
+            IF IsNotExpired(GenJournalLine) AND IsPostingDateAllowed(GenJournalLine) THEN BEGIN
+              MarkedGenJnlLine := GenJournalLine;
+              MarkedGenJnlLine.INSERT;
+            END;
+            IF NEXT = 0 THEN
+              FINDFIRST;
+          UNTIL "Line No." = StartLineNo;
+        END;
+        MarkedGenJnlLine := GenJournalLine;
+        MarkedGenJnlLine.SETRANGE("Posting Date",0D,WORKDATE);
       END;
+    END;
+
+    LOCAL PROCEDURE IsNotExpired@40(GenJournalLine@1000 : Record 81) : Boolean;
+    BEGIN
+      EXIT((GenJournalLine."Expiration Date" = 0D) OR (GenJournalLine."Expiration Date" >= GenJournalLine."Posting Date"));
+    END;
+
+    LOCAL PROCEDURE IsPostingDateAllowed@43(GenJournalLine@1000 : Record 81) : Boolean;
+    BEGIN
+      EXIT(NOT GenJnlCheckLine.DateNotAllowed(GenJournalLine."Posting Date"));
     END;
 
     PROCEDURE SetPreviewMode@27(NewPreviewMode@1000 : Boolean);
@@ -1062,13 +1056,13 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
         UNTIL TempGenJnlLine.NEXT = 0;
     END;
 
-    LOCAL PROCEDURE UpdateAndDeleteLines@31();
+    LOCAL PROCEDURE UpdateAndDeleteLines@31(VAR GenJnlLine@1003 : Record 81);
     VAR
       TempGenJnlLine2@1002 : TEMPORARY Record 81;
       OldVATAmount@1000 : Decimal;
       OldVATPct@1001 : Decimal;
     BEGIN
-      GenJnlBatch.ClearDataExchEntries;
+      ClearDataExchEntries(GenJnlLine);
       IF GenJnlTemplate.Recurring THEN BEGIN
         // Recurring journal
         LineCount := 0;
@@ -1100,6 +1094,7 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
         GenJnlLine2.SETFILTER("Account No.",'<>%1','');
         IF GenJnlLine2.FINDLAST THEN; // Remember the last line
         GenJnlLine3.COPY(GenJnlLine);
+        GenJnlLine3.SETCURRENTKEY("Journal Template Name","Journal Batch Name","Line No.");
         GenJnlLine3.DELETEALL;
         GenJnlLine3.RESET;
         GenJnlLine3.SETRANGE("Journal Template Name",GenJnlLine."Journal Template Name");
@@ -1130,16 +1125,65 @@ OBJECT Codeunit 13 Gen. Jnl.-Post Batch
     END;
 
     PROCEDURE Preview@32(VAR GenJournalLine@1000 : Record 81);
+    VAR
+      GenJnlLine@1001 : Record 81;
     BEGIN
       PreviewMode := TRUE;
       GenJnlLine.COPY(GenJournalLine);
-      Code;
+      Code(GenJnlLine);
     END;
 
     LOCAL PROCEDURE CheckRestrictions@35(VAR GenJournalLine@1000 : Record 81);
     BEGIN
       IF NOT PreviewMode THEN
         GenJournalLine.OnCheckGenJournalLinePostRestrictions;
+    END;
+
+    LOCAL PROCEDURE ClearDataExchEntries@37(VAR PassedGenJnlLine@1000 : Record 81);
+    VAR
+      GenJnlLine@1001 : Record 81;
+    BEGIN
+      GenJnlLine.COPY(PassedGenJnlLine);
+      IF GenJnlLine.FINDSET THEN
+        REPEAT
+          GenJnlLine.ClearDataExchangeEntries(TRUE);
+        UNTIL GenJnlLine.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE PostGenJournalLine@38(VAR GenJournalLine@1000 : Record 81;CurrentICPartner@1001 : Code[20];ICTransactionNo@1002 : Integer) : Boolean;
+    BEGIN
+      WITH GenJournalLine DO BEGIN
+        IF NeedCheckZeroAmount AND (Amount = 0) AND IsRecurring THEN
+          EXIT(FALSE);
+
+        LineCount := LineCount + 1;
+        IF CurrentICPartner <> '' THEN
+          "IC Partner Code" := CurrentICPartner;
+        UpdateDialog(RefPostingState::"Posting Lines",LineCount,NoOfRecords);
+        MakeRecurringTexts(GenJournalLine);
+        CheckDocumentNo(GenJournalLine);
+        GenJnlLine5.COPY(GenJournalLine);
+        PrepareGenJnlLineAddCurr(GenJnlLine5);
+        UpdateIncomingDocument(GenJnlLine5);
+        GenJnlPostLine.RunWithoutCheck(GenJnlLine5);
+        IF (GenJnlTemplate.Type = GenJnlTemplate.Type::Intercompany) AND (CurrentICPartner <> '') AND
+           ("IC Direction" = "IC Direction"::Outgoing) AND (ICTransactionNo > 0)
+        THEN
+          ICOutboxMgt.CreateOutboxJnlLine(ICTransactionNo,1,GenJnlLine5);
+        IF ("Recurring Method" >= "Recurring Method"::"RF Reversing Fixed") AND ("Posting Date" <> 0D) THEN BEGIN
+          "Posting Date" := "Posting Date" + 1;
+          "Document Date" := "Posting Date";
+          MultiplyAmounts(GenJournalLine,-1);
+          TempGenJnlLine4 := GenJournalLine;
+          TempGenJnlLine4."Reversing Entry" := TRUE;
+          TempGenJnlLine4.INSERT;
+          NoOfReversingRecords := NoOfReversingRecords + 1;
+          "Posting Date" := "Posting Date" - 1;
+          "Document Date" := "Posting Date";
+        END;
+        PostAllocations(GenJournalLine,FALSE);
+      END;
+      EXIT(TRUE);
     END;
 
     BEGIN

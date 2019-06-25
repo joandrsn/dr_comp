@@ -2,9 +2,9 @@ OBJECT Codeunit 99000770 Where-Used Management
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -18,7 +18,6 @@ OBJECT Codeunit 99000770 Where-Used Management
   CODE
   {
     VAR
-      ProdBOMHeader@1000 : Record 99000771;
       WhereUsedList@1001 : TEMPORARY Record 99000790;
       UOMMgt@1002 : Codeunit 5402;
       VersionMgt@1003 : Codeunit 99000756;
@@ -123,8 +122,7 @@ OBJECT Codeunit 99000770 Where-Used Management
                ProdBOMComponent."Production BOM No.","Calc.Date",TRUE) =
              ProdBOMComponent."Version Code"
           THEN BEGIN
-            ProdBOMHeader.GET(ProdBOMComponent."Production BOM No.");
-            IF ProdBOMHeader.Status <> ProdBOMHeader.Status::Closed THEN
+            IF IsActiveProductionBOM(ProdBOMComponent) THEN
               BuildWhereUsedList(
                 2,
                 ProdBOMComponent."Production BOM No.",
@@ -133,6 +131,30 @@ OBJECT Codeunit 99000770 Where-Used Management
                 CostCalcMgt.CalcCompItemQtyBase(ProdBOMComponent,"Calc.Date",Quantity,'',FALSE));
           END;
         UNTIL ProdBOMComponent.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE IsActiveProductionBOM@9(ProductionBOMLine@1000 : Record 99000772) : Boolean;
+    BEGIN
+      IF ProductionBOMLine."Version Code" = '' THEN
+        EXIT(NOT IsProductionBOMClosed(ProductionBOMLine));
+
+      EXIT(NOT IsProdBOMVersionClosed(ProductionBOMLine));
+    END;
+
+    LOCAL PROCEDURE IsProductionBOMClosed@10(ProductionBOMLine@1000 : Record 99000772) : Boolean;
+    VAR
+      ProdBOMHeader@1001 : Record 99000771;
+    BEGIN
+      ProdBOMHeader.GET(ProductionBOMLine."Production BOM No.");
+      EXIT(ProdBOMHeader.Status = ProdBOMHeader.Status::Closed);
+    END;
+
+    LOCAL PROCEDURE IsProdBOMVersionClosed@11(ProductionBOMLine@1000 : Record 99000772) : Boolean;
+    VAR
+      ProductionBOMVersion@1001 : Record 99000779;
+    BEGIN
+      ProductionBOMVersion.GET(ProductionBOMLine."Production BOM No.",ProductionBOMLine."Version Code");
+      EXIT(ProductionBOMVersion.Status = ProductionBOMVersion.Status::Closed);
     END;
 
     BEGIN

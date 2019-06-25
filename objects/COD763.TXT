@@ -2,9 +2,9 @@ OBJECT Codeunit 763 Aged Acc. Receivable
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -78,7 +78,7 @@ OBJECT Codeunit 763 Aged Acc. Receivable
             AddMeasure(CustPostingGroup.Code,GroupIndex,"Data Type"::Decimal,"Chart Type"::StackedColumn);
 
             TempEntryNoAmountBuf.RESET;
-            TempEntryNoAmountBuf.SETRANGE("Business Unit Code",CustPostingGroup.Code);
+            TempEntryNoAmountBuf.SETFILTER("Business Unit Code",CustPostingGroup.Code);
             IF TempEntryNoAmountBuf.FINDSET THEN
               REPEAT
                 PeriodIndex := TempEntryNoAmountBuf."Entry No.";
@@ -232,7 +232,7 @@ OBJECT Codeunit 763 Aged Acc. Receivable
       DrillDown(BusChartBuf,'',TempEntryNoAmountBuf);
     END;
 
-    PROCEDURE DrillDownCustLedgEntries@2(CustomerNo@1000 : Code[20];CustomerGroupCode@1003 : Code[10];StartDate@1001 : Date;EndDate@1002 : Date);
+    PROCEDURE DrillDownCustLedgEntries@2(CustomerNo@1000 : Code[20];CustomerGroupCode@1003 : Code[20];StartDate@1001 : Date;EndDate@1002 : Date);
     VAR
       CustLedgEntry@1004 : Record 21;
     BEGIN
@@ -245,7 +245,7 @@ OBJECT Codeunit 763 Aged Acc. Receivable
         CustLedgEntry.SETRANGE("Due Date",StartDate,EndDate);
       CustLedgEntry.SETRANGE(Open,TRUE);
       IF CustomerGroupCode <> '' THEN
-        CustLedgEntry.SETRANGE("Customer Posting Group",CustomerGroupCode);
+        CustLedgEntry.SETFILTER("Customer Posting Group",CustomerGroupCode);
       IF CustLedgEntry.ISEMPTY THEN
         EXIT;
       PAGE.RUN(PAGE::"Customer Ledger Entries",CustLedgEntry);

@@ -2,9 +2,9 @@ OBJECT Table 5062 Attachment
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -83,7 +83,7 @@ OBJECT Table 5062 Attachment
     VAR
       Text002@1002 : TextConst 'DAN=Den vedhæftede fil er tom.;ENU=The attachment is empty.';
       Text003@1003 : TextConst 'DAN=Den vedhæftede fil er allerede i brug på maskinen.;ENU=Attachment is already in use on this machine.';
-      Text004@1004 : TextConst 'DAN=Klik på Ja for at indlæse dokumentet, efter at du har gemt det.;ENU=When you have saved your document, click Yes to import the document.';
+      Text004@1004 : TextConst 'DAN=Den vedhæftede fil skal gemmes på disken, før du kan importere den.\\Vil du gemme filen?;ENU=The attachment file must be saved to disk before you can import it.\\Do you want to save the file?';
       Text005@1005 : TextConst 'DAN=Udlæs vedhæftet fil;ENU=Export Attachment';
       Text006@1006 : TextConst 'DAN=Indlæs vedhæftet fil;ENU=Import Attachment';
       Text007@1007 : TextConst 'DAN=Alle filer (*.*)|*.*;ENU=All Files (*.*)|*.*';
@@ -101,6 +101,8 @@ OBJECT Table 5062 Attachment
       RMSetup@1015 : Record 5079;
       FileMgt@1000 : Codeunit 419;
       AttachmentMgt@1021 : Codeunit 5052;
+      AttachmentImportQst@1017 : TextConst 'DAN=Vil du importere den vedhæftede fil?;ENU=Do you want to import attachment?';
+      AttachmentExportQst@1016 : TextConst 'DAN=Vil du eksportere den vedhæftede fil for at se eller redigere den eksternt?;ENU=Do you want to export attachment to view or edit it externaly?';
 
     PROCEDURE OpenAttachment@1(Caption@1000 : Text[260];IsTemporary@1001 : Boolean;LanguageCode@1100 : Code[10]);
     VAR
@@ -113,25 +115,34 @@ OBJECT Table 5062 Attachment
           ERROR(Text002);
       END;
 
-      FileName := ConstFilename;
-      IF NOT DeleteFile(FileName) THEN
-        ERROR(Text003);
-      ExportAttachmentToClientFile(FileName);
-      IF WordManagement.IsWordDocumentExtension("File Extension") THEN
-        WordManagement.OpenWordAttachment(Rec,FileName,Caption,IsTemporary,LanguageCode)
+      IF CURRENTCLIENTTYPE IN [CLIENTTYPE::Web,CLIENTTYPE::Tablet,CLIENTTYPE::Phone] THEN
+        ProcessWebAttachment(Caption + '.' + "File Extension")
       ELSE BEGIN
-        HYPERLINK(FileName);
-        IF NOT "Read Only" THEN BEGIN
-          IF CONFIRM(Text004,TRUE) THEN
-            ImportAttachmentFromClientFile(FileName,IsTemporary,FALSE);
-          DeleteFile(FileName);
-        END ELSE
-          IF CONFIRM(Text016,TRUE) THEN
+        FileName := ConstFilename;
+        IF NOT DeleteFile(FileName) THEN
+          ERROR(Text003);
+        ExportAttachmentToClientFile(FileName);
+        IF WordManagement.IsWordDocumentExtension("File Extension") THEN
+          WordManagement.OpenWordAttachment(Rec,FileName,Caption,IsTemporary,LanguageCode)
+        ELSE BEGIN
+          HYPERLINK(FileName);
+          IF NOT "Read Only" THEN BEGIN
+            IF CONFIRM(Text004,TRUE) THEN
+              ImportAttachmentFromClientFile(FileName,IsTemporary,FALSE);
             DeleteFile(FileName);
+          END ELSE
+            IF CONFIRM(Text016,TRUE) THEN
+              DeleteFile(FileName);
+        END;
       END;
     END;
 
-    PROCEDURE ShowAttachment@6(VAR SegLine@1000 : Record 5077;WordCaption@1001 : Text[260];IsTemporary@1002 : Boolean);
+    PROCEDURE ShowAttachment@6(VAR SegLine@1000 : Record 5077;WordCaption@1001 : Text[260];IsTemporary@1002 : Boolean;Handler@1003 : Boolean);
+    BEGIN
+      RunAttachment(SegLine,WordCaption,IsTemporary,TRUE,Handler);
+    END;
+
+    PROCEDURE RunAttachment@24(VAR SegLine@1000 : Record 5077;WordCaption@1001 : Text[260];IsTemporary@1002 : Boolean;IsVisible@1004 : Boolean;Handler@1006 : Boolean);
     VAR
       WordManagement@1003 : Codeunit 5054;
       FileName@1005 : Text;
@@ -139,20 +150,23 @@ OBJECT Table 5062 Attachment
       IF "Storage Type" = "Storage Type"::Embedded THEN
         CALCFIELDS(Attachment);
 
-      IF WordManagement.IsWordDocumentExtension("File Extension") THEN
-        WordManagement.ShowMergedDocument(SegLine,Rec,WordCaption,IsTemporary)
-      ELSE BEGIN
-        FileName := ConstFilename;
-        ExportAttachmentToClientFile(FileName);
-        HYPERLINK(FileName);
-        IF NOT "Read Only" THEN BEGIN
-          IF CONFIRM(Text004,TRUE) THEN
-            ImportAttachmentFromClientFile(FileName,IsTemporary,FALSE);
-          DeleteFile(FileName);
-        END ELSE
-          IF CONFIRM(Text016,TRUE) THEN
+      IF CURRENTCLIENTTYPE IN [CLIENTTYPE::Web,CLIENTTYPE::Tablet,CLIENTTYPE::Phone] THEN
+        ProcessWebAttachment(WordCaption + '.' + "File Extension")
+      ELSE
+        IF WordManagement.IsWordDocumentExtension("File Extension") THEN
+          WordManagement.RunMergedDocument(SegLine,Rec,WordCaption,IsTemporary,IsVisible,Handler)
+        ELSE BEGIN
+          FileName := ConstFilename;
+          ExportAttachmentToClientFile(FileName);
+          HYPERLINK(FileName);
+          IF NOT "Read Only" THEN BEGIN
+            IF CONFIRM(Text004,TRUE) THEN
+              ImportAttachmentFromClientFile(FileName,IsTemporary,FALSE);
             DeleteFile(FileName);
-      END;
+          END ELSE
+            IF CONFIRM(Text016,TRUE) THEN
+              DeleteFile(FileName);
+        END;
     END;
 
     PROCEDURE ExportAttachmentToClientFile@2(VAR ExportToFile@1000 : Text) : Boolean;
@@ -187,6 +201,7 @@ OBJECT Table 5062 Attachment
       ServerFileName@1010 : Text;
       NewAttachmentNo@1003 : Integer;
     BEGIN
+      CLEARLASTERROR;
       IF IsTemporary THEN
         EXIT(ImportTemporaryAttachmentFromClientFile(ImportFromFile));
 
@@ -209,8 +224,11 @@ OBJECT Table 5062 Attachment
       // then function updates the server file path with the actual client name
       ServerFileName := TEMPORARYPATH;
       FileName := ImportFromFile;
-      IF NOT UPLOAD(Text006,'',Text007,FileName,ServerFileName) THEN
-        ERROR(Text008,GETLASTERRORTEXT);
+      IF NOT UPLOAD(Text006,'',Text007,FileName,ServerFileName) THEN BEGIN
+        IF GETLASTERRORTEXT <> '' THEN
+          ERROR(Text008,GETLASTERRORTEXT);
+        EXIT(FALSE);
+      END;
 
       EXIT(ImportAttachmentFromServerFile(ServerFileName,FALSE,TRUE));
     END;
@@ -502,6 +520,17 @@ OBJECT Table 5062 Attachment
     BEGIN
       "Email Entry ID".CREATEOUTSTREAM(Stream);
       Stream.WRITETEXT(EntryID);
+    END;
+
+    LOCAL PROCEDURE ProcessWebAttachment@27(FileName@1000 : Text);
+    BEGIN
+      IF CONFIRM(AttachmentExportQst,TRUE) THEN BEGIN
+        TempBlob.Blob := Attachment;
+        FileMgt.BLOBExport(TempBlob,FileName,TRUE);
+        IF NOT "Read Only" THEN
+          IF CONFIRM(AttachmentImportQst,TRUE) THEN
+            ImportAttachmentFromClientFile('',ISTEMPORARY,FALSE);
+      END
     END;
 
     BEGIN

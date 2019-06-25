@@ -2,9 +2,9 @@ OBJECT Page 9306 Purchase Quotes
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -79,7 +79,7 @@ OBJECT Page 9306 Purchase Quotes
                       ActionContainerType=ActionItems }
       { 50      ;1   ;Action    ;
                       Name=MakeOrder;
-                      CaptionML=[DAN=Lav &ordre;
+                      CaptionML=[DAN=Opret &ordre;
                                  ENU=Make &Order];
                       Promoted=Yes;
                       Image=MakeOrder;
@@ -244,19 +244,11 @@ OBJECT Page 9306 Purchase Quotes
 
     { 113 ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 1 Code";
-                Visible=FALSE;
-                OnLookup=BEGIN
-                           DimMgt.LookupDimValueCodeNoUpdate(1);
-                         END;
-                          }
+                Visible=FALSE }
 
     { 111 ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 2 Code";
-                Visible=FALSE;
-                OnLookup=BEGIN
-                           DimMgt.LookupDimValueCodeNoUpdate(2);
-                         END;
-                          }
+                Visible=FALSE }
 
     { 115 ;2   ;Field     ;
                 SourceExpr="Location Code";
@@ -316,7 +308,6 @@ OBJECT Page 9306 Purchase Quotes
   CODE
   {
     VAR
-      DimMgt@1000 : Codeunit 408;
       DocPrint@1102601000 : Codeunit 229;
       OpenApprovalEntriesExist@1002 : Boolean;
 

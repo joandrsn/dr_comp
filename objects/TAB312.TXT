@@ -2,9 +2,9 @@ OBJECT Table 312 Purchases & Payables Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -96,6 +96,21 @@ OBJECT Table 312 Purchases & Payables Setup
                                                               ENU=Posted Prepmt. Cr. Memo Nos.] }
     { 29  ;   ;Check Prepmt. when Posting;Boolean ;CaptionML=[DAN=Kontroller forudbetaling ved bogføring;
                                                               ENU=Check Prepmt. when Posting] }
+    { 33  ;   ;Prepmt. Auto Update Frequency;Option;
+                                                   OnValidate=VAR
+                                                                PrepaymentMgt@1000 : Codeunit 441;
+                                                              BEGIN
+                                                                IF "Prepmt. Auto Update Frequency" = xRec."Prepmt. Auto Update Frequency" THEN
+                                                                  EXIT;
+
+                                                                PrepaymentMgt.CreateAndStartJobQueueEntryPurchase("Prepmt. Auto Update Frequency");
+                                                              END;
+
+                                                   CaptionML=[DAN=Frekvens for automatisk opdatering af forudbetaling;
+                                                              ENU=Prepmt. Auto Update Frequency];
+                                                   OptionCaptionML=[DAN=Aldrig,Dagligt,Ugentligt;
+                                                                    ENU=Never,Daily,Weekly];
+                                                   OptionString=Never,Daily,Weekly }
     { 35  ;   ;Default Posting Date;Option        ;CaptionML=[DAN=Standardbogføringsdato;
                                                               ENU=Default Posting Date];
                                                    OptionCaptionML=[DAN=Arbejdsdato,Ingen dato;
@@ -137,6 +152,8 @@ OBJECT Table 312 Purchases & Payables Setup
                                                    MinValue=0 }
     { 43  ;   ;Notify On Success   ;Boolean       ;CaptionML=[DAN=Informer i tilfælde af succes;
                                                               ENU=Notify On Success] }
+    { 46  ;   ;Allow Document Deletion Before;Date;CaptionML=[DAN=Tillad sletning af dokument før;
+                                                              ENU=Allow Document Deletion Before] }
     { 1217;   ;Debit Acc. for Non-Item Lines;Code20;
                                                    TableRelation="G/L Account" WHERE (Direct Posting=CONST(Yes),
                                                                                       Account Type=CONST(Posting),

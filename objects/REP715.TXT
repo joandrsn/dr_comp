@@ -2,9 +2,9 @@ OBJECT Report 715 Price List
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -116,6 +116,8 @@ OBJECT Report 715 Price List
                SourceExpr=CompanyAddr[6] }
 
     { 42  ;1   ;Column  ;SalesType           ;
+               OptionCaptionML=[DAN=Debitor,Debitorprisgruppe,Alle debitorer,Kampagne;
+                                ENU=Customer,Customer Price Group,All Customers,Campaign];
                SourceExpr=SalesType }
 
     { 43  ;1   ;Column  ;SalesCode           ;

@@ -2,9 +2,9 @@ OBJECT Table 167 Job
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -83,8 +83,7 @@ OBJECT Table 167 Job
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Description;
-                                                   OnValidate=BEGIN
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   JobsSetup.GET;
                                                                   NoSeriesMgt.TestManual(JobsSetup."Job Nos.");
@@ -92,6 +91,7 @@ OBJECT Table 167 Job
                                                                 END;
                                                               END;
 
+                                                   AltSearchField=Search Description;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 2   ;   ;Search Description  ;Code50        ;CaptionML=[DAN=Søgebeskrivelse;
@@ -310,6 +310,8 @@ OBJECT Table 167 Job
                                                                     CurrencyUpdatePurchLines;
                                                                   END ELSE
                                                                     ERROR(Text000,FIELDCAPTION("Currency Code"),TABLECAPTION);
+                                                                IF "Currency Code" <> '' THEN
+                                                                  VALIDATE("Invoice Currency Code",'');
                                                               END;
 
                                                    CaptionML=[DAN=Valutakode;
@@ -398,6 +400,11 @@ OBJECT Table 167 Job
                                                               ENU=WIP G/L Posting Date];
                                                    Editable=No }
     { 1011;   ;Invoice Currency Code;Code10       ;TableRelation=Currency;
+                                                   OnValidate=BEGIN
+                                                                IF "Invoice Currency Code" <> '' THEN
+                                                                  VALIDATE("Currency Code",'');
+                                                              END;
+
                                                    CaptionML=[DAN=Faktureringsvalutakode;
                                                               ENU=Invoice Currency Code] }
     { 1012;   ;Exch. Calculation (Cost);Option    ;CaptionML=[DAN=Kursberegning (kostbeløb);
@@ -737,6 +744,8 @@ OBJECT Table 167 Job
         Cust.GET("Bill-to Customer No.");
         Cust.TESTFIELD("Customer Posting Group");
         Cust.TESTFIELD("Bill-to Customer No.",'');
+        IF Cust."Privacy Blocked" THEN
+          ERROR(Cust.GetPrivacyBlockedGenericErrorText(Cust));
         IF Cust.Blocked = Cust.Blocked::All THEN
           ERROR(
             Text012,
@@ -753,6 +762,8 @@ OBJECT Table 167 Job
         "Bill-to Post Code" := Cust."Post Code";
         "Bill-to Country/Region Code" := Cust."Country/Region Code";
         "Invoice Currency Code" := Cust."Currency Code";
+        IF "Invoice Currency Code" <> '' THEN
+          VALIDATE("Currency Code",'');
         "Customer Disc. Group" := Cust."Customer Disc. Group";
         "Customer Price Group" := Cust."Customer Price Group";
         "Language Code" := Cust."Language Code";

@@ -2,9 +2,9 @@ OBJECT Codeunit 364 PostPurchLines-Delete
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -25,6 +25,7 @@ OBJECT Codeunit 364 PostPurchLines-Delete
       PurchShptLine@1003 : Record 6651;
       ItemTrackingMgt@1004 : Codeunit 6500;
       MoveEntries@1005 : Codeunit 361;
+      DocumentDeletionErr@1006 : TextConst '@@@=%1 - Posting Date;DAN=Du kan ikke slette bogførte købsdokumenter, der er bogført efter %1. \\Datoen er defineret af feltet Tillad sletning af dokument før i vinduet Opsætning af Køb.;ENU=You cannot delete posted purchase documents that are posted after %1. \\The date is defined by the Allow Document Deletion Before field in the Purchases & Payables window.';
 
     PROCEDURE DeletePurchRcptLines@1(PurchRcptHeader@1000 : Record 120);
     BEGIN
@@ -77,6 +78,16 @@ OBJECT Codeunit 364 PostPurchLines-Delete
         DATABASE::"Return Shipment Line",0,ReturnShptHeader."No.",'',0,0,TRUE);
 
       MoveEntries.MoveDocRelatedEntries(DATABASE::"Return Shipment Header",ReturnShptHeader."No.");
+    END;
+
+    PROCEDURE IsDocumentDeletionAllowed@4(PostingDate@1001 : Date);
+    VAR
+      PurchSetup@1000 : Record 312;
+    BEGIN
+      PurchSetup.GET;
+      PurchSetup.TESTFIELD("Allow Document Deletion Before");
+      IF PostingDate >= PurchSetup."Allow Document Deletion Before" THEN
+        ERROR(STRSUBSTNO(DocumentDeletionErr,PurchSetup."Allow Document Deletion Before"));
     END;
 
     BEGIN

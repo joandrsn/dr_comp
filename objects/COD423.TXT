@@ -2,9 +2,9 @@ OBJECT Codeunit 423 Change Log Management
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -25,7 +25,6 @@ OBJECT Codeunit 423 Change Log Management
       TempChangeLogSetupTable@1002 : TEMPORARY Record 403;
       ChangeLogSetupField@1004 : Record 404;
       TempChangeLogSetupField@1005 : TEMPORARY Record 404;
-      TempField@1006 : TEMPORARY Record 2000000041;
       ChangeLogSetupRead@1001 : Boolean;
 
     PROCEDURE GetDatabaseTableTriggerSetup@11(TableID@1004 : Integer;VAR LogInsert@1003 : Boolean;VAR LogModify@1002 : Boolean;VAR LogDelete@1001 : Boolean;VAR LogRename@1000 : Boolean);
@@ -160,6 +159,7 @@ OBJECT Codeunit 423 Change Log Management
       KeyRef1@1006 : KeyRef;
       i@1007 : Integer;
     BEGIN
+      ChangeLogEntry.CHANGECOMPANY(RecRef.CURRENTCOMPANY);
       ChangeLogEntry.INIT;
       ChangeLogEntry."Date and Time" := CURRENTDATETIME;
       ChangeLogEntry.Time := DT2TIME(ChangeLogEntry."Date and Time");
@@ -223,7 +223,7 @@ OBJECT Codeunit 423 Change Log Management
       FOR i := 1 TO RecRef.FIELDCOUNT DO BEGIN
         FldRef := RecRef.FIELDINDEX(i);
         IF HasValue(FldRef) THEN
-          IF IsNormalField(RecRef.NUMBER,FldRef.NUMBER) THEN
+          IF IsNormalField(FldRef) THEN
             IF IsLogActive(RecRef.NUMBER,FldRef.NUMBER,0) THEN
               InsertLogEntry(FldRef,FldRef,RecRef,0,TRUE);
       END;
@@ -253,15 +253,16 @@ OBJECT Codeunit 423 Change Log Management
       FOR i := 1 TO RecRef.FIELDCOUNT DO BEGIN
         FldRef := RecRef.FIELDINDEX(i);
         xFldRef := xRecRef.FIELDINDEX(i);
-        IF IsNormalField(RecRef.NUMBER,FldRef.NUMBER) THEN
+        IF IsNormalField(FldRef) THEN
           IF FORMAT(FldRef.VALUE) <> FORMAT(xFldRef.VALUE) THEN
             IF IsLogActive(RecRef.NUMBER,FldRef.NUMBER,1) THEN
               InsertLogEntry(FldRef,xFldRef,RecRef,1,IsReadable);
       END;
     END;
 
-    PROCEDURE LogRename@9(VAR RecRef@1000 : RecordRef;VAR xRecRef@1001 : RecordRef);
+    PROCEDURE LogRename@9(VAR RecRef@1000 : RecordRef;VAR xRecRefParam@1001 : RecordRef);
     VAR
+      xRecRef@1005 : RecordRef;
       FldRef@1003 : FieldRef;
       xFldRef@1004 : FieldRef;
       i@1002 : Integer;
@@ -271,11 +272,13 @@ OBJECT Codeunit 423 Change Log Management
 
       IF NOT IsLogActive(RecRef.NUMBER,0,1) THEN
         EXIT;
-      xRecRef.GET(xRecRef.RECORDID);
+
+      xRecRef.OPEN(xRecRefParam.NUMBER,FALSE,RecRef.CURRENTCOMPANY);
+      xRecRef.GET(xRecRefParam.RECORDID);
       FOR i := 1 TO RecRef.FIELDCOUNT DO BEGIN
         FldRef := RecRef.FIELDINDEX(i);
         xFldRef := xRecRef.FIELDINDEX(i);
-        IF IsNormalField(RecRef.NUMBER,FldRef.NUMBER) THEN
+        IF IsNormalField(FldRef) THEN
           IF FORMAT(FldRef.VALUE) <> FORMAT(xFldRef.VALUE) THEN
             IF IsLogActive(RecRef.NUMBER,FldRef.NUMBER,1) THEN
               InsertLogEntry(FldRef,xFldRef,RecRef,1,TRUE);
@@ -295,30 +298,15 @@ OBJECT Codeunit 423 Change Log Management
       FOR i := 1 TO RecRef.FIELDCOUNT DO BEGIN
         FldRef := RecRef.FIELDINDEX(i);
         IF HasValue(FldRef) THEN
-          IF IsNormalField(RecRef.NUMBER,FldRef.NUMBER) THEN
+          IF IsNormalField(FldRef) THEN
             IF IsLogActive(RecRef.NUMBER,FldRef.NUMBER,2) THEN
               InsertLogEntry(FldRef,FldRef,RecRef,2,TRUE);
       END;
     END;
 
-    LOCAL PROCEDURE IsNormalField@12(TableNumber@1001 : Integer;FieldNumber@1002 : Integer) : Boolean;
-    VAR
-      Field@1000 : Record 2000000041;
+    LOCAL PROCEDURE IsNormalField@12(FieldRef@1001 : FieldRef) : Boolean;
     BEGIN
-      GetField(TableNumber,FieldNumber,Field);
-      EXIT(Field.Class = TempField.Class::Normal);
-    END;
-
-    LOCAL PROCEDURE GetField@7(TableNumber@1001 : Integer;FieldNumber@1002 : Integer;VAR Field2@1003 : Record 2000000041);
-    VAR
-      Field@1000 : Record 2000000041;
-    BEGIN
-      IF NOT TempField.GET(TableNumber,FieldNumber) THEN BEGIN
-        Field.GET(TableNumber,FieldNumber);
-        TempField := Field;
-        TempField.INSERT;
-      END;
-      Field2 := TempField;
+      EXIT(FORMAT(FieldRef.CLASS) = 'Normal')
     END;
 
     LOCAL PROCEDURE HasValue@10(FldRef@1000 : FieldRef) : Boolean;

@@ -2,9 +2,9 @@ OBJECT Codeunit 8 AccSchedManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=21-12-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.49741;
   }
   PROPERTIES
   {
@@ -249,24 +249,23 @@ OBJECT Codeunit 8 AccSchedManagement
       EXIT(31129999D);
     END;
 
-    LOCAL PROCEDURE AccPeriodStartEnd@26(Formula@1002 : Code[20];Date@1000 : Date;VAR StartDate@1013 : Date;VAR EndDate@1014 : Date);
+    LOCAL PROCEDURE AccPeriodStartEnd@26(ColumnLayout@1002 : Record 334;Date@1000 : Date;VAR StartDate@1013 : Date;VAR EndDate@1014 : Date);
     VAR
-      ColumnLayout@1006 : Record 334;
       AccountingPeriod@1001 : Record 50;
       AccountingPeriodFY@1007 : Record 50;
       Steps@1005 : Integer;
-      Type@1004 : ' ,Period,Fiscal year,Fiscal Halfyear,Fiscal Quarter';
+      Type@1004 : ' ,Period,Fiscal Year';
       CurrentPeriodNo@1003 : Integer;
       RangeFromType@1012 : 'Int,CP,LP';
       RangeToType@1011 : 'Int,CP,LP';
       RangeFromInt@1010 : Integer;
       RangeToInt@1009 : Integer;
     BEGIN
-      IF Formula = '' THEN
+      IF ColumnLayout."Comparison Period Formula" = '' THEN
         EXIT;
 
       ColumnLayout.ParsePeriodFormula(
-        Formula,Steps,Type,RangeFromType,RangeToType,RangeFromInt,RangeToInt);
+        ColumnLayout."Comparison Period Formula",Steps,Type,RangeFromType,RangeToType,RangeFromInt,RangeToInt);
 
       // Find current period
       AccountingPeriod.SETFILTER("Starting Date",'<=%1',Date);
@@ -287,7 +286,7 @@ OBJECT Codeunit 8 AccSchedManagement
             StartDate := AccountingPeriod."Starting Date";
             EndDate := AccPeriodEndDate(StartDate);
           END;
-        Type::"Fiscal year":
+        Type::"Fiscal Year":
           BEGIN
             AccountingPeriodFY := AccountingPeriod;
             WHILE NOT AccountingPeriodFY."New Fiscal Year" DO
@@ -845,18 +844,8 @@ OBJECT Codeunit 8 AccSchedManagement
                   END;
                   Balance := Amount;
                 END;
-              IF CalcAddCurr THEN BEGIN
-                IF NOT GLSetupRead THEN BEGIN
-                  GLSetup.GET;
-                  GLSetupRead := TRUE;
-                  IF GLSetup."Additional Reporting Currency" <> '' THEN
-                    AddRepCurrency.GET(GLSetup."Additional Reporting Currency");
-                END;
-                IF GLSetup."Additional Reporting Currency" <> '' THEN
-                  ColValue := ROUND(ExchangeAmtAddCurrToLCY(ColValue),AddRepCurrency."Amount Rounding Precision")
-                ELSE
-                  ColValue := 0;
-              END;
+              IF CalcAddCurr THEN
+                ColValue := CalcLCYToACY(ColValue);
             END;
         END;
         IF TestBalance THEN BEGIN
@@ -1001,14 +990,14 @@ OBJECT Codeunit 8 AccSchedManagement
       FiscalStartDate2@1004 : Date;
     BEGIN
       WITH ColumnLayout DO BEGIN
-        CalcColumnDates("Comparison Date Formula","Comparison Period Formula",FromDate,ToDate,FiscalStartDate2);
+        CalcColumnDates(ColumnLayout,FromDate,ToDate,FiscalStartDate2);
         CASE "Column Type" OF
           "Column Type"::"Net Change":
             CASE AccSchedLine2."Row Type" OF
               AccSchedLine2."Row Type"::"Net Change":
                 GLAcc.SETRANGE("Date Filter",FromDate,ToDate);
               AccSchedLine2."Row Type"::"Beginning Balance":
-                GLAcc.SETFILTER("Date Filter",'..%1',FromDate - 1); // always includes closing date
+                GLAcc.SETFILTER("Date Filter",'..%1',CLOSINGDATE(FromDate - 1)); // always includes closing date
               AccSchedLine2."Row Type"::"Balance at Date":
                 GLAcc.SETRANGE("Date Filter",0D,ToDate);
             END;
@@ -1028,7 +1017,7 @@ OBJECT Codeunit 8 AccSchedManagement
               AccSchedLine2."Row Type"::"Net Change":
                 GLAcc.SETRANGE("Date Filter",FiscalStartDate2,ToDate);
               AccSchedLine2."Row Type"::"Beginning Balance":
-                GLAcc.SETFILTER("Date Filter",'..%1',FiscalStartDate2 - 1); // always includes closing date
+                GLAcc.SETFILTER("Date Filter",'..%1',CLOSINGDATE(FiscalStartDate2 - 1)); // always includes closing date
               AccSchedLine2."Row Type"::"Balance at Date":
                 GLAcc.SETRANGE("Date Filter",0D,ToDate);
             END;
@@ -1050,7 +1039,7 @@ OBJECT Codeunit 8 AccSchedManagement
                   FiscalStartDate2,
                   FindEndOfFiscalYear(FiscalStartDate2));
               AccSchedLine2."Row Type"::"Beginning Balance":
-                GLAcc.SETFILTER("Date Filter",'..%1',FiscalStartDate2 - 1); // always includes closing date
+                GLAcc.SETFILTER("Date Filter",'..%1',CLOSINGDATE(FiscalStartDate2 - 1)); // always includes closing date
               AccSchedLine2."Row Type"::"Balance at Date":
                 GLAcc.SETRANGE("Date Filter",0D,FindEndOfFiscalYear(ToDate));
             END;
@@ -1065,25 +1054,7 @@ OBJECT Codeunit 8 AccSchedManagement
       FiscalStartDate2@1004 : Date;
     BEGIN
       WITH ColumnLayout2 DO BEGIN
-        IF (FORMAT("Comparison Date Formula") <> '0') AND (FORMAT("Comparison Date Formula") <> '') THEN BEGIN
-          FromDate := CALCDATE("Comparison Date Formula",StartDate);
-          IF (StartDate = CALCDATE('<-CM>',StartDate)) AND
-             (FromDate = CALCDATE('<-CM>',FromDate)) AND
-             (EndDate = CALCDATE('<CM>',EndDate))
-          THEN
-            ToDate := CALCDATE('<CM>',EndDate)
-          ELSE
-            ToDate := CALCDATE("Comparison Date Formula",EndDate);
-          FiscalStartDate2 := FindFiscalYear(ToDate);
-        END ELSE
-          IF "Comparison Period Formula" <> '' THEN BEGIN
-            AccPeriodStartEnd("Comparison Period Formula",StartDate,FromDate,ToDate);
-            FiscalStartDate2 := FindFiscalYear(ToDate);
-          END ELSE BEGIN
-            FromDate := StartDate;
-            ToDate := EndDate;
-            FiscalStartDate2 := FiscalStartDate;
-          END;
+        CalcColumnDates(ColumnLayout2,FromDate,ToDate,FiscalStartDate2);
         CASE "Column Type" OF
           "Column Type"::"Net Change":
             CASE AccSchedLine2."Row Type" OF
@@ -1667,6 +1638,8 @@ OBJECT Codeunit 8 AccSchedManagement
                 ColValue := CostBudgEntry.Amount;
           END;
           Balance := CostBudgEntry.Amount;
+          IF CalcAddCurr THEN
+            ColValue := CalcLCYToACY(ColValue);
         END;
 
         IF TestBalance THEN BEGIN
@@ -1711,7 +1684,7 @@ OBJECT Codeunit 8 AccSchedManagement
       FiscalStartDate2@1005 : Date;
     BEGIN
       WITH ColumnLayout DO BEGIN
-        CalcColumnDates("Comparison Date Formula","Comparison Period Formula",FromDate,ToDate,FiscalStartDate2);
+        CalcColumnDates(ColumnLayout,FromDate,ToDate,FiscalStartDate2);
         CASE "Column Type" OF
           "Column Type"::"Net Change":
             CASE AccSchedLine2."Row Type" OF
@@ -1792,8 +1765,14 @@ OBJECT Codeunit 8 AccSchedManagement
         (AccSchedLine.GETFILTER("Cost Object Filter") <> ''));
     END;
 
-    PROCEDURE CalcColumnDates@41(ComparisonDateFormula@1000 : DateFormula;ComparisonPeriodFormula@1006 : Code[20];VAR FromDate@1001 : Date;VAR ToDate@1002 : Date;VAR FiscalStartDate2@1005 : Date);
+    PROCEDURE CalcColumnDates@41(ColumnLayout@1003 : Record 334;VAR FromDate@1001 : Date;VAR ToDate@1002 : Date;VAR FiscalStartDate2@1005 : Date);
+    VAR
+      ComparisonDateFormula@1004 : DateFormula;
+      ComparisonPeriodFormula@1000 : Code[20];
     BEGIN
+      ComparisonDateFormula := ColumnLayout."Comparison Date Formula";
+      ComparisonPeriodFormula := ColumnLayout."Comparison Period Formula";
+
       IF (FORMAT(ComparisonDateFormula) <> '0') AND (FORMAT(ComparisonDateFormula) <> '') THEN BEGIN
         FromDate := CALCDATE(ComparisonDateFormula,StartDate);
         ToDate := CALCDATE(ComparisonDateFormula,EndDate);
@@ -1805,7 +1784,7 @@ OBJECT Codeunit 8 AccSchedManagement
         FiscalStartDate2 := FindFiscalYear(ToDate);
       END ELSE
         IF ComparisonPeriodFormula <> '' THEN BEGIN
-          AccPeriodStartEnd(ComparisonPeriodFormula,StartDate,FromDate,ToDate);
+          AccPeriodStartEnd(ColumnLayout,StartDate,FromDate,ToDate);
           FiscalStartDate2 := FindFiscalYear(ToDate);
         END ELSE BEGIN
           FromDate := StartDate;
@@ -2083,6 +2062,19 @@ OBJECT Codeunit 8 AccSchedManagement
     PROCEDURE ForceRecalculate@55(NewRecalculate@1000 : Boolean);
     BEGIN
       Recalculate := NewRecalculate;
+    END;
+
+    LOCAL PROCEDURE CalcLCYToACY@46(ColValue@1000 : Decimal) : Decimal;
+    BEGIN
+      IF NOT GLSetupRead THEN BEGIN
+        GLSetup.GET;
+        GLSetupRead := TRUE;
+        IF GLSetup."Additional Reporting Currency" <> '' THEN
+          AddRepCurrency.GET(GLSetup."Additional Reporting Currency");
+      END;
+      IF GLSetup."Additional Reporting Currency" <> '' THEN
+        EXIT(ROUND(ExchangeAmtAddCurrToLCY(ColValue),AddRepCurrency."Amount Rounding Precision"));
+      EXIT(0);
     END;
 
     BEGIN

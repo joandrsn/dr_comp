@@ -2,7 +2,7 @@ OBJECT Table 2000000110 Active Session
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=30-05-19;
     Time=12:00:00;
     Version List=;
   }
@@ -40,10 +40,14 @@ OBJECT Table 2000000110 Active Session
                                                               ENU=Login Datetime] }
     { 10  ;   ;Database Name       ;Text250       ;CaptionML=[DAN=Databasenavn;
                                                               ENU=Database Name] }
+    { 11  ;   ;Session Unique ID   ;GUID          ;CaptionML=[DAN=Entydigt sessions-id;
+                                                              ENU=Session Unique ID] }
   }
   KEYS
   {
     {    ;Server Instance ID,Session ID           ;Clustered=Yes }
+    {    ;Login Datetime                           }
+    {    ;User SID,Client Type                     }
   }
   FIELDGROUPS
   {

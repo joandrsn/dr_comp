@@ -2,9 +2,9 @@ OBJECT Report 109 Customer - Summary Aging Simp.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -2127,6 +2127,7 @@ OBJECT Report 109 Customer - Summary Aging Simp.
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -2222,6 +2223,7 @@ OBJECT Report 109 Customer - Summary Aging Simp.
               </Style>
             </Textbox>
             <Textbox Name="Customer___Summary_Aging_Simp_Caption1">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

@@ -2,7 +2,7 @@ OBJECT Table 2000000072 Profile
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=30-05-19;
     Time=12:00:00;
     Version List=;
   }
@@ -18,7 +18,7 @@ OBJECT Table 2000000072 Profile
                                                               ENU=Profile ID] }
     { 12  ;   ;Description         ;Text250       ;CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
-    { 15  ;   ;Role Center ID      ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Page));
+    { 15  ;   ;Role Center ID      ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Page));
                                                    CaptionML=[DAN=Rollecenter-id;
                                                               ENU=Role Center ID] }
     { 18  ;   ;Default Role Center ;Boolean       ;CaptionML=[DAN=Standardrollecenter;

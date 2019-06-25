@@ -2,9 +2,9 @@ OBJECT Codeunit 1002 Job Create-Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=27-09-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.49326;
   }
   PROPERTIES
   {
@@ -325,7 +325,7 @@ OBJECT Codeunit 1002 Job Create-Invoice
 
       IF (NOT JobInvCurrency) AND (JobPlanningLine.Type <> JobPlanningLine.Type::Text) THEN BEGIN
         SalesHeader.TESTFIELD("Currency Code",JobPlanningLine."Currency Code");
-        IF Job."Currency Code" <> '' THEN BEGIN
+        IF (Job."Currency Code" <> '') AND (JobPlanningLine."Currency Factor" <> SalesHeader."Currency Factor") THEN BEGIN
           IF CONFIRM(Text011) THEN BEGIN
             JobPlanningLine.VALIDATE("Currency Factor",SalesHeader."Currency Factor");
             JobPlanningLine.MODIFY;
@@ -560,6 +560,8 @@ OBJECT Codeunit 1002 Job Create-Invoice
             TempJobPlanningLineInvoice."Quantity Transferred" := JobPlanningLineInvoice."Quantity Transferred";
             TempJobPlanningLineInvoice."Invoiced Amount (LCY)" := JobPlanningLineInvoice."Invoiced Amount (LCY)";
             TempJobPlanningLineInvoice."Invoiced Cost Amount (LCY)" := JobPlanningLineInvoice."Invoiced Cost Amount (LCY)";
+            TempJobPlanningLineInvoice."Invoiced Date" := JobPlanningLineInvoice."Invoiced Date";
+            TempJobPlanningLineInvoice."Transferred Date" := JobPlanningLineInvoice."Transferred Date";
             TempJobPlanningLineInvoice.INSERT;
           END;
         UNTIL JobPlanningLineInvoice.NEXT = 0;

@@ -2,9 +2,9 @@ OBJECT Table 9186 Generic Chart Memo Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,10 +13,12 @@ OBJECT Table 9186 Generic Chart Memo Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Code                ;Code10        ;CaptionML=[DAN=Kode;
+    { 1   ;   ;Code                ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kode;
                                                               ENU=Code];
                                                    NotBlank=Yes }
     { 2   ;   ;Language Code       ;Code10        ;TableRelation=Language.Code;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code];
                                                    NotBlank=Yes }
@@ -24,25 +26,35 @@ OBJECT Table 9186 Generic Chart Memo Buffer
                                                    CalcFormula=Lookup(Language.Name WHERE (Code=FIELD(Language Code)));
                                                    CaptionML=[DAN=Sprognavn;
                                                               ENU=Language Name] }
-    { 11  ;   ;Memo1               ;Text250       ;CaptionML=[DAN=Memo1;
+    { 11  ;   ;Memo1               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo1;
                                                               ENU=Memo1] }
-    { 12  ;   ;Memo2               ;Text250       ;CaptionML=[DAN=Memo2;
+    { 12  ;   ;Memo2               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo2;
                                                               ENU=Memo2] }
-    { 13  ;   ;Memo3               ;Text250       ;CaptionML=[DAN=Memo3;
+    { 13  ;   ;Memo3               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo3;
                                                               ENU=Memo3] }
-    { 14  ;   ;Memo4               ;Text250       ;CaptionML=[DAN=Memo4;
+    { 14  ;   ;Memo4               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo4;
                                                               ENU=Memo4] }
-    { 15  ;   ;Memo5               ;Text250       ;CaptionML=[DAN=Memo5;
+    { 15  ;   ;Memo5               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo5;
                                                               ENU=Memo5] }
-    { 16  ;   ;Memo6               ;Text250       ;CaptionML=[DAN=Memo6;
+    { 16  ;   ;Memo6               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo6;
                                                               ENU=Memo6] }
-    { 17  ;   ;Memo7               ;Text250       ;CaptionML=[DAN=Memo7;
+    { 17  ;   ;Memo7               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo7;
                                                               ENU=Memo7] }
-    { 18  ;   ;Memo8               ;Text250       ;CaptionML=[DAN=Memo8;
+    { 18  ;   ;Memo8               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo8;
                                                               ENU=Memo8] }
-    { 19  ;   ;Memo9               ;Text250       ;CaptionML=[DAN=Memo9;
+    { 19  ;   ;Memo9               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo9;
                                                               ENU=Memo9] }
-    { 20  ;   ;Memo10              ;Text250       ;CaptionML=[DAN=Memo10;
+    { 20  ;   ;Memo10              ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Memo10;
                                                               ENU=Memo10] }
   }
   KEYS

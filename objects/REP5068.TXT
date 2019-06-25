@@ -2,9 +2,9 @@ OBJECT Report 5068 Opportunity - Details
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -3904,6 +3904,7 @@ OBJECT Report 5068 Opportunity - Details
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -3921,9 +3922,9 @@ OBJECT Report 5068 Opportunity - Details
                 </Paragraph>
               </Paragraphs>
               <Top>0.846cm</Top>
-              <Left>14.9cm</Left>
+              <Left>12.9cm</Left>
               <Height>0.42384cm</Height>
-              <Width>3.17052cm</Width>
+              <Width>5.17052cm</Width>
               <ZIndex>4</ZIndex>
               <Visibility>
                 <Hidden>=IIf(ReportItems!CurrReportPAGENOCaption1.Value = "",True,False)</Hidden>

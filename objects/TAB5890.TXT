@@ -2,9 +2,9 @@ OBJECT Table 5890 Error Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,15 +13,20 @@ OBJECT Table 5890 Error Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Error No.           ;Integer       ;CaptionML=[DAN=Fejlnr.;
+    { 1   ;   ;Error No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Fejlnr.;
                                                               ENU=Error No.] }
-    { 2   ;   ;Error Text          ;Text250       ;CaptionML=[DAN=Fejltekst;
+    { 2   ;   ;Error Text          ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Fejltekst;
                                                               ENU=Error Text] }
-    { 3   ;   ;Source Table        ;Integer       ;CaptionML=[DAN=Kildetabel;
+    { 3   ;   ;Source Table        ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildetabel;
                                                               ENU=Source Table] }
-    { 4   ;   ;Source No.          ;Code20        ;CaptionML=[DAN=Kildenr.;
+    { 4   ;   ;Source No.          ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildenr.;
                                                               ENU=Source No.] }
-    { 5   ;   ;Source Ref. No.     ;Integer       ;CaptionML=[DAN=Kildereferencenr.;
+    { 5   ;   ;Source Ref. No.     ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildereferencenr.;
                                                               ENU=Source Ref. No.] }
   }
   KEYS

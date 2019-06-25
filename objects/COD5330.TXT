@@ -2,9 +2,9 @@ OBJECT Codeunit 5330 CRM Integration Management
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -21,7 +21,6 @@ OBJECT Codeunit 5330 CRM Integration Management
       UnableToResolveCRMEntityNameFrmTableIDErr@1002 : TextConst '@@@="%1 = table ID (numeric)";DAN=Programmet er ikke designet til at integrere tabellen %1 med Dynamics CRM.;ENU=The application is not designed to integrate Table %1 with Dynamics CRM.';
       CouplingNotFoundErr@1000 : TextConst 'DAN=Recorden er ikke sammenkædet med Microsoft Dynamics CRM.;ENU=The record is not coupled to Microsoft Dynamics CRM.';
       NoCardPageActionDefinedForTableIdErr@1022 : TextConst '@@@="%1 = Table ID";DAN=Handlingen Åbn side understøttes ikke for tabellen %1.;ENU=The open page action is not supported for Table %1.';
-      CRMDocumentHasBeenPostedMsg@1004 : TextConst '@@@="%1=Document Type;%2=Document Id";DAN=%1 ''%2'' er blevet bogført.;ENU=%1 ''%2'' has been posted.';
       IntegrationTableMappingNotFoundErr@1005 : TextConst '@@@="%1 = Integration Table Mapping caption, %2 = Table caption for the table which is not mapped";DAN=%1 blev ikke fundet for tabel %2 .;ENU=No %1 was found for table %2.';
       UpdateNowDirectionQst@1006 : TextConst '@@@=String menu options separated by comma.;DAN=Send dataopdatering til Dynamics CRM.,Hent dataopdatering fra Dynamics CRM.;ENU=Send data update to Dynamics CRM.,Get data update from Dynamics CRM.';
       UpdateOneNowTitleTxt@1007 : TextConst '@@@="%1 = Table caption and value for the entity we want to synchronize now.";DAN=Synkroniser data for %1?;ENU=Synchronize data for %1?';
@@ -53,7 +52,9 @@ OBJECT Codeunit 5330 CRM Integration Management
       CRMIntegrationEnabledState@1021 : ' ,Not Enabled,Enabled,Enabled But Not For Current User';
       DoYouWantToEnableCRMQst@1025 : TextConst 'DAN=Integration af Dynamics CRM er ikke aktiveret.\\Vil du åbne vinduet Konfiguration af Microsoft Dynamics CRM-forbindelse?;ENU=Dynnamics CRM Integration is not enabled.\\Do you want to open the Microsoft Dynamics CRM Connection Setup window?';
       NotEnabledForCurrentUserMsg@1035 : TextConst '@@@="%1 = Current User Id";DAN=Integration af Dynamics CRM er aktiveret.\Men da feltet Dynamics NAV-brugere skal knyttes til Dynamics CRM-brugere er markeret, er integration af Dynamics CRM ikke aktiveret for %1.;ENU=Dynamics CRM Integration is enabled.\However, because the Dynamics NAV Users Must Map to Dynamics CRM Users field is set, Dynamics CRM integration is not enabled for %1.';
+      CRMSalesOrderId@1004 : GUID;
       CRMIntegrationEnabledLastError@1036 : Text;
+      CRMDocumentHasBeenPostedMsg@1037 : TextConst '@@@="%1=Document Type;%2=Document Id";DAN=%1 ''%2'' er blevet bogført.;ENU=%1 ''%2'' has been posted.';
 
     PROCEDURE IsCRMIntegrationEnabled@5() : Boolean;
     VAR
@@ -422,6 +423,7 @@ OBJECT Codeunit 5330 CRM Integration Management
 
       CRMAccount.GET(CRMID);
       CRMStatisticsJob.CreateOrUpdateCRMAccountStatistics(Customer,CRMAccount);
+      CRMStatisticsJob.UpdateStatusOfPaidInvoices(Customer."No.");
       MESSAGE(AccountStatisticsUpdatedMsg);
     END;
 
@@ -544,7 +546,7 @@ OBJECT Codeunit 5330 CRM Integration Management
       END;
     END;
 
-    LOCAL PROCEDURE GetCRMEntityTypeName@7(TableId@1000 : Integer) : Text;
+    PROCEDURE GetCRMEntityTypeName@7(TableId@1000 : Integer) : Text;
     VAR
       TempNameValueBuffer@1001 : TEMPORARY Record 823;
       CRMSetupDefaults@1002 : Codeunit 5334;
@@ -667,52 +669,6 @@ OBJECT Codeunit 5330 CRM Integration Management
       CRMIncident.SETRANGE(CustomerId,CRMID);
       CRMIncident.FILTERGROUP := 2;
       PAGE.RUN(PAGE::"CRM Case List",CRMIncident);
-    END;
-
-    PROCEDURE AddPostToCRMEntityWall@29(TargetRecordID@1000 : RecordID;Message@1004 : Text);
-    VAR
-      CRMPost@1003 : Record 5344;
-      EntityID@1001 : GUID;
-      EntityTypeName@1002 : Text;
-    BEGIN
-      IF NOT GetCRMEntityIdAndTypeName(TargetRecordID,EntityID,EntityTypeName) THEN
-        EXIT;
-
-      CLEAR(CRMPost);
-      EVALUATE(CRMPost.RegardingObjectTypeCode,EntityTypeName);
-      CRMPost.RegardingObjectId := EntityID;
-      CRMPost.Text := COPYSTR(Message,1,MAXSTRLEN(CRMPost.Text));
-      CRMPost.Source := CRMPost.Source::AutoPost;
-      CRMPost.Type := CRMPost.Type::Status;
-      CRMPost.INSERT;
-    END;
-
-    PROCEDURE AddPostedSalesDocumentToCRMAccountWall@119(SalesHeader@1002 : Record 36);
-    VAR
-      Customer@1000 : Record 18;
-      CRMIntegrationManagement@1001 : Codeunit 5330;
-      CRMSetupDefaults@1003 : Codeunit 5334;
-    BEGIN
-      IF NOT CRMIntegrationManagement.IsCRMIntegrationEnabled THEN
-        EXIT;
-      IF NOT CRMSetupDefaults.GetAddPostedSalesDocumentToCRMAccountWallConfig THEN
-        EXIT;
-      IF NOT (SalesHeader."Document Type" IN [SalesHeader."Document Type"::Order,SalesHeader."Document Type"::Invoice]) THEN
-        EXIT;
-
-      Customer.GET(SalesHeader."Sell-to Customer No.");
-      AddPostToCRMEntityWall(Customer.RECORDID,STRSUBSTNO(CRMDocumentHasBeenPostedMsg,SalesHeader."Document Type",SalesHeader."No."));
-    END;
-
-    PROCEDURE GetCRMEntityIdAndTypeName@30(DestinationRecordID@1001 : RecordID;VAR EntityID@1000 : GUID;VAR EntityTypeName@1002 : Text) : Boolean;
-    VAR
-      CRMIntegrationRecord@1003 : Record 5331;
-    BEGIN
-      IF NOT CRMIntegrationRecord.FindIDFromRecordID(DestinationRecordID,EntityID) THEN
-        EXIT(FALSE);
-
-      EntityTypeName := GetCRMEntityTypeName(DestinationRecordID.TABLENO);
-      EXIT(TRUE);
     END;
 
     PROCEDURE GetNoOfCRMOpportunities@13(Customer@1003 : Record 18) : Integer;
@@ -893,22 +849,7 @@ OBJECT Codeunit 5330 CRM Integration Management
       END;
     END;
 
-    PROCEDURE SetCRMSalesOrderStatusToInvoiced@111(SalesHeader@1000 : Record 36);
-    VAR
-      CRMSalesorder@1001 : Record 5353;
-    BEGIN
-      IF NOT IsCRMIntegrationEnabled THEN
-        EXIT;
-
-      CRMSalesorder.SETRANGE(OrderNumber,SalesHeader."External Document No.");
-      IF CRMSalesorder.FINDFIRST THEN BEGIN
-        CRMSalesorder.StateCode := CRMSalesorder.StateCode::Invoiced;
-        CRMSalesorder.StatusCode := CRMSalesorder.StatusCode::Invoiced;
-        CRMSalesorder.MODIFY;
-      END;
-    END;
-
-    PROCEDURE Clear@21();
+    PROCEDURE ClearState@21();
     BEGIN
       CRMIntegrationEnabledState := CRMIntegrationEnabledState::" "
     END;
@@ -924,6 +865,88 @@ OBJECT Codeunit 5330 CRM Integration Management
         IF NOT ISNULL(ErrorObject.InnerException) THEN
           EXIT(ErrorObject.InnerException.Message);
       EXIT(GETLASTERRORTEXT);
+    END;
+
+    PROCEDURE SetCRMSalesOrderIdOnSalesHeaderDeletion@40(VAR SalesHeader@1000 : Record 36;RunTrigger@1001 : Boolean);
+    VAR
+      CRMIntegrationRecord@1003 : Record 5331;
+    BEGIN
+      IF (SalesHeader."Document Type" <> SalesHeader."Document Type"::Order) OR
+         (SalesHeader.Status = SalesHeader.Status::Open) OR
+         RunTrigger // RunTrigger is expected to be FALSE on removal of Sales Order Header on posting
+      THEN
+        EXIT;
+      IF NOT IsCRMIntegrationEnabled THEN
+        EXIT;
+
+      IF NOT CRMIntegrationRecord.FindIDFromRecordID(SalesHeader.RECORDID,CRMSalesOrderId) THEN
+        CLEAR(CRMSalesOrderId);
+    END;
+
+    PROCEDURE PostCRMSalesDocumentOnAfterPostSalesDoc@39(VAR SalesHeader@1000 : Record 36);
+    BEGIN
+      IF NOT IsCRMIntegrationEnabled THEN
+        EXIT;
+
+      AddPostedSalesDocumentToCRMAccountWall(SalesHeader);
+
+      IF NOT ISNULLGUID(CRMSalesOrderId) THEN // Should be set by SetOrderOnSalesHeaderDeletion
+        SetCRMSalesOrderStateAsInvoiced;
+    END;
+
+    LOCAL PROCEDURE AddPostedSalesDocumentToCRMAccountWall@37(SalesHeader@1002 : Record 36);
+    VAR
+      Customer@1000 : Record 18;
+      CRMSetupDefaults@1003 : Codeunit 5334;
+    BEGIN
+      IF NOT CRMSetupDefaults.GetAddPostedSalesDocumentToCRMAccountWallConfig THEN
+        EXIT;
+      IF SalesHeader."Document Type" IN [SalesHeader."Document Type"::Order,SalesHeader."Document Type"::Invoice] THEN BEGIN
+        Customer.GET(SalesHeader."Sell-to Customer No.");
+        AddPostToCRMEntityWall(
+          Customer.RECORDID,STRSUBSTNO(CRMDocumentHasBeenPostedMsg,SalesHeader."Document Type",SalesHeader."No."));
+      END;
+    END;
+
+    LOCAL PROCEDURE AddPostToCRMEntityWall@34(TargetRecordID@1000 : RecordID;Message@1004 : Text);
+    VAR
+      CRMPost@1003 : Record 5344;
+      EntityID@1001 : GUID;
+      EntityTypeName@1002 : Text;
+    BEGIN
+      IF NOT GetCRMEntityIdAndTypeName(TargetRecordID,EntityID,EntityTypeName) THEN
+        EXIT;
+
+      CLEAR(CRMPost);
+      EVALUATE(CRMPost.RegardingObjectTypeCode,EntityTypeName);
+      CRMPost.RegardingObjectId := EntityID;
+      CRMPost.Text := COPYSTR(Message,1,MAXSTRLEN(CRMPost.Text));
+      CRMPost.Source := CRMPost.Source::AutoPost;
+      CRMPost.Type := CRMPost.Type::Status;
+      CRMPost.INSERT;
+    END;
+
+    LOCAL PROCEDURE GetCRMEntityIdAndTypeName@30(DestinationRecordID@1001 : RecordID;VAR EntityID@1000 : GUID;VAR EntityTypeName@1002 : Text) : Boolean;
+    VAR
+      CRMIntegrationRecord@1003 : Record 5331;
+    BEGIN
+      IF NOT CRMIntegrationRecord.FindIDFromRecordID(DestinationRecordID,EntityID) THEN
+        EXIT(FALSE);
+
+      EntityTypeName := GetCRMEntityTypeName(DestinationRecordID.TABLENO);
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE SetCRMSalesOrderStateAsInvoiced@29();
+    VAR
+      CRMSalesorder@1000 : Record 5353;
+    BEGIN
+      CRMSalesorder.GET(CRMSalesOrderId);
+      CRMSalesorder.StateCode := CRMSalesorder.StateCode::Invoiced;
+      CRMSalesorder.StatusCode := CRMSalesorder.StatusCode::Invoiced;
+      CRMSalesorder.MODIFY;
+
+      CLEAR(CRMSalesOrderId);
     END;
 
     BEGIN

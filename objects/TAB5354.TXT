@@ -2,16 +2,16 @@ OBJECT Table 5354 CRM Salesorderdetail
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49741;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=salesorderdetail;
-    CaptionML=[DAN=Order Product;
-               ENU=Order Product];
+    CaptionML=[DAN=CRM Salesorderdetail;
+               ENU=CRM Salesorderdetail];
     Description=Line item in a sales order.;
   }
   FIELDS
@@ -296,18 +296,6 @@ OBJECT Table 5354 CRM Salesorderdetail
                                                    CaptionML=[DAN=Version Number;
                                                               ENU=Version Number];
                                                    Description=Version number of the sales order detail. }
-    { 48  ;   ;OwningBusinessUnit  ;GUID          ;ExternalName=owningbusinessunit;
-                                                   ExternalType=Uniqueidentifier;
-                                                   ExternalAccess=Read;
-                                                   CaptionML=[DAN=Owning Business Unit;
-                                                              ENU=Owning Business Unit];
-                                                   Description=Unique identifier of the business unit that owns the order product. }
-    { 49  ;   ;OwningUser          ;GUID          ;ExternalName=owninguser;
-                                                   ExternalType=Uniqueidentifier;
-                                                   ExternalAccess=Read;
-                                                   CaptionML=[DAN=Owning User;
-                                                              ENU=Owning User];
-                                                   Description=Unique identifier of the user who owns the order product. }
     { 50  ;   ;SalesOrderIsPriceLocked;Boolean    ;ExternalName=salesorderispricelocked;
                                                    ExternalType=Boolean;
                                                    ExternalAccess=Read;

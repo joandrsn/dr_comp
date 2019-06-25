@@ -2,9 +2,9 @@ OBJECT Report 5706 Create Stockkeeping Unit
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -201,8 +201,8 @@ OBJECT Report 5706 Create Stockkeeping Unit
           StockkeepingUnit."Last Date Modified" := WORKDATE;
           StockkeepingUnit."Special Equipment Code" := Item2."Special Equipment Code";
           StockkeepingUnit."Put-away Template Code" := Item2."Put-away Template Code";
-          StockkeepingUnit."Phys Invt Counting Period Code" :=
-            Item2."Phys Invt Counting Period Code";
+          StockkeepingUnit.SetHideValidationDialog(TRUE);
+          StockkeepingUnit.VALIDATE("Phys Invt Counting Period Code",Item2."Phys Invt Counting Period Code");
           StockkeepingUnit."Put-away Unit of Measure Code" :=
             Item2."Put-away Unit of Measure Code";
           StockkeepingUnit."Use Cross-Docking" := Item2."Use Cross-Docking";

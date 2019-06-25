@@ -2,9 +2,9 @@ OBJECT Table 370 Excel Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -19,9 +19,11 @@ OBJECT Table 370 Excel Buffer
                                                                   xlRowID := FORMAT("Row No.");
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Rubriknr.;
                                                               ENU=Row No.] }
-    { 2   ;   ;xlRowID             ;Text10        ;CaptionML=[DAN=Excel-række-id;
+    { 2   ;   ;xlRowID             ;Text10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Excel-række-id;
                                                               ENU=xlRowID] }
     { 3   ;   ;Column No.          ;Integer       ;OnValidate=VAR
                                                                 x@1000 : Integer;
@@ -50,36 +52,50 @@ OBJECT Table 370 Excel Buffer
                                                                   xlColID[x] := t[1 + i - x];
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Kolonnenr.;
                                                               ENU=Column No.] }
-    { 4   ;   ;xlColID             ;Text10        ;CaptionML=[DAN=Excel-kolonne-id;
+    { 4   ;   ;xlColID             ;Text10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Excel-kolonne-id;
                                                               ENU=xlColID] }
-    { 5   ;   ;Cell Value as Text  ;Text250       ;CaptionML=[DAN=Celleværdi som tekst;
+    { 5   ;   ;Cell Value as Text  ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Celleværdi som tekst;
                                                               ENU=Cell Value as Text] }
-    { 6   ;   ;Comment             ;Text250       ;CaptionML=[DAN=Bemærkning;
+    { 6   ;   ;Comment             ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bemærkning;
                                                               ENU=Comment] }
-    { 7   ;   ;Formula             ;Text250       ;CaptionML=[DAN=Formel;
+    { 7   ;   ;Formula             ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Formel;
                                                               ENU=Formula] }
-    { 8   ;   ;Bold                ;Boolean       ;CaptionML=[DAN=Fed;
+    { 8   ;   ;Bold                ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Fed;
                                                               ENU=Bold] }
-    { 9   ;   ;Italic              ;Boolean       ;CaptionML=[DAN=Kursiv;
+    { 9   ;   ;Italic              ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kursiv;
                                                               ENU=Italic] }
-    { 10  ;   ;Underline           ;Boolean       ;CaptionML=[DAN=Understreget;
+    { 10  ;   ;Underline           ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Understreget;
                                                               ENU=Underline] }
-    { 11  ;   ;NumberFormat        ;Text30        ;CaptionML=[DAN=Nummerformat;
+    { 11  ;   ;NumberFormat        ;Text30        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Nummerformat;
                                                               ENU=NumberFormat] }
-    { 12  ;   ;Formula2            ;Text250       ;CaptionML=[DAN=Formel2;
+    { 12  ;   ;Formula2            ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Formel2;
                                                               ENU=Formula2] }
-    { 13  ;   ;Formula3            ;Text250       ;CaptionML=[DAN=Formel3;
+    { 13  ;   ;Formula3            ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Formel3;
                                                               ENU=Formula3] }
-    { 14  ;   ;Formula4            ;Text250       ;CaptionML=[DAN=Formel4;
+    { 14  ;   ;Formula4            ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Formel4;
                                                               ENU=Formula4] }
-    { 15  ;   ;Cell Type           ;Option        ;CaptionML=[DAN=Celletype;
+    { 15  ;   ;Cell Type           ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Celletype;
                                                               ENU=Cell Type];
                                                    OptionCaptionML=[DAN=Nummer,Tekst,dato,Klokkeslæt;
                                                                     ENU=Number,Text,Date,Time];
                                                    OptionString=Number,Text,Date,Time }
-    { 16  ;   ;Double Underline    ;Boolean       ;CaptionML=[DAN=Dobbelt understregning;
+    { 16  ;   ;Double Underline    ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dobbelt understregning;
                                                               ENU=Double Underline] }
   }
   KEYS
@@ -182,6 +198,23 @@ OBJECT Table 370 Excel Buffer
       END;
     END;
 
+    PROCEDURE OpenBookStream@44(FileStream@1000 : InStream;SheetName@1001 : Text) : Text;
+    BEGIN
+      IF SheetName = '' THEN
+        EXIT(Text002);
+
+      IF SheetName = 'G/L Account' THEN
+        SheetName := 'GL Account';
+
+      XlWrkBkReader := XlWrkBkReader.Open(FileStream);
+      IF XlWrkBkReader.HasWorksheet(SheetName) THEN
+        XlWrkShtReader := XlWrkBkReader.GetWorksheetByName(SheetName)
+      ELSE BEGIN
+        QuitExcel;
+        ERROR(Text004,SheetName);
+      END;
+    END;
+
     PROCEDURE UpdateBook@5(FileName@1000 : Text;SheetName@1001 : Text[250]);
     BEGIN
       IF FileName = '' THEN
@@ -235,7 +268,7 @@ OBJECT Table 370 Excel Buffer
       TotalRecNo := COUNT + InfoExcelBuf.COUNT;
       RecNo := 0;
 
-      XlWrkShtWriter.AddPageSetup(OrientationValues.Landscape);
+      XlWrkShtWriter.AddPageSetup(OrientationValues.Landscape,9); // 9 - default value for Paper Size - A4
 
       // commit is required because of the result boolean check of ExcelBufferDialogMgt.RUN
       COMMIT;
@@ -893,6 +926,17 @@ OBJECT Table 370 Excel Buffer
       XlWrkBk := XlHelper.CallOpen(XlApp,FileName);
 
       PostOpenExcel;
+    END;
+
+    PROCEDURE OpenExcelWithName@99(FileName@1000 : Text);
+    BEGIN
+      IF FileName = '' THEN
+        ERROR(Text001);
+
+      IF OpenUsingDocumentService(FileName) THEN
+        EXIT;
+
+      FileManagement.DownloadHandler(FileNameServer,'','',Text034,FileName);
     END;
 
     LOCAL PROCEDURE OpenUsingDocumentService@21(FileName@1000 : Text) : Boolean;

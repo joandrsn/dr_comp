@@ -2,9 +2,9 @@ OBJECT Page 22 Customer List
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -231,13 +231,8 @@ OBJECT Page 22 Customer List
                                BEGIN
                                  CurrPage.SETSELECTIONFILTER(Customer);
                                  Customer.NEXT;
-
-                                 IF Customer.COUNT = 1 THEN
-                                   CRMIntegrationManagement.CreateNewRecordInCRM(RECORDID,FALSE)
-                                 ELSE BEGIN
-                                   CustomerRecordRef.GETTABLE(Customer);
-                                   CRMIntegrationManagement.CreateNewRecordsInCRM(CustomerRecordRef);
-                                 END
+                                 CustomerRecordRef.GETTABLE(Customer);
+                                 CRMIntegrationManagement.CreateNewRecordsInCRM(CustomerRecordRef);
                                END;
                                 }
       { 17      ;3   ;Action    ;
@@ -837,6 +832,12 @@ OBJECT Page 22 Customer List
 
     { 1102601002;2;Field  ;
                 SourceExpr=Blocked;
+                Visible=FALSE }
+
+    { 200 ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om adgangen til data skal begrænses for dataemnet i den daglige drift. Dette er eksempelvis nyttigt, når du vil beskytte data mod ændringer, mens det kontrolleres, om de indeholder personlige oplysninger.;
+                           ENU=Specifies whether to limit access to data for the data subject during daily operations. This is useful, for example, when protecting data from changes while it is under privacy review.];
+                SourceExpr="Privacy Blocked";
                 Visible=FALSE }
 
     { 1102601004;2;Field  ;

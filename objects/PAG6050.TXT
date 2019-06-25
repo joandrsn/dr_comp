@@ -2,9 +2,9 @@ OBJECT Page 6050 Service Contract
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -217,8 +217,8 @@ OBJECT Page 6050 Service Contract
                       CaptionML=[DAN=Nye dokumenter;
                                  ENU=New Documents] }
       { 110     ;2   ;Action    ;
-                      CaptionML=[DAN=Opret kre&ditnota;
-                                 ENU=Create Credit &Memo];
+                      CaptionML=[DAN=Opret servicekredit&nota;
+                                 ENU=Create Service Credit &Memo];
                       Image=CreateCreditMemo;
                       OnAction=VAR
                                  CreditNoteNo@1001 : Code[20];

@@ -2,9 +2,9 @@ OBJECT Page 9807 User Card
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -337,7 +337,7 @@ OBJECT Page 9807 User Card
       User.SETFILTER("Windows Security ID","Windows Security ID");
       User.SETFILTER("User Security ID",'<>%1',"User Security ID");
       IF User.FINDFIRST THEN
-        ERROR(Text002,WindowsUserName);
+        ERROR(Text002,User."User Name");
     END;
 
     LOCAL PROCEDURE ValidateAuthentication@7() : Boolean;

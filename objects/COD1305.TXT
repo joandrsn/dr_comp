@@ -2,9 +2,9 @@ OBJECT Codeunit 1305 Sales-Quote to Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -28,6 +28,8 @@ OBJECT Codeunit 1305 Sales-Quote to Invoice
             Cust.CheckBlockedCustOnDocs(Cust,"Document Type"::Quote,TRUE,FALSE);
             CALCFIELDS("Amount Including VAT");
             CALCFIELDS("Invoice Discount Amount");
+
+            ValidateSalesPersonOnSalesHeader(Rec,TRUE,FALSE);
 
             SalesInvoiceHeader := Rec;
 
@@ -80,24 +82,7 @@ OBJECT Codeunit 1305 Sales-Quote to Invoice
           SalesInvoiceHeader."Posting Date" := "Posting Date"
         ELSE
           SalesInvoiceHeader."Posting Date" := WORKDATE;
-
-        SalesInvoiceHeader."Document Date" := "Document Date";
-        SalesInvoiceHeader."Shipment Date" := "Shipment Date";
-        SalesInvoiceHeader."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
-        SalesInvoiceHeader."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
-        SalesInvoiceHeader."Dimension Set ID" := "Dimension Set ID";
-
-        SalesInvoiceHeader."Location Code" := "Location Code";
-        SalesInvoiceHeader."Ship-to Name" := "Ship-to Name";
-        SalesInvoiceHeader."Ship-to Name 2" := "Ship-to Name 2";
-        SalesInvoiceHeader."Ship-to Address" := "Ship-to Address";
-        SalesInvoiceHeader."Ship-to Address 2" := "Ship-to Address 2";
-        SalesInvoiceHeader."Ship-to City" := "Ship-to City";
-        SalesInvoiceHeader."Ship-to Post Code" := "Ship-to Post Code";
-        SalesInvoiceHeader."Ship-to County" := "Ship-to County";
-        SalesInvoiceHeader."Ship-to Country/Region Code" := "Ship-to Country/Region Code";
-        SalesInvoiceHeader."Ship-to Contact" := "Ship-to Contact";
-
+        SalesInvoiceHeader.InitFromSalesHeader(SalesQuoteHeader);
         SalesInvoiceHeader.MODIFY;
       END;
     END;
@@ -106,6 +91,7 @@ OBJECT Codeunit 1305 Sales-Quote to Invoice
     VAR
       SalesQuoteLine@1000 : Record 37;
       SalesInvoiceLine@1004 : Record 37;
+      Resource@1001 : Record 156;
     BEGIN
       WITH SalesQuoteHeader DO BEGIN
         SalesQuoteLine.RESET;
@@ -114,6 +100,12 @@ OBJECT Codeunit 1305 Sales-Quote to Invoice
 
         IF SalesQuoteLine.FINDSET THEN
           REPEAT
+            IF SalesQuoteLine.Type = SalesQuoteLine.Type::Resource THEN
+              IF SalesQuoteLine."No." <> '' THEN
+                IF Resource.GET(SalesQuoteLine."No.") THEN BEGIN
+                  Resource.CheckResourcePrivacyBlocked(FALSE);
+                  Resource.TESTFIELD(Blocked,FALSE);
+                END;
             SalesInvoiceLine := SalesQuoteLine;
             SalesInvoiceLine."Document Type" := SalesInvoiceHeader."Document Type";
             SalesInvoiceLine."Document No." := SalesInvoiceHeader."No.";

@@ -2,9 +2,9 @@ OBJECT Table 9500 Email Item
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -87,7 +87,7 @@ OBJECT Table 9500 Email Item
     BEGIN
       CLEAR(Body);
       BodyText.ADDTEXT(Value);
-      Body.CREATEOUTSTREAM(DataStream);
+      Body.CREATEOUTSTREAM(DataStream,TEXTENCODING::UTF8);
       BodyText.WRITE(DataStream);
     END;
 
@@ -99,7 +99,7 @@ OBJECT Table 9500 Email Item
       // Note this is intended only to get the body in memory - not from the database.
       Value := '';
       IF Body.HASVALUE THEN BEGIN
-        Body.CREATEINSTREAM(DataStream);
+        Body.CREATEINSTREAM(DataStream,TEXTENCODING::UTF8);
         BodyText.READ(DataStream);
         BodyText.GETSUBTEXT(Value,1);
       END;

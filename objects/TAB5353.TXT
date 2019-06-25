@@ -2,17 +2,17 @@ OBJECT Table 5353 CRM Salesorder
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     DataCaptionFields=Name,OrderNumber;
     TableType=CRM;
     ExternalName=salesorder;
-    CaptionML=[DAN=Order;
-               ENU=Order];
+    CaptionML=[DAN=CRM Salesorder;
+               ENU=CRM Salesorder];
     Description=Quote that has been accepted.;
   }
   FIELDS

@@ -2,9 +2,9 @@ OBJECT Codeunit 5802 Inventory Posting To G/L
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -127,12 +127,8 @@ OBJECT Codeunit 5802 Inventory Posting To G/L
         PostBufDimNo := 0;
 
         RunOnlyCheckSaved := RunOnlyCheck;
-        IF NOT PostToGL THEN BEGIN
-          // Cost amounts are updated by unit value so that that cheking can be simulated.
-          CostToPost := 1;
-          CostToPostACY := 1;
-          RunOnlyCheck := TRUE;
-        END;
+        IF NOT PostToGL THEN
+          EXIT(FALSE);
 
         CASE "Item Ledger Entry Type" OF
           "Item Ledger Entry Type"::Purchase:
@@ -868,6 +864,7 @@ OBJECT Codeunit 5802 Inventory Posting To G/L
         GenJnlLine."Source Code" := SourceCodeSetup."Inventory Post Cost";
         GenJnlLine."System-Created Entry" := TRUE;
         GenJnlLine."Job No." := "Job No.";
+        GenJnlLine."Reason Code" := ValueEntry."Reason Code";
         REPEAT
           GenJnlLine.VALIDATE("Posting Date","Posting Date");
           IF SetAmt(GenJnlLine,Amount,"Amount (ACY)") THEN BEGIN

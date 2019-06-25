@@ -2,9 +2,9 @@ OBJECT Page 9092 Approval FactBox
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -12,14 +12,6 @@ OBJECT Page 9092 Approval FactBox
                ENU=Approval];
     SourceTable=Table454;
     PageType=CardPart;
-    OnOpenPage=VAR
-                 ApprovalEntry@1000 : Record 454;
-               BEGIN
-                 ApprovalEntry.COPY(Rec);
-                 IF ApprovalEntry.FINDFIRST THEN
-                   SETFILTER("Approver ID",'<>%1',ApprovalEntry."Sender ID");
-               END;
-
     OnFindRecord=BEGIN
                    DocumentHeading := '';
 
@@ -70,6 +62,18 @@ OBJECT Page 9092 Approval FactBox
         Heading := FORMAT(ApprovalEntry."Document Type");
       Heading := Heading + ' ' + ApprovalEntry."Document No.";
       EXIT(Heading);
+    END;
+
+    PROCEDURE RefreshPage@1(SourceRecordID@1000 : RecordID);
+    VAR
+      ApprovalEntry@1001 : Record 454;
+    BEGIN
+      SETRANGE("Record ID to Approve",SourceRecordID);
+      ApprovalEntry.COPY(Rec);
+      IF ApprovalEntry.FINDFIRST THEN
+        SETFILTER("Approver ID",'<>%1',ApprovalEntry."Sender ID");
+      IF FINDLAST THEN;
+      CurrPage.UPDATE(FALSE);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Page 9227 Sales Analysis by Dim Matrix
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -103,53 +103,13 @@ OBJECT Page 9227 Sales Analysis by Dim Matrix
                  END;
 
     OnAfterGetRecord=BEGIN
-                       IF TotalQuantityVisible THEN
-                         Quantity := CalcAmt(DimCodeBufferColumn,2,FALSE);
-                       IF TotalInvtValueVisible THEN
-                         Amount := CalcAmt(DimCodeBufferColumn,0,FALSE);
-                       Steps := 1;
-                       Which := '-';
-
-                       ItemAnalysisMgt.FindRec(
-                         ItemAnalysisView,ColumnDimOption,DimCodeBufferColumn3,Which,
-                         ItemFilter,LocationFilter,PeriodType,DateFilter,PeriodInitialized,InternalDateFilter,
-                         Dim1Filter,Dim2Filter,Dim3Filter);
-
-                       i := 1;
-                       WHILE (i <= NoOfRecords) AND (i <= ARRAYLEN(MatrixColumnCaptions)) DO BEGIN
-                         MatrixData[i] := CalcAmt(DimCodeBufferColumn3,ValueType,TRUE);
-                         ItemAnalysisMgt.NextRec(
-                           ItemAnalysisView,ColumnDimOption,DimCodeBufferColumn3,Steps,
-                           ItemFilter,LocationFilter,PeriodType,DateFilter,
-                           Dim1Filter,Dim2Filter,Dim3Filter);
-                         i := i + 1;
-                       END;
+                       CalcAmounts;
 
                        FormatLine;
                      END;
 
     OnAfterGetCurrRecord=BEGIN
-                           IF TotalQuantityVisible THEN
-                             Quantity := CalcAmt(DimCodeBufferColumn,2,FALSE);
-                           IF TotalInvtValueVisible THEN
-                             Amount := CalcAmt(DimCodeBufferColumn,0,FALSE);
-                           Steps := 1;
-                           Which := '-';
-
-                           ItemAnalysisMgt.FindRec(
-                             ItemAnalysisView,ColumnDimOption,DimCodeBufferColumn3,Which,
-                             ItemFilter,LocationFilter,PeriodType,DateFilter,PeriodInitialized,InternalDateFilter,
-                             Dim1Filter,Dim2Filter,Dim3Filter);
-
-                           i := 1;
-                           WHILE (i <= NoOfRecords) AND (i <= ARRAYLEN(MatrixColumnCaptions)) DO BEGIN
-                             MatrixData[i] := CalcAmt(DimCodeBufferColumn3,ValueType,TRUE);
-                             ItemAnalysisMgt.NextRec(
-                               ItemAnalysisView,ColumnDimOption,DimCodeBufferColumn3,Steps,
-                               ItemFilter,LocationFilter,PeriodType,DateFilter,
-                               Dim1Filter,Dim2Filter,Dim3Filter);
-                             i := i + 1;
-                           END;
+                           CalcAmounts;
                          END;
 
     ActionList=ACTIONS
@@ -746,6 +706,7 @@ OBJECT Page 9227 Sales Analysis by Dim Matrix
       Dim1Filter@1007 : Code[250];
       Dim2Filter@1006 : Code[250];
       Dim3Filter@1005 : Code[250];
+      CodeRange@1040 : Code[250];
       BudgetFilter@1016 : Code[250];
       DateFilter@1004 : Text[30];
       MatrixColumnCaptions@1024 : ARRAY [32] OF Text[1024];
@@ -754,7 +715,6 @@ OBJECT Page 9227 Sales Analysis by Dim Matrix
       RoundingFactorFormatString@1039 : Text;
       ShowOppositeSign@1020 : Boolean;
       PeriodInitialized@1021 : Boolean;
-      i@1022 : Integer;
       Steps@1023 : Integer;
       NoOfRecords@1028 : Integer;
       MatrixData@1000 : ARRAY [32] OF Decimal;
@@ -837,6 +797,38 @@ OBJECT Page 9227 Sales Analysis by Dim Matrix
       InternalDateFilter := InternalDateFilter1;
     END;
 
+    PROCEDURE LoadCodeRange@7(NewCodeRange@1006 : Code[250]);
+    BEGIN
+      CodeRange := NewCodeRange;
+    END;
+
+    LOCAL PROCEDURE CalcAmounts@10();
+    VAR
+      i@1000 : Integer;
+    BEGIN
+      IF TotalQuantityVisible THEN
+        Quantity := CalcAmt(DimCodeBufferColumn,2,FALSE);
+      IF TotalInvtValueVisible THEN
+        Amount := CalcAmt(DimCodeBufferColumn,0,FALSE);
+      Steps := 1;
+      Which := '-';
+
+      ItemAnalysisMgt.FindRec(
+        ItemAnalysisView,ColumnDimOption,DimCodeBufferColumn3,Which,
+        GetFieldItemFilter,GetFieldLocationFilter,PeriodType,DateFilter,PeriodInitialized,InternalDateFilter,
+        GetFieldDim1Filter,GetFieldDim2Filter,GetFieldDim3Filter);
+
+      i := 1;
+      WHILE (i <= NoOfRecords) AND (i <= ARRAYLEN(MatrixColumnCaptions)) DO BEGIN
+        MatrixData[i] := CalcAmt(DimCodeBufferColumn3,ValueType,TRUE);
+        ItemAnalysisMgt.NextRec(
+          ItemAnalysisView,ColumnDimOption,DimCodeBufferColumn3,Steps,
+          GetFieldItemFilter,GetFieldLocationFilter,PeriodType,DateFilter,
+          GetFieldDim1Filter,GetFieldDim2Filter,GetFieldDim3Filter);
+        i := i + 1;
+      END;
+    END;
+
     LOCAL PROCEDURE CalcAmt@3(DimCodeBufferColumn1@1004 : Record 367;ValueType@1001 : Integer;SetColFilter@1000 : Boolean) : Decimal;
     VAR
       Amt@1002 : Decimal;
@@ -881,19 +873,19 @@ OBJECT Page 9227 Sales Analysis by Dim Matrix
 
       ItemAnalysisMgt.FindRec(
         ItemAnalysisView,ColumnDimOption,DimCodeBufferColumn3,Which,
-        ItemFilter,LocationFilter,PeriodType,DateFilter,PeriodInitialized,InternalDateFilter,
-        Dim1Filter,Dim2Filter,Dim3Filter);
+        GetFieldItemFilter,GetFieldLocationFilter,PeriodType,DateFilter,PeriodInitialized,InternalDateFilter,
+        GetFieldDim1Filter,GetFieldDim2Filter,GetFieldDim3Filter);
 
       Steps := Ordinal - 1;
       ItemAnalysisMgt.NextRec(
         ItemAnalysisView,ColumnDimOption,DimCodeBufferColumn3,Steps,
-        ItemFilter,LocationFilter,PeriodType,DateFilter,
-        Dim1Filter,Dim2Filter,Dim3Filter);
+        GetFieldItemFilter,GetFieldLocationFilter,PeriodType,DateFilter,
+        GetFieldDim1Filter,GetFieldDim2Filter,GetFieldDim3Filter);
 
       ItemAnalysisMgt.DrillDown(
         CurrentAnalysisArea,ItemStatisticsBuffer,CurrentItemAnalysisViewCode,
-        ItemFilter,LocationFilter,DateFilter,
-        Dim1Filter,Dim2Filter,Dim3Filter,BudgetFilter,
+        GetFieldItemFilter,GetFieldLocationFilter,DateFilter,
+        GetFieldDim1Filter,GetFieldDim2Filter,GetFieldDim3Filter,BudgetFilter,
         LineDimOption,Rec,
         ColumnDimOption,DimCodeBufferColumn3,
         TRUE,ValueType,ShowActualBudget);
@@ -912,6 +904,39 @@ OBJECT Page 9227 Sales Analysis by Dim Matrix
     LOCAL PROCEDURE FormatStr@8() : Text;
     BEGIN
       EXIT(RoundingFactorFormatString);
+    END;
+
+    LOCAL PROCEDURE GetFieldItemFilter@12() : Code[250];
+    BEGIN
+      EXIT(GetFieldFilter(ColumnDimOption::Item,ItemFilter));
+    END;
+
+    LOCAL PROCEDURE GetFieldLocationFilter@14() : Code[250];
+    BEGIN
+      EXIT(GetFieldFilter(ColumnDimOption::Location,LocationFilter));
+    END;
+
+    LOCAL PROCEDURE GetFieldDim1Filter@15() : Code[250];
+    BEGIN
+      EXIT(GetFieldFilter(ColumnDimOption::"Dimension 1",Dim1Filter));
+    END;
+
+    LOCAL PROCEDURE GetFieldDim2Filter@16() : Code[250];
+    BEGIN
+      EXIT(GetFieldFilter(ColumnDimOption::"Dimension 2",Dim2Filter));
+    END;
+
+    LOCAL PROCEDURE GetFieldDim3Filter@17() : Code[250];
+    BEGIN
+      EXIT(GetFieldFilter(ColumnDimOption::"Dimension 3",Dim3Filter));
+    END;
+
+    LOCAL PROCEDURE GetFieldFilter@23(RequiredColumnDimOption@1000 : Option;DefaultFilter@1001 : Code[250]) : Code[250];
+    BEGIN
+      IF (ColumnDimOption = RequiredColumnDimOption) AND (CodeRange <> '') THEN
+        EXIT(CodeRange);
+
+      EXIT(DefaultFilter);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Report 121 Customer - Balance to Date
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
@@ -33,8 +33,9 @@ OBJECT Report 121 Customer - Balance to Date
                                   SETRANGE("Date Filter",0D,MaxDate);
                                   CALCFIELDS("Net Change (LCY)","Net Change");
 
-                                  IF ((PrintAmountInLCY AND ("Net Change (LCY)" = 0)) OR
-                                      ((NOT PrintAmountInLCY) AND ("Net Change" = 0)))
+                                  IF (PrintAmountInLCY AND ("Net Change (LCY)" = 0) OR
+                                      (NOT PrintAmountInLCY) AND ("Net Change" = 0)) AND
+                                     (NOT ShowEntriesWithZeroBalance)
                                   THEN
                                     CurrReport.SKIP;
                                 END;
@@ -90,35 +91,30 @@ OBJECT Report 121 Customer - Balance to Date
     { 5082;1   ;DataItem;CustLedgEntry3      ;
                DataItemTable=Table21;
                DataItemTableView=SORTING(Entry No.);
-               OnPreDataItem=BEGIN
+               OnPreDataItem=VAR
+                               TempCustLedgerEntry@1000 : TEMPORARY Record 21;
+                               ClosedEntryIncluded@1001 : Boolean;
+                             BEGIN
                                RESET;
-                               DtldCustLedgEntry.SETCURRENTKEY("Customer No.","Posting Date","Entry Type");
-                               DtldCustLedgEntry.SETRANGE("Customer No.",Customer."No.");
-                               DtldCustLedgEntry.SETRANGE("Posting Date",CALCDATE('<+1D>',MaxDate),31129999D);
-                               DtldCustLedgEntry.SETRANGE("Entry Type",DtldCustLedgEntry."Entry Type"::Application);
-                               IF NOT PrintUnappliedEntries THEN
-                                 DtldCustLedgEntry.SETRANGE(Unapplied,FALSE);
-
-                               IF DtldCustLedgEntry.FIND('-') THEN
+                               SETRANGE("Date Filter",0D,MaxDate);
+                               FilterCustLedgerEntry(CustLedgEntry3);
+                               IF FINDSET THEN
                                  REPEAT
-                                   "Entry No." := DtldCustLedgEntry."Cust. Ledger Entry No.";
-                                   MARK(TRUE);
-                                 UNTIL DtldCustLedgEntry.NEXT = 0;
-
-                               SETCURRENTKEY("Customer No.",Open);
-                               SETRANGE("Customer No.",Customer."No.");
-                               SETRANGE(Open,TRUE);
-                               SETRANGE("Posting Date",0D,MaxDate);
-
-                               IF FIND('-') THEN
-                                 REPEAT
-                                   MARK(TRUE);
+                                   IF NOT Open THEN
+                                     ClosedEntryIncluded := CheckCustEntryIncluded("Entry No.");
+                                   IF Open OR ClosedEntryIncluded THEN BEGIN
+                                     MARK(TRUE);
+                                     TempCustLedgerEntry := CustLedgEntry3;
+                                     TempCustLedgerEntry.INSERT;
+                                   END;
                                  UNTIL NEXT = 0;
 
                                SETCURRENTKEY("Entry No.");
-                               SETRANGE(Open);
                                MARKEDONLY(TRUE);
-                               SETRANGE("Date Filter",0D,MaxDate);
+
+                               AddCustomerDimensionFilter(CustLedgEntry3);
+
+                               CalcCustomerTotalAmount(TempCustLedgerEntry);
                              END;
 
                OnAfterGetRecord=BEGIN
@@ -133,12 +129,6 @@ OBJECT Report 121 Customer - Balance to Date
                                     RemainingAmt := "Remaining Amount";
                                     CurrencyCode := "Currency Code";
                                   END;
-
-                                  CurrencyTotalBuffer.UpdateTotal(
-                                    CurrencyCode,
-                                    RemainingAmt,
-                                    0,
-                                    Counter1);
                                 END;
                                  }
 
@@ -176,6 +166,7 @@ OBJECT Report 121 Customer - Balance to Date
                                  WHERE(Entry Type=FILTER(<>Initial Entry));
                OnPreDataItem=BEGIN
                                DtldCustLedgEntryNum := 0;
+                               CustLedgEntry3.COPYFILTER("Posting Date","Posting Date");
                              END;
 
                OnAfterGetRecord=BEGIN
@@ -232,7 +223,8 @@ OBJECT Report 121 Customer - Balance to Date
                DataItemTableView=SORTING(Number)
                                  WHERE(Number=FILTER(1..));
                OnPreDataItem=BEGIN
-                               CurrencyTotalBuffer.SETFILTER("Total Amount",'<>0');
+                               IF NOT ShowEntriesWithZeroBalance THEN
+                                 CurrencyTotalBuffer.SETFILTER("Total Amount",'<>0');
                              END;
 
                OnAfterGetRecord=BEGIN
@@ -336,6 +328,14 @@ OBJECT Report 121 Customer - Balance to Date
                              ENU=Include Unapplied Entries];
                   SourceExpr=PrintUnappliedEntries }
 
+      { 5   ;2   ;Field     ;
+                  Name=ShowEntriesWithZeroBalance;
+                  CaptionML=[DAN=Vis poster, hvor saldoen er nul;
+                             ENU=Show Entries with Zero Balance];
+                  ToolTipML=[DAN=Angiver, om rapporten skal medtage poster med en saldo på nul. Som standard medtager posten kun poster med en positiv eller negativ saldo.;
+                             ENU=Specifies if the report must include entries with a balance of 0. By default, the report only includes entries with a positive or negative balance.];
+                  SourceExpr=ShowEntriesWithZeroBalance }
+
     }
   }
   LABELS
@@ -347,11 +347,10 @@ OBJECT Report 121 Customer - Balance to Date
       Text000@1000 : TextConst 'DAN=Saldo d. %1;ENU=Balance on %1';
       CurrencyTotalBuffer@1001 : TEMPORARY Record 332;
       CurrencyTotalBuffer2@1002 : TEMPORARY Record 332;
-      DtldCustLedgEntry@1016 : Record 379;
       PrintAmountInLCY@1005 : Boolean;
       PrintOnePrPage@1006 : Boolean;
       CustFilter@1007 : Text;
-      CustDateFilter@1008 : Text[30];
+      CustDateFilter@1100 : Text[30];
       MaxDate@1009 : Date;
       OriginalAmt@1010 : Decimal;
       Amt@1011 : Decimal;
@@ -361,6 +360,7 @@ OBJECT Report 121 Customer - Balance to Date
       OK@1014 : Boolean;
       CurrencyCode@1015 : Code[10];
       PrintUnappliedEntries@1004 : Boolean;
+      ShowEntriesWithZeroBalance@1008 : Boolean;
       CustBalancetoDateCaptionLbl@9242 : TextConst 'DAN=Debitor - saldo til dato;ENU=Customer - Balance to Date';
       CurrReportPageNoCaptionLbl@2595 : TextConst 'DAN=Side;ENU=Page';
       AllamtsareinLCYCaptionLbl@6201 : TextConst 'DAN=Alle beløb er i RV.;ENU=All amounts are in LCY.';
@@ -375,6 +375,83 @@ OBJECT Report 121 Customer - Balance to Date
       PrintOnePrPage := NewPrintOnePrPage;
       PrintUnappliedEntries := NewPrintUnappliedEntries;
       MaxDate := NewEndingDate;
+    END;
+
+    LOCAL PROCEDURE FilterCustLedgerEntry@5(VAR CustLedgerEntry@1000 : Record 21);
+    BEGIN
+      WITH CustLedgerEntry DO BEGIN
+        SETCURRENTKEY("Customer No.","Posting Date");
+        SETRANGE("Customer No.",Customer."No.");
+        SETRANGE("Posting Date",0D,MaxDate);
+      END;
+    END;
+
+    LOCAL PROCEDURE AddCustomerDimensionFilter@8(VAR CustLedgerEntry@1000 : Record 21);
+    BEGIN
+      WITH CustLedgerEntry DO BEGIN
+        IF Customer.GETFILTER("Global Dimension 1 Filter") <> '' THEN
+          SETFILTER("Global Dimension 1 Code",Customer.GETFILTER("Global Dimension 1 Filter"));
+        IF Customer.GETFILTER("Global Dimension 2 Filter") <> '' THEN
+          SETFILTER("Global Dimension 2 Code",Customer.GETFILTER("Global Dimension 2 Filter"));
+        IF Customer.GETFILTER("Currency Filter") <> '' THEN
+          SETFILTER("Currency Code",Customer.GETFILTER("Currency Filter"));
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcCustomerTotalAmount@13(VAR TempCustLedgerEntry@1000 : TEMPORARY Record 21);
+    BEGIN
+      WITH TempCustLedgerEntry DO BEGIN
+        SETCURRENTKEY("Entry No.");
+        SETRANGE("Date Filter",0D,MaxDate);
+        AddCustomerDimensionFilter(TempCustLedgerEntry);
+        IF FINDSET THEN
+          REPEAT
+            IF PrintAmountInLCY THEN BEGIN
+              CALCFIELDS("Remaining Amt. (LCY)");
+              RemainingAmt := "Remaining Amt. (LCY)";
+              CurrencyCode := '';
+            END ELSE BEGIN
+              CALCFIELDS("Remaining Amount");
+              RemainingAmt := "Remaining Amount";
+              CurrencyCode := "Currency Code";
+            END;
+            IF RemainingAmt <> 0 THEN
+              CurrencyTotalBuffer.UpdateTotal(
+                CurrencyCode,
+                RemainingAmt,
+                0,
+                Counter1);
+          UNTIL NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE CheckCustEntryIncluded@6(EntryNo@1000 : Integer) : Boolean;
+    VAR
+      CustLedgerEntry@1001 : Record 21;
+    BEGIN
+      IF CustLedgerEntry.GET(EntryNo) AND (CustLedgerEntry."Posting Date" <= MaxDate) THEN BEGIN
+        CustLedgerEntry.SETRANGE("Date Filter",0D,MaxDate);
+        CustLedgerEntry.CALCFIELDS("Remaining Amount");
+        IF CustLedgerEntry."Remaining Amount" <> 0 THEN
+          EXIT(TRUE);
+        IF PrintUnappliedEntries THEN
+          EXIT(CheckUnappliedEntryExists(EntryNo));
+      END;
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE CheckUnappliedEntryExists@7(EntryNo@1001 : Integer) : Boolean;
+    VAR
+      DetailedCustLedgEntry@1000 : Record 379;
+    BEGIN
+      WITH DetailedCustLedgEntry DO BEGIN
+        SETCURRENTKEY("Cust. Ledger Entry No.","Entry Type","Posting Date");
+        SETRANGE("Cust. Ledger Entry No.",EntryNo);
+        SETRANGE("Entry Type","Entry Type"::Application);
+        SETFILTER("Posting Date",'>%1',MaxDate);
+        SETRANGE(Unapplied,TRUE);
+        EXIT(NOT ISEMPTY);
+      END;
     END;
 
     BEGIN
@@ -2310,101 +2387,6 @@ OBJECT Report 121 Customer - Balance to Date
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.06944in</Height>
-                  <TablixCells>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="Textbox9">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
-                                    <FontWeight>Bold</FontWeight>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style />
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox9</rd:DefaultName>
-                          <Style>
-                            <PaddingRight>0.0625in</PaddingRight>
-                          </Style>
-                        </Textbox>
-                        <ColSpan>5</ColSpan>
-                      </CellContents>
-                    </TablixCell>
-                    <TablixCell />
-                    <TablixCell />
-                    <TablixCell />
-                    <TablixCell />
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="Textbox18">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
-                                    <FontWeight>Bold</FontWeight>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style />
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox18</rd:DefaultName>
-                          <Style>
-                            <Border />
-                            <VerticalAlign>Top</VerticalAlign>
-                            <PaddingLeft>5pt</PaddingLeft>
-                            <PaddingRight>5pt</PaddingRight>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="Textbox19">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                    <FontSize>8pt</FontSize>
-                                    <FontWeight>Bold</FontWeight>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style />
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox19</rd:DefaultName>
-                          <Style>
-                            <Border />
-                            <PaddingRight>0.0625in</PaddingRight>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                  </TablixCells>
-                </TablixRow>
-                <TablixRow>
                   <Height>0.13889in</Height>
                   <TablixCells>
                     <TablixCell>
@@ -2645,13 +2627,6 @@ OBJECT Report 121 Customer - Balance to Date
                           <DataElementName>Detail_Collection</DataElementName>
                           <DataElementOutput>Output</DataElementOutput>
                           <KeepTogether>true</KeepTogether>
-                        </TablixMember>
-                        <TablixMember>
-                          <Visibility>
-                            <Hidden>=iif(Fields!DocNo_DtldCustLedgEntry.Value="",true,false) or
- iif(Fields!No_Customer.Value="",true,false)</Hidden>
-                          </Visibility>
-                          <KeepWithGroup>Before</KeepWithGroup>
                         </TablixMember>
                         <TablixMember>
                           <Visibility>
@@ -5297,6 +5272,7 @@ OBJECT Report 121 Customer - Balance to Date
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

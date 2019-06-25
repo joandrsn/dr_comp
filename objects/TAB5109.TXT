@@ -2,9 +2,9 @@ OBJECT Table 5109 Purchase Header Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -141,7 +141,7 @@ OBJECT Table 5109 Purchase Header Archive
     { 41  ;   ;Language Code       ;Code10        ;TableRelation=Language;
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code] }
-    { 43  ;   ;Purchaser Code      ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 43  ;   ;Purchaser Code      ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Indkøberkode;
                                                               ENU=Purchaser Code] }
     { 45  ;   ;Order Class         ;Code10        ;CaptionML=[DAN=Ordregruppe;
@@ -423,8 +423,18 @@ OBJECT Table 5109 Purchase Header Archive
                                                               ENU=Time Archived] }
     { 5045;   ;Date Archived       ;Date          ;CaptionML=[DAN=Arkiveringsdato;
                                                               ENU=Date Archived] }
-    { 5046;   ;Archived By         ;Code50        ;CaptionML=[DAN=Arkiveret af;
-                                                              ENU=Archived By] }
+    { 5046;   ;Archived By         ;Code50        ;TableRelation=User."User Name";
+                                                   OnLookup=VAR
+                                                              UserMgt@1000 : Codeunit 418;
+                                                            BEGIN
+                                                              UserMgt.LookupUserID("Archived By");
+                                                            END;
+
+                                                   TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Arkiveret af;
+                                                              ENU=Archived By];
+                                                   Editable=No }
     { 5047;   ;Version No.         ;Integer       ;CaptionML=[DAN=Versionsnr.;
                                                               ENU=Version No.] }
     { 5048;   ;Doc. No. Occurrence ;Integer       ;CaptionML=[DAN=Forekomster af dok.nr.;
@@ -485,6 +495,7 @@ OBJECT Table 5109 Purchase Header Archive
                                                    CaptionML=[DAN=Sidste returvareleverancenr.;
                                                               ENU=Last Return Shipment No.] }
     { 9000;   ;Assigned User ID    ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
   }

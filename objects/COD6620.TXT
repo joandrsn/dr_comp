@@ -2,9 +2,9 @@ OBJECT Codeunit 6620 Copy Document Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.51418;
   }
   PROPERTIES
   {
@@ -29,6 +29,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       TempAsmHeader@1052 : TEMPORARY Record 900;
       TempAsmLine@1053 : TEMPORARY Record 901;
       TempSalesInvLine@1056 : TEMPORARY Record 113;
+      SalespersonPurchaser@1972 : Record 13;
       CustCheckCreditLimit@1006 : Codeunit 312;
       ItemCheckAvail@1005 : Codeunit 311;
       TransferExtendedText@1015 : Codeunit 378;
@@ -81,6 +82,8 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       LinesApplied@1062 : Boolean;
       DiffPostDateOrderQst@1065 : TextConst 'DAN=Bogføringsdatoen for det kopierede dokument er forskellig fra bogføringsdatoen for originaldokumentet. Originaldokumentet har allerede et bogføringsnr. baseret på en nummerserie med datorækkefølge. Når du bogfører det kopierede dokument, kan du få den forkerte datorækkefølge i de bogførte dokumenter.\Vil du fortsætte?;ENU=The Posting Date of the copied document is different from the Posting Date of the original document. The original document already has a Posting No. based on a number series with date order. When you post the copied document, you may have the wrong date order in the posted documents.\Do you want to continue?';
       CopyPostedDeferral@1064 : Boolean;
+      CopyExtText@1067 : Boolean;
+      SavedLanguageID@1066 : Integer;
 
     PROCEDURE SetProperties@2(NewIncludeHeader@1001 : Boolean;NewRecalculateLines@1000 : Boolean;NewMoveNegLines@1006 : Boolean;NewCreateToHeader@1002 : Boolean;NewHideDialog@1003 : Boolean;NewExactCostRevMandatory@1004 : Boolean;NewApplyFully@1005 : Boolean);
     BEGIN
@@ -173,11 +176,11 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       FromSalesCrMemoLine@1014 : Record 115;
       GLSetUp@1010 : Record 98;
       Cust@1011 : Record 18;
+      ReleaseSalesDocument@1001 : Codeunit 414;
       NextLineNo@1003 : Integer;
       ItemChargeAssgntNextLineNo@1002 : Integer;
       LinesNotCopied@1000 : Integer;
       MissingExCostRevLink@1012 : Boolean;
-      ReleaseSalesDocument@1004 : Codeunit 414;
       ReleaseDocument@1005 : Boolean;
     BEGIN
       WITH ToSalesHeader DO BEGIN
@@ -267,6 +270,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
           SalesDocType::"Posted Credit Memo":
             BEGIN
               FromSalesCrMemoHeader.GET(FromDocNo);
+              FromSalesCrMemoHeader.TESTFIELD("Prepayment Credit Memo",FALSE);
               WarnSalesInvoicePmtDisc(ToSalesHeader,FromSalesHeader,FromDocType,FromDocNo);
               IF NOT CheckDateOrder(
                    "Posting No.","Posting No. Series",
@@ -357,10 +361,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
                 TRANSFERFIELDS(FromReturnRcptHeader,FALSE);
               END;
             SalesDocType::"Posted Credit Memo":
-              BEGIN
-                VALIDATE("Sell-to Customer No.",FromSalesCrMemoHeader."Sell-to Customer No.");
-                TRANSFERFIELDS(FromSalesCrMemoHeader,FALSE);
-              END;
+              TransferFieldsFromCrMemoToInv(ToSalesHeader,FromSalesCrMemoHeader);
           END;
           Invoice := FALSE;
           Ship := FALSE;
@@ -370,6 +371,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
           END;
           IF MoveNegLines OR IncludeHeader THEN
             VALIDATE("Location Code");
+          CopyShiptoCodeFromInvToCrMemo(ToSalesHeader,FromSalesInvHeader,FromDocType);
 
           CopyFieldsFromOldSalesHeader(ToSalesHeader,OldSalesHeader);
           IF RecalculateLines THEN
@@ -557,11 +559,11 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       FromPurchCrMemoLine@1006 : Record 125;
       GLSetup@1023 : Record 98;
       Vend@1024 : Record 23;
+      ReleasePurchaseDocument@1000 : Codeunit 415;
       NextLineNo@1020 : Integer;
       ItemChargeAssgntNextLineNo@1016 : Integer;
       LinesNotCopied@1018 : Integer;
       MissingExCostRevLink@1025 : Boolean;
-      ReleasePurchaseDocument@1019 : Codeunit 415;
       ReleaseDocument@1021 : Boolean;
     BEGIN
       WITH ToPurchHeader DO BEGIN
@@ -635,6 +637,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
                    "Posting Date",FromPurchCrMemoHeader."Posting Date")
               THEN
                 EXIT;
+              FromPurchCrMemoHeader.TESTFIELD("Prepayment Credit Memo",FALSE);
               WarnPurchInvoicePmtDisc(ToPurchHeader,FromPurchHeader,FromDocType,FromDocNo);
               IF NOT IncludeHeader AND NOT RecalculateLines THEN
                 CheckFromPurchaseCrMemoHeader(FromPurchCrMemoHeader,ToPurchHeader);
@@ -686,6 +689,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
                 TRANSFERFIELDS(FromPurchHeader,FALSE);
                 "Last Receiving No." := '';
                 Status := Status::Open;
+                "IC Status" := "IC Status"::New;
                 IF "Document Type" <> "Document Type"::Order THEN
                   "Prepayment %" := 0;
                 IF FromDocType IN [PurchDocType::Quote,PurchDocType::"Blanket Order"] THEN
@@ -721,8 +725,10 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             Status := Status::Open;
             ReleaseDocument := TRUE;
           END;
-          IF MoveNegLines OR IncludeHeader THEN
+          IF MoveNegLines OR IncludeHeader THEN BEGIN
             VALIDATE("Location Code");
+            CopyShippingInfoPurchOrder(ToPurchHeader,FromPurchHeader);
+          END;
           IF MoveNegLines THEN
             VALIDATE("Order Address Code");
 
@@ -1038,6 +1044,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       ToSalesLine."Document Type" := ToSalesHeader."Document Type";
       ToSalesLine."Document No." := ToSalesHeader."No.";
       ToSalesLine."Line No." := NextLineNo;
+      ToSalesLine."Copied From Posted Doc." := FromSalesLine."Copied From Posted Doc.";
       IF (ToSalesLine.Type <> ToSalesLine.Type::" ") AND
          (ToSalesLine."Document Type" IN [ToSalesLine."Document Type"::"Return Order",ToSalesLine."Document Type"::"Credit Memo"])
       THEN BEGIN
@@ -1091,7 +1098,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
         ToSalesLine."Job Contract Entry No." := FromSalesLine."Job Contract Entry No.";
       END;
 
-      IF (ToSalesHeader."Language Code" <> FromSalesHeader."Language Code") OR RecalculateLines THEN BEGIN
+      IF (ToSalesHeader."Language Code" <> FromSalesHeader."Language Code") OR RecalculateLines OR CopyExtText THEN BEGIN
         IF TransferExtendedText.SalesCheckIfAnyExtText(ToSalesLine,FALSE) THEN BEGIN
           TransferExtendedText.InsertSalesExtText(ToSalesLine);
           ToSalesLine2.SETRANGE("Document Type",ToSalesLine."Document Type");
@@ -1276,6 +1283,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       ToPurchLine."Document Type" := ToPurchHeader."Document Type";
       ToPurchLine."Document No." := ToPurchHeader."No.";
       ToPurchLine."Line No." := NextLineNo;
+      ToPurchLine."Copied From Posted Doc." := FromPurchLine."Copied From Posted Doc.";
       ToPurchLine.VALIDATE("Currency Code",FromPurchHeader."Currency Code");
       IF (ToPurchLine.Type <> ToPurchLine.Type::" ") AND
          ((ToPurchLine.Amount = 0) OR
@@ -1321,7 +1329,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
         ToPurchLine."Appl.-to Item Entry" := FromPurchLine."Appl.-to Item Entry"
       END;
 
-      IF (ToPurchHeader."Language Code" <> FromPurchHeader."Language Code") OR RecalculateLines THEN BEGIN
+      IF (ToPurchHeader."Language Code" <> FromPurchHeader."Language Code") OR RecalculateLines OR CopyExtText THEN BEGIN
         IF TransferExtendedText.PurchCheckIfAnyExtText(ToPurchLine,FALSE) THEN BEGIN
           TransferExtendedText.InsertPurchExtText(ToPurchLine);
           ToPurchLine2.SETRANGE("Document Type",ToPurchLine."Document Type");
@@ -1938,11 +1946,13 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               FromSalesShptHeader.GET("Document No.");
               TransferOldExtLines.ClearLineNumbers;
             END;
+            FromSalesShptHeader.TESTFIELD("Prices Including VAT",ToSalesHeader."Prices Including VAT");
             FromSalesHeader.TRANSFERFIELDS(FromSalesShptHeader);
             FillExactCostRevLink :=
               IsSalesFillExactCostRevLink(ToSalesHeader,0,FromSalesHeader."Currency Code");
             FromSalesLine.TRANSFERFIELDS(FromSalesShptLine);
             FromSalesLine."Appl.-from Item Entry" := 0;
+            FromSalesLine."Copied From Posted Doc." := TRUE;
 
             IF "Document No." <> OldDocNo THEN BEGIN
               OldDocNo := "Document No.";
@@ -2021,10 +2031,12 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       FromSalesLineBuf@1007 : TEMPORARY Record 37;
       FromSalesInvHeader@1005 : Record 112;
       TempItemTrkgEntry@1009 : TEMPORARY Record 337;
+      AssemblyHeader@1026 : Record 900;
       ItemTrackingMgt@1018 : Codeunit 6500;
       OldInvDocNo@1011 : Code[20];
       OldShptDocNo@1014 : Code[20];
       NextLineNo@1000 : Integer;
+      SalesCombDocLineNo@1015 : Integer;
       NextItemTrkgEntryNo@1023 : Integer;
       FromLineCounter@1025 : Integer;
       ToLineCounter@1024 : Integer;
@@ -2034,6 +2046,8 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       SalesInvLineCount@1040 : Integer;
       SalesLineCount@1041 : Integer;
       BufferCount@1042 : Integer;
+      FirstLineShipped@1016 : Boolean;
+      FirstLineText@1017 : Boolean;
     BEGIN
       MissingExCostRevLink := FALSE;
       InitCurrency(ToSalesHeader."Currency Code");
@@ -2047,18 +2061,14 @@ OBJECT Codeunit 6620 Copy Document Mgt.
 
       // Fill sales line buffer
       SalesInvLineCount := 0;
+      FirstLineText := FALSE;
       WITH FromSalesInvLine DO
         IF FINDSET THEN
           REPEAT
             FromLineCounter := FromLineCounter + 1;
             IF IsTimeForUpdate THEN
               Window.UPDATE(1,FromLineCounter);
-            IF Type = Type::Item THEN BEGIN
-              SalesInvLineCount += 1;
-              TempSalesInvLine := FromSalesInvLine;
-              TempSalesInvLine.INSERT;
-            END;
-
+            SetTempSalesInvLine(FromSalesInvLine,TempSalesInvLine,SalesInvLineCount,NextLineNo,FirstLineText);
             IF FromSalesInvHeader."No." <> "Document No." THEN BEGIN
               FromSalesInvHeader.GET("Document No.");
               TransferOldExtLines.ClearLineNumbers;
@@ -2073,6 +2083,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             FromSalesLine."Shipment Line No." := 0;
             FromSalesLine."Return Receipt No." := '';
             FromSalesLine."Return Receipt Line No." := "Line No.";
+            FromSalesLine."Copied From Posted Doc." := TRUE;
 
             SplitLine := TRUE;
             GetItemLedgEntries(ItemLedgEntryBuf,TRUE);
@@ -2087,24 +2098,15 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               ELSE
                 SplitLine := FALSE;
 
-            IF NOT SplitLine THEN BEGIN
-              FromSalesLine2 := FromSalesLineBuf;
-              FromSalesLineBuf := FromSalesLine;
-              FromSalesLineBuf."Document No." := FromSalesLine2."Document No.";
-              FromSalesLineBuf."Shipment Line No." := FromSalesLine2."Shipment Line No.";
-              NextLineNo := NextLineNo + 10000;
-              IF NOT IsRecalculateAmount(FromSalesHeader."Currency Code",ToSalesHeader."Currency Code",
-                   FromSalesHeader."Prices Including VAT",ToSalesHeader."Prices Including VAT")
-              THEN
-                FromSalesLineBuf."Return Receipt No." := "Document No.";
-              ReCalcSalesLine(FromSalesHeader,ToSalesHeader,FromSalesLineBuf);
-              FromSalesLineBuf.INSERT;
-            END;
+            IF NOT SplitLine THEN
+              CopySalesLinesToBuffer(
+                FromSalesHeader,FromSalesLine,FromSalesLine2,FromSalesLineBuf,ToSalesHeader,"Document No.",NextLineNo);
           UNTIL NEXT = 0;
 
       // Create sales line from buffer
       Window.UPDATE(1,FromLineCounter);
       BufferCount := 0;
+      FirstLineShipped := TRUE;
       WITH FromSalesLineBuf DO BEGIN
         // Sorting according to Sales Line Document No.,Line No.
         SETCURRENTKEY("Document Type","Document No.","Line No.");
@@ -2123,11 +2125,17 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             IF "Shipment No." <> OldInvDocNo THEN BEGIN
               OldInvDocNo := "Shipment No.";
               OldShptDocNo := '';
+              FirstLineShipped := TRUE;
               InsertOldSalesDocNoLine(ToSalesHeader,OldInvDocNo,2,NextLineNo);
             END;
+            CheckFirstLineShipped("Document No.","Shipment Line No.",SalesCombDocLineNo,NextLineNo,FirstLineShipped);
             IF ("Document No." <> OldShptDocNo) AND ("Shipment Line No." > 0) THEN BEGIN
+              IF FirstLineShipped THEN
+                SalesCombDocLineNo := NextLineNo;
               OldShptDocNo := "Document No.";
-              InsertOldSalesCombDocNoLine(ToSalesHeader,OldInvDocNo,OldShptDocNo,NextLineNo,TRUE);
+              InsertOldSalesCombDocNoLine(ToSalesHeader,OldInvDocNo,OldShptDocNo,SalesCombDocLineNo,TRUE);
+              NextLineNo := NextLineNo + 10000;
+              FirstLineShipped := TRUE;
             END;
 
             InitFromSalesLine2(FromSalesLine2,FromSalesLineBuf);
@@ -2165,9 +2173,12 @@ OBJECT Codeunit 6620 Copy Document Mgt.
                     ItemTrackingDocMgt.CollectItemTrkgPerPostedDocLine(
                       TempItemTrkgEntry,TempTrkgItemLedgEntry,FALSE,"Document No.","Line No.");
 
-                  ItemTrackingMgt.CopyItemLedgEntryTrkgToSalesLn(TempTrkgItemLedgEntry,ToSalesLine,
-                    FillExactCostRevLink AND ExactCostRevMandatory,MissingExCostRevLink,
-                    FromSalesHeader."Prices Including VAT",ToSalesHeader."Prices Including VAT",FALSE);
+                  IF ToSalesLine.AsmToOrderExists(AssemblyHeader) THEN
+                    SetTrackingOnAssemblyReservation(AssemblyHeader,ItemLedgEntryBuf)
+                  ELSE
+                    ItemTrackingMgt.CopyItemLedgEntryTrkgToSalesLn(TempTrkgItemLedgEntry,ToSalesLine,
+                      FillExactCostRevLink AND ExactCostRevMandatory,MissingExCostRevLink,
+                      FromSalesHeader."Prices Including VAT",ToSalesHeader."Prices Including VAT",FALSE);
                 END;
               END;
             END;
@@ -2228,6 +2239,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             FromSalesLine."Shipment Line No." := 0;
             FromSalesLine."Return Receipt No." := '';
             FromSalesLine."Return Receipt Line No." := "Line No.";
+            FromSalesLine."Copied From Posted Doc." := TRUE;
 
             SplitLine := TRUE;
             GetItemLedgEntries(ItemLedgEntryBuf,TRUE);
@@ -2243,21 +2255,9 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               ELSE
                 SplitLine := FALSE;
 
-            IF NOT SplitLine THEN BEGIN
-              FromSalesLine2 := FromSalesLineBuf;
-              FromSalesLineBuf := FromSalesLine;
-              FromSalesLineBuf."Document No." := FromSalesLine2."Document No.";
-              FromSalesLineBuf."Shipment Line No." := FromSalesLine2."Shipment Line No.";
-              NextLineNo := NextLineNo + 10000;
-              IF NOT IsRecalculateAmount(
-                   FromSalesHeader."Currency Code",ToSalesHeader."Currency Code",
-                   FromSalesHeader."Prices Including VAT",ToSalesHeader."Prices Including VAT")
-              THEN
-                FromSalesLineBuf."Return Receipt No." := "Document No.";
-              ReCalcSalesLine(FromSalesHeader,ToSalesHeader,FromSalesLineBuf);
-              FromSalesLineBuf.INSERT;
-            END;
-
+            IF NOT SplitLine THEN
+              CopySalesLinesToBuffer(
+                FromSalesHeader,FromSalesLine,FromSalesLine2,FromSalesLineBuf,ToSalesHeader,"Document No.",NextLineNo);
           UNTIL NEXT = 0;
 
       // Create sales line from buffer
@@ -2365,6 +2365,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               IsSalesFillExactCostRevLink(ToSalesHeader,2,FromSalesHeader."Currency Code");
             FromSalesLine.TRANSFERFIELDS(FromReturnRcptLine);
             FromSalesLine."Appl.-from Item Entry" := 0;
+            FromSalesLine."Copied From Posted Doc." := TRUE;
 
             IF "Document No." <> OldDocNo THEN BEGIN
               OldDocNo := "Document No.";
@@ -2425,6 +2426,23 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       Window.CLOSE;
     END;
 
+    LOCAL PROCEDURE CopySalesLinesToBuffer@144(FromSalesHeader@1003 : Record 36;FromSalesLine@1002 : Record 37;VAR FromSalesLine2@1000 : Record 37;VAR TempSalesLineBuf@1001 : TEMPORARY Record 37;ToSalesHeader@1005 : Record 36;DocNo@1006 : Code[20];VAR NextLineNo@1004 : Integer);
+    BEGIN
+      FromSalesLine2 := TempSalesLineBuf;
+      TempSalesLineBuf := FromSalesLine;
+      TempSalesLineBuf."Document No." := FromSalesLine2."Document No.";
+      TempSalesLineBuf."Shipment Line No." := FromSalesLine2."Shipment Line No.";
+      TempSalesLineBuf."Line No." := NextLineNo;
+      NextLineNo := NextLineNo + 10000;
+      IF NOT IsRecalculateAmount(
+           FromSalesHeader."Currency Code",ToSalesHeader."Currency Code",
+           FromSalesHeader."Prices Including VAT",ToSalesHeader."Prices Including VAT")
+      THEN
+        TempSalesLineBuf."Return Receipt No." := DocNo;
+      ReCalcSalesLine(FromSalesHeader,ToSalesHeader,TempSalesLineBuf);
+      TempSalesLineBuf.INSERT;
+    END;
+
     LOCAL PROCEDURE SplitPstdSalesLinesPerILE@35(ToSalesHeader@1011 : Record 36;FromSalesHeader@1017 : Record 36;VAR ItemLedgEntry@1003 : Record 32;VAR FromSalesLineBuf@1004 : Record 37;FromSalesLine@1001 : Record 37;VAR NextLineNo@1006 : Integer;VAR CopyItemTrkg@1002 : Boolean;VAR MissingExCostRevLink@1005 : Boolean;FillExactCostRevLink@1000 : Boolean;FromShptOrRcpt@1016 : Boolean) : Boolean;
     VAR
       OrgQtyBase@1007 : Decimal;
@@ -2477,6 +2495,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             FromSalesLine."Quantity (Base)" := FromSalesLine."Quantity (Base)" - FromSalesLineBuf."Quantity (Base)";
             FromSalesLine.Quantity := FromSalesLine.Quantity - FromSalesLineBuf.Quantity;
             FromSalesLineBuf."Appl.-from Item Entry" := "Entry No.";
+            NextLineNo := NextLineNo + 1;
             FromSalesLineBuf."Line No." := NextLineNo;
             NextLineNo := NextLineNo + 1;
             FromSalesLineBuf."Document No." := "Document No.";
@@ -2504,6 +2523,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
     LOCAL PROCEDURE SplitSalesDocLinesPerItemTrkg@57(VAR ItemLedgEntry@1003 : Record 32;VAR TempItemTrkgEntry@1002 : TEMPORARY Record 337;VAR FromSalesLineBuf@1004 : Record 37;FromSalesLine@1001 : Record 37;VAR NextLineNo@1009 : Integer;VAR NextItemTrkgEntryNo@1007 : Integer;VAR MissingExCostRevLink@1005 : Boolean;FromShptOrRcpt@1010 : Boolean) : Boolean;
     VAR
       SalesLineBuf@1008 : ARRAY [2] OF TEMPORARY Record 37;
+      Tracked@1013 : Boolean;
       ReversibleQtyBase@1000 : Decimal;
       SignFactor@1006 : Integer;
       i@1012 : Integer;
@@ -2558,10 +2578,17 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               ELSE
                 ReversibleQtyBase := FromSalesLine."Quantity (Base)"
             ELSE
-              IF -"Shipped Qty. Not Returned" < FromSalesLine."Quantity (Base)" * SignFactor THEN
-                ReversibleQtyBase := -"Shipped Qty. Not Returned" * SignFactor
-              ELSE
-                ReversibleQtyBase := FromSalesLine."Quantity (Base)";
+              IF Positive THEN BEGIN
+                ReversibleQtyBase := "Remaining Quantity";
+                IF ReversibleQtyBase < FromSalesLine."Quantity (Base)" * SignFactor THEN
+                  ReversibleQtyBase := ReversibleQtyBase * SignFactor
+                ELSE
+                  ReversibleQtyBase := FromSalesLine."Quantity (Base)";
+              END ELSE
+                IF -"Shipped Qty. Not Returned" < FromSalesLine."Quantity (Base)" * SignFactor THEN
+                  ReversibleQtyBase := -"Shipped Qty. Not Returned" * SignFactor
+                ELSE
+                  ReversibleQtyBase := FromSalesLine."Quantity (Base)";
 
             IF ReversibleQtyBase <> 0 THEN BEGIN
               IF NOT Positive THEN
@@ -2579,6 +2606,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               InsertTempItemTrkgEntry(
                 ItemLedgEntry,TempItemTrkgEntry,-ABS(ReversibleQtyBase),
                 SalesLineBuf[i]."Line No.",NextItemTrkgEntryNo,TRUE);
+              Tracked := TRUE;
             END;
           UNTIL (NEXT = 0) OR (FromSalesLine."Quantity (Base)" = 0);
 
@@ -2596,7 +2624,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
           END;
         UNTIL (NEXT = 0) OR FromShptOrRcpt;
 
-        IF (FromSalesLine."Quantity (Base)" <> 0) AND NOT Positive AND TempItemTrkgEntry.ISEMPTY THEN
+        IF (FromSalesLine."Quantity (Base)" <> 0) AND NOT Tracked THEN
           MissingExCostRevLink := TRUE;
       END;
 
@@ -2609,6 +2637,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       TempTrkgItemLedgEntry@1019 : TEMPORARY Record 32;
       FromPurchHeader@1006 : Record 38;
       FromPurchLine@1003 : Record 39;
+      OriginalPurchHeader@1013 : Record 38;
       ToPurchLine@1010 : Record 39;
       FromPurchLineBuf@1007 : TEMPORARY Record 39;
       FromPurchRcptHeader@1005 : Record 120;
@@ -2637,6 +2666,8 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               Window.UPDATE(1,FromLineCounter);
             IF FromPurchRcptHeader."No." <> "Document No." THEN BEGIN
               FromPurchRcptHeader.GET("Document No.");
+              IF OriginalPurchHeader.GET(OriginalPurchHeader."Document Type"::Order,FromPurchRcptHeader."Order No.") THEN
+                OriginalPurchHeader.TESTFIELD("Prices Including VAT",ToPurchHeader."Prices Including VAT");
               TransferOldExtLines.ClearLineNumbers;
             END;
             FromPurchHeader.TRANSFERFIELDS(FromPurchRcptHeader);
@@ -2644,6 +2675,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               IsPurchFillExactCostRevLink(ToPurchHeader,0,FromPurchHeader."Currency Code");
             FromPurchLine.TRANSFERFIELDS(FromPurchRcptLine);
             FromPurchLine."Appl.-to Item Entry" := 0;
+            FromPurchLine."Copied From Posted Doc." := TRUE;
 
             IF "Document No." <> OldDocNo THEN BEGIN
               OldDocNo := "Document No.";
@@ -2744,9 +2776,9 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               Window.UPDATE(1,FromLineCounter);
             IF FromPurchInvHeader."No." <> "Document No." THEN BEGIN
               FromPurchInvHeader.GET("Document No.");
+              FromPurchInvHeader.TESTFIELD("Prices Including VAT",ToPurchHeader."Prices Including VAT");
               TransferOldExtLines.ClearLineNumbers;
             END;
-            FromPurchInvHeader.TESTFIELD("Prices Including VAT",ToPurchHeader."Prices Including VAT");
             FromPurchHeader.TRANSFERFIELDS(FromPurchInvHeader);
             FillExactCostRevLink := IsPurchFillExactCostRevLink(ToPurchHeader,1,FromPurchHeader."Currency Code");
             FromPurchLine.TRANSFERFIELDS(FromPurchInvLine);
@@ -2756,6 +2788,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             FromPurchLine."Receipt Line No." := 0;
             FromPurchLine."Return Shipment No." := '';
             FromPurchLine."Return Shipment Line No." := "Line No.";
+            FromPurchLine."Copied From Posted Doc." := TRUE;
 
             SplitLine := TRUE;
             GetItemLedgEntries(ItemLedgEntryBuf,TRUE);
@@ -2770,20 +2803,9 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               ELSE
                 SplitLine := FALSE;
 
-            IF NOT SplitLine THEN BEGIN
-              FromPurchLine2 := FromPurchLineBuf;
-              FromPurchLineBuf := FromPurchLine;
-              FromPurchLineBuf."Document No." := FromPurchLine2."Document No.";
-              FromPurchLineBuf."Receipt Line No." := FromPurchLine2."Receipt Line No.";
-              FromPurchLineBuf."Line No." := NextLineNo;
-              NextLineNo := NextLineNo + 10000;
-              IF NOT IsRecalculateAmount(FromPurchHeader."Currency Code",ToPurchHeader."Currency Code",
-                   FromPurchHeader."Prices Including VAT",ToPurchHeader."Prices Including VAT")
-              THEN
-                FromPurchLineBuf."Return Shipment No." := "Document No.";
-              ReCalcPurchLine(FromPurchHeader,ToPurchHeader,FromPurchLineBuf);
-              FromPurchLineBuf.INSERT;
-            END;
+            IF NOT SplitLine THEN
+              CopyPurchLinesToBuffer(
+                FromPurchHeader,FromPurchLine,FromPurchLine2,FromPurchLineBuf,ToPurchHeader,"Document No.",NextLineNo);
           UNTIL NEXT = 0;
 
       // Create purchase line from buffer
@@ -2802,7 +2824,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               OldRcptDocNo := '';
               InsertOldPurchDocNoLine(ToPurchHeader,OldInvDocNo,2,NextLineNo);
             END;
-            IF "Document No." <> OldRcptDocNo THEN BEGIN
+            IF ("Document No." <> OldRcptDocNo) AND ("Receipt Line No." > 0) THEN BEGIN
               OldRcptDocNo := "Document No.";
               InsertOldPurchCombDocNoLine(ToPurchHeader,OldInvDocNo,OldRcptDocNo,NextLineNo,TRUE);
             END;
@@ -2891,6 +2913,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               Window.UPDATE(1,FromLineCounter);
             IF FromPurchCrMemoHeader."No." <> "Document No." THEN BEGIN
               FromPurchCrMemoHeader.GET("Document No.");
+              FromPurchCrMemoHeader.TESTFIELD("Prices Including VAT",ToPurchHeader."Prices Including VAT");
               TransferOldExtLines.ClearLineNumbers;
             END;
             FromPurchHeader.TRANSFERFIELDS(FromPurchCrMemoHeader);
@@ -2903,6 +2926,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             FromPurchLine."Receipt Line No." := 0;
             FromPurchLine."Return Shipment No." := '';
             FromPurchLine."Return Shipment Line No." := "Line No.";
+            FromPurchLine."Copied From Posted Doc." := TRUE;
 
             SplitLine := TRUE;
             GetItemLedgEntries(ItemLedgEntryBuf,TRUE);
@@ -2918,22 +2942,9 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               ELSE
                 SplitLine := FALSE;
 
-            IF NOT SplitLine THEN BEGIN
-              FromPurchLine2 := FromPurchLineBuf;
-              FromPurchLineBuf := FromPurchLine;
-              FromPurchLineBuf."Document No." := FromPurchLine2."Document No.";
-              FromPurchLineBuf."Receipt Line No." := FromPurchLine2."Receipt Line No.";
-              FromPurchLineBuf."Line No." := NextLineNo;
-              NextLineNo := NextLineNo + 10000;
-              IF NOT IsRecalculateAmount(
-                   FromPurchHeader."Currency Code",ToPurchHeader."Currency Code",
-                   FromPurchHeader."Prices Including VAT",ToPurchHeader."Prices Including VAT")
-              THEN
-                FromPurchLineBuf."Return Shipment No." := "Document No.";
-              ReCalcPurchLine(FromPurchHeader,ToPurchHeader,FromPurchLineBuf);
-              FromPurchLineBuf.INSERT;
-            END;
-
+            IF NOT SplitLine THEN
+              CopyPurchLinesToBuffer(
+                FromPurchHeader,FromPurchLine,FromPurchLine2,FromPurchLineBuf,ToPurchHeader,"Document No.",NextLineNo);
           UNTIL NEXT = 0;
 
       // Create purchase line from buffer
@@ -3007,6 +3018,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       TempTrkgItemLedgEntry@1020 : TEMPORARY Record 32;
       FromPurchHeader@1006 : Record 38;
       FromPurchLine@1003 : Record 39;
+      OriginalPurchHeader@1013 : Record 38;
       ToPurchLine@1010 : Record 39;
       FromPurchLineBuf@1007 : TEMPORARY Record 39;
       FromReturnShptHeader@1005 : Record 6650;
@@ -3035,6 +3047,8 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               Window.UPDATE(1,FromLineCounter);
             IF FromReturnShptHeader."No." <> "Document No." THEN BEGIN
               FromReturnShptHeader.GET("Document No.");
+              IF OriginalPurchHeader.GET(OriginalPurchHeader."Document Type"::"Return Order",FromReturnShptHeader."Return Order No.") THEN
+                OriginalPurchHeader.TESTFIELD("Prices Including VAT",ToPurchHeader."Prices Including VAT");
               TransferOldExtLines.ClearLineNumbers;
             END;
             FromPurchHeader.TRANSFERFIELDS(FromReturnShptHeader);
@@ -3042,6 +3056,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               IsPurchFillExactCostRevLink(ToPurchHeader,2,FromPurchHeader."Currency Code");
             FromPurchLine.TRANSFERFIELDS(FromReturnShptLine);
             FromPurchLine."Appl.-to Item Entry" := 0;
+            FromPurchLine."Copied From Posted Doc." := TRUE;
 
             IF "Document No." <> OldDocNo THEN BEGIN
               OldDocNo := "Document No.";
@@ -3101,11 +3116,28 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       Window.CLOSE;
     END;
 
+    LOCAL PROCEDURE CopyPurchLinesToBuffer@145(FromPurchHeader@1006 : Record 38;FromPurchLine@1005 : Record 39;VAR FromPurchLine2@1004 : Record 39;VAR TempPurchLineBuf@1003 : TEMPORARY Record 39;ToPurchHeader@1002 : Record 38;DocNo@1001 : Code[20];VAR NextLineNo@1000 : Integer);
+    BEGIN
+      FromPurchLine2 := TempPurchLineBuf;
+      TempPurchLineBuf := FromPurchLine;
+      TempPurchLineBuf."Document No." := FromPurchLine2."Document No.";
+      TempPurchLineBuf."Receipt Line No." := FromPurchLine2."Receipt Line No.";
+      TempPurchLineBuf."Line No." := NextLineNo;
+      NextLineNo := NextLineNo + 10000;
+      IF NOT IsRecalculateAmount(
+           FromPurchHeader."Currency Code",ToPurchHeader."Currency Code",
+           FromPurchHeader."Prices Including VAT",ToPurchHeader."Prices Including VAT")
+      THEN
+        TempPurchLineBuf."Return Shipment No." := DocNo;
+      ReCalcPurchLine(FromPurchHeader,ToPurchHeader,TempPurchLineBuf);
+      TempPurchLineBuf.INSERT;
+    END;
+
     LOCAL PROCEDURE SplitPstdPurchLinesPerILE@55(ToPurchHeader@1008 : Record 38;FromPurchHeader@1009 : Record 38;VAR ItemLedgEntry@1003 : Record 32;VAR FromPurchLineBuf@1004 : Record 39;FromPurchLine@1001 : Record 39;VAR NextLineNo@1006 : Integer;VAR CopyItemTrkg@1002 : Boolean;VAR MissingExCostRevLink@1005 : Boolean;FillExactCostRevLink@1000 : Boolean;FromShptOrRcpt@1010 : Boolean) : Boolean;
     VAR
       Item@1012 : Record 27;
+      ApplyRec@1019 : Record 339;
       OrgQtyBase@1007 : Decimal;
-      ApplyRec@1011 : Record 339;
     BEGIN
       IF FromShptOrRcpt THEN BEGIN
         FromPurchLineBuf.RESET;
@@ -3165,7 +3197,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               ConfirmApply;
           IF ("Remaining Quantity" > 0) OR ApplyFully THEN BEGIN
             FromPurchLineBuf := FromPurchLine;
-            IF "Remaining Quantity" < ABS(FromPurchLine."Quantity (Base)") THEN BEGIN
+            IF "Remaining Quantity" < ABS(FromPurchLine."Quantity (Base)") THEN
               IF NOT ApplyFully THEN BEGIN
                 IF FromPurchLine."Quantity (Base)" > 0 THEN
                   FromPurchLineBuf."Quantity (Base)" := "Remaining Quantity"
@@ -3179,7 +3211,6 @@ OBJECT Codeunit 6620 Copy Document Mgt.
                 ConvertFromBase(
                   FromPurchLineBuf.Quantity,FromPurchLineBuf."Quantity (Base)",FromPurchLineBuf."Qty. per Unit of Measure");
               END;
-            END;
             FromPurchLine."Quantity (Base)" := FromPurchLine."Quantity (Base)" - FromPurchLineBuf."Quantity (Base)";
             FromPurchLine.Quantity := FromPurchLine.Quantity - FromPurchLineBuf.Quantity;
             FromPurchLineBuf."Appl.-to Item Entry" := "Entry No.";
@@ -3215,10 +3246,11 @@ OBJECT Codeunit 6620 Copy Document Mgt.
     LOCAL PROCEDURE SplitPurchDocLinesPerItemTrkg@59(VAR ItemLedgEntry@1003 : Record 32;VAR TempItemTrkgEntry@1009 : TEMPORARY Record 337;VAR FromPurchLineBuf@1004 : Record 39;FromPurchLine@1001 : Record 39;VAR NextLineNo@1008 : Integer;VAR NextItemTrkgEntryNo@1002 : Integer;VAR MissingExCostRevLink@1005 : Boolean;FromShptOrRcpt@1007 : Boolean) : Boolean;
     VAR
       PurchLineBuf@1012 : ARRAY [2] OF TEMPORARY Record 39;
+      ApplyRec@1019 : Record 339;
+      Tracked@1011 : Boolean;
       RemainingQtyBase@1000 : Decimal;
       SignFactor@1006 : Integer;
       i@1013 : Integer;
-      ApplyRec@1010 : Record 339;
     BEGIN
       IF FromShptOrRcpt THEN BEGIN
         FromPurchLineBuf.RESET;
@@ -3270,15 +3302,22 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               ELSE
                 RemainingQtyBase := FromPurchLine."Quantity (Base)"
             ELSE
-              IF "Remaining Quantity" < FromPurchLine."Quantity (Base)" * SignFactor THEN BEGIN
-                IF ("Item Tracking" = "Item Tracking"::None) AND AskApply THEN
-                  ConfirmApply;
-                IF (NOT ApplyFully) OR ("Item Tracking" <> "Item Tracking"::None) THEN
-                  RemainingQtyBase := GetQtyOfPurchILENotShipped("Entry No.") * SignFactor
+              IF NOT Positive THEN BEGIN
+                RemainingQtyBase := -"Shipped Qty. Not Returned";
+                IF RemainingQtyBase < FromPurchLine."Quantity (Base)" * SignFactor THEN
+                  RemainingQtyBase := RemainingQtyBase * SignFactor
                 ELSE
-                  RemainingQtyBase := FromPurchLine."Quantity (Base)" - ApplyRec.Returned("Entry No.");
+                  RemainingQtyBase := FromPurchLine."Quantity (Base)";
               END ELSE
-                RemainingQtyBase := FromPurchLine."Quantity (Base)";
+                IF "Remaining Quantity" < FromPurchLine."Quantity (Base)" * SignFactor THEN BEGIN
+                  IF ("Item Tracking" = "Item Tracking"::None) AND AskApply THEN
+                    ConfirmApply;
+                  IF (NOT ApplyFully) OR ("Item Tracking" <> "Item Tracking"::None) THEN
+                    RemainingQtyBase := GetQtyOfPurchILENotShipped("Entry No.") * SignFactor
+                  ELSE
+                    RemainingQtyBase := FromPurchLine."Quantity (Base)" - ApplyRec.Returned("Entry No.");
+                END ELSE
+                  RemainingQtyBase := FromPurchLine."Quantity (Base)";
 
             IF RemainingQtyBase <> 0 THEN BEGIN
               IF Positive THEN
@@ -3301,6 +3340,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
                 InsertTempItemTrkgEntry(
                   ItemLedgEntry,TempItemTrkgEntry,ABS(RemainingQtyBase),
                   PurchLineBuf[i]."Line No.",NextItemTrkgEntryNo,TRUE);
+              Tracked := TRUE;
             END;
           UNTIL (NEXT = 0) OR (FromPurchLine."Quantity (Base)" = 0);
 
@@ -3317,7 +3357,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             SETRANGE("Document Line No.");
           END;
         UNTIL (NEXT = 0) OR FromShptOrRcpt;
-        IF (FromPurchLine."Quantity (Base)" <> 0) AND Positive AND TempItemTrkgEntry.ISEMPTY THEN
+        IF (FromPurchLine."Quantity (Base)" <> 0) AND NOT Tracked THEN
           MissingExCostRevLink := TRUE;
       END;
 
@@ -3423,9 +3463,12 @@ OBJECT Codeunit 6620 Copy Document Mgt.
     LOCAL PROCEDURE InsertOldSalesDocNoLine@41(ToSalesHeader@1001 : Record 36;OldDocNo@1000 : Code[20];OldDocType@1004 : Integer;VAR NextLineNo@1002 : Integer);
     VAR
       ToSalesLine2@1003 : Record 37;
+      GlobalLanguageID@1005 : Integer;
     BEGIN
       IF SkipCopyFromDescription THEN
         EXIT;
+
+      GlobalLanguageID := SetLanguageByCode(ToSalesHeader."Language Code");
 
       NextLineNo := NextLineNo + 10000;
       ToSalesLine2.INIT;
@@ -3434,12 +3477,17 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       ToSalesLine2."Document No." := ToSalesHeader."No.";
       ToSalesLine2.Description := STRSUBSTNO(Text015,SELECTSTR(OldDocType,Text013),OldDocNo);
       ToSalesLine2.INSERT;
+
+      SetLanguageByID(GlobalLanguageID);
     END;
 
     LOCAL PROCEDURE InsertOldSalesCombDocNoLine@62(ToSalesHeader@1001 : Record 36;OldDocNo@1000 : Code[20];OldDocNo2@1005 : Code[20];VAR NextLineNo@1002 : Integer;CopyFromInvoice@1004 : Boolean);
     VAR
       ToSalesLine2@1003 : Record 37;
+      GlobalLanguageID@1006 : Integer;
     BEGIN
+      GlobalLanguageID := SetLanguageByCode(ToSalesHeader."Language Code");
+
       NextLineNo := NextLineNo + 10000;
       ToSalesLine2.INIT;
       ToSalesLine2."Line No." := NextLineNo;
@@ -3458,14 +3506,19 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             COPYSTR(SELECTSTR(3,Text016) + OldDocNo,1,23),
             COPYSTR(SELECTSTR(4,Text016) + OldDocNo2,1,23));
       ToSalesLine2.INSERT;
+
+      SetLanguageByID(GlobalLanguageID);
     END;
 
     LOCAL PROCEDURE InsertOldPurchDocNoLine@56(ToPurchHeader@1001 : Record 38;OldDocNo@1000 : Code[20];OldDocType@1004 : Integer;VAR NextLineNo@1002 : Integer);
     VAR
       ToPurchLine2@1003 : Record 39;
+      GlobalLanguageID@1005 : Integer;
     BEGIN
       IF SkipCopyFromDescription THEN
         EXIT;
+
+      GlobalLanguageID := SetLanguageByCode(ToPurchHeader."Language Code");
 
       NextLineNo := NextLineNo + 10000;
       ToPurchLine2.INIT;
@@ -3474,12 +3527,17 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       ToPurchLine2."Document No." := ToPurchHeader."No.";
       ToPurchLine2.Description := STRSUBSTNO(Text015,SELECTSTR(OldDocType,Text014),OldDocNo);
       ToPurchLine2.INSERT;
+
+      SetLanguageByID(GlobalLanguageID);
     END;
 
     LOCAL PROCEDURE InsertOldPurchCombDocNoLine@72(ToPurchHeader@1001 : Record 38;OldDocNo@1000 : Code[20];OldDocNo2@1005 : Code[20];VAR NextLineNo@1002 : Integer;CopyFromInvoice@1004 : Boolean);
     VAR
       ToPurchLine2@1003 : Record 39;
+      GlobalLanguageID@1006 : Integer;
     BEGIN
+      GlobalLanguageID := SetLanguageByCode(ToPurchHeader."Language Code");
+
       NextLineNo := NextLineNo + 10000;
       ToPurchLine2.INIT;
       ToPurchLine2."Line No." := NextLineNo;
@@ -3498,6 +3556,8 @@ OBJECT Codeunit 6620 Copy Document Mgt.
             COPYSTR(SELECTSTR(3,Text017) + OldDocNo,1,23),
             COPYSTR(SELECTSTR(4,Text017) + OldDocNo2,1,23));
       ToPurchLine2.INSERT;
+
+      SetLanguageByID(GlobalLanguageID);
     END;
 
     PROCEDURE IsSalesFillExactCostRevLink@38(ToSalesHeader@1000 : Record 36;FromDocType@1001 : 'Sales Shipment,Sales Invoice,Sales Return Receipt,Sales Credit Memo';CurrencyCode@1002 : Code[10]) : Boolean;
@@ -4080,6 +4140,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       ValueEntry@1002 : Record 5802;
       ValueEntry2@1000 : Record 5802;
       ItemLedgerEntry@1003 : Record 32;
+      ItemLedgerEntry2@1005 : Record 32;
       SalesShipmentLine@1004 : Record 111;
     BEGIN
       CLEAR(PostedAsmHeader);
@@ -4101,8 +4162,15 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       IF ValueEntry.COUNT > 1 THEN BEGIN
         ValueEntry2.COPY(ValueEntry);
         ValueEntry2.SETFILTER("Item Ledger Entry No.",'<>%1',ValueEntry."Item Ledger Entry No.");
-        IF NOT ValueEntry2.ISEMPTY THEN
-          ERROR(Text032,TempSalesInvLine."Document No.");
+        IF ValueEntry2.FINDSET THEN
+          REPEAT
+            ItemLedgerEntry2.GET(ValueEntry2."Item Ledger Entry No.");
+            IF (ItemLedgerEntry2."Document Type" <> ItemLedgerEntry."Document Type") OR
+               (ItemLedgerEntry2."Document No." <> ItemLedgerEntry."Document No.") OR
+               (ItemLedgerEntry2."Document Line No." <> ItemLedgerEntry."Document Line No.")
+            THEN
+              ERROR(Text032,TempSalesInvLine."Document No.");
+          UNTIL ValueEntry2.NEXT = 0;
       END;
       GenerateAsmDataFromPosted(PostedAsmHeader,DocType);
       EXIT(TRUE);
@@ -4171,6 +4239,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
           Quantity := QtyToAsmToOrder;
           "Quantity (Base)" := QtyToAsmToOrderBase;
         END;
+        "Bin Code" := TempFromAsmHeader."Bin Code";
         "Unit Cost" := TempFromAsmHeader."Unit Cost";
         RoundQty(Quantity);
         RoundQty("Quantity (Base)");
@@ -4225,8 +4294,20 @@ OBJECT Codeunit 6620 Copy Document Mgt.
           ToAssemblyLine.Position := FromAsmLine.Position;
           ToAssemblyLine."Position 2" := FromAsmLine."Position 2";
           ToAssemblyLine."Position 3" := FromAsmLine."Position 3";
+          IF ToAssemblyLine.Type = ToAssemblyLine.Type::Item THEN
+            IF AvailabilityCheck THEN BEGIN
+              ToAssemblyLine."Location Code" := FromAsmLine."Location Code";
+              ToAssemblyLine."Variant Code" := FromAsmLine."Variant Code";
+            END ELSE BEGIN
+              ToAssemblyLine.VALIDATE("Location Code",FromAsmLine."Location Code");
+              ToAssemblyLine.VALIDATE("Variant Code",FromAsmLine."Variant Code");
+            END;
           IF ToAssemblyLine.Type <> ToAssemblyLine.Type::" " THEN BEGIN
-            ToAssemblyLine.VALIDATE("Unit Cost",FromAsmLine."Unit Cost");
+            IF RecalculateLines THEN
+              ToAssemblyLine."Unit Cost" := ToAssemblyLine.GetUnitCost
+            ELSE
+              ToAssemblyLine."Unit Cost" := FromAsmLine."Unit Cost";
+            ToAssemblyLine."Cost Amount" := ToAssemblyLine.CalcCostAmount(ToAssemblyLine.Quantity,ToAssemblyLine."Unit Cost");
             IF AvailabilityCheck THEN BEGIN
               WITH ToAssemblyLine DO BEGIN
                 "Quantity (Base)" := UOMMgt.CalcBaseQty(Quantity,"Qty. per Unit of Measure");
@@ -4236,15 +4317,6 @@ OBJECT Codeunit 6620 Copy Document Mgt.
               END;
             END ELSE
               ToAssemblyLine.VALIDATE("Quantity to Consume",ToAsmHeader."Quantity to Assemble" * FromAsmLine."Quantity per");
-          END;
-          IF ToAssemblyLine.Type = ToAssemblyLine.Type::Item THEN BEGIN
-            IF AvailabilityCheck THEN BEGIN
-              ToAssemblyLine."Location Code" := FromAsmLine."Location Code";
-              ToAssemblyLine."Variant Code" := FromAsmLine."Variant Code";
-            END ELSE BEGIN
-              ToAssemblyLine.VALIDATE("Location Code",FromAsmLine."Location Code");
-              ToAssemblyLine.VALIDATE("Variant Code",FromAsmLine."Variant Code");
-            END;
           END;
           ToAssemblyLine.MODIFY(NOT AvailabilityCheck);
         UNTIL FromAsmLine.NEXT = 0;
@@ -4350,6 +4422,8 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       ToSalesLine."Prepayment VAT Difference" := 0;
       ToSalesLine."Prepmt VAT Diff. to Deduct" := 0;
       ToSalesLine."Prepmt VAT Diff. Deducted" := 0;
+      ToSalesLine."Prepmt. Amt. Incl. VAT" := 0;
+      ToSalesLine."Prepmt. VAT Amount Inv. (LCY)" := 0;
       ToSalesLine."Quantity Shipped" := 0;
       ToSalesLine."Qty. Shipped (Base)" := 0;
       ToSalesLine."Return Qty. Received" := 0;
@@ -4426,6 +4500,8 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       ToPurchLine."Prepayment VAT Difference" := 0;
       ToPurchLine."Prepmt VAT Diff. to Deduct" := 0;
       ToPurchLine."Prepmt VAT Diff. Deducted" := 0;
+      ToPurchLine."Prepmt. Amt. Incl. VAT" := 0;
+      ToPurchLine."Prepmt. VAT Amount Inv. (LCY)" := 0;
       ToPurchLine."Quantity Received" := 0;
       ToPurchLine."Qty. Received (Base)" := 0;
       ToPurchLine."Return Qty. Shipped" := 0;
@@ -4544,7 +4620,8 @@ OBJECT Codeunit 6620 Copy Document Mgt.
         "Prepmt. Cr. Memo No. Series" := OldSalesHeader."Prepmt. Cr. Memo No. Series";
         "Prepmt. Cr. Memo No." := OldSalesHeader."Prepmt. Cr. Memo No.";
         "Prepmt. Posting Description" := OldSalesHeader."Prepmt. Posting Description";
-      END
+        SetSalespersonPurchaserCode("Salesperson Code");
+      END;
     END;
 
     LOCAL PROCEDURE CopyFieldsFromOldPurchHeader@119(VAR ToPurchHeader@1000 : Record 38;OldPurchHeader@1001 : Record 38);
@@ -4564,6 +4641,7 @@ OBJECT Codeunit 6620 Copy Document Mgt.
         "Prepmt. Cr. Memo No. Series" := OldPurchHeader."Prepmt. Cr. Memo No. Series";
         "Prepmt. Cr. Memo No." := OldPurchHeader."Prepmt. Cr. Memo No.";
         "Prepmt. Posting Description" := OldPurchHeader."Prepmt. Posting Description";
+        SetSalespersonPurchaserCode("Purchaser Code");
       END;
     END;
 
@@ -5165,6 +5243,164 @@ OBJECT Codeunit 6620 Copy Document Mgt.
       EXIT(
         (PurchaseHeader."Document Type" <> PurchaseHeader."Document Type"::Quote) AND
         (PurchaseHeader."Document Type" <> PurchaseHeader."Document Type"::"Blanket Order"));
+    END;
+
+    LOCAL PROCEDURE CheckFirstLineShipped@177(DocNo@1000 : Code[20];ShipmentLineNo@1001 : Integer;VAR SalesCombDocLineNo@1003 : Integer;VAR NextLineNo@1004 : Integer;VAR FirstLineShipped@1002 : Boolean);
+    BEGIN
+      IF (DocNo = '') AND (ShipmentLineNo = 0) AND FirstLineShipped THEN BEGIN
+        FirstLineShipped := FALSE;
+        SalesCombDocLineNo := NextLineNo;
+        NextLineNo := NextLineNo + 10000;
+      END;
+    END;
+
+    LOCAL PROCEDURE SetTempSalesInvLine@78(FromSalesInvLine@1000 : Record 113;VAR TempSalesInvLine@1001 : TEMPORARY Record 113;VAR SalesInvLineCount@1003 : Integer;VAR NextLineNo@1004 : Integer;VAR FirstLineText@1002 : Boolean);
+    BEGIN
+      IF FromSalesInvLine.Type = FromSalesInvLine.Type::Item THEN BEGIN
+        SalesInvLineCount += 1;
+        TempSalesInvLine := FromSalesInvLine;
+        TempSalesInvLine.INSERT;
+        IF FirstLineText THEN BEGIN
+          NextLineNo := NextLineNo + 10000;
+          FirstLineText := FALSE;
+        END;
+      END ELSE
+        IF FromSalesInvLine.Type = FromSalesInvLine.Type::" " THEN
+          FirstLineText := TRUE;
+    END;
+
+    LOCAL PROCEDURE SetLanguageByCode@137(LanguageCode@1000 : Code[10]) PreviousGlobalLanguageID : Integer;
+    VAR
+      Language@1001 : Record 8;
+    BEGIN
+      IF LanguageCode = '' THEN
+        EXIT(0);
+
+      PreviousGlobalLanguageID := GLOBALLANGUAGE;
+      GLOBALLANGUAGE(Language.GetLanguageID(LanguageCode));
+    END;
+
+    LOCAL PROCEDURE SetLanguageByID@136(LanguageID@1000 : Integer);
+    BEGIN
+      IF LanguageID <> 0 THEN
+        GLOBALLANGUAGE(LanguageID);
+    END;
+
+    PROCEDURE ChangeLanguage@140(LanguageCode@1000 : Code[10]);
+    BEGIN
+      SavedLanguageID := SetLanguageByCode(LanguageCode);
+    END;
+
+    PROCEDURE RestoreLanguage@141();
+    BEGIN
+      SetLanguageByID(SavedLanguageID);
+      SavedLanguageID := 0;
+    END;
+
+    LOCAL PROCEDURE CopyShiptoCodeFromInvToCrMemo@71(VAR ToSalesHeader@1000 : Record 36;FromSalesInvHeader@1001 : Record 112;FromDocType@1002 : Option);
+    BEGIN
+      IF (FromDocType = SalesDocType::"Posted Invoice") AND
+         (FromSalesInvHeader."Ship-to Code" <> '') AND
+         (ToSalesHeader."Document Type" = ToSalesHeader."Document Type"::"Credit Memo")
+      THEN
+        ToSalesHeader."Ship-to Code" := FromSalesInvHeader."Ship-to Code";
+    END;
+
+    LOCAL PROCEDURE TransferFieldsFromCrMemoToInv@143(VAR ToSalesHeader@1000 : Record 36;FromSalesCrMemoHeader@1001 : Record 114);
+    BEGIN
+      ToSalesHeader.VALIDATE("Sell-to Customer No.",FromSalesCrMemoHeader."Sell-to Customer No.");
+      ToSalesHeader.TRANSFERFIELDS(FromSalesCrMemoHeader,FALSE);
+      IF (ToSalesHeader."Document Type" = ToSalesHeader."Document Type"::Invoice) AND IncludeHeader THEN
+        ToSalesHeader.VALIDATE("Ship-to Code",FromSalesCrMemoHeader."Ship-to Code");
+    END;
+
+    LOCAL PROCEDURE CopyShippingInfoPurchOrder@142(VAR ToPurchaseHeader@1000 : Record 38;FromPurchaseHeader@1001 : Record 38);
+    BEGIN
+      IF (ToPurchaseHeader."Document Type" = ToPurchaseHeader."Document Type"::Order) AND
+         (FromPurchaseHeader."Document Type" = FromPurchaseHeader."Document Type"::Order)
+      THEN BEGIN
+        ToPurchaseHeader."Ship-to Address" := FromPurchaseHeader."Ship-to Address";
+        ToPurchaseHeader."Ship-to Address 2" := FromPurchaseHeader."Ship-to Address 2";
+        ToPurchaseHeader."Ship-to City" := FromPurchaseHeader."Ship-to City";
+        ToPurchaseHeader."Ship-to Country/Region Code" := FromPurchaseHeader."Ship-to Country/Region Code";
+        ToPurchaseHeader."Ship-to County" := FromPurchaseHeader."Ship-to County";
+        ToPurchaseHeader."Ship-to Name" := FromPurchaseHeader."Ship-to Name";
+        ToPurchaseHeader."Ship-to Name 2" := FromPurchaseHeader."Ship-to Name 2";
+        ToPurchaseHeader."Ship-to Post Code" := FromPurchaseHeader."Ship-to Post Code";
+        ToPurchaseHeader."Ship-to Contact" := FromPurchaseHeader."Ship-to Contact";
+        ToPurchaseHeader."Inbound Whse. Handling Time" := FromPurchaseHeader."Inbound Whse. Handling Time";
+      END;
+    END;
+
+    LOCAL PROCEDURE SetSalespersonPurchaserCode@218(VAR SalespersonPurchaserCode@1000 : Code[20]);
+    BEGIN
+      IF SalespersonPurchaserCode <> '' THEN
+        IF SalespersonPurchaser.GET(SalespersonPurchaserCode) THEN
+          IF SalespersonPurchaser.VerifySalesPersonPurchaserPrivacyBlocked(SalespersonPurchaser) THEN
+            SalespersonPurchaserCode := ''
+    END;
+
+    PROCEDURE SetCopyExtText@150();
+    BEGIN
+      CopyExtText := TRUE;
+    END;
+
+    LOCAL PROCEDURE SetTrackingOnAssemblyReservation@146(AssemblyHeader@1001 : Record 900;VAR TempItemLedgerEntry@1002 : TEMPORARY Record 32);
+    VAR
+      ReservationEntry@1000 : Record 337;
+      TempReservationEntry@1003 : TEMPORARY Record 337;
+      TempTrackingSpecification@1004 : TEMPORARY Record 336;
+      ItemTrackingCode@1009 : Record 6502;
+      ReservationEngineMgt@1007 : Codeunit 99000831;
+      QtyToAddAsBlank@1008 : Decimal;
+    BEGIN
+      TempItemLedgerEntry.SETFILTER("Lot No.",'<>%1','');
+      IF TempItemLedgerEntry.ISEMPTY THEN
+        EXIT;
+
+      ReservationEntry.SETRANGE("Source Type",DATABASE::"Assembly Header");
+      ReservationEntry.SETRANGE("Source Subtype",AssemblyHeader."Document Type");
+      ReservationEntry.SETRANGE("Source ID",AssemblyHeader."No.");
+      ReservationEntry.SETRANGE("Source Ref. No.",0);
+      ReservationEntry.SETRANGE("Reservation Status",ReservationEntry."Reservation Status"::Reservation);
+      IF ReservationEntry.FINDSET THEN
+        REPEAT
+          TempReservationEntry := ReservationEntry;
+          TempReservationEntry.INSERT;
+        UNTIL ReservationEntry.NEXT = 0;
+
+      IF TempItemLedgerEntry.FINDSET THEN
+        REPEAT
+          TempTrackingSpecification."Entry No." += 1;
+          TempTrackingSpecification."Item No." := TempItemLedgerEntry."Item No.";
+          TempTrackingSpecification."Location Code" := TempItemLedgerEntry."Location Code";
+          TempTrackingSpecification."Quantity (Base)" := TempItemLedgerEntry.Quantity;
+          TempTrackingSpecification."Serial No." := TempItemLedgerEntry."Serial No.";
+          TempTrackingSpecification."Lot No." := TempItemLedgerEntry."Lot No.";
+          TempTrackingSpecification."Warranty Date" := TempItemLedgerEntry."Warranty Date";
+          TempTrackingSpecification."Expiration Date" := TempItemLedgerEntry."Expiration Date";
+          TempTrackingSpecification.INSERT;
+        UNTIL TempItemLedgerEntry.NEXT = 0;
+
+      IF TempTrackingSpecification.FINDSET THEN
+        REPEAT
+          IF GetItemTrackingCode(ItemTrackingCode,TempTrackingSpecification."Item No.") THEN
+            ReservationEngineMgt.AddItemTrackingToTempRecSet(
+              TempReservationEntry,TempTrackingSpecification,TempTrackingSpecification."Quantity (Base)",QtyToAddAsBlank,
+              ItemTrackingCode."SN Specific Tracking",ItemTrackingCode."Lot Specific Tracking");
+        UNTIL TempTrackingSpecification.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE GetItemTrackingCode@164(VAR ItemTrackingCode@1000 : Record 6502;ItemNo@1001 : Code[20]) : Boolean;
+    BEGIN
+      IF NOT Item.GET(ItemNo) THEN
+        EXIT(FALSE);
+
+      IF Item."Item Tracking Code" = '' THEN
+        EXIT(FALSE);
+
+      ItemTrackingCode.GET(Item."Item Tracking Code");
+      EXIT(TRUE);
     END;
 
     BEGIN

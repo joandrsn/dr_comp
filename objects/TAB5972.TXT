@@ -2,9 +2,9 @@ OBJECT Table 5972 Contract/Service Discount
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -12,6 +12,7 @@ OBJECT Table 5972 Contract/Service Discount
     OnInsert=BEGIN
                TESTFIELD("Contract No.");
                IF "Contract Type" = "Contract Type"::Contract THEN BEGIN
+                 VerifyContractOpen;
                  ServMgtSetup.GET;
                  IF ServMgtSetup."Register Contract Changes" THEN
                    ContractChangeLog.LogContractChange(
@@ -22,6 +23,7 @@ OBJECT Table 5972 Contract/Service Discount
 
     OnModify=BEGIN
                IF "Contract Type" = "Contract Type"::Contract THEN BEGIN
+                 VerifyContractOpen;
                  ServMgtSetup.GET;
                  IF "Discount %" <> xRec."Discount %" THEN
                    IF ServMgtSetup."Register Contract Changes" THEN
@@ -33,6 +35,7 @@ OBJECT Table 5972 Contract/Service Discount
 
     OnDelete=BEGIN
                IF "Contract Type" = "Contract Type"::Contract THEN BEGIN
+                 VerifyContractOpen;
                  ServMgtSetup.GET;
                  IF ServMgtSetup."Register Contract Changes" THEN
                    ContractChangeLog.LogContractChange(
@@ -94,6 +97,14 @@ OBJECT Table 5972 Contract/Service Discount
       Text000@1000 : TextConst 'DAN=Du kan ikke omdøbe recorden.;ENU=You cannot rename the record.';
       ContractChangeLog@1001 : Record 5967;
       ServMgtSetup@1002 : Record 5911;
+
+    LOCAL PROCEDURE VerifyContractOpen@1();
+    VAR
+      ServiceContractHeader@1000 : Record 5965;
+    BEGIN
+      ServiceContractHeader.GET("Contract Type","Contract No.");
+      ServiceContractHeader.TESTFIELD("Change Status",ServiceContractHeader."Change Status"::Open);
+    END;
 
     BEGIN
     END.

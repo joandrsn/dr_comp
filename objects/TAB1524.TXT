@@ -2,9 +2,9 @@ OBJECT Table 1524 Workflow Rule
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47864;
   }
   PROPERTIES
   {
@@ -79,6 +79,15 @@ OBJECT Table 1524 Workflow Rule
       IF Value.ISINTEGER OR Value.ISBIGINTEGER OR Value.ISDECIMAL OR Value.ISDURATION THEN
         EXIT(CompareNumbers(xValue,Value));
 
+      IF Value.ISDATE THEN
+        EXIT(CompareDates(xValue,Value));
+
+      IF Value.ISTIME THEN
+        EXIT(CompareTimes(xValue,Value));
+
+      IF Value.ISDATETIME THEN
+        EXIT(CompareDateTimes(xValue,Value));
+
       EXIT(CompareText(FORMAT(xValue,0,2),FORMAT(Value,0,2)));
     END;
 
@@ -89,6 +98,33 @@ OBJECT Table 1524 Workflow Rule
           EXIT(xValue < Value);
         Operator::Decreased:
           EXIT(xValue > Value);
+        Operator::Changed:
+          EXIT(xValue <> Value);
+        ELSE
+          EXIT(FALSE);
+      END;
+    END;
+
+    LOCAL PROCEDURE CompareDates@5(xValue@1000 : Date;Value@1002 : Date) : Boolean;
+    BEGIN
+      EXIT(CompareDateTimes(CREATEDATETIME(xValue,0T),CREATEDATETIME(Value,0T)));
+    END;
+
+    LOCAL PROCEDURE CompareTimes@6(xValue@1000 : Time;Value@1002 : Time) : Boolean;
+    VAR
+      ReferenceDate@1001 : Date;
+    BEGIN
+      ReferenceDate := TODAY;
+      EXIT(CompareDateTimes(CREATEDATETIME(ReferenceDate,xValue),CREATEDATETIME(ReferenceDate,Value)));
+    END;
+
+    LOCAL PROCEDURE CompareDateTimes@11(xValue@1000 : DateTime;Value@1002 : DateTime) : Boolean;
+    BEGIN
+      CASE Operator OF
+        Operator::Increased:
+          EXIT(xValue - Value < 0);
+        Operator::Decreased:
+          EXIT(xValue - Value > 0);
         Operator::Changed:
           EXIT(xValue <> Value);
         ELSE

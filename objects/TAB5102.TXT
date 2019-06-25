@@ -2,9 +2,9 @@ OBJECT Table 5102 RM Matrix Management
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -125,7 +125,7 @@ OBJECT Table 5102 RM Matrix Management
                                                               ENU=Avg.Calcd. Current Value (LCY)];
                                                    Editable=No;
                                                    AutoFormatType=1 }
-    { 10  ;   ;Salesperson Filter  ;Code10        ;FieldClass=FlowFilter;
+    { 10  ;   ;Salesperson Filter  ;Code20        ;FieldClass=FlowFilter;
                                                    TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerfilter;
                                                               ENU=Salesperson Filter] }

@@ -2,9 +2,9 @@ OBJECT Codeunit 1297 Http Web Request Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -24,6 +24,27 @@ OBJECT Codeunit 1297 Http Web Request Mgt.
       InternalErr@1001 : TextConst 'DAN=Fjerntjenesten har returneret følgende fejlmeddelelse:\\;ENU=The remote service has returned the following error message:\\';
       NoCookieForYouErr@1040 : TextConst 'DAN=Webanmodningen indeholder ingen cookies.;ENU=The web request has no cookies.';
 
+    PROCEDURE InvokeJSONRequest@66(RequestJson@1002 : Text;VAR ResponseJson@1001 : Text;VAR HttpError@1009 : Text) Result : Boolean;
+    VAR
+      JSONMgt@1000 : Codeunit 5459;
+      OAuth20Mgt@1003 : Codeunit 1140;
+    BEGIN
+      IF JSONMgt.InitializeFromString(RequestJson) THEN
+        IF JSONMgt.SelectTokenFromRoot(OAuth20Mgt.GetTestToken) THEN BEGIN
+          OnBeforeInvokeTestJSONRequest(Result,RequestJson,ResponseJson,HttpError);
+          EXIT(Result);
+        END;
+
+      ResponseJson := '';
+      HttpError := '';
+
+      IF ProcessJsonRequestResponse(RequestJson,ResponseJson) THEN
+        EXIT(TRUE);
+
+      HttpError := ParseFaultJsonResponse(ResponseJson);
+      EXIT(FALSE);
+    END;
+
     PROCEDURE GetResponse@6(VAR ResponseInStream@1005 : InStream;VAR HttpStatusCode@1000 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpStatusCode";VAR ResponseHeaders@1003 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Collections.Specialized.NameValueCollection") : Boolean;
     VAR
       WebRequestHelper@1001 : Codeunit 1299;
@@ -31,6 +52,37 @@ OBJECT Codeunit 1297 Http Web Request Mgt.
     BEGIN
       EXIT(WebRequestHelper.GetWebResponse(HttpWebRequest,HttpWebResponse,ResponseInStream,HttpStatusCode,
           ResponseHeaders,GlobalProgressDialogEnabled));
+    END;
+
+    PROCEDURE GetResponseStream@23(VAR ResponseInStream@1005 : InStream) : Boolean;
+    VAR
+      WebRequestHelper@1001 : Codeunit 1299;
+      HttpWebResponse@1006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      HttpStatusCode@1002 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpStatusCode";
+      ResponseHeaders@1000 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Collections.Specialized.NameValueCollection";
+    BEGIN
+      EXIT(WebRequestHelper.GetWebResponse(HttpWebRequest,HttpWebResponse,ResponseInStream,HttpStatusCode,
+          ResponseHeaders,GlobalProgressDialogEnabled));
+    END;
+
+    LOCAL PROCEDURE GetResponseJson@37(VAR ResponseJson@1004 : Text) : Boolean;
+    VAR
+      WebRequestHelper@1001 : Codeunit 1299;
+      HttpWebResponse@1006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      HttpStatusCode@1002 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpStatusCode";
+      ResponseHeaders@1000 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Collections.Specialized.NameValueCollection";
+      ResponseInStream@1003 : InStream;
+    BEGIN
+      ResponseJson := '';
+      CreateInstream(ResponseInStream);
+
+      IF NOT WebRequestHelper.GetWebResponse(
+           HttpWebRequest,HttpWebResponse,ResponseInStream,HttpStatusCode,ResponseHeaders,GlobalProgressDialogEnabled)
+      THEN
+        EXIT(FALSE);
+
+      SetJSONHeaders(ResponseJson,ResponseHeaders);
+      EXIT(SetJSONContent(ResponseJson,ResponseInStream));
     END;
 
     [TryFunction]
@@ -55,6 +107,7 @@ OBJECT Codeunit 1297 Http Web Request Mgt.
 
       IF NOT ISNULL(WebException.Response) THEN BEGIN
         ResponseInputStream := WebException.Response.GetResponseStream;
+
         TraceLogStreamToTempFile(ResponseInputStream,'WebExceptionResponse',TempReturnTempBlob);
 
         IF NodePath <> '' THEN
@@ -74,6 +127,54 @@ OBJECT Codeunit 1297 Http Web Request Mgt.
         ErrorText += '\\' + SupportInfo;
 
       ERROR(ErrorText);
+    END;
+
+    LOCAL PROCEDURE ProcessJsonRequestResponse@38(RequestJson@1007 : Text;VAR ResponseJson@1005 : Text) : Boolean;
+    VAR
+      JSONMgt@1001 : Codeunit 5459;
+      Content@1000 : Text;
+    BEGIN
+      JSONMgt.InitializeObject(RequestJson);
+      Initialize(JSONMgt.GetValue('ServiceURL') + JSONMgt.GetValue('URLRequestPath'));
+      SetMethod(JSONMgt.GetValue('Method'));
+      GetJSONHeaders(RequestJson);
+
+      Content := JSONMgt.GetValue('Content');
+      IF Content <> '' THEN
+        AddBodyAsText(Content);
+
+      IF GetResponseJson(ResponseJson) THEN
+        EXIT(TRUE);
+
+      ProcessFaultJsonResponse(ResponseJson);
+      EXIT(FALSE);
+    END;
+
+    [TryFunction]
+    LOCAL PROCEDURE ProcessFaultJsonResponse@39(VAR ResponseJson@1005 : Text);
+    VAR
+      WebRequestHelper@1000 : Codeunit 1299;
+      WebException@1002 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.WebException";
+      ServiceURL@1003 : Text;
+      HttpError@1001 : Text;
+    BEGIN
+      ResponseJson := '';
+      HttpError := WebRequestHelper.GetWebResponseError(WebException,ServiceURL);
+      ParseWebResponseError(ResponseJson,WebException);
+
+      IF ResponseJson = '' THEN
+        ERROR(HttpError);
+    END;
+
+    LOCAL PROCEDURE ParseFaultJsonResponse@45(ResponseJson@1000 : Text) : Text;
+    VAR
+      JSONMgt@1001 : Codeunit 5459;
+      code@1002 : Text;
+      name@1003 : Text;
+      description@1004 : Text;
+    BEGIN
+      IF JSONMgt.GetJsonWebResponseError(ResponseJson,code,name,description) THEN
+        EXIT(STRSUBSTNO('Http error %1 (%2)\%3',code,name,description));
     END;
 
     [TryFunction]
@@ -99,9 +200,10 @@ OBJECT Codeunit 1297 Http Web Request Mgt.
 
     [TryFunction]
     PROCEDURE TryLoadXMLResponse@15(ResponseInputStream@1002 : InStream;VAR XmlDoc@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");
+    VAR
+      XMLDOMManagement@1001 : Codeunit 6224;
     BEGIN
-      XmlDoc := XmlDoc.XmlDocument;
-      XmlDoc.Load(ResponseInputStream);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseInputStream,XmlDoc);
     END;
 
     PROCEDURE SetTraceLogEnabled@1(Enabled@1000 : Boolean);
@@ -180,7 +282,14 @@ OBJECT Codeunit 1297 Http Web Request Mgt.
 
     PROCEDURE AddHeader@10(Key@1000 : Text;Value@1001 : Text);
     BEGIN
-      HttpWebRequest.Headers.Add(Key,Value);
+      CASE Key OF
+        'Accept':
+          SetReturnType(Value);
+        'Content-Type':
+          SetContentType(Value);
+        ELSE
+          HttpWebRequest.Headers.Add(Key,Value);
+      END;
     END;
 
     PROCEDURE AddBody@3(BodyFilePath@1000 : Text);
@@ -242,6 +351,89 @@ OBJECT Codeunit 1297 Http Web Request Mgt.
     BEGIN
       TempBlob.INIT;
       TempBlob.Blob.CREATEINSTREAM(InStr);
+    END;
+
+    LOCAL PROCEDURE GetJSONHeaders@40(RequestJson@1000 : Text);
+    VAR
+      JSONMgt@1002 : Codeunit 5459;
+      Name@1003 : Text;
+      Value@1004 : Text;
+    BEGIN
+      JSONMgt.InitializeObject(RequestJson);
+      IF JSONMgt.SelectTokenFromRoot('Header') THEN
+        IF JSONMgt.ReadProperties THEN
+          WHILE JSONMgt.GetNextProperty(Name,Value) DO
+            AddHeader(Name,Value);
+    END;
+
+    LOCAL PROCEDURE SetJSONHeaders@44(VAR ResponseJson@1001 : Text;ResponseHeaders@1000 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Collections.Specialized.NameValueCollection");
+    VAR
+      JSONMgt@1004 : Codeunit 5459;
+      HeaderJson@1003 : Text;
+      i@1002 : Integer;
+    BEGIN
+      IF ResponseHeaders.Count > 0 THEN BEGIN
+        FOR i := 0 TO ResponseHeaders.Count - 1 DO
+          JSONMgt.SetValue(ResponseHeaders.GetKey(i),ResponseHeaders.Item(i));
+        HeaderJson := JSONMgt.WriteObjectToString;
+        JSONMgt.InitializeObject(ResponseJson);
+        JSONMgt.AddJson('Header',HeaderJson);
+        ResponseJson := JSONMgt.WriteObjectToString;
+      END;
+    END;
+
+    LOCAL PROCEDURE SetJSONContent@51(VAR ResponseJson@1000 : Text;ResponseInStream@1002 : InStream) : Boolean;
+    VAR
+      JSONMgt@1003 : Codeunit 5459;
+      ContentJson@1004 : Text;
+      Content@1001 : Text;
+    BEGIN
+      IF ResponseInStream.READTEXT(Content) = 0 THEN
+        EXIT(TRUE);
+
+      IF NOT JSONMgt.InitializeFromString(Content) THEN
+        EXIT(FALSE);
+
+      ContentJson := JSONMgt.WriteObjectToString;
+      JSONMgt.InitializeObject(ResponseJson);
+      JSONMgt.AddJson('Content',ContentJson);
+      ResponseJson := JSONMgt.WriteObjectToString;
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE ParseWebResponseError@41(VAR ResponseJson@1000 : Text;WebException@1004 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.WebException");
+    VAR
+      JSONMgt@1002 : Codeunit 5459;
+      HttpWebResponse@1005 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      Convert@1007 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Convert";
+      ResponseInputStream@1003 : InStream;
+      ErrorDescription@1006 : Text;
+    BEGIN
+      IF ISNULL(WebException.Response) THEN
+        EXIT;
+      HttpWebResponse := WebException.Response;
+
+      JSONMgt.SetJsonWebResponseError(
+        ResponseJson,
+        FORMAT(Convert.ToInt32(HttpWebResponse.StatusCode)),
+        HttpWebResponse.StatusCode.ToString,
+        HttpWebResponse.StatusDescription);
+
+      // Try to get more details
+      ResponseInputStream := HttpWebResponse.GetResponseStream;
+      IF SetJSONContent(ResponseJson,ResponseInputStream) THEN
+        IF JSONMgt.InitializeFromString(ResponseJson) THEN BEGIN
+          ErrorDescription := JSONMgt.GetValue('Content.error_description');
+          IF ErrorDescription <> '' THEN BEGIN
+            JSONMgt.SetValue('Error.description',ErrorDescription);
+            ResponseJson := JSONMgt.WriteObjectToString;
+          END;
+        END;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeInvokeTestJSONRequest@42(VAR Result@1003 : Boolean;RequestJson@1002 : Text;VAR ResponseJson@1001 : Text;VAR HttpError@1000 : Text);
+    BEGIN
     END;
 
     BEGIN

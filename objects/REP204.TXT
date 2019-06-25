@@ -2,9 +2,9 @@ OBJECT Report 204 Sales - Quote
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -114,7 +114,9 @@ OBJECT Report 204 Sales - Quote
                                       ShowShippingAddr := TRUE;
 
                                   IF Print THEN BEGIN
-                                    IF ArchiveDocument THEN
+                                    IF ShowRequestPage AND ArchiveDocument OR
+                                       NOT ShowRequestPage AND SalesSetup."Archive Quotes and Orders"
+                                    THEN
                                       ArchiveManagement.StoreSalesDocument("Sales Header",LogInteraction);
 
                                     IF LogInteraction THEN BEGIN
@@ -816,6 +818,7 @@ OBJECT Report 204 Sales - Quote
                    LogInteraction := SegManagement.FindInteractTmplCode(1) <> '';
 
                    LogInteractionEnable := LogInteraction;
+                   ShowRequestPage := TRUE;
                  END;
 
     }
@@ -968,6 +971,7 @@ OBJECT Report 204 Sales - Quote
       CompanyInfoEmailCaptionLbl@1765 : TextConst 'DAN=Mail;ENU=E-Mail';
       DocumentDateCaptionLbl@7509 : TextConst 'DAN=Bilagsdato;ENU=Document Date';
       SalesLineAllowInvoiceDiscCaptionLbl@6573 : TextConst 'DAN=Tillad fakturarabat;ENU=Allow Invoice Discount';
+      ShowRequestPage@1064 : Boolean;
 
     PROCEDURE InitializeRequest@1(NoOfCopiesFrom@1000 : Integer;ShowInternalInfoFrom@1001 : Boolean;ArchiveDocumentFrom@1002 : Boolean;LogInteractionFrom@1003 : Boolean;PrintFrom@1004 : Boolean);
     BEGIN
@@ -1463,7 +1467,7 @@ OBJECT Report 204 Sales - Quote
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>7.11486in</Width>
+                  <Width>18cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -8268,7 +8272,6 @@ Cstr(Fields!ShipmentMethodDescription.Value)
                   <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Left>0cm</Left>
                   <Height>14mm</Height>
                   <Width>60mm</Width>
                   <Visibility>
@@ -8278,9 +8281,8 @@ Cstr(Fields!ShipmentMethodDescription.Value)
                 </Image>
               </ReportItems>
               <KeepTogether>true</KeepTogether>
-              <Top>0.04639cm</Top>
-              <Height>1.42121cm</Height>
-              <Width>6cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>52</ZIndex>
             </Rectangle>
             <Rectangle Name="Rectangle2">
@@ -8290,9 +8292,8 @@ Cstr(Fields!ShipmentMethodDescription.Value)
                   <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Left>0.03528cm</Left>
-                  <Height>40pt</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(IsNothing(Fields!CompanyInfo1Picture.Value)= TRUE,TRUE,FALSE)</Hidden>
                   </Visibility>
@@ -8301,8 +8302,8 @@ Cstr(Fields!ShipmentMethodDescription.Value)
               </ReportItems>
               <KeepTogether>true</KeepTogether>
               <Left>6cm</Left>
-              <Height>1.51694cm</Height>
-              <Width>6.07056cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>53</ZIndex>
             </Rectangle>
             <Rectangle Name="Rectangle3">
@@ -8312,10 +8313,8 @@ Cstr(Fields!ShipmentMethodDescription.Value)
                   <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Top>0.03528cm</Top>
-                  <Left>0.07056cm</Left>
-                  <Height>40pt</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(IsNothing(Fields!CompanyInfo2Picture.Value) = TRUE,TRUE,FALSE)</Hidden>
                   </Visibility>
@@ -8324,8 +8323,8 @@ Cstr(Fields!ShipmentMethodDescription.Value)
               </ReportItems>
               <KeepTogether>true</KeepTogether>
               <Left>12cm</Left>
-              <Height>1.4676cm</Height>
-              <Width>6.07175cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>54</ZIndex>
             </Rectangle>
             <Textbox Name="SalesHeaderPricesIncludingVATCaption1">

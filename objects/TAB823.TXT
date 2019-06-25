@@ -2,9 +2,9 @@ OBJECT Table 823 Name/Value Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -14,12 +14,18 @@ OBJECT Table 823 Name/Value Buffer
   FIELDS
   {
     { 1   ;   ;ID                  ;Integer       ;AutoIncrement=Yes;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Id;
                                                               ENU=ID] }
-    { 2   ;   ;Name                ;Text250       ;CaptionML=[DAN=Navn;
+    { 2   ;   ;Name                ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Navn;
                                                               ENU=Name] }
-    { 3   ;   ;Value               ;Text250       ;CaptionML=[DAN=Værdi;
+    { 3   ;   ;Value               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Værdi;
                                                               ENU=Value] }
+    { 4   ;   ;Value BLOB          ;BLOB          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=BLOB-værdi;
+                                                              ENU=Value BLOB] }
   }
   KEYS
   {
@@ -48,9 +54,42 @@ OBJECT Table 823 Name/Value Buffer
 
       ID := NewID;
       Name := NewName;
-      Value := NewValue;
+      SetValueWithoutModifying(NewValue);
 
       INSERT(TRUE);
+    END;
+
+    PROCEDURE GetValue@22() : Text;
+    VAR
+      TempBlob@1001 : Record 99008535;
+      CR@1002 : Text[1];
+    BEGIN
+      IF NOT "Value BLOB".HASVALUE THEN
+        EXIT(Value);
+      CR[1] := 10;
+      CALCFIELDS("Value BLOB");
+      TempBlob.Blob := "Value BLOB";
+      EXIT(TempBlob.ReadAsText(CR,TEXTENCODING::Windows));
+    END;
+
+    PROCEDURE SetValue@24(NewValue@1000 : Text);
+    BEGIN
+      SetValueWithoutModifying(NewValue);
+      MODIFY;
+    END;
+
+    PROCEDURE SetValueWithoutModifying@25(NewValue@1000 : Text);
+    VAR
+      TempBlob@1001 : Record 99008535;
+    BEGIN
+      CLEAR("Value BLOB");
+      Value := COPYSTR(NewValue,1,MAXSTRLEN(Value));
+      IF STRLEN(NewValue) <= MAXSTRLEN(Value) THEN
+        EXIT; // No need to store anything in the blob
+      IF NewValue = '' THEN
+        EXIT;
+      TempBlob.WriteAsText(NewValue,TEXTENCODING::Windows);
+      "Value BLOB" := TempBlob.Blob;
     END;
 
     BEGIN

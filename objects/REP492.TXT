@@ -2,9 +2,9 @@ OBJECT Report 492 Copy Purchase Document
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -269,6 +269,9 @@ OBJECT Report 492 Copy Purchase Document
                 FromPurchInvHeader."Buy-from Vendor No." := PurchHeader."Buy-from Vendor No.";
                 IF FromPurchInvHeader.FIND('=><') THEN;
               END;
+            FromPurchInvHeader.FILTERGROUP(2);
+            FromPurchInvHeader.SETRANGE("Prepayment Invoice",FALSE);
+            FromPurchInvHeader.FILTERGROUP(0);
             IF PAGE.RUNMODAL(0,FromPurchInvHeader) = ACTION::LookupOK THEN
               DocNo := FromPurchInvHeader."No.";
           END;
@@ -291,6 +294,9 @@ OBJECT Report 492 Copy Purchase Document
                 FromPurchCrMemoHeader."Buy-from Vendor No." := PurchHeader."Buy-from Vendor No.";
                 IF FromPurchCrMemoHeader.FIND('=><') THEN;
               END;
+            FromPurchCrMemoHeader.FILTERGROUP(2);
+            FromPurchCrMemoHeader.SETRANGE("Prepayment Credit Memo",FALSE);
+            FromPurchCrMemoHeader.FILTERGROUP(0);
             IF PAGE.RUNMODAL(0,FromPurchCrMemoHeader) = ACTION::LookupOK THEN
               DocNo := FromPurchCrMemoHeader."No.";
           END;

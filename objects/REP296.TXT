@@ -2,9 +2,9 @@ OBJECT Report 296 Batch Post Sales Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47864;
   }
   PROPERTIES
   {
@@ -40,16 +40,21 @@ OBJECT Report 296 Batch Post Sales Orders
                                   Counter := Counter + 1;
                                   Window.UPDATE(1,"No.");
                                   Window.UPDATE(2,ROUND(Counter / CounterTotal * 10000,1));
+
+                                  IF NOT IsApprovedForPostingBatch THEN
+                                    CurrReport.SKIP;
+
+                                  BatchConfirmUpdateDeferralDate(BatchConfirm,ReplacePostingDate,PostingDateReq);
+
                                   Ship := ShipReq;
                                   Invoice := InvReq;
                                   CLEAR(SalesPost);
                                   SalesPost.SetPostingDate(ReplacePostingDate,ReplaceDocumentDate,PostingDateReq);
-                                  IF IsApprovedForPostingBatch THEN
-                                    IF SalesPost.RUN("Sales Header") THEN BEGIN
-                                      CounterOK := CounterOK + 1;
-                                      IF MARKEDONLY THEN
-                                        MARK(FALSE);
-                                    END;
+                                  IF SalesPost.RUN("Sales Header") THEN BEGIN
+                                    CounterOK := CounterOK + 1;
+                                    IF MARKEDONLY THEN
+                                      MARK(FALSE);
+                                  END;
                                 END;
 
                OnPostDataItem=BEGIN
@@ -101,8 +106,11 @@ OBJECT Report 296 Batch Post Sales Orders
                   SourceExpr=PostingDateReq }
 
       { 4   ;2   ;Field     ;
+                  Name=ReplacePostingDate;
                   CaptionML=[DAN=Erstat bogføringsdato;
                              ENU=Replace Posting Date];
+                  ToolTipML=[DAN=Angiver, om den nye bogføringsdato skal udlignes.;
+                             ENU=Specifies if the new posting date will be applied.];
                   SourceExpr=ReplacePostingDate;
                   OnValidate=BEGIN
                                IF ReplacePostingDate THEN
@@ -151,6 +159,7 @@ OBJECT Report 296 Batch Post Sales Orders
       ReplacePostingDate@1016 : Boolean;
       ReplaceDocumentDate@1017 : Boolean;
       CalcInvDisc@1018 : Boolean;
+      BatchConfirm@1004 : ' ,Skip,Update';
 
     LOCAL PROCEDURE CalculateInvoiceDiscount@1();
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Page 5854 Get Post.Doc-S.Cr.MemoLn Sbfrm
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -14,6 +14,50 @@ OBJECT Page 5854 Get Post.Doc-S.Cr.MemoLn Sbfrm
     LinksAllowed=No;
     SourceTable=Table115;
     PageType=ListPart;
+    OnFindRecord=BEGIN
+                   IF FIND(Which) THEN BEGIN
+                     SalesCrMemoLine := Rec;
+                     WHILE TRUE DO BEGIN
+                       ShowRec := IsShowRec(Rec);
+                       IF ShowRec THEN
+                         EXIT(TRUE);
+                       IF NEXT(1) = 0 THEN BEGIN
+                         Rec := SalesCrMemoLine;
+                         IF FIND(Which) THEN
+                           WHILE TRUE DO BEGIN
+                             ShowRec := IsShowRec(Rec);
+                             IF ShowRec THEN
+                               EXIT(TRUE);
+                             IF NEXT(-1) = 0 THEN
+                               EXIT(FALSE);
+                           END;
+                       END;
+                     END;
+                   END;
+                   EXIT(FALSE);
+                 END;
+
+    OnNextRecord=VAR
+                   RealSteps@1000 : Integer;
+                   NextSteps@1001 : Integer;
+                 BEGIN
+                   IF Steps = 0 THEN
+                     EXIT;
+
+                   SalesCrMemoLine := Rec;
+                   REPEAT
+                     NextSteps := NEXT(Steps / ABS(Steps));
+                     ShowRec := IsShowRec(Rec);
+                     IF ShowRec THEN BEGIN
+                       RealSteps := RealSteps + NextSteps;
+                       SalesCrMemoLine := Rec;
+                     END;
+                   UNTIL (NextSteps = 0) OR (RealSteps = Steps);
+                   Rec := SalesCrMemoLine;
+                   FIND;
+                   EXIT(RealSteps);
+                 END;
+
     OnAfterGetRecord=BEGIN
                        "Document No.HideValue" := FALSE;
                        DocumentNoOnFormat;
@@ -216,6 +260,7 @@ OBJECT Page 5854 Get Post.Doc-S.Cr.MemoLn Sbfrm
       UnitPrice@1007 : Decimal;
       LineAmount@1012 : Decimal;
       "Document No.HideValue"@19020538 : Boolean INDATASET;
+      ShowRec@1000 : Boolean;
 
     LOCAL PROCEDURE IsFirstDocLine@2() : Boolean;
     BEGIN
@@ -238,6 +283,17 @@ OBJECT Page 5854 Get Post.Doc-S.Cr.MemoLn Sbfrm
       LineAmount := "Line Amount";
 
       EXIT("Line No." = TempSalesCrMemoLine."Line No.");
+    END;
+
+    LOCAL PROCEDURE IsShowRec@3(SalesCrMemoLine2@1000 : Record 115) : Boolean;
+    BEGIN
+      WITH SalesCrMemoLine2 DO BEGIN
+        IF "Document No." <> SalesCrMemoHeader."No." THEN
+          SalesCrMemoHeader.GET("Document No.");
+        IF SalesCrMemoHeader."Prepayment Credit Memo" THEN
+          EXIT(FALSE);
+        EXIT(TRUE);
+      END;
     END;
 
     PROCEDURE GetSelectedLine@1(VAR FromSalesCrMemoLine@1000 : Record 115);

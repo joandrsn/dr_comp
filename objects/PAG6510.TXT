@@ -2,9 +2,9 @@ OBJECT Page 6510 Item Tracking Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -71,8 +71,10 @@ OBJECT Page 6510 Item Tracking Lines
                       DATABASE::"Purchase Line":
                         SynchronizeLinkedSources(STRSUBSTNO(Text015,Text017));
                     END;
-                  IF FormRunMode = FormRunMode::Transfer THEN
+
+                  IF (FormRunMode = FormRunMode::Transfer) OR IsOrderToOrderBindingToTransfer THEN
                     SynchronizeLinkedSources('');
+                  SynchronizeWarehouseItemTracking;
                 END;
 
     OnAfterGetRecord=BEGIN
@@ -732,6 +734,8 @@ OBJECT Page 6510 Item Tracking Lines
       Text004@1016 : TextConst 'DAN=positiv;ENU=positive';
       LastEntryNo@1008 : Integer;
       CurrentSourceType@1048 : Integer;
+      SecondSourceID@1035 : Integer;
+      IsAssembleToOrder@1053 : Boolean;
       ExpectedReceiptDate@1010 : Date;
       ShipmentDate@1017 : Date;
       Text005@1018 : TextConst 'DAN=Der opstod en fejl under skrivning til databasen.;ENU=Error when writing to database.';
@@ -755,15 +759,14 @@ OBJECT Page 6510 Item Tracking Lines
       LotAvailabilityActive@1051 : Boolean;
       Inbound@1059 : Boolean;
       CurrentSourceCaption@1047 : Text[255];
-      CurrentSourceRowID@1039 : Text[100];
-      SecondSourceRowID@1040 : Text[100];
+      CurrentSourceRowID@1039 : Text[250];
+      SecondSourceRowID@1040 : Text[250];
       Text016@1044 : TextConst 'DAN=købsordrelinje;ENU=purchase order line';
       Text017@1045 : TextConst 'DAN=salgsordrelinje;ENU=sales order line';
       Text018@1057 : TextConst 'DAN=Gemmer ændringer til elementsporingsliste;ENU=Saving item tracking line changes';
       ForBinCode@1043 : Code[20];
       Text019@1013 : TextConst 'DAN=Der er disponeringsadvarsler på en eller flere linjer.\Vil du lukke formularen alligevel?;ENU=There are availability warnings on one or more lines.\Close the form anyway?';
       Text020@1002 : TextConst 'DAN=Pladsholder;ENU=Placeholder';
-      IsPick@1042 : Boolean;
       ApplFromItemEntryVisible@19038403 : Boolean INDATASET;
       ApplToItemEntryVisible@1050 : Boolean INDATASET;
       "Item No.Editable"@19055681 : Boolean INDATASET;
@@ -992,6 +995,9 @@ OBJECT Page 6510 Item Tracking Lines
     END;
 
     LOCAL PROCEDURE AddReservEntriesToTempRecSet@15(VAR ReservEntry@1000 : Record 337;VAR TempTrackingSpecification@1001 : TEMPORARY Record 336;SwapSign@1002 : Boolean;Color@1004 : Integer);
+    VAR
+      FromReservEntry@1003 : Record 337;
+      AddTracking@1005 : Boolean;
     BEGIN
       IF ReservEntry.FINDSET THEN
         REPEAT
@@ -1000,21 +1006,30 @@ OBJECT Page 6510 Item Tracking Lines
             TempReservEntry.INSERT;
           END;
           IF ReservEntry.TrackingExists THEN BEGIN
-            TempTrackingSpecification.TRANSFERFIELDS(ReservEntry);
-            // Ensure uniqueness of Entry No. by making it negative:
-            TempTrackingSpecification."Entry No." *= -1;
-            IF SwapSign THEN
-              TempTrackingSpecification."Quantity (Base)" *= -1;
-            IF Color <> 0 THEN BEGIN
-              TempTrackingSpecification."Quantity Handled (Base)" :=
-                TempTrackingSpecification."Quantity (Base)";
-              TempTrackingSpecification."Quantity Invoiced (Base)" :=
-                TempTrackingSpecification."Quantity (Base)";
-              TempTrackingSpecification."Qty. to Handle (Base)" := 0;
-              TempTrackingSpecification."Qty. to Invoice (Base)" := 0;
+            AddTracking := TRUE;
+            IF SecondSourceID = DATABASE::"Warehouse Shipment Line" THEN
+              IF FromReservEntry.GET(ReservEntry."Entry No.",NOT ReservEntry.Positive) THEN
+                AddTracking := (FromReservEntry."Source Type" = DATABASE::"Assembly Header") = IsAssembleToOrder
+              ELSE
+                AddTracking := NOT IsAssembleToOrder;
+
+            IF AddTracking THEN BEGIN
+              TempTrackingSpecification.TRANSFERFIELDS(ReservEntry);
+              // Ensure uniqueness of Entry No. by making it negative:
+              TempTrackingSpecification."Entry No." *= -1;
+              IF SwapSign THEN
+                TempTrackingSpecification."Quantity (Base)" *= -1;
+              IF Color <> 0 THEN BEGIN
+                TempTrackingSpecification."Quantity Handled (Base)" :=
+                  TempTrackingSpecification."Quantity (Base)";
+                TempTrackingSpecification."Quantity Invoiced (Base)" :=
+                  TempTrackingSpecification."Quantity (Base)";
+                TempTrackingSpecification."Qty. to Handle (Base)" := 0;
+                TempTrackingSpecification."Qty. to Invoice (Base)" := 0;
+              END;
+              TempTrackingSpecification."Buffer Status" := Color;
+              TempTrackingSpecification.INSERT;
             END;
-            TempTrackingSpecification."Buffer Status" := Color;
-            TempTrackingSpecification.INSERT;
           END;
         UNTIL ReservEntry.NEXT = 0;
     END;
@@ -1425,7 +1440,6 @@ OBJECT Page 6510 Item Tracking Lines
       IdenticalArray@1010 : ARRAY [2] OF Boolean;
     BEGIN
       OK := FALSE;
-      ReservEngineMgt.SetPick(IsPick);
 
       IF ((CurrentSignFactor * NewTrackingSpecification."Qty. to Handle") < 0) AND
          (FormRunMode <> FormRunMode::"Drop Shipment")
@@ -2107,7 +2121,7 @@ OBJECT Page 6510 Item Tracking Lines
           LOWERCASE(TempReservEntry.TextCaption),SourceQuantityArray[1]);
 
       // Copy to inbound part of transfer
-      IF FormRunMode = FormRunMode::Transfer THEN
+      IF (FormRunMode = FormRunMode::Transfer) OR IsOrderToOrderBindingToTransfer THEN
         SynchronizeLinkedSources('');
     END;
 
@@ -2262,11 +2276,6 @@ OBJECT Page 6510 Item Tracking Lines
       Inbound := NewInbound;
     END;
 
-    PROCEDURE SetPick@34(IsPick2@1000 : Boolean);
-    BEGIN
-      IsPick := IsPick2;
-    END;
-
     LOCAL PROCEDURE SerialNoOnAfterValidate@19074494();
     BEGIN
       UpdateExpDateEditable;
@@ -2353,6 +2362,78 @@ OBJECT Page 6510 Item Tracking Lines
            ("Source Subtype" IN [0,2,3,4]))
       END;
       EXIT(NOT QtyToInvoiceColumnIsHidden);
+    END;
+
+    PROCEDURE SetSecondSourceID@57(SourceID@1000 : Integer;IsATO@1001 : Boolean);
+    BEGIN
+      SecondSourceID := SourceID;
+      IsAssembleToOrder := IsATO;
+    END;
+
+    LOCAL PROCEDURE SynchronizeWarehouseItemTracking@53();
+    VAR
+      WarehouseShipmentLine@1000 : Record 7321;
+      ItemTrackingMgt@1002 : Codeunit 6500;
+    BEGIN
+      IF ItemTrackingMgt.ItemTrkgIsManagedByWhse(
+           "Source Type","Source Subtype","Source ID",
+           "Source Prod. Order Line","Source Ref. No.","Location Code","Item No.")
+      THEN
+        EXIT;
+
+      WarehouseShipmentLine.SETRANGE("Source Type","Source Type");
+      WarehouseShipmentLine.SETRANGE("Source Subtype","Source Subtype");
+      WarehouseShipmentLine.SETRANGE("Source No.","Source ID");
+      WarehouseShipmentLine.SETRANGE("Source Line No.","Source Ref. No.");
+      IF WarehouseShipmentLine.FINDSET THEN
+        REPEAT
+          DeleteWhseItemTracking(WarehouseShipmentLine);
+          WarehouseShipmentLine.CreateWhseItemTrackingLines;
+        UNTIL WarehouseShipmentLine.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE DeleteWhseItemTracking@52(WarehouseShipmentLine@1000 : Record 7321);
+    VAR
+      WhseItemTrackingLine@1001 : Record 6550;
+    BEGIN
+      WhseItemTrackingLine.SETRANGE("Source Type",DATABASE::"Warehouse Shipment Line");
+      WhseItemTrackingLine.SETRANGE("Source ID",WarehouseShipmentLine."No.");
+      WhseItemTrackingLine.SETRANGE("Source Ref. No.",WarehouseShipmentLine."Line No.");
+      WhseItemTrackingLine.DELETEALL(TRUE);
+    END;
+
+    LOCAL PROCEDURE IsOrderToOrderBindingToTransfer@59() : Boolean;
+    VAR
+      ReservEntry@1000 : Record 337;
+    BEGIN
+      IF CurrentSourceType = DATABASE::"Transfer Line" THEN
+        EXIT(FALSE);
+
+      ReservEntry.SETRANGE("Source Type","Source Type");
+      ReservEntry.SETRANGE("Source Subtype","Source Subtype");
+      ReservEntry.SETRANGE("Source ID","Source ID");
+      ReservEntry.SETRANGE("Source Ref. No.","Source Ref. No.");
+      ReservEntry.SETRANGE("Source Batch Name","Source Batch Name");
+      ReservEntry.SETRANGE("Source Prod. Order Line","Source Prod. Order Line");
+      ReservEntry.SETRANGE("Reservation Status",ReservEntry."Reservation Status"::Reservation);
+      ReservEntry.SETRANGE(Binding,ReservEntry.Binding::"Order-to-Order");
+      IF ReservEntry.ISEMPTY THEN
+        EXIT(FALSE);
+
+      ReservEntry.FINDFIRST;
+      ReservEntry.GET(ReservEntry."Entry No.",NOT ReservEntry.Positive);
+      IF NOT ((ReservEntry."Source Type" = DATABASE::"Transfer Line") AND (ReservEntry."Source Subtype" = 0)) THEN
+        EXIT(FALSE);
+
+      CurrentSourceRowID :=
+        ItemTrackingMgt.ComposeRowID(ReservEntry."Source Type",
+          0,ReservEntry."Source ID",ReservEntry."Source Batch Name",
+          ReservEntry."Source Prod. Order Line",ReservEntry."Source Ref. No.");
+      SecondSourceRowID :=
+        ItemTrackingMgt.ComposeRowID(ReservEntry."Source Type",
+          1,ReservEntry."Source ID",ReservEntry."Source Batch Name",
+          ReservEntry."Source Prod. Order Line",ReservEntry."Source Ref. No.");
+      EXIT(TRUE);
     END;
 
     BEGIN

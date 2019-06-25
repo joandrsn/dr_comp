@@ -2,9 +2,9 @@ OBJECT Codeunit 1012 Job Jnl.-Post Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -42,7 +42,6 @@ OBJECT Codeunit 1012 Job Jnl.-Post Line
       GLSetupRead@1023 : Boolean;
       NextEntryNo@1020 : Integer;
       GLEntryNo@1034 : Integer;
-      Text000@1000 : TextConst 'DAN="Feltet Sagsplanlægningslinjenr. skal have en værdi, når der findes reservationsposter. Kladdetypenavn=%1, Sagskladdenavn=%2, Linjenr.=%3. Feltet kan ikke indeholde en nulværdi eller være tomt.";ENU="The Job Planning Line No. field must have a value when reservation entries exist. Journal Template Name=%1, Job Journal Batch Name=%2, Line No.=%3. It cannot be zero or empty."';
 
     LOCAL PROCEDURE GetJobReg@3(VAR NewJobReg@1000 : Record 241);
     BEGIN
@@ -81,6 +80,7 @@ OBJECT Codeunit 1012 Job Jnl.-Post Line
       JobJnlLineReserve@1014 : Codeunit 99000844;
       JobLedgEntryNo@1005 : Integer;
       SkipJobLedgerEntry@1009 : Boolean;
+      ApplyToJobContractEntryNo@1008 : Boolean;
       TempRemainingQty@1000 : Decimal;
       RemainingAmount@1010 : Decimal;
       RemainingAmountLCY@1016 : Decimal;
@@ -180,11 +180,16 @@ OBJECT Codeunit 1012 Job Jnl.-Post Line
                   InitItemJnlLine;
                   JobJnlLineReserve.TransJobJnlLineToItemJnlLine(JobJnlLine2,ItemJnlLine,ItemJnlLine."Quantity (Base)");
 
+                  ApplyToJobContractEntryNo := FALSE;
                   IF JobPlanningLine.GET("Job No.","Job Task No.","Job Planning Line No.") THEN
-                    ItemJnlLine."Job Contract Entry No." := JobPlanningLine."Job Contract Entry No."
+                    ApplyToJobContractEntryNo := TRUE
                   ELSE
                     IF JobPlanningReservationExists(JobJnlLine2."No.",JobJnlLine2."Job No.") THEN
-                      ERROR(Text000,"Journal Template Name","Journal Batch Name","Line No.");
+                      IF ApplyToMatchingJobPlanningLine(JobJnlLine2,JobPlanningLine) THEN
+                        ApplyToJobContractEntryNo := TRUE;
+
+                  IF ApplyToJobContractEntryNo THEN
+                    ItemJnlLine."Job Contract Entry No." := JobPlanningLine."Job Contract Entry No.";
 
                   ItemLedgEntry.LOCKTABLE;
                   ItemJnlLine2 := ItemJnlLine;
@@ -213,7 +218,7 @@ OBJECT Codeunit 1012 Job Jnl.-Post Line
                       END;
                     END;
                     IF NOT SkipJobLedgerEntry THEN BEGIN
-                      TempRemainingQty := "Remaining Qty.";
+                      TempRemainingQty := JobJnlLine2."Remaining Qty.";
                       JobJnlLine2.Quantity := -ValueEntry."Invoiced Quantity" / "Qty. per Unit of Measure";
                       JobJnlLine2."Quantity (Base)" := ROUND(JobJnlLine2.Quantity * "Qty. per Unit of Measure",0.00001);
                       IF "Currency Code" <> '' THEN
@@ -334,6 +339,7 @@ OBJECT Codeunit 1012 Job Jnl.-Post Line
               IF GLEntryNo > 0 THEN BEGIN
                 JobLedgEntry."Ledger Entry Type" := JobLedgEntry."Ledger Entry Type"::"G/L Account";
                 JobLedgEntry."Ledger Entry No." := GLEntryNo;
+                GLEntryNo := 0;
               END;
             END;
         END;
@@ -564,6 +570,30 @@ OBJECT Codeunit 1012 Job Jnl.-Post Line
         ValueEntry.SETRANGE("Job Ledger Entry No.",0);
       END;
       EXIT(ValueEntry.FINDSET);
+    END;
+
+    LOCAL PROCEDURE ApplyToMatchingJobPlanningLine@10(VAR JobJnlLine@1000 : Record 210;VAR JobPlanningLine@1005 : Record 1003) : Boolean;
+    VAR
+      Job@1001 : Record 167;
+      JobLedgEntry@1003 : Record 169;
+      JobTransferLine@1004 : Codeunit 1004;
+      JobLinkUsage@1002 : Codeunit 1026;
+    BEGIN
+      IF JobLedgEntry."Entry Type" <> JobLedgEntry."Entry Type"::Usage THEN
+        EXIT(FALSE);
+
+      Job.GET(JobJnlLine."Job No.");
+      JobLedgEntry.INIT;
+      JobTransferLine.FromJnlLineToLedgEntry(JobJnlLine,JobLedgEntry);
+      JobLedgEntry.Quantity := JobJnlLine.Quantity;
+      JobLedgEntry."Quantity (Base)" := JobJnlLine."Quantity (Base)";
+
+      IF JobLinkUsage.FindMatchingJobPlanningLine(JobPlanningLine,JobLedgEntry) THEN BEGIN
+        JobJnlLine.VALIDATE("Job Planning Line No.",JobPlanningLine."Line No.");
+        JobJnlLine.MODIFY(TRUE);
+        EXIT(TRUE);
+      END;
+      EXIT(FALSE);
     END;
 
     BEGIN

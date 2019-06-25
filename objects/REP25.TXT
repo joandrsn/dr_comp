@@ -2,9 +2,9 @@ OBJECT Report 25 Account Schedule
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -417,7 +417,7 @@ OBJECT Report 25 Account Schedule
       OnOpenPage=BEGIN
                    GLSetup.GET;
                    TransferValues;
-                   IF AccSchedName <> '' THEN
+                   IF (AccSchedName <> '') AND (ColumnLayoutName = '') THEN
                      ValidateAccSchedName;
                    IF NOT UseHiddenFilters THEN BEGIN
                      HiddenFilterEditable := TRUE;
@@ -686,14 +686,14 @@ OBJECT Report 25 Account Schedule
       CostBudgetFilterHidden@1053 : Text[30];
       BusinessUnitFilter@1040 : Text[30];
       BusinessUnitFilterHidden@1033 : Text[30];
-      Dim1Filter@1034 : Text[250];
-      Dim1FilterHidden@1041 : Text[250];
-      Dim2Filter@1035 : Text[250];
-      Dim2FilterHidden@1042 : Text[250];
-      Dim3Filter@1037 : Text[250];
-      Dim3FilterHidden@1043 : Text[250];
-      Dim4Filter@1036 : Text[250];
-      Dim4FilterHidden@1044 : Text[250];
+      Dim1Filter@1034 : Text;
+      Dim1FilterHidden@1041 : Text;
+      Dim2Filter@1035 : Text;
+      Dim2FilterHidden@1042 : Text;
+      Dim3Filter@1037 : Text;
+      Dim3FilterHidden@1043 : Text;
+      Dim4Filter@1036 : Text;
+      Dim4FilterHidden@1044 : Text;
       CostCenterFilter@1058 : Text[250];
       CostObjectFilter@1059 : Text[250];
       CashFlowFilter@1052 : Text[250];
@@ -775,7 +775,7 @@ OBJECT Report 25 Account Schedule
       ColumnLayoutNameHidden := ColLayoutName;
     END;
 
-    PROCEDURE SetFilters@4(NewDateFilter@1000 : Text[30];NewBudgetFilter@1001 : Text[30];NewCostBudgetFilter@1007 : Text[30];NewBusUnitFilter@1002 : Text[30];NewDim1Filter@1003 : Text[250];NewDim2Filter@1004 : Text[250];NewDim3Filter@1005 : Text[250];NewDim4Filter@1006 : Text[250]);
+    PROCEDURE SetFilters@4(NewDateFilter@1000 : Text[30];NewBudgetFilter@1001 : Text[30];NewCostBudgetFilter@1007 : Text[30];NewBusUnitFilter@1002 : Text[30];NewDim1Filter@1003 : Text;NewDim2Filter@1004 : Text;NewDim3Filter@1005 : Text;NewDim4Filter@1006 : Text);
     BEGIN
       DateFilterHidden := NewDateFilter;
       GLBudgetFilterHidden := NewBudgetFilter;
@@ -1740,11 +1740,10 @@ OBJECT Report 25 Account Schedule
                               <Style>
                                 <Border>
                                   <Style>None</Style>
-                                  <Width>2pt</Width>
                                 </Border>
                                 <BottomBorder>
                                   <Style>=IIF(Fields!Underline_control.Value=TRUE,"Solid",IIF(Fields!DoubleUnderline_control.Value=TRUE,"Double","None"))</Style>
-                                  <Width>=IIF(Fields!Underline_control.Value=TRUE,"1pt",IIF(Fields!DoubleUnderline_control.Value=TRUE,"2pt","1pt"))</Width>
+                                  <Width>=IIF(Fields!Underline_control.Value=TRUE,"1pt",IIF(Fields!DoubleUnderline_control.Value=TRUE,"3pt","1pt"))</Width>
                                 </BottomBorder>
                                 <BackgroundColor>=IIF(Fields!LineShadowed.Value = true,"#EFEFEF" , "#FFFFFF")</BackgroundColor>
                                 <VerticalAlign>Middle</VerticalAlign>
@@ -1779,11 +1778,10 @@ OBJECT Report 25 Account Schedule
                               <Style>
                                 <Border>
                                   <Style>None</Style>
-                                  <Width>2pt</Width>
                                 </Border>
                                 <BottomBorder>
                                   <Style>=IIF(Fields!Underline_control.Value=TRUE,"Solid",IIF(Fields!DoubleUnderline_control.Value=TRUE,"Double","None"))</Style>
-                                  <Width>=IIF(Fields!Underline_control.Value=TRUE,"1pt",IIF(Fields!DoubleUnderline_control.Value=TRUE,"2pt","1pt"))</Width>
+                                  <Width>=IIF(Fields!Underline_control.Value=TRUE,"1pt",IIF(Fields!DoubleUnderline_control.Value=TRUE,"3pt","1pt"))</Width>
                                 </BottomBorder>
                                 <BackgroundColor>=IIF(Fields!LineShadowed.Value = true,"#EFEFEF" , "#FFFFFF")</BackgroundColor>
                                 <VerticalAlign>Middle</VerticalAlign>
@@ -1821,14 +1819,111 @@ OBJECT Report 25 Account Schedule
                               <Style>
                                 <Border>
                                   <Style>None</Style>
-                                  <Width>2pt</Width>
                                 </Border>
                                 <BottomBorder>
                                   <Style>=IIF(Fields!Underline_control.Value=TRUE,"Solid",IIF(Fields!DoubleUnderline_control.Value=TRUE,"Double","None"))</Style>
-                                  <Width>=IIF(Fields!Underline_control.Value=TRUE,"1pt",IIF(Fields!DoubleUnderline_control.Value=TRUE,"2pt","1pt"))</Width>
+                                  <Width>=IIF(Fields!Underline_control.Value=TRUE,"1pt",IIF(Fields!DoubleUnderline_control.Value=TRUE,"3pt","1pt"))</Width>
                                 </BottomBorder>
                                 <BackgroundColor>=IIF(Fields!LineShadowed.Value = true,"#EFEFEF" , "#FFFFFF")</BackgroundColor>
                                 <VerticalAlign>Middle</VerticalAlign>
+                                <PaddingLeft>0.125cm</PaddingLeft>
+                                <PaddingRight>0.125cm</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
+                      </TablixCells>
+                    </TablixRow>
+                    <TablixRow>
+                      <Height>0.09472cm</Height>
+                      <TablixCells>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="DummyTextBox1">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value EvaluationMode="Auto" />
+                                      <Style>
+                                        <FontSize>7pt</FontSize>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <Style>
+                                <Border>
+                                  <Style>None</Style>
+                                </Border>
+                                <BackgroundColor>=IIF(Fields!LineShadowed.Value = true,"#EFEFEF" , "#FFFFFF")</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="DummyTextBox2">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value EvaluationMode="Auto" />
+                                      <Style>
+                                        <FontSize>7pt</FontSize>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <Style>
+                                <Border>
+                                  <Style>None</Style>
+                                </Border>
+                                <BackgroundColor>=IIF(Fields!LineShadowed.Value = true,"#EFEFEF" , "#FFFFFF")</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>0.125cm</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="DummyTextBox3">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value EvaluationMode="Auto" />
+                                      <Style>
+                                        <FontSize>7pt</FontSize>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <Style>
+                                <Border>
+                                  <Style>None</Style>
+                                </Border>
+                                <BackgroundColor>=IIF(Fields!LineShadowed.Value = true,"#EFEFEF" , "#FFFFFF")</BackgroundColor>
                                 <PaddingLeft>0.125cm</PaddingLeft>
                                 <PaddingRight>0.125cm</PaddingRight>
                                 <PaddingTop>2pt</PaddingTop>
@@ -1953,6 +2048,7 @@ OBJECT Report 25 Account Schedule
                                   </SortExpressions>
                                   <TablixMembers>
                                     <TablixMember />
+                                    <TablixMember />
                                   </TablixMembers>
                                   <Visibility>
                                     <Hidden>=IIF(Last(Fields!LineSkipped.Value, "Lines") = True, True, False)</Hidden>
@@ -1974,7 +2070,7 @@ OBJECT Report 25 Account Schedule
                 <DataSetName>DataSet_Result</DataSetName>
                 <Top>3.53612cm</Top>
                 <Left>0.03757cm</Left>
-                <Height>1.86842cm</Height>
+                <Height>1.96314cm</Height>
                 <Width>10.74149cm</Width>
                 <DataElementOutput>NoOutput</DataElementOutput>
                 <Style />
@@ -5594,7 +5690,7 @@ OBJECT Report 25 Account Schedule
               <Top>1.18996cm</Top>
               <Left>0.03757cm</Left>
               <Height>0.423cm</Height>
-              <Width>2.25cm</Width>
+              <Width>4.76361cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -5619,7 +5715,7 @@ OBJECT Report 25 Account Schedule
               <Top>1.61296cm</Top>
               <Left>0.03757cm</Left>
               <Height>0.423cm</Height>
-              <Width>2.25cm</Width>
+              <Width>4.76361cm</Width>
               <ZIndex>2</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -5643,7 +5739,7 @@ OBJECT Report 25 Account Schedule
               <Top>2.03596cm</Top>
               <Left>0.03757cm</Left>
               <Height>0.423cm</Height>
-              <Width>2.25cm</Width>
+              <Width>4.76361cm</Width>
               <ZIndex>3</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -5667,7 +5763,7 @@ OBJECT Report 25 Account Schedule
               <Top>2.45896cm</Top>
               <Left>0.03757cm</Left>
               <Height>0.423cm</Height>
-              <Width>2.25cm</Width>
+              <Width>4.76361cm</Width>
               <ZIndex>4</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -5689,7 +5785,7 @@ OBJECT Report 25 Account Schedule
                 </Paragraph>
               </Paragraphs>
               <Top>2.03596cm</Top>
-              <Left>4.68757cm</Left>
+              <Left>7.22757cm</Left>
               <Height>0.423cm</Height>
               <Width>5.1cm</Width>
               <ZIndex>5</ZIndex>
@@ -5737,7 +5833,7 @@ OBJECT Report 25 Account Schedule
                 </Paragraph>
               </Paragraphs>
               <Top>1.18996cm</Top>
-              <Left>2.43757cm</Left>
+              <Left>4.97757cm</Left>
               <Height>0.423cm</Height>
               <Width>5.1cm</Width>
               <ZIndex>7</ZIndex>
@@ -5764,7 +5860,7 @@ OBJECT Report 25 Account Schedule
                 </Paragraph>
               </Paragraphs>
               <Top>1.61296cm</Top>
-              <Left>2.43757cm</Left>
+              <Left>4.97757cm</Left>
               <Height>0.423cm</Height>
               <Width>2.1cm</Width>
               <ZIndex>8</ZIndex>
@@ -5788,7 +5884,7 @@ OBJECT Report 25 Account Schedule
                 </Paragraph>
               </Paragraphs>
               <Top>2.03596cm</Top>
-              <Left>2.43757cm</Left>
+              <Left>4.97757cm</Left>
               <Height>0.423cm</Height>
               <Width>2.1cm</Width>
               <ZIndex>9</ZIndex>
@@ -5812,7 +5908,7 @@ OBJECT Report 25 Account Schedule
                 </Paragraph>
               </Paragraphs>
               <Top>2.45896cm</Top>
-              <Left>2.43757cm</Left>
+              <Left>4.97757cm</Left>
               <Height>0.423cm</Height>
               <Width>2.1cm</Width>
               <ZIndex>10</ZIndex>
@@ -5890,7 +5986,7 @@ OBJECT Report 25 Account Schedule
               <Top>2.88196cm</Top>
               <Left>0.03757cm</Left>
               <Height>0.423cm</Height>
-              <Width>2.22222cm</Width>
+              <Width>4.73583cm</Width>
               <ZIndex>13</ZIndex>
               <Visibility>
                 <Hidden>=IIF(Fields!AnalysisView_Code.Value="",TRUE,FALSE)</Hidden>
@@ -5918,7 +6014,7 @@ OBJECT Report 25 Account Schedule
                 </Paragraph>
               </Paragraphs>
               <Top>2.88196cm</Top>
-              <Left>2.43757cm</Left>
+              <Left>4.97757cm</Left>
               <Height>0.423cm</Height>
               <Width>2.1cm</Width>
               <ZIndex>14</ZIndex>
@@ -5946,7 +6042,7 @@ OBJECT Report 25 Account Schedule
                 </Paragraph>
               </Paragraphs>
               <Top>2.88364cm</Top>
-              <Left>4.68757cm</Left>
+              <Left>7.22757cm</Left>
               <Height>0.423cm</Height>
               <Width>5.47779cm</Width>
               <ZIndex>15</ZIndex>
@@ -5976,7 +6072,7 @@ OBJECT Report 25 Account Schedule
               <Top>3.51856cm</Top>
               <Left>0.00663cm</Left>
               <Height>0.423cm</Height>
-              <Width>7.93651cm</Width>
+              <Width>14.28571cm</Width>
               <ZIndex>16</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>

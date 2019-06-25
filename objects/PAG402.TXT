@@ -2,9 +2,9 @@ OBJECT Page 402 Sales Order Statistics
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -646,7 +646,7 @@ OBJECT Page 402 Sales Order Statistics
       Text009@1043 : TextConst 'DAN=Forudbetalingsbeløb, der fratrækkes;ENU=Prepmt. Amt. to Deduct';
       VATLinesForm@1044 : Page 9401;
       DynamicEditable@1025 : Boolean;
-      UpdateInvDiscountQst@1056 : TextConst 'DAN=Der er en eller flere fakturerede linjer.\Vil du opdatere fakturarabatten?;ENU=There are one or more invoiced lines.\Do you want to update the invoice discount?';
+      UpdateInvDiscountQst@1056 : TextConst 'DAN=Én eller flere linjer er blevet faktureret. Rabatten på de fakturerede linjer medregnes ikke.\\Vil du opdatere fakturarabatten?;ENU=One or more lines have been invoiced. The discount distributed to invoiced lines will not be taken into account.\\Do you want to update the invoice discount?';
 
     LOCAL PROCEDURE RefreshOnAfterGetRecord@10();
     VAR

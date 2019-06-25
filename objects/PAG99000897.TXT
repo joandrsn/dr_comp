@@ -2,9 +2,9 @@ OBJECT Page 99000897 Available - Prod. Order Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -45,6 +45,7 @@ OBJECT Page 99000897 Available - Prod. Order Lines
                                  ENU=F&unctions];
                       Image=Action }
       { 4       ;2   ;Action    ;
+                      Name=Reserve;
                       CaptionML=[DAN=&Reserver;
                                  ENU=&Reserve];
                       Image=Reserve;

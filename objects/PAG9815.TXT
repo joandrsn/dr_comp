@@ -2,9 +2,9 @@ OBJECT Page 9815 Std. Password Dialog
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -29,6 +29,8 @@ OBJECT Page 9815 Std. Password Dialog
                            IF NOT CONFIRM(ConfirmBlankPasswordQst) THEN
                              ERROR(PasswordTooSimpleErr);
                          END ELSE BEGIN
+                           IF SetPassword = '' THEN
+                             ERROR(PasswordBlankIsNotAllowedErr);
                            IF ValidatePassword AND NOT IdentityManagement.ValidatePasswordStrength(SetPassword) THEN
                              ERROR(PasswordTooSimpleErr);
                          END;
@@ -74,7 +76,8 @@ OBJECT Page 9815 Std. Password Dialog
       PasswordMismatchErr@1003 : TextConst 'DAN=Adgangskoderne stemmer ikke overens.;ENU=The specified passwords are not the same.';
       PasswordTooSimpleErr@1004 : TextConst 'DAN=Den indtastede adgangskode opfylder ikke kravene. Den skal være på mindst otte tegn og indeholde både små og store bogstaver samt tal.;ENU=The specified password does not meet the requirements. It must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.';
       PasswordNotValidatedErr@1007 : TextConst 'DAN=Adgangskoden blev ikke valideret korrekt eller blev ikke accepteret.;ENU=The password did not validate correctly, or it was not accepted.';
-      ConfirmBlankPasswordQst@1008 : TextConst 'DAN=Vil du afslutte dialogboksen med en tom adgangskode?;ENU=Do you want to exit the dialog box with an empty password?';
+      PasswordBlankIsNotAllowedErr@1012 : TextConst 'DAN=Du skal angive en adgangskode.;ENU=You must enter a password.';
+      ConfirmBlankPasswordQst@1008 : TextConst 'DAN=Vil du afslutte uden at angive en adgangskode?;ENU=Do you want to exit without entering a password?';
       IdentityManagement@1002 : Codeunit 9801;
       SetPassword@1000 : Text[250] INDATASET;
       ConfirmPassword@1001 : Text[250] INDATASET;

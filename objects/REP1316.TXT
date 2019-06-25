@@ -2,9 +2,9 @@ OBJECT Report 1316 Mini Statement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -627,6 +627,9 @@ OBJECT Report 1316 Mini Statement
                                 BEGIN
                                   IF ("Posting Date" > EndDate) AND ("Due Date" >= EndDate) THEN
                                     CurrReport.SKIP;
+                                  IF DateChoice = DateChoice::"Due Date" THEN
+                                    IF "Due Date" >= EndDate THEN
+                                      CurrReport.SKIP;
                                   CustLedgEntry := AgingCustLedgEntry;
                                   CustLedgEntry.SETRANGE("Date Filter",0D,EndDate);
                                   CustLedgEntry.CALCFIELDS("Remaining Amount");
@@ -634,10 +637,8 @@ OBJECT Report 1316 Mini Statement
                                   IF CustLedgEntry."Remaining Amount" = 0 THEN
                                     CurrReport.SKIP;
 
-                                  IF IncludeAgingBand AND ("Posting Date" <= EndDate) THEN
+                                  IF "Posting Date" <= EndDate THEN
                                     UpdateBuffer("Currency Code",GetDate("Posting Date","Due Date"),"Remaining Amount");
-                                  IF "Due Date" >= EndDate THEN
-                                    CurrReport.SKIP;
                                 END;
 
                DataItemLinkReference=Customer;
@@ -5345,7 +5346,7 @@ Cstr(Fields!CustBalanceCaption.Value)
         <Height>2.30732in</Height>
         <Style />
       </Body>
-      <Width>7.06245in</Width>
+      <Width>18cm</Width>
       <Page>
         <PageHeader>
           <Height>4.18764in</Height>
@@ -6414,10 +6415,9 @@ Cstr(Fields!CustBalanceCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>0.00281in</Left>
-              <Height>40pt</Height>
-              <Width>5.72209cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>40</ZIndex>
               <Visibility>
                 <Hidden>=IIF(IsNothing(Fields!CompanyInfo1Picture.Value)=TRUE,TRUE,FALSE)</Hidden>
@@ -6432,10 +6432,10 @@ Cstr(Fields!CustBalanceCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>2.29727in</Left>
-              <Height>40pt</Height>
-              <Width>5.73466cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>41</ZIndex>
               <Visibility>
                 <Hidden>=IIF(ISNOTHING(Fields!CompanyInfo2Picture.Value) =  TRUE, TRUE, FALSE)</Hidden>
@@ -6450,10 +6450,10 @@ Cstr(Fields!CustBalanceCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>4.62445in</Left>
-              <Height>40pt</Height>
-              <Width>6.18537cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>42</ZIndex>
               <Visibility>
                 <Hidden>=IIF(ISNOTHING(Fields!CompanyInfo3Picture.Value) =  TRUE, TRUE, FALSE)</Hidden>

@@ -2,9 +2,9 @@ OBJECT Page 7118 Purchase Analysis Report
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -210,12 +210,13 @@ OBJECT Page 7118 Purchase Analysis Report
                 SourceExpr=CurrentReportName;
                 OnValidate=BEGIN
                              AnalysisReportMgt.CheckReportName(CurrentReportName,Rec);
-                             CurrentReportNameOnAfterValida;
+                             CurrentReportNameOnAfterValidate;
                            END;
 
                 OnLookup=BEGIN
                            IF AnalysisReportMgt.LookupReportName(GETRANGEMAX("Analysis Area"),CurrentReportName) THEN BEGIN
                              Text := CurrentReportName;
+                             CurrentReportNameOnAfterValidate;
                              EXIT(TRUE);
                            END;
                          END;
@@ -227,7 +228,7 @@ OBJECT Page 7118 Purchase Analysis Report
                 SourceExpr=CurrentLineTemplate;
                 OnValidate=BEGIN
                              AnalysisReportMgt.CheckAnalysisLineTemplName(CurrentLineTemplate,Rec);
-                             CurrentLineTemplateOnAfterVali;
+                             CurrentLineTemplateOnAfterValidate;
                            END;
 
                 OnLookup=BEGIN
@@ -244,12 +245,13 @@ OBJECT Page 7118 Purchase Analysis Report
                 SourceExpr=CurrentColumnTemplate;
                 OnValidate=BEGIN
                              AnalysisReportMgt.GetColumnTemplate(GETRANGEMAX("Analysis Area"),CurrentColumnTemplate);
-                             CurrentColumnTemplateOnAfterVa;
+                             CurrentColumnTemplateOnAfterValidate;
                            END;
 
                 OnLookup=BEGIN
                            IF AnalysisReportMgt.LookupColumnName(GETRANGEMAX("Analysis Area"),CurrentColumnTemplate) THEN BEGIN
                              Text := CurrentColumnTemplate;
+                             CurrentColumnTemplateOnAfterValidate;
                              EXIT(TRUE);
                            END;
                          END;
@@ -269,7 +271,7 @@ OBJECT Page 7118 Purchase Analysis Report
                              SETRANGE("Source Type Filter",CurrentSourceTypeFilter);
                              CurrentSourceTypeNoFilter := '';
                              AnalysisReportMgt.SetSourceNo(Rec,CurrentSourceTypeNoFilter);
-                             CurrentSourceTypeFilterOnAfter;
+                             CurrentSourceTypeFilterOnAfterValidate;
                            END;
                             }
 
@@ -278,7 +280,7 @@ OBJECT Page 7118 Purchase Analysis Report
                            ENU=Source No. Filter];
                 SourceExpr=CurrentSourceTypeNoFilter;
                 OnValidate=BEGIN
-                             CurrentSourceTypeNoFilterOnAft;
+                             CurrentSourceTypeNoFilterOnAfterValidate;
                            END;
 
                 OnLookup=BEGIN
@@ -437,27 +439,27 @@ OBJECT Page 7118 Purchase Analysis Report
       THEN BEGIN
         IF LastColumn = '' THEN BEGIN
           IF AnalysisColumn2.FIND('-') THEN;
-          tmpFirstColumn := AnalysisColumn2."Column No.";
+          tmpFirstColumn := AnalysisColumn2."Column Header";
           tmpFirstLineNo := AnalysisColumn2."Line No.";
           AnalysisColumn2.NEXT(NoOfColumns - 1);
-          tmpLastColumn := AnalysisColumn2."Column No.";
+          tmpLastColumn := AnalysisColumn2."Column Header";
           tmpLastLineNo := AnalysisColumn2."Line No.";
         END ELSE BEGIN
           IF AnalysisColumn2.GET(AnalysisColumn2."Analysis Area"::Purchase,CurrentColumnTemplate,LastLineNo) THEN;
           AnalysisColumn2.NEXT(1);
-          tmpFirstColumn := AnalysisColumn2."Column No.";
+          tmpFirstColumn := AnalysisColumn2."Column Header";
           tmpFirstLineNo := AnalysisColumn2."Line No.";
           AnalysisColumn2.NEXT(NoOfColumns - 1);
-          tmpLastColumn := AnalysisColumn2."Column No.";
+          tmpLastColumn := AnalysisColumn2."Column Header";
           tmpLastLineNo := AnalysisColumn2."Line No.";
         END;
       END ELSE BEGIN
         IF AnalysisColumn2.GET(AnalysisColumn2."Analysis Area"::Purchase,CurrentColumnTemplate,FirstLineNo) THEN;
         AnalysisColumn2.NEXT(-1);
-        tmpLastColumn := AnalysisColumn2."Column No.";
+        tmpLastColumn := AnalysisColumn2."Column Header";
         tmpLastLineNo := AnalysisColumn2."Line No.";
         AnalysisColumn2.NEXT(-NoOfColumns + 1);
-        tmpFirstColumn := AnalysisColumn2."Column No.";
+        tmpFirstColumn := AnalysisColumn2."Column Header";
         tmpFirstLineNo := AnalysisColumn2."Line No.";
       END;
 
@@ -480,6 +482,7 @@ OBJECT Page 7118 Purchase Analysis Report
       AnalysisColumn2.SETRANGE("Analysis Area",AnalysisColumn2."Analysis Area"::Purchase);
       AnalysisColumn2.SETRANGE("Analysis Column Template",CurrentColumnTemplate);
       AnalysisColumn2.SETRANGE("Line No.",FirstLineNo,LastLineNo);
+      AnalysisColumn2.SETFILTER(Show,'<>%1',AnalysisColumn2.Show::Never);
       i := 1;
 
       IF AnalysisColumn2.FIND('-') THEN
@@ -500,7 +503,7 @@ OBJECT Page 7118 Purchase Analysis Report
       NewCurrentReportName := NewReportName;
     END;
 
-    LOCAL PROCEDURE CurrentReportNameOnAfterValida@19043622();
+    LOCAL PROCEDURE CurrentReportNameOnAfterValidate@19043622();
     BEGIN
       CurrPage.SAVERECORD;
       ValidateReportName;
@@ -512,7 +515,7 @@ OBJECT Page 7118 Purchase Analysis Report
       SetPointsAnalysisColumn;
     END;
 
-    LOCAL PROCEDURE CurrentLineTemplateOnAfterVali@19002239();
+    LOCAL PROCEDURE CurrentLineTemplateOnAfterValidate@19002239();
     BEGIN
       CurrPage.SAVERECORD;
       AnalysisReportMgt.SetAnalysisLineTemplName(CurrentLineTemplate,Rec);
@@ -520,7 +523,7 @@ OBJECT Page 7118 Purchase Analysis Report
       CurrPage.UPDATE(FALSE);
     END;
 
-    LOCAL PROCEDURE CurrentColumnTemplateOnAfterVa@19007060();
+    LOCAL PROCEDURE CurrentColumnTemplateOnAfterValidate@19007060();
     BEGIN
       AnalysisReportMgt.CopyColumnsToTemp(Rec,CurrentColumnTemplate,AnalysisColumn);
       CurrPage.UPDATE(FALSE);
@@ -528,13 +531,13 @@ OBJECT Page 7118 Purchase Analysis Report
       SetPointsAnalysisColumn;
     END;
 
-    LOCAL PROCEDURE CurrentSourceTypeNoFilterOnAft@19027013();
+    LOCAL PROCEDURE CurrentSourceTypeNoFilterOnAfterValidate@19027013();
     BEGIN
       AnalysisReportMgt.SetSourceNo(Rec,CurrentSourceTypeNoFilter);
       CurrPage.UPDATE(FALSE);
     END;
 
-    LOCAL PROCEDURE CurrentSourceTypeFilterOnAfter@19072332();
+    LOCAL PROCEDURE CurrentSourceTypeFilterOnAfterValidate@19072332();
     BEGIN
       CurrPage.UPDATE(FALSE);
     END;

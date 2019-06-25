@@ -2,9 +2,9 @@ OBJECT Table 99000799 Order Tracking Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -15,9 +15,11 @@ OBJECT Table 99000799 Order Tracking Entry
   {
     { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
-    { 2   ;   ;Supplied by         ;Text80        ;CaptionML=[DAN=Forsynet af;
+    { 2   ;   ;Supplied by         ;Text80        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Forsynet af;
                                                               ENU=Supplied by] }
-    { 3   ;   ;Demanded by         ;Text80        ;CaptionML=[DAN=Behov fra;
+    { 3   ;   ;Demanded by         ;Text80        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Behov fra;
                                                               ENU=Demanded by] }
     { 8   ;   ;Shipment Date       ;Date          ;CaptionML=[DAN=Afsendelsesdato;
                                                               ENU=Shipment Date] }

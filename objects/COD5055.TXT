@@ -2,9 +2,9 @@ OBJECT Codeunit 5055 CustVendBank-Update
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -36,8 +36,8 @@ OBJECT Codeunit 5055 CustVendBank-Update
       Vend@1002 : Record 23;
       BankAcc@1003 : Record 270;
       NoSerie@1004 : Code[10];
-      PurchaserCode@1005 : Code[10];
-      OurContactCode@1006 : Code[10];
+      PurchaserCode@1005 : Code[20];
+      OurContactCode@1006 : Code[20];
 
     PROCEDURE UpdateCustomer@1(VAR Cont@1000 : Record 5050;VAR ContBusRel@1001 : Record 5054);
     VAR

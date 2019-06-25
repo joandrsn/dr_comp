@@ -2,9 +2,9 @@ OBJECT Codeunit 8617 Config. Validate Management
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -768,7 +768,7 @@ OBJECT Codeunit 8617 Config. Validate Management
       END;
     END;
 
-    PROCEDURE AddComment@3(VAR FieldRef@1006 : FieldRef) RowComment : Text[1024];
+    PROCEDURE AddComment@3(VAR FieldRef@1006 : FieldRef) RowComment : Text;
     VAR
       FieldBuffer@1000 : ARRAY [250] OF Text[250];
       Text10@1004 : Text[1];

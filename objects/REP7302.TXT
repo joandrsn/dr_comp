@@ -2,9 +2,9 @@ OBJECT Report 7302 Whse. Invt.-Registering - Test
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -2060,6 +2060,7 @@ Fields!Warehouse_Journal_Line__Journal_Batch_Name_.Value)</Hidden>
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

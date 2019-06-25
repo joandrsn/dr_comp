@@ -2,9 +2,9 @@ OBJECT Report 5914 Delete Invoiced Service Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -81,7 +81,7 @@ OBJECT Report 5914 Delete Invoiced Service Orders
                                           ServOrderAlloc.DELETEALL;
                                           ServAllocMgt.SetServOrderAllocStatus("Service Header");
 
-                                          ApprovalsMgmt.DeleteApprovalEntry(DATABASE::"Service Header","Document Type","No.");
+                                          ApprovalsMgmt.DeleteApprovalEntries(RECORDID);
 
                                           DELETE;
                                           COMMIT;

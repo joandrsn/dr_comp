@@ -2,9 +2,9 @@ OBJECT Report 6032 Post Prepaid Contract Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50293;
   }
   PROPERTIES
   {
@@ -86,10 +86,16 @@ OBJECT Report 6032 Post Prepaid Contract Entries
                                   ServLedgEntry."Moved from Prepaid Acc." := TRUE;
                                   ServLedgEntry.MODIFY;
 
-                                  TempServLedgEntry.SETRANGE("Service Contract No.","Service Contract No.");
-                                  TempServLedgEntry.CALCSUMS("Amount (LCY)");
-                                  IF (TempServLedgEntry."Amount (LCY)" <> 0) AND (LastContract <> '') AND (LastContract <> "Service Contract No.") THEN
-                                    PostGenJnlLine;
+                                  IF NOT (LastContract IN ['',"Service Contract No."]) THEN BEGIN
+                                    TempServLedgEntry.RESET;
+                                    TempServLedgEntry.SETRANGE("Service Contract No.",LastContract);
+                                    TempServLedgEntry.CALCSUMS("Amount (LCY)");
+                                    IF TempServLedgEntry."Amount (LCY)" <> 0 THEN
+                                      PostGenJnlLine
+                                    ELSE
+                                      TempServLedgEntry.DELETEALL;
+                                    TempServLedgEntry.SETRANGE("Service Contract No.","Service Contract No.");
+                                  END;
 
                                   LastContract := "Service Contract No.";
 

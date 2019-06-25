@@ -1,0 +1,223 @@
+OBJECT Page 1140 OAuth 2.0 Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21-12-18;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.50868;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=OAuth 2.0-konfiguration;
+               ENU=OAuth 2.0 Setup];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    LinksAllowed=No;
+    SourceTable=Table1140;
+    ShowFilter=No;
+    OnOpenPage=BEGIN
+                 ClientID := "Client ID";
+                 ClientSecret := "Client Secret";
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 7       ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 11      ;1   ;Action    ;
+                      Name=RequestAuthorizationCode;
+                      CaptionML=[DAN=Anmod om godkendelseskode;
+                                 ENU=Request Authorization Code];
+                      ToolTipML=[DAN=Åbn websiden til tjenestegodkendelse. Du vil blive bedt om logon-legitimationsoplysninger. Godkendelseskoden skal kopieres til feltet Angiv godkendelseskode.;
+                                 ENU=Open the service authorization web page. Login credentials will be prompted. The authorization code must be copied into the Enter Authorization Code field.];
+                      Promoted=Yes;
+                      Image=EncryptionKeys;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 RequestAuthorizationCode;
+                                 RequestAuthorizationCodeInvoked := TRUE;
+                               END;
+                                }
+      { 17      ;1   ;Action    ;
+                      Name=RefreshAccessToken;
+                      CaptionML=[DAN=Opdater adgangstoken;
+                                 ENU=Refresh Access Token];
+                      ToolTipML=[DAN=Opdater adgangen, og opdater tokens.;
+                                 ENU=Refresh the access and refresh tokens.];
+                      Promoted=Yes;
+                      Image=Refresh;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 MessageText@1003 : Text;
+                               BEGIN
+                                 IF NOT RefreshAccessToken(MessageText) THEN BEGIN
+                                   COMMIT; // save new "Status" value
+                                   ERROR(MessageText);
+                                 END;
+
+                                 MESSAGE(MessageText);
+                               END;
+                                }
+      { 8       ;0   ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 10      ;1   ;Action    ;
+                      Name=EncryptionManagement;
+                      CaptionML=[DAN=Administration af kryptering;
+                                 ENU=Encryption Management];
+                      ToolTipML=[DAN=Aktivér eller deaktiver datakryptering. Datakryptering er med til at sikre, at uautoriserede brugere ikke kan læse virksomhedsdata.;
+                                 ENU=Enable or disable data encryption. Data encryption helps make sure that unauthorized users cannot read business data.];
+                      RunObject=Page 9905;
+                      Image=EncryptionKeys;
+                      RunPageMode=View }
+      { 9       ;1   ;Action    ;
+                      Name=HttpLog;
+                      CaptionML=[DAN=Http-log;
+                                 ENU=Http Log];
+                      ToolTipML=[DAN=Få vist logposter for historik over http-anmodninger/-svar for den aktuelle opsætning af OAuth-slutpunktet.;
+                                 ENU=See the http request/response history log entries for the current OAuth endpoint setup.];
+                      Image=Log;
+                      OnAction=VAR
+                                 ActivityLog@1002 : Record 710;
+                               BEGIN
+                                 ActivityLog.ShowEntries(Rec);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                ContainerType=ContentArea }
+
+    { 19  ;1   ;Group     ;
+                Name=General;
+                CaptionML=[DAN=Generelt;
+                           ENU=General];
+                GroupType=Group }
+
+    { 23  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver beskrivelsen.;
+                           ENU=Specifies the description.];
+                SourceExpr=Description }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver URL-adressen til tjenesten.;
+                           ENU=Specifies the service URL.];
+                SourceExpr="Service URL" }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver URL-adressen til omdirigering.;
+                           ENU=Specifies the redirect URL.];
+                SourceExpr="Redirect URL" }
+
+    { 26  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver området.;
+                           ENU=Specifies the scope.];
+                SourceExpr=Scope }
+
+    { 20  ;1   ;Group     ;
+                Name=Request URL Paths;
+                CaptionML=[DAN=Stier til URL-adresse for anmodning;
+                           ENU=Request URL Paths];
+                GroupType=Group }
+
+    { 18  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver stien til URL-adressen til godkendelse.;
+                           ENU=Specifies the authorization URL path.];
+                SourceExpr="Authorization URL Path" }
+
+    { 21  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver stien til URL-adressen til adgangstoken.;
+                           ENU=Specifies the access token URL path.];
+                SourceExpr="Access Token URL Path" }
+
+    { 25  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver stien til URL-adressen til opdateringstoken.;
+                           ENU=Specifies the refresh token URL path.];
+                SourceExpr="Refresh Token URL Path" }
+
+    { 3   ;1   ;Group     ;
+                Name=Client Tokens;
+                CaptionML=[DAN=Klienttokens;
+                           ENU=Client Tokens];
+                GroupType=Group }
+
+    { 4   ;2   ;Field     ;
+                Name=Client ID;
+                ExtendedDatatype=Masked;
+                CaptionML=[DAN=Klient-id;
+                           ENU=Client ID];
+                ToolTipML=[DAN=Angiver token for klient-id.;
+                           ENU=Specifies the client ID token.];
+                SourceExpr=ClientID;
+                OnValidate=BEGIN
+                             SetToken("Client ID",ClientID);
+                             ClientID := "Client ID";
+                             CurrPage.UPDATE(TRUE);
+                           END;
+                            }
+
+    { 5   ;2   ;Field     ;
+                Name=Client Secret;
+                ExtendedDatatype=Masked;
+                CaptionML=[DAN=Klienthemmelighed;
+                           ENU=Client Secret];
+                ToolTipML=[DAN=Angiver token for klienthemmelighed.;
+                           ENU=Specifies the client secret token.];
+                SourceExpr=ClientSecret;
+                OnValidate=BEGIN
+                             SetToken("Client Secret",ClientSecret);
+                             ClientSecret := "Client Secret";
+                             CurrPage.UPDATE(TRUE);
+                           END;
+                            }
+
+    { 12  ;1   ;Group     ;
+                Name=Request Authorization Code;
+                CaptionML=[DAN=Anmod om godkendelseskode;
+                           ENU=Request Authorization Code];
+                Visible=RequestAuthorizationCodeInvoked OR (Status = Status::Disabled) OR (Status = Status::Error);
+                GroupType=Group }
+
+    { 14  ;2   ;Field     ;
+                Name=Enter Authorization Code;
+                CaptionML=[DAN=Angiv godkendelseskode;
+                           ENU=Enter Authorization Code];
+                ToolTipML=[DAN=Angiver den modtagne godkendelseskode fra handlingen Anmod om godkendelse.;
+                           ENU=Specifies the received authorization code from the request authorization action.];
+                SourceExpr=ReceivedAuthorizationCode;
+                OnValidate=BEGIN
+                             ValidateAuthorizationCode;
+                           END;
+                            }
+
+  }
+  CODE
+  {
+    VAR
+      ReceivedAuthorizationCode@1004 : Text;
+      RequestAuthorizationCodeInvoked@1000 : Boolean;
+      ClientID@1020 : Text;
+      ClientSecret@1021 : Text;
+
+    LOCAL PROCEDURE ValidateAuthorizationCode@3();
+    VAR
+      MessageText@1000 : Text;
+    BEGIN
+      IF ReceivedAuthorizationCode = '' THEN
+        EXIT;
+
+      IF NOT RequestAccessToken(MessageText,ReceivedAuthorizationCode) THEN
+        ERROR(MessageText);
+
+      ReceivedAuthorizationCode := '';
+      RequestAuthorizationCodeInvoked := FALSE;
+      IF MessageText <> '' THEN
+        MESSAGE(MessageText);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

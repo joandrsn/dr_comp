@@ -2,9 +2,9 @@ OBJECT Table 6661 Return Receipt Line
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -566,6 +566,8 @@ OBJECT Table 6661 Return Receipt Line
     BEGIN
       INIT;
       TRANSFERFIELDS(SalesLine);
+      IF ("No." = '') AND (Type IN [Type::"G/L Account"..Type::"Charge (Item)"]) THEN
+        Type := Type::" ";
       "Posting Date" := ReturnRcptHeader."Posting Date";
       "Document No." := ReturnRcptHeader."No.";
       Quantity := SalesLine."Return Qty. to Receive";

@@ -2,9 +2,9 @@ OBJECT Page 5855 Posted Purchase Document Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -107,7 +107,7 @@ OBJECT Page 5855 Posted Purchase Document Lines
                 Name=NoOfPostedInvoices;
                 CaptionML=[DAN=B&ogførte fakturaer;
                            ENU=Posted I&nvoices];
-                SourceExpr=STRSUBSTNO('(%1)',"No. of Pstd. Invoices" - NoOfPostedPrepayments);
+                SourceExpr=STRSUBSTNO('(%1)',"No. of Pstd. Invoices" - NoOfPostedPrepmtInvoices);
                 Editable=FALSE }
 
     { 41  ;3   ;Field     ;
@@ -117,9 +117,10 @@ OBJECT Page 5855 Posted Purchase Document Lines
                 Editable=FALSE }
 
     { 11  ;3   ;Field     ;
+                Name=NoOfPostedCrMemos;
                 CaptionML=[DAN=&Bogførte kreditnotaer;
                            ENU=Posted Cr. &Memos];
-                SourceExpr=STRSUBSTNO('(%1)',"No. of Pstd. Credit Memos");
+                SourceExpr=STRSUBSTNO('(%1)',"No. of Pstd. Credit Memos" - NoOfPostedPrepmtCrMemos);
                 Editable=FALSE }
 
     { 44  ;3   ;Field     ;
@@ -192,6 +193,7 @@ OBJECT Page 5855 Posted Purchase Document Lines
           BEGIN
             CurrPage.PostedRcpts.PAGE.GetSelectedLine(FromPurchRcptLine);
             CopyDocMgt.SetProperties(FALSE,FALSE,FALSE,FALSE,TRUE,TRUE,OriginalQuantity);
+            CopyDocMgt.SetCopyExtText;
             CopyDocMgt.CopyPurchRcptLinesToDoc(
               ToPurchHeader,FromPurchRcptLine,LinesNotCopied,MissingExCostRevLink);
           END;
@@ -199,6 +201,7 @@ OBJECT Page 5855 Posted Purchase Document Lines
           BEGIN
             CurrPage.PostedInvoices.PAGE.GetSelectedLine(FromPurchInvLine);
             CopyDocMgt.SetProperties(FALSE,FALSE,FALSE,FALSE,TRUE,TRUE,OriginalQuantity);
+            CopyDocMgt.SetCopyExtText;
             CopyDocMgt.CopyPurchInvLinesToDoc(
               ToPurchHeader,FromPurchInvLine,LinesNotCopied,MissingExCostRevLink);
           END;
@@ -206,6 +209,7 @@ OBJECT Page 5855 Posted Purchase Document Lines
           BEGIN
             CurrPage.PostedReturnShpts.PAGE.GetSelectedLine(FromReturnShptLine);
             CopyDocMgt.SetProperties(FALSE,TRUE,FALSE,FALSE,TRUE,TRUE,OriginalQuantity);
+            CopyDocMgt.SetCopyExtText;
             CopyDocMgt.CopyPurchReturnShptLinesToDoc(
               ToPurchHeader,FromReturnShptLine,LinesNotCopied,MissingExCostRevLink);
           END;
@@ -213,6 +217,7 @@ OBJECT Page 5855 Posted Purchase Document Lines
           BEGIN
             CurrPage.PostedCrMemos.PAGE.GetSelectedLine(FromPurchCrMemoLine);
             CopyDocMgt.SetProperties(FALSE,FALSE,FALSE,FALSE,TRUE,TRUE,OriginalQuantity);
+            CopyDocMgt.SetCopyExtText;
             CopyDocMgt.CopyPurchCrMemoLinesToDoc(
               ToPurchHeader,FromPurchCrMemoLine,LinesNotCopied,MissingExCostRevLink);
           END;
@@ -318,13 +323,22 @@ OBJECT Page 5855 Posted Purchase Document Lines
       x3CurrentMenuTypeOptOnPush;
     END;
 
-    LOCAL PROCEDURE NoOfPostedPrepayments@3() : Integer;
+    LOCAL PROCEDURE NoOfPostedPrepmtInvoices@3() : Integer;
     VAR
       PurchInvHeader@1000 : Record 122;
     BEGIN
       PurchInvHeader.SETRANGE("Buy-from Vendor No.","No.");
       PurchInvHeader.SETRANGE("Prepayment Invoice",TRUE);
       EXIT(PurchInvHeader.COUNT);
+    END;
+
+    LOCAL PROCEDURE NoOfPostedPrepmtCrMemos@6() : Integer;
+    VAR
+      PurchCrMemoHdr@1000 : Record 124;
+    BEGIN
+      PurchCrMemoHdr.SETRANGE("Buy-from Vendor No.","No.");
+      PurchCrMemoHdr.SETRANGE("Prepayment Credit Memo",TRUE);
+      EXIT(PurchCrMemoHdr.COUNT);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Table 137 Inc. Doc. Attachment Overview
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -28,7 +28,8 @@ OBJECT Table 137 Inc. Doc. Attachment Overview
                                                               ENU=Line No.] }
     { 3   ;   ;Created Date-Time   ;DateTime      ;CaptionML=[DAN=Oprettet dato/klokkeslæt;
                                                               ENU=Created Date-Time] }
-    { 4   ;   ;Created By User Name;Code50        ;CaptionML=[DAN=Brugernavn for oprettelse;
+    { 4   ;   ;Created By User Name;Code50        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Brugernavn for oprettelse;
                                                               ENU=Created By User Name] }
     { 5   ;   ;Name                ;Text50        ;CaptionML=[DAN=Navn;
                                                               ENU=Name];

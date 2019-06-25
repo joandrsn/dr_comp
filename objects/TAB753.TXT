@@ -2,9 +2,9 @@ OBJECT Table 753 Standard Item Journal Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -288,7 +288,7 @@ OBJECT Table 753 Standard Item Journal Line
                                                    CaptionML=[DAN=Beløb;
                                                               ENU=Amount];
                                                    AutoFormatType=1 }
-    { 23  ;   ;Salespers./Purch. Code;Code10      ;TableRelation=Salesperson/Purchaser;
+    { 23  ;   ;Salespers./Purch. Code;Code20      ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=BEGIN
                                                                 CreateDim(
                                                                   DATABASE::"Salesperson/Purchaser","Salespers./Purch. Code",
@@ -690,12 +690,20 @@ OBJECT Table 753 Standard Item Journal Line
     END;
 
     LOCAL PROCEDURE GetUnitAmount@6(CalledByFieldNo@1000 : Integer);
+    VAR
+      UnitCostValue@1001 : Decimal;
     BEGIN
       RetrieveCosts;
       IF ("Value Entry Type" <> "Value Entry Type"::"Direct Cost") OR
          ("Item Charge No." <> '')
       THEN
         EXIT;
+
+      UnitCostValue := UnitCost;
+      IF (CalledByFieldNo = FIELDNO(Quantity)) AND
+         (Item."No." <> '') AND (Item."Costing Method" <> Item."Costing Method"::Standard)
+      THEN
+        UnitCostValue := "Unit Cost" / UOMMgt.GetQtyPerUnitOfMeasure(Item,"Unit of Measure Code");
 
       CASE "Entry Type" OF
         "Entry Type"::Purchase:
@@ -704,11 +712,11 @@ OBJECT Table 753 Standard Item Journal Line
           SalesPriceCalcMgt.FindStdItemJnlLinePrice(Rec,CalledByFieldNo);
         "Entry Type"::"Positive Adjmt.":
           "Unit Amount" := ROUND(
-              ((UnitCost - "Overhead Rate") * "Qty. per Unit of Measure") / (1 + "Indirect Cost %" / 100),
+              ((UnitCostValue - "Overhead Rate") * "Qty. per Unit of Measure") / (1 + "Indirect Cost %" / 100),
               GLSetup."Unit-Amount Rounding Precision");
         "Entry Type"::"Negative Adjmt.":
           IF NOT "Phys. Inventory" THEN
-            "Unit Amount" := UnitCost * "Qty. per Unit of Measure"
+            "Unit Amount" := UnitCostValue * "Qty. per Unit of Measure"
           ELSE
             UnitCost := "Unit Cost";
         "Entry Type"::Transfer:

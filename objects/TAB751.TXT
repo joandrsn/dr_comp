@@ -2,9 +2,9 @@ OBJECT Table 751 Standard General Journal Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -693,7 +693,7 @@ OBJECT Table 751 Standard General Journal Line
                                                    CaptionML=[DAN=Genvejsdimension 2-kode;
                                                               ENU=Shortcut Dimension 2 Code];
                                                    CaptionClass='1,2,2' }
-    { 26  ;   ;Salespers./Purch. Code;Code10      ;TableRelation=Salesperson/Purchaser;
+    { 26  ;   ;Salespers./Purch. Code;Code20      ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=BEGIN
                                                                 CreateDim(
                                                                   DATABASE::"Salesperson/Purchaser","Salespers./Purch. Code",
@@ -802,7 +802,7 @@ OBJECT Table 751 Standard General Journal Line
 
                                                    CaptionML=[DAN=Betalingsbeting.kode;
                                                               ENU=Payment Terms Code] }
-    { 50  ;   ;Business Unit Code  ;Code10        ;TableRelation="Business Unit";
+    { 50  ;   ;Business Unit Code  ;Code20        ;TableRelation="Business Unit";
                                                    CaptionML=[DAN=Konc.virksomhedskode;
                                                               ENU=Business Unit Code] }
     { 51  ;   ;Standard Journal Code;Code10       ;TableRelation="Standard General Journal".Code;

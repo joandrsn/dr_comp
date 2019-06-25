@@ -2,9 +2,9 @@ OBJECT Page 317 VAT Statement
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=27-03-19;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.51234;
   }
   PROPERTIES
   {
@@ -47,18 +47,6 @@ OBJECT Page 317 VAT Statement
                       Promoted=Yes;
                       Image=View;
                       PromotedCategory=Process }
-      { 1900000006;0 ;ActionContainer;
-                      ActionContainerType=Reports }
-      { 1902106506;1 ;Action    ;
-                      CaptionML=[DAN=Momsangivelse;
-                                 ENU=VAT Statement];
-                      Promoted=Yes;
-                      Image=Report;
-                      PromotedCategory=Report;
-                      OnAction=BEGIN
-                                 ReportPrint.PrintVATStmtLine(Rec);
-                               END;
-                                }
       { 1900000004;0 ;ActionContainer;
                       ActionContainerType=ActionItems }
       { 31      ;1   ;ActionGroup;
@@ -115,6 +103,11 @@ OBJECT Page 317 VAT Statement
 
     { 4   ;2   ;Field     ;
                 SourceExpr=Description }
+
+    { 3   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på den kasse, som momsangivelsen gælder for.;
+                           ENU=Specifies the number on the packaging box that the VAT statement applies to.];
+                SourceExpr="Box No." }
 
     { 6   ;2   ;Field     ;
                 SourceExpr=Type }

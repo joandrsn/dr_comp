@@ -2,9 +2,9 @@ OBJECT Codeunit 905 Assembly Line Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -81,7 +81,7 @@ OBJECT Codeunit 905 Assembly Line Management
       END;
     END;
 
-    LOCAL PROCEDURE AddBOMLine2@35(AsmHeader@1004 : Record 900;VAR AssemblyLine@1000 : Record 901;AsmLineRecordIsTemporary@1002 : Boolean;BomComponent@1001 : Record 90;ShowDueDateBeforeWorkDateMessage@1003 : Boolean);
+    LOCAL PROCEDURE AddBOMLine2@35(AsmHeader@1004 : Record 900;VAR AssemblyLine@1000 : Record 901;AsmLineRecordIsTemporary@1002 : Boolean;BomComponent@1001 : Record 90;ShowDueDateBeforeWorkDateMessage@1003 : Boolean;QtyPerUoM@1007 : Decimal);
     VAR
       DueDateBeforeWorkDateMsgShown@1005 : Boolean;
       SkipVerificationsThatChangeDatabase@1006 : Boolean;
@@ -103,22 +103,20 @@ OBJECT Codeunit 905 Assembly Line Management
           AssemblyLine.VALIDATE(
             "Quantity per",
             AssemblyLine.CalcQuantityFromBOM(
-              BomComponent.Type,BomComponent."Quantity per",1,"Qty. per Unit of Measure",AssemblyLine."Resource Usage Type"));
+              BomComponent.Type,BomComponent."Quantity per",1,QtyPerUoM,AssemblyLine."Resource Usage Type"));
         AssemblyLine.VALIDATE(
           Quantity,
           AssemblyLine.CalcQuantityFromBOM(
-            BomComponent.Type,BomComponent."Quantity per",Quantity,"Qty. per Unit of Measure",AssemblyLine."Resource Usage Type"));
+            BomComponent.Type,BomComponent."Quantity per",Quantity,QtyPerUoM,AssemblyLine."Resource Usage Type"));
         AssemblyLine.VALIDATE(
           "Quantity to Consume",
           AssemblyLine.CalcQuantityFromBOM(
-            BomComponent.Type,BomComponent."Quantity per","Quantity to Assemble","Qty. per Unit of Measure",
-            AssemblyLine."Resource Usage Type"));
+            BomComponent.Type,BomComponent."Quantity per","Quantity to Assemble",QtyPerUoM,AssemblyLine."Resource Usage Type"));
         AssemblyLine.ValidateDueDate(AsmHeader,"Starting Date",ShowDueDateBeforeWorkDateMessage);
         DueDateBeforeWorkDateMsgShown := (AssemblyLine."Due Date" < WORKDATE) AND ShowDueDateBeforeWorkDateMessage;
         AssemblyLine.ValidateLeadTimeOffset(
           AsmHeader,BomComponent."Lead-Time Offset",NOT DueDateBeforeWorkDateMsgShown AND ShowDueDateBeforeWorkDateMessage);
         AssemblyLine.Description := BomComponent.Description;
-        AssemblyLine."Description 2" := "Description 2";
         IF AssemblyLine.Type = AssemblyLine.Type::Item THEN
           AssemblyLine.VALIDATE("Variant Code",BomComponent."Variant Code");
         AssemblyLine.Position := BomComponent.Position;
@@ -134,7 +132,7 @@ OBJECT Codeunit 905 Assembly Line Management
     PROCEDURE AddBOMLine@10(AsmHeader@1005 : Record 900;VAR AssemblyLine@1004 : Record 901;BomComponent@1002 : Record 90);
     BEGIN
       InsertAsmLine(AsmHeader,AssemblyLine,FALSE);
-      AddBOMLine2(AsmHeader,AssemblyLine,FALSE,BomComponent,GetWarningMode);
+      AddBOMLine2(AsmHeader,AssemblyLine,FALSE,BomComponent,GetWarningMode,AsmHeader."Qty. per Unit of Measure");
     END;
 
     PROCEDURE ExplodeAsmList@13(VAR AsmLine@1000 : Record 901);
@@ -188,7 +186,7 @@ OBJECT Codeunit 905 Assembly Line Management
           NextLineNo := NextLineNo + LineSpacing;
           TempAssemblyLine."Line No." := NextLineNo;
           TempAssemblyLine.INSERT(TRUE);
-          AddBOMLine2(AssemblyHeader,TempAssemblyLine,TRUE,FromBOMComp,FALSE);
+          AddBOMLine2(AssemblyHeader,TempAssemblyLine,TRUE,FromBOMComp,FALSE,1);
           TempAssemblyLine.Quantity := TempAssemblyLine.Quantity * "Quantity per" * "Qty. per Unit of Measure";
           TempAssemblyLine."Quantity (Base)" := TempAssemblyLine."Quantity (Base)" * "Quantity per" * "Qty. per Unit of Measure";
           TempAssemblyLine."Quantity per" := TempAssemblyLine."Quantity per" * "Quantity per" * "Qty. per Unit of Measure";
@@ -291,7 +289,7 @@ OBJECT Codeunit 905 Assembly Line Management
           IF BomComponent.FINDSET THEN
             REPEAT
               InsertAsmLine(AsmHeader,TempAssemblyLine,TRUE);
-              AddBOMLine2(AsmHeader,TempAssemblyLine,TRUE,BomComponent,FALSE);
+              AddBOMLine2(AsmHeader,TempAssemblyLine,TRUE,BomComponent,FALSE,AsmHeader."Qty. per Unit of Measure");
             UNTIL BomComponent.NEXT <= 0;
         END;
       END ELSE

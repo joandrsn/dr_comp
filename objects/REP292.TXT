@@ -2,9 +2,9 @@ OBJECT Report 292 Copy Sales Document
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -270,6 +270,9 @@ OBJECT Report 292 Copy Sales Document
                 FromSalesInvHeader."Sell-to Customer No." := SalesHeader."Sell-to Customer No.";
                 IF FromSalesInvHeader.FIND('=><') THEN;
               END;
+            FromSalesInvHeader.FILTERGROUP(2);
+            FromSalesInvHeader.SETRANGE("Prepayment Invoice",FALSE);
+            FromSalesInvHeader.FILTERGROUP(0);
             IF PAGE.RUNMODAL(0,FromSalesInvHeader) = ACTION::LookupOK THEN
               DocNo := FromSalesInvHeader."No.";
           END;
@@ -292,6 +295,9 @@ OBJECT Report 292 Copy Sales Document
                 FromSalesCrMemoHeader."Sell-to Customer No." := SalesHeader."Sell-to Customer No.";
                 IF FromSalesCrMemoHeader.FIND('=><') THEN;
               END;
+            FromSalesCrMemoHeader.FILTERGROUP(2);
+            FromSalesCrMemoHeader.SETRANGE("Prepayment Credit Memo",FALSE);
+            FromSalesCrMemoHeader.FILTERGROUP(0);
             IF PAGE.RUNMODAL(0,FromSalesCrMemoHeader) = ACTION::LookupOK THEN
               DocNo := FromSalesCrMemoHeader."No.";
           END;

@@ -2,9 +2,9 @@ OBJECT Table 9002 User Group Access Control
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -19,6 +19,7 @@ OBJECT Table 9002 User Group Access Control
                                                    CaptionML=[DAN=Brugergruppekode;
                                                               ENU=User Group Code] }
     { 2   ;   ;User Security ID    ;GUID          ;TableRelation=User;
+                                                   DataClassification=EndUserPseudonymousIdentifiers;
                                                    CaptionML=[DAN=Brugersikkerheds-id;
                                                               ENU=User Security ID] }
     { 3   ;   ;Role ID             ;Code20        ;TableRelation="Permission Set";

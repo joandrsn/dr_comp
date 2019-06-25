@@ -2,16 +2,16 @@ OBJECT Table 5363 CRM Organization
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=organization;
-    CaptionML=[DAN=Organization;
-               ENU=Organization];
+    CaptionML=[DAN=CRM Organization;
+               ENU=CRM Organization];
     Description=Top level of the Microsoft Dynamics CRM business hierarchy. The organization can be a specific business, holding company, or corporation.;
   }
   FIELDS

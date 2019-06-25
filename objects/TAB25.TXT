@@ -2,9 +2,9 @@ OBJECT Table 25 Vendor Ledger Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50583,NAVDK9.00.00.50583;
   }
   PROPERTIES
   {
@@ -106,7 +106,7 @@ OBJECT Table 25 Vendor Ledger Entry
                                                    CaptionML=[DAN=Global dimension 2-kode;
                                                               ENU=Global Dimension 2 Code];
                                                    CaptionClass='1,1,2' }
-    { 25  ;   ;Purchaser Code      ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 25  ;   ;Purchaser Code      ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Indkøberkode;
                                                               ENU=Purchaser Code] }
     { 27  ;   ;User ID             ;Code50        ;TableRelation=User."User Name";
@@ -117,6 +117,7 @@ OBJECT Table 25 Vendor Ledger Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 28  ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
@@ -355,8 +356,7 @@ OBJECT Table 25 Vendor Ledger Entry
                                                               END;
 
                                                    CaptionML=[DAN=Kredit.nummer;
-                                                              ENU=Creditor No.];
-                                                   Numeric=Yes }
+                                                              ENU=Creditor No.] }
     { 171 ;   ;Payment Reference   ;Code16        ;OnValidate=VAR
                                                                 PaymentMethod@1060001 : Record 289;
                                                                 FIKManagement@1060000 : Codeunit 13650;

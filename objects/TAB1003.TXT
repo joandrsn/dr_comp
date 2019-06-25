@@ -2,9 +2,9 @@ OBJECT Table 1003 Job Planning Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.51418;
   }
   PROPERTIES
   {
@@ -31,7 +31,8 @@ OBJECT Table 1003 Job Planning Line
     OnDelete=VAR
                JobUsageLink@1000 : Record 1020;
              BEGIN
-               ValidateModification;
+               ValidateModification(TRUE);
+               CheckRelatedJobPlanningLineInvoice;
 
                IF "Usage Link" THEN BEGIN
                  JobUsageLink.SETRANGE("Job No.","Job No.");
@@ -54,7 +55,6 @@ OBJECT Table 1003 Job Planning Line
 
     CaptionML=[DAN=Sagsplanlægningslinje;
                ENU=Job Planning Line];
-    PasteIsValid=No;
     LookupPageID=Page1007;
     DrillDownPageID=Page1007;
   }
@@ -68,7 +68,7 @@ OBJECT Table 1003 Job Planning Line
                                                               ENU=Job No.];
                                                    NotBlank=Yes }
     { 3   ;   ;Planning Date       ;Date          ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Planning Date" <> "Planning Date");
 
                                                                 VALIDATE("Document Date","Planning Date");
                                                                 IF ("Currency Date" = 0D) OR ("Currency Date" = xRec."Planning Date") THEN
@@ -77,20 +77,23 @@ OBJECT Table 1003 Job Planning Line
                                                                   UpdateAllAmounts;
                                                                 IF "Planning Date" <> 0D THEN
                                                                   CheckItemAvailable(FIELDNO("Planning Date"));
-                                                                UpdateReservation(FIELDNO("Planning Date"));
+                                                                IF CurrFieldNo = FIELDNO("Planned Delivery Date") THEN
+                                                                  UpdateReservation(CurrFieldNo)
+                                                                ELSE
+                                                                  UpdateReservation(FIELDNO("Planning Date"));
                                                                 "Planned Delivery Date" := "Planning Date";
                                                               END;
 
                                                    CaptionML=[DAN=Planlægningsdato;
                                                               ENU=Planning Date] }
     { 4   ;   ;Document No.        ;Code20        ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Document No." <> "Document No.");
                                                               END;
 
                                                    CaptionML=[DAN=Bilagsnr.;
                                                               ENU=Document No.] }
     { 5   ;   ;Type                ;Option        ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec.Type <> Type);
 
                                                                 UpdateReservation(FIELDNO(Type));
 
@@ -111,7 +114,7 @@ OBJECT Table 1003 Job Planning Line
                                                                  ELSE IF (Type=CONST(G/L Account)) "G/L Account"
                                                                  ELSE IF (Type=CONST(Text)) "Standard Text";
                                                    OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."No." <> "No.");
 
                                                                 CheckUsageLinkRelations;
 
@@ -138,6 +141,7 @@ OBJECT Table 1003 Job Planning Line
                                                                   Type::Resource:
                                                                     BEGIN
                                                                       Res.GET("No.");
+                                                                      Res.CheckResourcePrivacyBlocked(FALSE);
                                                                       Res.TESTFIELD(Blocked,FALSE);
                                                                       Description := Res.Name;
                                                                       "Description 2" := Res."Name 2";
@@ -188,7 +192,7 @@ OBJECT Table 1003 Job Planning Line
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 8   ;   ;Description         ;Text50        ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec.Description <> Description);
                                                               END;
 
                                                    CaptionML=[DAN=Beskrivelse;
@@ -247,7 +251,7 @@ OBJECT Table 1003 Job Planning Line
                                                               ENU=Direct Unit Cost (LCY)];
                                                    AutoFormatType=2 }
     { 12  ;   ;Unit Cost (LCY)     ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Unit Cost (LCY)" <> "Unit Cost (LCY)");
 
                                                                 IF (Type = Type::Item) AND
                                                                    Item.GET("No.") AND
@@ -274,7 +278,7 @@ OBJECT Table 1003 Job Planning Line
                                                    Editable=No;
                                                    AutoFormatType=1 }
     { 14  ;   ;Unit Price (LCY)    ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Unit Price (LCY)" <> "Unit Price (LCY)");
 
                                                                 InitRoundingPrecisions;
                                                                 "Unit Price" := ROUND(
@@ -303,7 +307,7 @@ OBJECT Table 1003 Job Planning Line
                                                    OnValidate=VAR
                                                                 Resource@1000 : Record 156;
                                                               BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Unit of Measure Code" <> "Unit of Measure Code");
 
                                                                 GetGLSetup;
                                                                 CASE Type OF
@@ -342,7 +346,7 @@ OBJECT Table 1003 Job Planning Line
                                                               ENU=Unit of Measure Code] }
     { 20  ;   ;Location Code       ;Code10        ;TableRelation=Location WHERE (Use As In-Transit=CONST(No));
                                                    OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Location Code" <> "Location Code");
 
                                                                 "Bin Code" := '';
                                                                 IF Type = Type::Item THEN BEGIN
@@ -367,12 +371,13 @@ OBJECT Table 1003 Job Planning Line
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    Editable=No }
     { 32  ;   ;Work Type Code      ;Code10        ;TableRelation="Work Type";
                                                    OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Work Type Code" <> "Work Type Code");
                                                                 TESTFIELD(Type,Type::Resource);
 
                                                                 VALIDATE("Line Discount %",0);
@@ -423,7 +428,7 @@ OBJECT Table 1003 Job Planning Line
                                                               ENU=Job Task No.];
                                                    NotBlank=Yes }
     { 1001;   ;Line Amount (LCY)   ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Line Amount (LCY)" <> "Line Amount (LCY)");
 
                                                                 InitRoundingPrecisions;
                                                                 "Line Amount" := ROUND(
@@ -439,7 +444,7 @@ OBJECT Table 1003 Job Planning Line
                                                    Editable=No;
                                                    AutoFormatType=1 }
     { 1002;   ;Unit Cost           ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Unit Cost" <> "Unit Cost");
 
                                                                 UpdateAllAmounts;
                                                               END;
@@ -454,7 +459,7 @@ OBJECT Table 1003 Job Planning Line
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
     { 1004;   ;Unit Price          ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Unit Price" <> "Unit Price");
 
                                                                 UpdateAllAmounts;
                                                               END;
@@ -469,7 +474,7 @@ OBJECT Table 1003 Job Planning Line
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
     { 1006;   ;Line Amount         ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Line Amount" <> "Line Amount");
 
                                                                 UpdateAllAmounts;
                                                               END;
@@ -479,7 +484,7 @@ OBJECT Table 1003 Job Planning Line
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
     { 1007;   ;Line Discount Amount;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Line Discount Amount" <> "Line Discount Amount");
 
                                                                 UpdateAllAmounts;
                                                               END;
@@ -489,7 +494,7 @@ OBJECT Table 1003 Job Planning Line
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
     { 1008;   ;Line Discount Amount (LCY);Decimal ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Line Discount Amount (LCY)" <> "Line Discount Amount (LCY)");
 
                                                                 InitRoundingPrecisions;
                                                                 "Line Discount Amount" := ROUND(
@@ -505,7 +510,7 @@ OBJECT Table 1003 Job Planning Line
                                                    Editable=No;
                                                    AutoFormatType=1 }
     { 1015;   ;Cost Factor         ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Cost Factor" <> "Cost Factor");
 
                                                                 UpdateAllAmounts;
                                                               END;
@@ -520,7 +525,7 @@ OBJECT Table 1003 Job Planning Line
                                                               ENU=Lot No.];
                                                    Editable=No }
     { 1021;   ;Line Discount %     ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Line Discount %" <> "Line Discount %");
 
                                                                 UpdateAllAmounts;
                                                               END;
@@ -550,7 +555,7 @@ OBJECT Table 1003 Job Planning Line
                                                    OptionString=Schedule,Contract,Both Schedule and Contract }
     { 1023;   ;Currency Code       ;Code10        ;TableRelation=Currency;
                                                    OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Currency Code" <> "Currency Code");
 
                                                                 UpdateCurrencyFactor;
                                                                 UpdateAllAmounts;
@@ -560,7 +565,7 @@ OBJECT Table 1003 Job Planning Line
                                                               ENU=Currency Code];
                                                    Editable=No }
     { 1024;   ;Currency Date       ;Date          ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Currency Date" <> "Currency Date");
 
                                                                 UpdateCurrencyFactor;
                                                                 IF (CurrFieldNo <> FIELDNO("Planning Date")) AND ("No." <> '') THEN
@@ -571,7 +576,7 @@ OBJECT Table 1003 Job Planning Line
                                                    CaptionML=[DAN=Valutadato;
                                                               ENU=Currency Date] }
     { 1025;   ;Currency Factor     ;Decimal       ;OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Currency Factor" <> "Currency Factor");
 
                                                                 IF ("Currency Code" = '') AND ("Currency Factor" <> 0) THEN
                                                                   FIELDERROR("Currency Factor",STRSUBSTNO(Text001,FIELDCAPTION("Currency Code")));
@@ -775,8 +780,7 @@ OBJECT Table 1003 Job Planning Line
                                                                                                                  Reservation Status=CONST(Reservation)));
                                                    OnValidate=BEGIN
                                                                 TESTFIELD("Qty. per Unit of Measure");
-                                                                CALCFIELDS("Reserved Quantity");
-                                                                Planned := "Reserved Quantity" = "Remaining Qty.";
+                                                                UpdatePlanned;
                                                               END;
 
                                                    AccessByPermission=TableData 27=R;
@@ -812,7 +816,7 @@ OBJECT Table 1003 Job Planning Line
                                                    Editable=No }
     { 5402;   ;Variant Code        ;Code10        ;TableRelation=IF (Type=CONST(Item)) "Item Variant".Code WHERE (Item No.=FIELD(No.));
                                                    OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Variant Code" <> "Variant Code");
 
                                                                 IF "Variant Code" = '' THEN BEGIN
                                                                   IF Type = Type::Item THEN BEGIN
@@ -837,7 +841,7 @@ OBJECT Table 1003 Job Planning Line
                                                               ENU=Variant Code] }
     { 5403;   ;Bin Code            ;Code20        ;TableRelation=Bin.Code WHERE (Location Code=FIELD(Location Code));
                                                    OnValidate=BEGIN
-                                                                ValidateModification;
+                                                                ValidateModification(xRec."Bin Code" <> "Bin Code");
 
                                                                 TESTFIELD("Location Code");
                                                                 CheckItemAvailable(FIELDNO("Bin Code"));
@@ -962,6 +966,7 @@ OBJECT Table 1003 Job Planning Line
       Text028@1026 : TextConst 'DAN=%1 kan ikke ændres, når %2 er udfyldt.;ENU=You cannot change the %1 when the %2 has been filled in.';
       UnitAmountRoundingPrecisionFCY@1036 : Decimal;
       AmountRoundingPrecisionFCY@1037 : Decimal;
+      NotPossibleJobPlanningLineErr@1000 : TextConst 'DAN=Det er ikke muligt at slette en sagsplanlægningslinje, der er overført til en faktura.;ENU=It is not possible to deleted job planning line transferred to an invoice.';
 
     LOCAL PROCEDURE CalcBaseQty@14(Qty@1000 : Decimal) : Decimal;
     BEGIN
@@ -1116,6 +1121,7 @@ OBJECT Table 1003 Job Planning Line
       "Last Date Modified" := 0D;
       Status := Job.Status;
       ControlUsageLink;
+      "Country/Region Code" := Job."Bill-to Country/Region Code";
     END;
 
     LOCAL PROCEDURE DeleteAmounts@10();
@@ -1510,10 +1516,12 @@ OBJECT Table 1003 Job Planning Line
       END;
     END;
 
-    LOCAL PROCEDURE ValidateModification@21();
+    LOCAL PROCEDURE ValidateModification@21(FieldChanged@1000 : Boolean);
     BEGIN
-      CALCFIELDS("Qty. Transferred to Invoice");
-      TESTFIELD("Qty. Transferred to Invoice",0);
+      IF FieldChanged THEN BEGIN
+        CALCFIELDS("Qty. Transferred to Invoice");
+        TESTFIELD("Qty. Transferred to Invoice",0);
+      END;
     END;
 
     LOCAL PROCEDURE CheckUsageLinkRelations@7();
@@ -1585,7 +1593,7 @@ OBJECT Table 1003 Job Planning Line
       IF (CurrFieldNo <> CalledByFieldNo) AND (CurrFieldNo <> 0) THEN
         EXIT;
       CASE CalledByFieldNo OF
-        FIELDNO("Planning Date"):
+        FIELDNO("Planning Date"),FIELDNO("Planned Delivery Date"):
           IF (xRec."Planning Date" <> "Planning Date") AND
              (Quantity <> 0) AND
              (Reserve <> Reserve::Never)
@@ -1605,9 +1613,7 @@ OBJECT Table 1003 Job Planning Line
             Reserve := Reserve::Never;
       END;
       JobPlanningLineReserve.VerifyChange(Rec,xRec);
-
-      CALCFIELDS("Reserved Quantity");
-      Planned := "Reserved Quantity" = "Remaining Qty.";
+      UpdatePlanned;
     END;
 
     PROCEDURE ShowReservation@74();
@@ -1661,6 +1667,7 @@ OBJECT Table 1003 Job Planning Line
             FIND;
           END;
         END;
+        UpdatePlanned;
       END;
     END;
 
@@ -1716,8 +1723,35 @@ OBJECT Table 1003 Job Planning Line
     VAR
       JobInvoices@1000 : Page 1029;
     BEGIN
+      JobInvoices.SetShowDetails(FALSE);
       JobInvoices.SetPrJobPlanningLine(Rec);
       JobInvoices.RUN;
+    END;
+
+    LOCAL PROCEDURE CheckRelatedJobPlanningLineInvoice@36();
+    VAR
+      JobPlanningLineInvoice@1000 : Record 1022;
+    BEGIN
+      JobPlanningLineInvoice.SETRANGE("Job No.","Job No.");
+      JobPlanningLineInvoice.SETRANGE("Job Task No.","Job Task No.");
+      JobPlanningLineInvoice.SETRANGE("Job Planning Line No.","Line No.");
+      IF NOT JobPlanningLineInvoice.ISEMPTY THEN
+        ERROR(NotPossibleJobPlanningLineErr);
+    END;
+
+    PROCEDURE RowID1@44() : Text[250];
+    VAR
+      ItemTrackingMgt@1000 : Codeunit 6500;
+    BEGIN
+      EXIT(
+        ItemTrackingMgt.ComposeRowID(DATABASE::"Job Planning Line",Status,
+          "Job No.",'',0,"Job Contract Entry No."));
+    END;
+
+    PROCEDURE UpdatePlanned@37();
+    BEGIN
+      CALCFIELDS("Reserved Quantity");
+      Planned := "Reserved Quantity" = "Remaining Qty.";
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Report 7305 Whse.-Source - Create Document
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -48,6 +48,7 @@ OBJECT Report 7305 Whse.-Source - Create Document
 
                    IF WhseActivHeader.FIND('-') THEN BEGIN
                      REPEAT
+                       CreatePutAway.DeleteBlankBinContent(WhseActivHeader);
                        IF SortActivity > 0 THEN
                          WhseActivHeader.SortWhseDoc;
                        COMMIT;
@@ -425,9 +426,6 @@ OBJECT Report 7305 Whse.-Source - Create Document
                                   IF ("Flushing Method" = "Flushing Method"::"Pick + Forward") AND ("Routing Link Code" = '') THEN
                                     CurrReport.SKIP;
 
-                                  IF NOT RequirePick("Location Code") THEN
-                                    CurrReport.SKIP;
-
                                   WMSMgt.CheckInboundBlockedBin("Location Code","Bin Code","Item No.","Variant Code","Unit of Measure Code");
 
                                   WhseWkshLine.SETRANGE("Source Line No.","Prod. Order Line No.");
@@ -482,9 +480,6 @@ OBJECT Report 7305 Whse.-Source - Create Document
                OnAfterGetRecord=VAR
                                   WMSMgt@1000 : Codeunit 7302;
                                 BEGIN
-                                  IF NOT RequirePick("Location Code") THEN
-                                    CurrReport.SKIP;
-
                                   WMSMgt.CheckInboundBlockedBin("Location Code","Bin Code","No.","Variant Code","Unit of Measure Code");
 
                                   WhseWkshLine.SETRANGE("Source Line No.","Line No.");
@@ -693,17 +688,6 @@ OBJECT Report 7305 Whse.-Source - Create Document
       HideValidationDialog := NewHideValidationDialog;
     END;
 
-    LOCAL PROCEDURE RequirePick@1(LocationCode@1001 : Code[10]) : Boolean;
-    VAR
-      Location@1000 : Record 14;
-    BEGIN
-      GetLocation(Location,LocationCode);
-      IF Location.Code = '' THEN
-        EXIT(WhseSetup."Require Pick" AND WhseSetup."Require Shipment");
-
-      EXIT(Location."Require Pick" AND Location."Require Shipment");
-    END;
-
     LOCAL PROCEDURE GetLocation@7(VAR Location@1001 : Record 14;LocationCode@1000 : Code[10]);
     BEGIN
       IF Location.Code <> LocationCode THEN
@@ -790,6 +774,8 @@ OBJECT Report 7305 Whse.-Source - Create Document
           ItemTrackingMgt.SplitPostedWhseRcptLine(PostedWhseRcptLine,TempPostedWhseRcptLine);
       END;
       RemQtyToHandleBase := PostedWhseRcptLine."Qty. (Base)";
+
+      TempPostedWhseRcptLine.RESET;
       IF TempPostedWhseRcptLine.FIND('-') THEN
         REPEAT
           TempPostedWhseRcptLine2 := TempPostedWhseRcptLine;

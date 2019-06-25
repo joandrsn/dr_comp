@@ -2,9 +2,9 @@ OBJECT Table 6660 Return Receipt Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -143,7 +143,7 @@ OBJECT Table 6660 Return Receipt Header
     { 41  ;   ;Language Code       ;Code10        ;TableRelation=Language;
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code] }
-    { 43  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 43  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 46  ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
@@ -304,6 +304,7 @@ OBJECT Table 6660 Return Receipt Header
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 113 ;   ;Source Code         ;Code10        ;TableRelation="Source Code";

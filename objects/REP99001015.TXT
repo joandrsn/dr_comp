@@ -2,9 +2,9 @@ OBJECT Report 99001015 Calculate Subcontracts
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -221,6 +221,7 @@ OBJECT Report 99001015 Calculate Subcontracts
         SETRANGE(Type,Type::Item);
         SETRANGE("No.",ProdOrderLine."Item No.");
         SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
+        SETRANGE("Prod. Order Line No.",ProdOrderLine."Line No.");
         SETRANGE("Operation No.","Prod. Order Routing Line"."Operation No.");
         DELETEALL(TRUE);
       END;

@@ -2,9 +2,9 @@ OBJECT Page 459 Sales & Receivables Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW18.00,NAVDK8.00;
+    Version List=NAVW19.00.00.50785,NAVDK9.00.00.50785;
   }
   PROPERTIES
   {
@@ -59,6 +59,9 @@ OBJECT Page 459 Sales & Receivables Setup
     { 65  ;2   ;Field     ;
                 SourceExpr="Logo Position on Documents" }
 
+    { 39  ;2   ;Field     ;
+                SourceExpr="Freight G/L Acc. No." }
+
     { 77  ;2   ;Field     ;
                 SourceExpr="Default Posting Date" }
 
@@ -98,8 +101,19 @@ OBJECT Page 459 Sales & Receivables Setup
     { 71  ;2   ;Field     ;
                 SourceExpr="Check Prepmt. when Posting" }
 
+    { 62  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvor ofte jobbet, der automatisk opdaterer status for ordrer, der afventer forudbetaling, skal køre.;
+                           ENU=Specifies how often the job must run that automatically updates the status of orders that are pending prepayment.];
+                SourceExpr="Prepmt. Auto Update Frequency" }
+
     { 81  ;2   ;Field     ;
                 SourceExpr="Archive Quotes and Orders" }
+
+    { 37  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om og hvornår bogførte salgsdokumenter kan slettes. Hvis du angiver en dato, kan de bogførte salgsdokumenter med en bogføringsdato på eller efter denne dato ikke slettes.;
+                           ENU=Specifies if and when posted sales documents can be deleted. If you enter a date, posted sales documents with a posting date on or after this date cannot be deleted.];
+                SourceExpr="Allow Document Deletion Before";
+                Importance=Additional }
 
     { 1900309501;1;Group  ;
                 CaptionML=[DAN=Dimensioner;

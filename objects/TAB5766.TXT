@@ -2,9 +2,9 @@ OBJECT Table 5766 Warehouse Activity Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -56,8 +56,8 @@ OBJECT Table 5766 Warehouse Activity Header
                                                                 GetLocation("Location Code");
                                                                 CASE Type OF
                                                                   Type::"Invt. Put-away":
-                                                                    IF Location.RequireReceive("Location Code") THEN
-                                                                      Location.TESTFIELD("Require Receive",FALSE);
+                                                                    IF Location.RequireReceive("Location Code") AND ("Source Document" <> "Source Document"::"Prod. Output") THEN
+                                                                      VALIDATE("Source Document","Source Document"::"Prod. Output");
                                                                   Type::"Invt. Pick":
                                                                     IF Location.RequireShipment("Location Code") THEN
                                                                       Location.TESTFIELD("Require Shipment",FALSE);
@@ -79,6 +79,7 @@ OBJECT Table 5766 Warehouse Activity Header
                                                                 END;
                                                               END;
 
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
     { 5   ;   ;Assignment Date     ;Date          ;CaptionML=[DAN=Tildelt den;
@@ -234,6 +235,11 @@ OBJECT Table 5766 Warehouse Activity Header
                                                                     ERROR(Text002,FIELDCAPTION("Source Document"));
                                                                   "Source No." := '';
                                                                   ClearDestinationFields;
+                                                                  IF Type = Type::"Invt. Put-away" THEN BEGIN
+                                                                    GetLocation("Location Code");
+                                                                    IF Location.RequireReceive("Location Code") THEN
+                                                                      TESTFIELD("Source Document","Source Document"::"Prod. Output");
+                                                                  END;
                                                                 END;
 
                                                                 CASE "Source Document" OF

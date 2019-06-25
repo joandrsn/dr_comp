@@ -2,9 +2,9 @@ OBJECT Table 279 Extended Text Header
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -75,8 +75,6 @@ OBJECT Table 279 Extended Text Header
                                                    OnValidate=BEGIN
                                                                 IF "All Language Codes" THEN
                                                                   "Language Code" := ''
-                                                                ELSE
-                                                                  TESTFIELD("Language Code");
                                                               END;
 
                                                    CaptionML=[DAN=Alle sprogkoder;

@@ -2,9 +2,9 @@ OBJECT Report 104 Customer - Detail Trial Bal.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -59,17 +59,6 @@ OBJECT Report 104 Customer - Detail Trial Bal.
                                         CustLedgEntry.SETFILTER("Date Filter",CustDateFilter);
                                         CustLedgEntry.CALCFIELDS("Amount (LCY)");
                                         StartBalAdjLCY := StartBalAdjLCY - CustLedgEntry."Amount (LCY)";
-                                        "Detailed Cust. Ledg. Entry".SETCURRENTKEY("Cust. Ledger Entry No.","Entry Type","Posting Date");
-                                        "Detailed Cust. Ledg. Entry".SETRANGE("Cust. Ledger Entry No.",CustLedgEntry."Entry No.");
-                                        "Detailed Cust. Ledg. Entry".SETFILTER("Entry Type",'%1|%2',
-                                          "Detailed Cust. Ledg. Entry"."Entry Type"::"Correction of Remaining Amount",
-                                          "Detailed Cust. Ledg. Entry"."Entry Type"::"Appln. Rounding");
-                                        "Detailed Cust. Ledg. Entry".SETFILTER("Posting Date",CustDateFilter);
-                                        IF "Detailed Cust. Ledg. Entry".FIND('-') THEN
-                                          REPEAT
-                                            StartBalAdjLCY := StartBalAdjLCY - "Detailed Cust. Ledg. Entry"."Amount (LCY)";
-                                          UNTIL "Detailed Cust. Ledg. Entry".NEXT = 0;
-                                        "Detailed Cust. Ledg. Entry".RESET;
                                       UNTIL CustLedgEntry.NEXT = 0;
                                   END;
                                   CurrReport.PRINTONLYIFDETAIL := ExcludeBalanceOnly OR (StartBalanceLCY = 0);
@@ -265,7 +254,6 @@ OBJECT Report 104 Customer - Detail Trial Bal.
                                     "Entry Type"::"Correction of Remaining Amount":
                                       Correction := Correction + "Amount (LCY)";
                                   END;
-                                  CustBalanceLCY := CustBalanceLCY + "Amount (LCY)";
                                 END;
 
                DataItemLink=Cust. Ledger Entry No.=FIELD(Entry No.) }
@@ -641,19 +629,19 @@ OBJECT Report 104 Customer - Detail Trial Bal.
                   <Width>1.95456cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.81686cm</Width>
+                  <Width>2.21373cm</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>1.06261cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.40604cm</Width>
+                  <Width>2.00916cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.40604cm</Width>
+                  <Width>2.1347cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.43586cm</Width>
+                  <Width>2.11836cm</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>1.59964cm</Width>
@@ -4718,7 +4706,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.13889in</Height>
+                  <Height>0.35278cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -4764,7 +4752,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Sum(Fields!CustBalanceLCY4.Value)-(Sum(Fields!StartBalanceLCY2.Value)+Sum(Fields!StartBalAdjLCY2.Value))</Value>
+                                  <Value>=Sum(Fields!CustBalanceLCY4.Value)-Sum(Fields!StartBalanceLCY2.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontSize>8pt</FontSize>
@@ -5986,8 +5974,8 @@ OBJECT Report 104 Customer - Detail Trial Bal.
             </TablixRowHierarchy>
             <DataSetName>DataSet_Result</DataSetName>
             <Top>20pt</Top>
-            <Height>6.07659cm</Height>
-            <Width>18.62422cm</Width>
+            <Height>6.0766cm</Height>
+            <Width>18.03539cm</Width>
             <Style />
           </Tablix>
           <Textbox Name="CustTABLECAPTIONFilter">
@@ -6010,7 +5998,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
             </Paragraphs>
             <Top>10pt</Top>
             <Height>11pt</Height>
-            <Width>18.28234cm</Width>
+            <Width>18.03539cm</Width>
             <ZIndex>1</ZIndex>
             <Visibility>
               <Hidden>=IIF(Fields!CustFilter.Value="",TRUE,FALSE)</Hidden>
@@ -6037,7 +6025,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
               </Paragraph>
             </Paragraphs>
             <Height>11pt</Height>
-            <Width>18.28234cm</Width>
+            <Width>18.03539cm</Width>
             <ZIndex>2</ZIndex>
             <Visibility>
               <Hidden>=IIF(Fields!ExcludeBalanceOnly.Value=TRUE,TRUE,FALSE)</Hidden>
@@ -6051,7 +6039,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
         <Height>2.67014in</Height>
         <Style />
       </Body>
-      <Width>7.33237in</Width>
+      <Width>7.10055in</Width>
       <Page>
         <PageHeader>
           <Height>0.97222in</Height>
@@ -6076,7 +6064,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
               </Paragraphs>
               <Top>40pt</Top>
               <Height>11pt</Height>
-              <Width>18.28234cm</Width>
+              <Width>18.03539cm</Width>
               <Visibility>
                 <Hidden>=IIF(Fields!PrintAmountsInLCY.Value=FALSE,TRUE,FALSE)</Hidden>
               </Visibility>
@@ -6107,7 +6095,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
               <Top>10pt</Top>
               <Left>12.97687cm</Left>
               <Height>11pt</Height>
-              <Width>5.36494cm</Width>
+              <Width>5.05852cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -6155,7 +6143,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
               </Paragraphs>
               <Top>30pt</Top>
               <Height>11pt</Height>
-              <Width>18.34181cm</Width>
+              <Width>18.03539cm</Width>
               <ZIndex>3</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -6206,13 +6194,14 @@ OBJECT Report 104 Customer - Detail Trial Bal.
               </Paragraphs>
               <Left>12.97687cm</Left>
               <Height>11pt</Height>
-              <Width>5.37602cm</Width>
+              <Width>5.05852cm</Width>
               <ZIndex>5</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -6233,7 +6222,7 @@ OBJECT Report 104 Customer - Detail Trial Bal.
               <Top>20pt</Top>
               <Left>12.97687cm</Left>
               <Height>11pt</Height>
-              <Width>5.37602cm</Width>
+              <Width>5.05852cm</Width>
               <ZIndex>6</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
@@ -6242,6 +6231,8 @@ OBJECT Report 104 Customer - Detail Trial Bal.
           </ReportItems>
           <Style />
         </PageHeader>
+        <PageHeight>11.69in</PageHeight>
+        <PageWidth>8.27in</PageWidth>
         <InteractiveHeight>11in</InteractiveHeight>
         <InteractiveWidth>8.5in</InteractiveWidth>
         <LeftMargin>0.69444in</LeftMargin>

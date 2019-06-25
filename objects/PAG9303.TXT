@@ -2,9 +2,9 @@ OBJECT Page 9303 Blanket Sales Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -101,7 +101,7 @@ OBJECT Page 9303 Blanket Sales Orders
                                END;
                                 }
       { 73      ;1   ;Action    ;
-                      CaptionML=[DAN=Lav &ordre;
+                      CaptionML=[DAN=Opret &ordre;
                                  ENU=Make &Order];
                       Promoted=Yes;
                       Image=MakeOrder;

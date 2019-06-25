@@ -1,0 +1,201 @@
+OBJECT Page 737 VAT Return Period List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=25-04-19;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.51333;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Momsangivelsesperioder;
+               ENU=VAT Return Periods];
+    SourceTable=Table737;
+    PageType=List;
+    CardPageID=VAT Return Period Card;
+    OnOpenPage=BEGIN
+                 VATReportSetup.GET;
+                 IsEditable := VATReportSetup."Manual Receive Period CU ID" = 0;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       InitPageControllers;
+                     END;
+
+    OnInsertRecord=BEGIN
+                     IF NOT IsEditable THEN
+                       ERROR('');
+                   END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           InitPageControllers;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 10      ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 11      ;1   ;Action    ;
+                      Name=Get VAT Return Periods;
+                      CaptionML=[DAN=Hent momsangivelsesperioder;
+                                 ENU=Get VAT Return Periods];
+                      ToolTipML=[DAN=Indlæs de momsangivelsesperioder, der er oprettet i systemet.;
+                                 ENU=Load the VAT return periods that are set up in the system.];
+                      Promoted=Yes;
+                      Visible=NOT IsEditable;
+                      PromotedIsBig=Yes;
+                      Image=GetLines;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 VATReportMgt@1000 : Codeunit 737;
+                               BEGIN
+                                 VATReportMgt.GetVATReturnPeriods;
+                               END;
+                                }
+      { 12      ;1   ;Action    ;
+                      Name=Create VAT Return;
+                      CaptionML=[DAN=Opret momsangivelse;
+                                 ENU=Create VAT Return];
+                      ToolTipML=[DAN=Opret en ny momsangivelse fra den valgte momsangivelsesperiode.;
+                                 ENU=Create a new VAT return from the selected VAT return period.];
+                      Promoted=Yes;
+                      Enabled=CreateVATReturnEnabled;
+                      PromotedIsBig=Yes;
+                      Image=RefreshLines;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 VATReturnPeriod@1000 : Record 737;
+                                 VATReportMgt@1001 : Codeunit 737;
+                               BEGIN
+                                 CurrPage.SETSELECTIONFILTER(VATReturnPeriod);
+                                 IF VATReturnPeriod.COUNT = 1 THEN
+                                   VATReportMgt.CreateVATReturnFromVATPeriod(Rec);
+                               END;
+                                }
+      { 13      ;0   ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 14      ;1   ;Action    ;
+                      Name=Open VAT Return Card;
+                      CaptionML=[DAN=Åbn momsangivelseskortet;
+                                 ENU=Open VAT Return Card];
+                      ToolTipML=[DAN=Åbn momsangivelseskortet for den valgte momsangivelsesperiode.;
+                                 ENU=Open the VAT return card for the selected VAT return period.];
+                      Enabled=OpenVATReturnEnabled;
+                      Image=ShowList;
+                      OnAction=VAR
+                                 VATReturnPeriod@1000 : Record 737;
+                                 VATReportMgt@1001 : Codeunit 737;
+                               BEGIN
+                                 CurrPage.SETSELECTIONFILTER(VATReturnPeriod);
+                                 IF VATReturnPeriod.COUNT = 1 THEN
+                                   VATReportMgt.OpenVATReturnCardFromVATPeriod(Rec);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Editable=IsEditable;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver startdatoen for momsangivelsesperioden.;
+                           ENU=Specifies the start date of the VAT return period.];
+                SourceExpr="Start Date" }
+
+    { 4   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver slutdatoen for momsangivelsesperioden.;
+                           ENU=Specifies the end date of the VAT return period.];
+                SourceExpr="End Date" }
+
+    { 5   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver forfaldsdatoen for momsangivelsesperioden.;
+                           ENU=Specifies the due date for the VAT return period.];
+                SourceExpr="Due Date";
+                StyleExpr=WarningStyleExpr }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver statussen for momsangivelsesperioden.;
+                           ENU=Specifies the status of the VAT return period.];
+                SourceExpr=Status;
+                StyleExpr=WarningStyleExpr }
+
+    { 7   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver datoen for modtaget momsangivelsesperiode.;
+                           ENU=Specifies the VAT return period received date.];
+                SourceExpr="Received Date" }
+
+    { 15  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver nummeret på den tilknyttede momsangivelse.;
+                           ENU=Specifies the number of the associated VAT return.];
+                SourceExpr="VAT Return No.";
+                OnDrillDown=BEGIN
+                              DrillDownVATReturn;
+                            END;
+                             }
+
+    { 16  ;2   ;Field     ;
+                Name=VATReturnStatus;
+                CaptionML=[DAN=Status for momsangivelse;
+                           ENU=VAT Return Status];
+                ToolTipML=[DAN=Angiver status for den tilknyttede momsangivelse.;
+                           ENU=Specifies the status of the associated VAT return.];
+                SourceExpr=VATReturnStatus;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              DrillDownVATReturn;
+                            END;
+                             }
+
+    { 8   ;    ;Container ;
+                ContainerType=FactBoxArea }
+
+    { 9   ;1   ;Part      ;
+                SubPageLink=No.=FIELD(No.);
+                PagePartID=Page736;
+                PartType=Page }
+
+  }
+  CODE
+  {
+    VAR
+      VATReportSetup@1000 : Record 743;
+      WarningStyleExpr@1001 : Text;
+      CreateVATReturnEnabled@1002 : Boolean;
+      OpenVATReturnEnabled@1005 : Boolean;
+      IsEditable@1003 : Boolean;
+      VATReturnStatus@1006 : ' ,Open,Released,Submitted,Accepted,Closed,Rejected,Canceled';
+
+    LOCAL PROCEDURE InitPageControllers@2();
+    BEGIN
+      CreateVATReturnEnabled := (Status = Status::Open) AND ("VAT Return No." = '');
+      OpenVATReturnEnabled := (Status = Status::Open) OR ("VAT Return No." <> '');
+      CALCFIELDS("VAT Return Status");
+      IF "VAT Return No." <> '' THEN
+        VATReturnStatus := "VAT Return Status" + 1
+      ELSE
+        VATReturnStatus := VATReturnStatus::" ";
+      CheckOpenOrOverdue;
+    END;
+
+    LOCAL PROCEDURE CheckOpenOrOverdue@1();
+    BEGIN
+      IF (Status = Status::Open) AND ("Due Date" <> 0D) AND
+         (("Due Date" < WORKDATE) OR
+          VATReportSetup.IsPeriodReminderCalculation AND
+          ("Due Date" >= WORKDATE) AND ("Due Date" <= CALCDATE(VATReportSetup."Period Reminder Calculation",WORKDATE)))
+      THEN
+        WarningStyleExpr := 'Unfavorable'
+      ELSE
+        WarningStyleExpr := '';
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

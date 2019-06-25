@@ -2,9 +2,9 @@ OBJECT Codeunit 370 Bank Acc. Reconciliation Post
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -76,7 +76,6 @@ OBJECT Codeunit 370 Bank Acc. Reconciliation Post
       WITH BankAccRecon DO BEGIN
         // Run through lines
         BankAccReconLine.FilterBankRecLines(BankAccRecon);
-        BankAccReconLine.SETFILTER("Statement Amount",'<>%1',0);
         TotalAmount := 0;
         TotalAppliedAmount := 0;
         TotalDiff := 0;
@@ -269,10 +268,10 @@ OBJECT Codeunit 370 Bank Acc. Reconciliation Post
           "Document Type" := "Document Type"::Refund;
 
         "Account Type" := BankAccReconLine."Account Type";
-        "Account No." := BankAccReconLine."Account No.";
+        VALIDATE("Account No.",BankAccReconLine."Account No.");
 
         "Posting Date" := BankAccReconLine."Transaction Date";
-        Description := BankAccReconLine.Description;
+        Description := BankAccReconLine.GetDescription;
         "Shortcut Dimension 1 Code" := BankAccReconLine."Shortcut Dimension 1 Code";
         "Shortcut Dimension 2 Code" := BankAccReconLine."Shortcut Dimension 2 Code";
         "Dimension Set ID" := BankAccReconLine."Dimension Set ID";
@@ -286,7 +285,7 @@ OBJECT Codeunit 370 Bank Acc. Reconciliation Post
         "Source Code" := SourceCode;
         "Allow Zero-Amount Posting" := TRUE;
 
-        "Applies-to ID" := BankAccReconLine."Statement No.";
+        "Applies-to ID" := BankAccReconLine.GetAppliesToID;
       END;
 
       WITH AppliedPmtEntry DO
@@ -385,11 +384,7 @@ OBJECT Codeunit 370 Bank Acc. Reconciliation Post
               CurrExchRate.ExchangeAmount("Remaining Pmt. Disc. Possible",'',"Currency Code",PostingDate);
         END ELSE BEGIN
           "Applies-to ID" := AppliesToID;
-
-          "Amount to Apply" := AppliedPmtEntry."Applied Amount";
-          IF BankAcc.IsInLocalCurrency THEN
-            "Amount to Apply" :=
-              CurrExchRate.ExchangeAmount("Amount to Apply",'',"Currency Code",PostingDate);
+          "Amount to Apply" := AppliedPmtEntry.CalcAmountToApply(PostingDate);
         END;
 
         CODEUNIT.RUN(CODEUNIT::"Cust. Entry-Edit",CustLedgEntry);
@@ -415,11 +410,7 @@ OBJECT Codeunit 370 Bank Acc. Reconciliation Post
               CurrExchRate.ExchangeAmount("Remaining Pmt. Disc. Possible",'',"Currency Code",PostingDate);
         END ELSE BEGIN
           "Applies-to ID" := AppliesToID;
-
-          "Amount to Apply" := AppliedPmtEntry."Applied Amount";
-          IF BankAcc.IsInLocalCurrency THEN
-            "Amount to Apply" :=
-              CurrExchRate.ExchangeAmount("Amount to Apply",'',"Currency Code",PostingDate);
+          "Amount to Apply" := AppliedPmtEntry.CalcAmountToApply(PostingDate);
         END;
 
         CODEUNIT.RUN(CODEUNIT::"Vend. Entry-Edit",VendLedgEntry);

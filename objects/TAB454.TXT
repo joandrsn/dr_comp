@@ -2,9 +2,9 @@ OBJECT Table 454 Approval Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -39,7 +39,7 @@ OBJECT Table 454 Approval Entry
                                                    TestTableRelation=No;
                                                    CaptionML=[DAN=Afsender-id;
                                                               ENU=Sender ID] }
-    { 7   ;   ;Salespers./Purch. Code;Code10      ;CaptionML=[DAN=Sælger/indkøberkode;
+    { 7   ;   ;Salespers./Purch. Code;Code20      ;CaptionML=[DAN=Sælger/indkøberkode;
                                                               ENU=Salespers./Purch. Code] }
     { 8   ;   ;Approver ID         ;Code50        ;TableRelation=User."User Name";
                                                    OnLookup=BEGIN
@@ -47,6 +47,7 @@ OBJECT Table 454 Approval Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Godkender-id;
                                                               ENU=Approver ID] }
     { 9   ;   ;Status              ;Option        ;OnValidate=BEGIN
@@ -70,6 +71,7 @@ OBJECT Table 454 Approval Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id for seneste ændring;
                                                               ENU=Last Modified By User ID] }
     { 13  ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
@@ -109,7 +111,8 @@ OBJECT Table 454 Approval Entry
                                                                                              Workflow Step Instance ID=FIELD(Workflow Step Instance ID)));
                                                    CaptionML=[DAN=Afventer godkendelser;
                                                               ENU=Pending Approvals] }
-    { 22  ;   ;Record ID to Approve;RecordID      ;CaptionML=[DAN=Record-id, der skal godkendes;
+    { 22  ;   ;Record ID to Approve;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-id, der skal godkendes;
                                                               ENU=Record ID to Approve] }
     { 23  ;   ;Delegation Date Formula;DateFormula;CaptionML=[DAN=Uddelegeringsdatoformel;
                                                               ENU=Delegation Date Formula] }
@@ -144,6 +147,7 @@ OBJECT Table 454 Approval Entry
     {    ;Approver ID,Status                       }
     {    ;Sender ID                                }
     {    ;Due Date                                 }
+    {    ;Table ID,Record ID to Approve,Status,Workflow Step Instance ID,Sequence No. }
   }
   FIELDGROUPS
   {

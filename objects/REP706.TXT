@@ -2,9 +2,9 @@ OBJECT Report 706 Status
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -34,6 +34,10 @@ OBJECT Report 706 Status
                OnPreDataItem=BEGIN
                                CurrReport.CREATETOTALS(RemainingQty,InvtValue,PosInvtValue,NegInvtValue);
                              END;
+
+               OnAfterGetRecord=BEGIN
+                                  IsAverageCostItem := "Costing Method" = "Costing Method"::Average;
+                                END;
 
                ReqFilterFields=No.,Inventory Posting Group,Statistics Group,Location Filter }
 
@@ -106,6 +110,9 @@ OBJECT Report 706 Status
     { 26  ;1   ;Column  ;HereofNegativeCaption;
                SourceExpr=HereofNegativeCaptionLbl }
 
+    { 2   ;1   ;Column  ;IsAverageCostItem   ;
+               SourceExpr=IsAverageCostItem }
+
     { 7209;1   ;DataItem;                    ;
                DataItemTable=Table32;
                DataItemTableView=SORTING(Item No.,Entry Type,Variant Code,Drop Shipment,Location Code,Posting Date);
@@ -117,9 +124,13 @@ OBJECT Report 706 Status
                              END;
 
                OnAfterGetRecord=BEGIN
-                                  CalcRemainingQty;
-                                  IF RemainingQty = 0 THEN
-                                    CurrReport.SKIP;
+                                  IF Item."Costing Method" = Item."Costing Method"::Average THEN
+                                    RemainingQty := Quantity
+                                  ELSE BEGIN
+                                    CalcRemainingQty;
+                                    IF RemainingQty = 0 THEN
+                                      CurrReport.SKIP;
+                                  END;
 
                                   CalcUnitCost;
                                   InvtValue := UnitCost * ABS(RemainingQty);
@@ -221,6 +232,7 @@ OBJECT Report 706 Status
       TotalCaptionLbl@1909 : TextConst 'DAN=I alt;ENU=Total';
       HereofPositiveCaptionLbl@2834 : TextConst 'DAN=Heraf positivt;ENU=Hereof Positive';
       HereofNegativeCaptionLbl@9218 : TextConst 'DAN=Heraf negativt;ENU=Hereof Negative';
+      IsAverageCostItem@1008 : Boolean;
 
     LOCAL PROCEDURE CalcRemainingQty@4();
     VAR
@@ -311,7 +323,7 @@ OBJECT Report 706 Status
   RDLDATA
   {
     <?xml version="1.0" encoding="utf-8"?>
-<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
     <DataSource Name="DataSource">
@@ -319,7 +331,6 @@ OBJECT Report 706 Status
         <DataProvider>SQL</DataProvider>
         <ConnectString />
       </ConnectionProperties>
-      <rd:SecurityType>None</rd:SecurityType>
       <rd:DataSourceID>3d6de9ef-437f-4196-a397-c5b77c909c91</rd:DataSourceID>
     </DataSource>
   </DataSources>
@@ -398,6 +409,9 @@ OBJECT Report 706 Status
         </Field>
         <Field Name="HereofNegativeCaption">
           <DataField>HereofNegativeCaption</DataField>
+        </Field>
+        <Field Name="IsAverageCostItem">
+          <DataField>IsAverageCostItem</DataField>
         </Field>
         <Field Name="PostingDate_ItemLedgerEntry">
           <DataField>PostingDate_ItemLedgerEntry</DataField>
@@ -3330,6 +3344,9 @@ OBJECT Report 706 Status
                       <TablixMembers>
                         <TablixMember />
                       </TablixMembers>
+                      <Visibility>
+                        <Hidden>=Fields!IsAverageCostItem.Value</Hidden>
+                      </Visibility>
                       <DataElementName>Detail_Collection</DataElementName>
                       <DataElementOutput>Output</DataElementOutput>
                       <KeepTogether>true</KeepTogether>

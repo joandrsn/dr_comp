@@ -2,9 +2,9 @@ OBJECT Codeunit 9651 Document Report Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -77,7 +77,7 @@ OBJECT Codeunit 9651 Document Report Mgt.
         ReportAction::SaveAsExcel:
           ERROR(NotImplementedErr);
         ReportAction::Print:
-          PrintWordDoc(ReportID,TempBlob,FileName);
+          PrintWordDoc(ReportID,TempBlob,FileName,TRUE);
         ReportAction::Preview:
           FileMgt.BLOBExport(TempBlob,UserFileName(ReportID,DoConvertToPdf),TRUE);
       END;
@@ -197,20 +197,20 @@ OBJECT Codeunit 9651 Document Report Mgt.
       TempBlob.Blob := TempBlobPdf.Blob;
     END;
 
-    LOCAL PROCEDURE PrintWordDoc@15(ReportID@1003 : Integer;VAR TempBlob@1015 : Record 99008535;PrinterName@1000 : Text);
+    LOCAL PROCEDURE PrintWordDoc@15(ReportID@1003 : Integer;VAR TempBlob@1015 : Record 99008535;PrinterName@1000 : Text;Collate@1002 : Boolean);
     VAR
       FileMgt@1001 : Codeunit 419;
     BEGIN
       IF FileMgt.IsWindowsClient THEN
-        PrintWordDocInWord(ReportID,TempBlob,PrinterName)
+        PrintWordDocInWord(ReportID,TempBlob,PrinterName,Collate,1)
       ELSE
         IF FileMgt.IsWebClient THEN
           FileMgt.BLOBExport(TempBlob,UserFileName(ReportID,FALSE),TRUE)
         ELSE
-          PrintWordDocOnServer(TempBlob,PrinterName);
+          PrintWordDocOnServer(TempBlob,PrinterName,Collate);
     END;
 
-    LOCAL PROCEDURE PrintWordDocInWord@17(ReportID@1006 : Integer;TempBlob@1015 : Record 99008535;PrinterName@1004 : Text);
+    LOCAL PROCEDURE PrintWordDocInWord@17(ReportID@1006 : Integer;TempBlob@1015 : Record 99008535;PrinterName@1004 : Text;Collate@1007 : Boolean;Copies@1008 : Integer);
     VAR
       FileMgt@1005 : Codeunit 419;
       WordApplication@1001 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.ApplicationClass" RUNONCLIENT;
@@ -224,7 +224,7 @@ OBJECT Codeunit 9651 Document Report Mgt.
         FileName := FileMgt.BLOBExport(TempBlob,FileName,FALSE);
 
         WordDocument := WordHelper.CallOpen(WordApplication,FileName,FALSE,FALSE);
-        WordHelper.CallPrintOut(WordDocument,PrinterName);
+        WordHelper.CallPrintOut(WordDocument,PrinterName,Collate,Copies);
 
         T0 := CURRENTDATETIME;
         WHILE (WordApplication.BackgroundPrintingStatus > 0) AND (CURRENTDATETIME < T0 + 180000) DO
@@ -233,7 +233,7 @@ OBJECT Codeunit 9651 Document Report Mgt.
         IF DeleteClientFile(FileName) THEN;
       END ELSE BEGIN
         IF (PrinterName <> '') AND IsValidPrinter(PrinterName) THEN
-          PrintWordDocOnServer(TempBlob,PrinterName) // Don't print on server if the printer has not been setup.
+          PrintWordDocOnServer(TempBlob,PrinterName,Collate) // Don't print on server if the printer has not been setup.
         ELSE
           FileMgt.BLOBExport(TempBlob,UserFileName(ReportID,FALSE),TRUE);
       END;
@@ -262,25 +262,26 @@ OBJECT Codeunit 9651 Document Report Mgt.
       WordApplication := WordApplication.ApplicationClass;
     END;
 
-    LOCAL PROCEDURE PrintWordDocOnServer@16(TempBlob@1001 : Record 99008535;PrinterName@1000 : Text);
+    LOCAL PROCEDURE PrintWordDocOnServer@16(TempBlob@1001 : Record 99008535;PrinterName@1000 : Text;Collate@1004 : Boolean);
     VAR
       PdfWriter@1003 : DotNet "'Microsoft.Dynamics.Nav.PdfWriter, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.PdfWriter.WordToPdf";
       InStreamWordDoc@1002 : InStream;
     BEGIN
       TempBlob.Blob.CREATEINSTREAM(InStreamWordDoc);
-      PdfWriter.PrintWordDoc(InStreamWordDoc,PrinterName);
+      PdfWriter.PrintWordDoc(InStreamWordDoc,PrinterName,Collate);
     END;
 
     LOCAL PROCEDURE UserFileName@6(ReportID@1000 : Integer;DoConvertToPdf@1003 : Boolean) : Text;
     VAR
       AllObjWithCaption@1001 : Record 2000000058;
+      FileManagement@1004 : Codeunit 419;
       UserFileType@1002 : Text[10];
     BEGIN
       AllObjWithCaption.GET(AllObjWithCaption."Object Type"::Report,ReportID);
       UserFileType := '%1.docx';
       IF DoConvertToPdf THEN
         UserFileType := '%1.pdf';
-      EXIT(STRSUBSTNO(UserFileType,AllObjWithCaption."Object Caption"));
+      EXIT(STRSUBSTNO(UserFileType,FileManagement.GetSafeFileName(AllObjWithCaption."Object Caption")));
     END;
 
     PROCEDURE ApplyUpgradeToReports@10(VAR ReportUpgradeCollection@1007 : DotNet "'Microsoft.Dynamics.Nav.DocumentReport, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.DocumentReport.ReportUpgradeCollection";testOnly@1000 : Boolean) : Boolean;

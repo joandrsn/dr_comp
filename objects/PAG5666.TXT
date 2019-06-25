@@ -2,9 +2,9 @@ OBJECT Page 5666 FA Depreciation Books Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-09-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50637;
   }
   PROPERTIES
   {
@@ -17,10 +17,16 @@ OBJECT Page 5666 FA Depreciation Books Subform
     PageType=ListPart;
     RefreshOnActivate=Yes;
     OnAfterGetRecord=BEGIN
-                       Disposed := "Disposal Date" > 0D;
-                       IF Disposed THEN
-                         "Book Value" := 0;
+                       BookValue := GetBookValue;
                      END;
+
+    OnNewRecord=BEGIN
+                  BookValue := 0;
+                END;
+
+    OnInsertRecord=BEGIN
+                     BookValue := GetBookValue;
+                   END;
 
     ActionList=ACTIONS
     {
@@ -29,7 +35,7 @@ OBJECT Page 5666 FA Depreciation Books Subform
       { 1907746904;1 ;ActionGroup;
                       CaptionML=[DAN=&Afskr.profil;
                                  ENU=&Depr. Book];
-                      Image=DepreciationsBooks }
+                      Image=DepreciationBooks }
       { 1900295504;2 ;Action    ;
                       CaptionML=[DAN=&Poster;
                                  ENU=Ledger E&ntries];
@@ -140,11 +146,13 @@ OBJECT Page 5666 FA Depreciation Books Subform
     { 28  ;2   ;Field     ;
                 CaptionML=[DAN=Solgt;
                            ENU=Disposed Of];
-                SourceExpr=Disposed;
+                SourceExpr="Disposal Date" > 0D;
                 Editable=FALSE }
 
     { 2   ;2   ;Field     ;
-                SourceExpr="Book Value";
+                Name=BookValue;
+                SourceExpr=BookValue;
+                Editable=FALSE;
                 OnDrillDown=VAR
                               FALedgEntry@1000 : Record 5601;
                             BEGIN
@@ -244,7 +252,7 @@ OBJECT Page 5666 FA Depreciation Books Subform
       DepreciationCalc@1004 : Codeunit 5616;
       ChangeExchangeRate@1005 : Page 511;
       AddCurrCodeIsFound@1006 : Boolean;
-      Disposed@1007 : Boolean;
+      BookValue@1007 : Decimal;
 
     LOCAL PROCEDURE GetAddCurrCode@1() : Code[10];
     BEGIN
@@ -288,6 +296,14 @@ OBJECT Page 5666 FA Depreciation Books Subform
       FADeprBook.SETRANGE("FA No.","FA No.");
       FADeprBook.SETRANGE("Depreciation Book Code","Depreciation Book Code");
       PAGE.RUN(PAGE::"Main Asset Statistics",FADeprBook);
+    END;
+
+    LOCAL PROCEDURE GetBookValue@8() : Decimal;
+    BEGIN
+      IF "Disposal Date" > 0D THEN
+        EXIT(0);
+      CALCFIELDS("Book Value");
+      EXIT("Book Value");
     END;
 
     BEGIN

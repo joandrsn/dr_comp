@@ -2,9 +2,9 @@ OBJECT Codeunit 7314 Warehouse Availability Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -103,22 +103,16 @@ OBJECT Codeunit 7314 Warehouse Availability Mgt.
 
     PROCEDURE CalcLineReservQtyOnPicksShips@47(SourceType@1006 : Integer;SourceSubType@1003 : Option;SourceID@1002 : Code[20];SourceRefNo@1001 : Integer;SourceProdOrderLine@1000 : Integer;ReservedQtyBase@1009 : Decimal;VAR WarehouseActivityLine@1010 : Record 5767) : Decimal;
     VAR
-      WhseShipmentLine@1005 : Record 7321;
       WhseActivityLine@1004 : Record 5767;
       PickedNotYetShippedQty@1007 : Decimal;
       OutstandingQtyOnPickLines@1008 : Decimal;
     BEGIN
       // Returns the reserved part of the sum of outstanding quantity on pick lines and
       // quantity on shipment lines picked but not yet shipped for a given demand line
-      IF SourceType <> DATABASE::"Prod. Order Component" THEN BEGIN
-        WhseShipmentLine.SETCURRENTKEY("Source Type","Source Subtype","Source No.","Source Line No.");
-        WhseShipmentLine.SETRANGE("Source Type",SourceType);
-        WhseShipmentLine.SETRANGE("Source Subtype",SourceSubType);
-        WhseShipmentLine.SETRANGE("Source No.",SourceID);
-        WhseShipmentLine.SETRANGE("Source Line No.",SourceRefNo);
-        WhseShipmentLine.CALCSUMS("Qty. Picked (Base)","Qty. Shipped (Base)");
-        PickedNotYetShippedQty := WhseShipmentLine."Qty. Picked (Base)" - WhseShipmentLine."Qty. Shipped (Base)";
-      END;
+      IF SourceType = DATABASE::"Prod. Order Component" THEN
+        PickedNotYetShippedQty := CalcQtyPickedOnProdOrderComponentLine(SourceSubType,SourceID,SourceProdOrderLine,SourceRefNo)
+      ELSE
+        PickedNotYetShippedQty := CalcQtyPickedOnWhseShipmentLine(SourceType,SourceSubType,SourceID,SourceRefNo);
 
       WhseActivityLine.SETCURRENTKEY("Source Type","Source Subtype","Source No.","Source Line No.");
       WhseActivityLine.SETRANGE("Source Type",SourceType);
@@ -302,6 +296,31 @@ OBJECT Codeunit 7314 Warehouse Availability Mgt.
       EXIT(WhseEntry."Qty. (Base)");
     END;
 
+    PROCEDURE CalcQtyOnAssemblyBin@4(LocationCode@1000 : Code[10];ItemNo@1001 : Code[20];VariantCode@1002 : Code[10];LotNo@1003 : Code[20];SerialNo@1004 : Code[20]) : Decimal;
+    VAR
+      Location@1006 : Record 14;
+      WhseEntry@1005 : Record 7312;
+    BEGIN
+      Location.GET(LocationCode);
+      IF Location."To-Assembly Bin Code" = '' THEN
+        EXIT(0);
+
+      WITH WhseEntry DO BEGIN
+        SETCURRENTKEY("Item No.","Bin Code","Location Code","Variant Code",
+          "Unit of Measure Code","Lot No.","Serial No.","Entry Type");
+        SETRANGE("Item No.",ItemNo);
+        SETRANGE("Bin Code",Location."To-Assembly Bin Code");
+        SETRANGE("Location Code",LocationCode);
+        SETRANGE("Variant Code",VariantCode);
+        IF LotNo <> '' THEN
+          SETRANGE("Lot No.",LotNo);
+        IF SerialNo <> '' THEN
+          SETRANGE("Serial No.",SerialNo);
+        CALCSUMS("Qty. (Base)");
+        EXIT("Qty. (Base)");
+      END;
+    END;
+
     PROCEDURE CalcQtyOnBlockedITOrOnBlockedOutbndBins@67(LocationCode@1000 : Code[10];ItemNo@1001 : Code[20];VariantCode@1002 : Code[10];LotNo@1003 : Code[20];SerialNo@1004 : Code[20];LNRequired@1006 : Boolean;SNRequired@1007 : Boolean) QtyBlocked : Decimal;
     VAR
       BinContent@1005 : Record 7302;
@@ -325,6 +344,36 @@ OBJECT Codeunit 7314 Warehouse Availability Mgt.
             END ELSE
               QtyBlocked += CalcQtyWithBlockedItemTracking;
           UNTIL NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcQtyPickedOnProdOrderComponentLine@8(SourceSubtype@1004 : Option;SourceID@1001 : Code[20];SourceProdOrderLineNo@1002 : Integer;SourceRefNo@1003 : Integer) : Decimal;
+    VAR
+      ProdOrderComponent@1000 : Record 5407;
+    BEGIN
+      WITH ProdOrderComponent DO BEGIN
+        SETRANGE(Status,SourceSubtype);
+        SETRANGE("Prod. Order No.",SourceID);
+        SETRANGE("Prod. Order Line No.",SourceProdOrderLineNo);
+        SETRANGE("Line No.",SourceRefNo);
+        IF FINDFIRST THEN
+          EXIT("Qty. Picked (Base)");
+      END;
+
+      EXIT(0);
+    END;
+
+    LOCAL PROCEDURE CalcQtyPickedOnWhseShipmentLine@9(SourceType@1000 : Integer;SourceSubType@1001 : Option;SourceID@1002 : Code[20];SourceRefNo@1003 : Integer) : Decimal;
+    VAR
+      WhseShipmentLine@1004 : Record 7321;
+    BEGIN
+      WITH WhseShipmentLine DO BEGIN
+        SETRANGE("Source Type",SourceType);
+        SETRANGE("Source Subtype",SourceSubType);
+        SETRANGE("Source No.",SourceID);
+        SETRANGE("Source Line No.",SourceRefNo);
+        CALCSUMS("Qty. Picked (Base)","Qty. Shipped (Base)");
+        EXIT("Qty. Picked (Base)" - "Qty. Shipped (Base)");
       END;
     END;
 

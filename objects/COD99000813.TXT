@@ -2,23 +2,25 @@ OBJECT Codeunit 99000813 Carry Out Action
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
     TableNo=246;
     OnRun=BEGIN
+            ProductionExist := TRUE;
+            AssemblyExist := TRUE;
             CASE TrySourceType OF
               TrySourceType::Purchase:
                 CarryOutToReqWksh(Rec,TryWkshTempl,TryWkshName);
               TrySourceType::Transfer:
                 CarryOutTransOrder(Rec,TryChoice,TryWkshTempl,TryWkshName);
               TrySourceType::Production:
-                CarryOutProdOrder(Rec,TryChoice,TryWkshTempl,TryWkshName);
+                ProductionExist := CarryOutProdOrder(Rec,TryChoice,TryWkshTempl,TryWkshName);
               TrySourceType::Assembly:
-                CarryOutAsmOrder(Rec,TryChoice);
+                AssemblyExist := CarryOutAsmOrder(Rec,TryChoice);
             END;
 
             IF "Action Message" = "Action Message"::Cancel THEN
@@ -34,7 +36,8 @@ OBJECT Codeunit 99000813 Carry Out Action
               BlockDynamicTracking(TRUE);
               IF TrySourceType = TrySourceType::Production THEN
                 BlockDynamicTrackingOnComp(TRUE);
-              DELETE(TRUE);
+              IF ProductionExist AND AssemblyExist THEN
+                DELETE(TRUE);
               BlockDynamicTracking(FALSE);
             END;
           END;
@@ -56,11 +59,14 @@ OBJECT Codeunit 99000813 Carry Out Action
       CheckDateConflict@1004 : Codeunit 99000815;
       PrintOrder@1008 : Boolean;
       SplitTransferOrders@1016 : Boolean;
+      ProductionExist@1019 : Boolean;
+      AssemblyExist@1020 : Boolean;
       TrySourceType@1013 : 'Purchase,Transfer,Production,Assembly';
       TryChoice@1012 : Option;
       TryWkshTempl@1011 : Code[10];
       TryWkshName@1010 : Code[10];
       LineNo@1007 : Integer;
+      CouldNotChangeSupplyTxt@1021 : TextConst '@@@=%1 - Ref. Order No., %2 - Ref. Line No.;DAN=Leveringstypen kunne ikke ændres i ordre %1, ordrelinje %2;ENU=The supply type could not be changed in order %1, order line %2';
 
     PROCEDURE TryCarryOutAction@20(SourceType@1004 : 'Purchase,Transfer,Production,Assembly';VAR ReqLine@1003 : Record 246;Choice@1002 : Option;WkshTempl@1001 : Code[10];WkshName@1000 : Code[10]) : Boolean;
     BEGIN
@@ -77,7 +83,7 @@ OBJECT Codeunit 99000813 Carry Out Action
       TryWkshName := WkshName;
     END;
 
-    PROCEDURE CarryOutProdOrder@1(ReqLine@1000 : Record 246;ProdOrderChoice@1001 : ' ,Planned,Firm Planned,Firm Planned & Print,Copy to Req. Wksh';ProdWkshTempl@1003 : Code[10];ProdWkshName@1002 : Code[10]);
+    PROCEDURE CarryOutProdOrder@1(ReqLine@1000 : Record 246;ProdOrderChoice@1001 : ' ,Planned,Firm Planned,Firm Planned & Print,Copy to Req. Wksh';ProdWkshTempl@1003 : Code[10];ProdWkshName@1002 : Code[10]) : Boolean;
     BEGIN
       PrintOrder := ProdOrderChoice = ProdOrderChoice::"Firm Planned & Print";
       CASE ReqLine."Action Message" OF
@@ -89,10 +95,11 @@ OBJECT Codeunit 99000813 Carry Out Action
         ReqLine."Action Message"::"Change Qty.",
         ReqLine."Action Message"::Reschedule,
         ReqLine."Action Message"::"Resched. & Chg. Qty.":
-          ProdOrderChgAndReshedule(ReqLine);
+          EXIT(ProdOrderChgAndReshedule(ReqLine));
         ReqLine."Action Message"::Cancel:
           DeleteOrderLines(ReqLine);
       END;
+      EXIT(TRUE);
     END;
 
     PROCEDURE CarryOutTransOrder@3(ReqLine@1000 : Record 246;TransOrderChoice@1001 : ' ,Make Trans. Orders,Make Trans. Orders & Print,Copy to Req. Wksh';TransWkshTempName@1002 : Code[10];TransJournalName@1003 : Code[10]);
@@ -117,7 +124,7 @@ OBJECT Codeunit 99000813 Carry Out Action
         END;
     END;
 
-    PROCEDURE CarryOutAsmOrder@26(ReqLine@1003 : Record 246;AsmOrderChoice@1002 : ' ,Make Assembly Orders,Make Assembly Orders & Print');
+    PROCEDURE CarryOutAsmOrder@26(ReqLine@1003 : Record 246;AsmOrderChoice@1002 : ' ,Make Assembly Orders,Make Assembly Orders & Print') : Boolean;
     VAR
       AsmHeader@1000 : Record 900;
     BEGIN
@@ -128,10 +135,11 @@ OBJECT Codeunit 99000813 Carry Out Action
         ReqLine."Action Message"::"Change Qty.",
         ReqLine."Action Message"::Reschedule,
         ReqLine."Action Message"::"Resched. & Chg. Qty.":
-          AsmOrderChgAndReshedule(ReqLine);
+          EXIT(AsmOrderChgAndReshedule(ReqLine));
         ReqLine."Action Message"::Cancel:
           DeleteOrderLines(ReqLine);
       END;
+      EXIT(TRUE);
     END;
 
     PROCEDURE CarryOutToReqWksh@6(ReqLine@1000 : Record 246;ReqWkshTempName@1001 : Code[10];ReqJournalName@1002 : Code[10]);
@@ -233,7 +241,7 @@ OBJECT Codeunit 99000813 Carry Out Action
         UNTIL TempTransHeaderToPrint.NEXT = 0;
     END;
 
-    PROCEDURE ProdOrderChgAndReshedule@17(ReqLine@1000 : Record 246);
+    PROCEDURE ProdOrderChgAndReshedule@17(ReqLine@1000 : Record 246) : Boolean;
     VAR
       ProdOrderLine@1001 : Record 5406;
       PlanningComponent@1002 : Record 99000829;
@@ -276,7 +284,7 @@ OBJECT Codeunit 99000813 Carry Out Action
                 ReservMgt.DeleteReservEntries(FALSE,ProdOrderComp."Remaining Qty. (Base)");
                 ReservMgt.ClearSurplus;
                 ReservMgt.AutoTrack(ProdOrderComp."Remaining Qty. (Base)");
-                CheckDateConflict.ProdOrderComponentCheck(ProdOrderComp,FALSE);
+                CheckDateConflict.ProdOrderComponentCheck(ProdOrderComp,FALSE,FALSE);
               END ELSE
                 PlanningComponent.DELETE(TRUE);
             UNTIL PlanningComponent.NEXT = 0;
@@ -293,8 +301,12 @@ OBJECT Codeunit 99000813 Carry Out Action
 
               FinalizeOrderHeader(ProdOrder);
             END;
+        END ELSE BEGIN
+          MESSAGE(STRSUBSTNO(CouldNotChangeSupplyTxt,"Ref. Order No.","Ref. Line No."));
+          EXIT(FALSE);
         END;
       END;
+      EXIT(TRUE);
     END;
 
     PROCEDURE PurchOrderChgAndReshedule@22(ReqLine@1000 : Record 246);
@@ -322,7 +334,8 @@ OBJECT Codeunit 99000813 Carry Out Action
 
         PurchHeader.GET(PurchLine."Document Type",PurchLine."Document No.");
         PrintPurchaseOrder(PurchHeader);
-      END;
+      END ELSE
+        ERROR(STRSUBSTNO(CouldNotChangeSupplyTxt,ReqLine."Ref. Order No.",ReqLine."Ref. Line No."));
     END;
 
     PROCEDURE TransOrderChgAndReshedule@25(ReqLine@1000 : Record 246);
@@ -354,7 +367,7 @@ OBJECT Codeunit 99000813 Carry Out Action
       END;
     END;
 
-    PROCEDURE AsmOrderChgAndReshedule@32(ReqLine@1000 : Record 246);
+    PROCEDURE AsmOrderChgAndReshedule@32(ReqLine@1000 : Record 246) : Boolean;
     VAR
       AsmHeader@1001 : Record 900;
       PlanningComponent@1002 : Record 99000829;
@@ -394,8 +407,12 @@ OBJECT Codeunit 99000813 Carry Out Action
             UNTIL PlanningComponent.NEXT = 0;
 
           PrintAsmOrder(AsmHeader);
+        END ELSE BEGIN
+          MESSAGE(STRSUBSTNO(CouldNotChangeSupplyTxt,"Ref. Order No.","Ref. Line No."));
+          EXIT(FALSE);
         END;
       END;
+      EXIT(TRUE);
     END;
 
     PROCEDURE DeleteOrderLines@4(ReqLine@1000 : Record 246);
@@ -869,6 +886,7 @@ OBJECT Codeunit 99000813 Carry Out Action
       PlanningRtngLine@1006 : Record 99000830;
       ProdOrderRtngLine@1007 : Record 5409;
       WMSManagement@1008 : Codeunit 7302;
+      FlushingMethod@1009 : Option;
     BEGIN
       PlanningRtngLine.SETRANGE("Worksheet Template Name",ReqLine."Worksheet Template Name");
       PlanningRtngLine.SETRANGE("Worksheet Batch Name",ReqLine."Journal Batch Name");
@@ -941,6 +959,16 @@ OBJECT Codeunit 99000813 Carry Out Action
           ProdOrderRtngLine."Location Code" := ReqLine."Location Code";
           ProdOrderRtngLine."From-Production Bin Code" :=
             WMSManagement.GetProdCenterBinCode(PlanningRtngLine.Type,PlanningRtngLine."No.",ReqLine."Location Code",FALSE,0);
+
+          FlushingMethod := ProdOrderRtngLine."Flushing Method";
+          IF ProdOrderRtngLine."Flushing Method" = ProdOrderRtngLine."Flushing Method"::Manual THEN
+            ProdOrderRtngLine."To-Production Bin Code" := WMSManagement.GetProdCenterBinCode(
+                PlanningRtngLine.Type,PlanningRtngLine."No.",ReqLine."Location Code",TRUE,
+                FlushingMethod)
+          ELSE
+            ProdOrderRtngLine."Open Shop Floor Bin Code" := WMSManagement.GetProdCenterBinCode(
+                PlanningRtngLine.Type,PlanningRtngLine."No.",ReqLine."Location Code",TRUE,
+                FlushingMethod);
 
           ProdOrderRtngLine.UpdateDatetime;
           ProdOrderRtngLine.INSERT;

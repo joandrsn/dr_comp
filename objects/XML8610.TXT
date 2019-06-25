@@ -2,9 +2,9 @@ OBJECT XMLport 8610 Config. Data Schema
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -111,6 +111,8 @@ OBJECT XMLport 8610 Config. Data Schema
 
     { [{2142B629-CF56-4508-AA6A-D5120D66C2F6}];10;xsd:element         ;Element ;Table   ;
                                                   SourceTable=Table8616;
+                                                  SourceTableView=SORTING(Field1,Field2,Field13)
+                                                                  ORDER(Ascending);
                                                   LinkFields=Field1=FIELD(Field1),
                                                              Field2=FIELD(Field2);
                                                   LinkTable=Config. Package Table;

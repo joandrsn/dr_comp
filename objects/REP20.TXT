@@ -2,9 +2,9 @@ OBJECT Report 20 Calc. and Post VAT Settlement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -4800,7 +4800,7 @@ OBJECT Report 20 Calc. and Post VAT Settlement
             <Top>1.05792cm</Top>
             <Left>3.15cm</Left>
             <Height>0.423cm</Height>
-            <Width>1.5cm</Width>
+            <Width>5cm</Width>
             <ZIndex>6</ZIndex>
             <Style>
               <VerticalAlign>Middle</VerticalAlign>
@@ -5011,6 +5011,7 @@ OBJECT Report 20 Calc. and Post VAT Settlement
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

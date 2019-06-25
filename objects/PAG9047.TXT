@@ -2,9 +2,9 @@ OBJECT Page 9047 Machine Operator Activities
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -52,7 +52,9 @@ OBJECT Page 9047 Machine Operator Activities
                 DrillDownPageID=Released Production Orders }
 
     { 1   ;2   ;Field     ;
-                SourceExpr="Released Prod. Orders - Today";
+                CaptionML=[DAN=Frigivne prod.ordrer indtil i dag;
+                           ENU=Released Prod. Orders Until Today];
+                SourceExpr="Rlsd. Prod. Orders Until Today";
                 DrillDownPageID=Released Production Orders }
 
     { 5   ;1   ;Group     ;

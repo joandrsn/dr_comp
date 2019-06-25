@@ -2,9 +2,9 @@ OBJECT Report 5802 Inventory Valuation - WIP
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=26-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.47864;
   }
   PROPERTIES
   {
@@ -430,7 +430,7 @@ OBJECT Report 5802 Inventory Valuation - WIP
           EXIT(FALSE);
       END;
 
-      EXIT(NOT ValueEntryExist("Production Order",StartDate,EndDate));
+      EXIT(NOT ValueEntryExist("Production Order",StartDate,31129999D));
     END;
 
     PROCEDURE InitializeRequest@4(NewStartDate@1001 : Date;NewEndDate@1000 : Date);
@@ -3265,6 +3265,7 @@ OBJECT Report 5802 Inventory Valuation - WIP
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

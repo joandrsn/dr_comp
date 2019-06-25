@@ -2,9 +2,9 @@ OBJECT Codeunit 229 Document-Print
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -72,6 +72,7 @@ OBJECT Codeunit 229 Document-Print
           EXIT;
       END;
 
+      SetCustomReportSelectionUsageFilter(CustomReportSelection,ReportSelections.GETFILTER(Usage));
       IF CustomReportSelection.PrintCustomReports(SalesHeader,SendAsEmail,FALSE) = 0 THEN BEGIN
         ReportSelections.SETFILTER("Report ID",'<>0');
         ReportSelections.FIND('-');
@@ -285,6 +286,7 @@ OBJECT Codeunit 229 Document-Print
           EXIT;
       END;
 
+      SetCustomReportSelectionUsageFilter(CustomReportSelection,ReportSelection.GETFILTER(Usage));
       IF CustomReportSelection.PrintCustomReports(SalesHeader,FALSE,FALSE) = 0 THEN BEGIN
         ReportSelection.SETFILTER("Report ID",'<>0');
         ReportSelection.FIND('-');
@@ -359,6 +361,38 @@ OBJECT Codeunit 229 Document-Print
       REPEAT
         REPORT.RUNMODAL(ReportSelection."Report ID",TRUE,FALSE,PurchHeaderArch)
       UNTIL ReportSelection.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE SetCustomReportSelectionUsageFilter@13(VAR CustomReportSelection@1000 : Record 9657;ReportSelectionUsageFilter@1001 : Text);
+    VAR
+      ReportSelections@1002 : Record 77;
+    BEGIN
+      IF ReportSelectionUsageFilter = '' THEN
+        EXIT;
+      IF NOT EVALUATE(ReportSelections.Usage,ReportSelectionUsageFilter) THEN
+        EXIT;
+
+      WITH ReportSelections DO
+        CASE Usage OF
+          Usage::"S.Order":
+            CustomReportSelection.SETRANGE(Usage,CustomReportSelection.Usage::"S.Order");
+          Usage::"S.Work Order":
+            CustomReportSelection.SETRANGE(Usage,CustomReportSelection.Usage::"S.Work Order");
+          Usage::"S.Order Pick Instruction":
+            CustomReportSelection.SETRANGE(Usage,CustomReportSelection.Usage::"S.Order Pick Instruction");
+          Usage::"S.Quote":
+            CustomReportSelection.SETRANGE(Usage,CustomReportSelection.Usage::"S.Quote");
+          Usage::"S.Blanket":
+            CustomReportSelection.SETRANGE(Usage,CustomReportSelection.Usage::"S.Blanket");
+          Usage::"S.Return":
+            CustomReportSelection.SETRANGE(Usage,CustomReportSelection.Usage::"S.Return");
+          Usage::"S.Invoice":
+            CustomReportSelection.SETRANGE(Usage,CustomReportSelection.Usage::"S.Invoice");
+          Usage::"S.Cr.Memo":
+            CustomReportSelection.SETRANGE(Usage,CustomReportSelection.Usage::"S.Cr.Memo");
+          ELSE
+            EXIT;
+        END;
     END;
 
     BEGIN

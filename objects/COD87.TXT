@@ -2,9 +2,9 @@ OBJECT Codeunit 87 Blanket Sales Order to Order
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -13,16 +13,20 @@ OBJECT Codeunit 87 Blanket Sales Order to Order
             Cust@1001 : Record 18;
             TempSalesLine@1002 : TEMPORARY Record 37;
             ATOLink@1000 : Record 904;
+            Resource@1007 : Record 156;
             Reservation@1005 : Page 498;
             PrepmtMgt@1004 : Codeunit 441;
             SalesCalcDiscountByType@1003 : Codeunit 56;
             ShouldRedistributeInvoiceAmount@1006 : Boolean;
+            CreditLimitExceeded@1008 : Boolean;
           BEGIN
             TESTFIELD("Document Type","Document Type"::"Blanket Order");
             ShouldRedistributeInvoiceAmount := SalesCalcDiscountByType.ShouldRedistributeInvoiceDiscountAmount(Rec);
 
             Cust.GET("Sell-to Customer No.");
             Cust.CheckBlockedCustOnDocs(Cust,"Document Type"::Order,TRUE,FALSE);
+
+            ValidateSalesPersonOnSalesHeader(Rec,TRUE,FALSE);
 
             IF QtyToShipIsZero THEN
               ERROR(Text002);
@@ -31,55 +35,20 @@ OBJECT Codeunit 87 Blanket Sales Order to Order
 
             CheckAvailability(Rec);
 
-            SalesOrderHeader := Rec;
-            SalesOrderHeader."Document Type" := SalesOrderHeader."Document Type"::Order;
-            IF NOT HideValidationDialog THEN
-              CustCheckCreditLimit.SalesHeaderCheck(SalesOrderHeader);
-
-            SalesOrderHeader."No. Printed" := 0;
-            SalesOrderHeader.Status := SalesOrderHeader.Status::Open;
-            SalesOrderHeader."No." := '';
-
-            SalesOrderLine.LOCKTABLE;
-            SalesOrderHeader.INSERT(TRUE);
-
-            IF "Order Date" = 0D THEN
-              SalesOrderHeader."Order Date" := WORKDATE
-            ELSE
-              SalesOrderHeader."Order Date" := "Order Date";
-            IF "Posting Date" <> 0D THEN
-              SalesOrderHeader."Posting Date" := "Posting Date";
-            SalesOrderHeader."Document Date" := "Document Date";
-            SalesOrderHeader."Shipment Date" := "Shipment Date";
-            SalesOrderHeader."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
-            SalesOrderHeader."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
-            SalesOrderHeader."Dimension Set ID" := "Dimension Set ID";
-            SalesOrderHeader."Outbound Whse. Handling Time" := "Outbound Whse. Handling Time";
-            SalesOrderHeader."Location Code" := "Location Code";
-            SalesOrderHeader."Ship-to Name" := "Ship-to Name";
-            SalesOrderHeader."Ship-to Name 2" := "Ship-to Name 2";
-            SalesOrderHeader."Ship-to Address" := "Ship-to Address";
-            SalesOrderHeader."Ship-to Address 2" := "Ship-to Address 2";
-            SalesOrderHeader."Ship-to City" := "Ship-to City";
-            SalesOrderHeader."Ship-to Post Code" := "Ship-to Post Code";
-            SalesOrderHeader."Ship-to County" := "Ship-to County";
-            SalesOrderHeader."Ship-to Country/Region Code" := "Ship-to Country/Region Code";
-            SalesOrderHeader."Ship-to Contact" := "Ship-to Contact";
-
-            SalesOrderHeader.Reserve := Reserve;
-            SalesOrderHeader."Prepayment %" := Cust."Prepayment %";
-            IF SalesOrderHeader."Posting Date" = 0D THEN
-              SalesOrderHeader."Posting Date" := WORKDATE;
-
-            SalesOrderHeader.MODIFY;
+            CreditLimitExceeded := CreateSalesHeader(Rec,Cust."Prepayment %");
 
             BlanketOrderSalesLine.RESET;
             BlanketOrderSalesLine.SETRANGE("Document Type","Document Type");
             BlanketOrderSalesLine.SETRANGE("Document No.","No.");
-
             IF BlanketOrderSalesLine.FINDSET THEN BEGIN
               TempSalesLine.DELETEALL;
               REPEAT
+                IF BlanketOrderSalesLine.Type = BlanketOrderSalesLine.Type::Resource THEN
+                  IF BlanketOrderSalesLine."No." <> '' THEN
+                    IF Resource.GET(BlanketOrderSalesLine."No.") THEN BEGIN
+                      Resource.CheckResourcePrivacyBlocked(FALSE);
+                      Resource.TESTFIELD(Blocked,FALSE);
+                    END;
                 IF (BlanketOrderSalesLine.Type = BlanketOrderSalesLine.Type::" ") OR (BlanketOrderSalesLine."Qty. to Ship" <> 0) THEN BEGIN
                   SalesLine.SETCURRENTKEY("Document Type","Blanket Order No.","Blanket Order Line No.");
                   SalesLine.SETRANGE("Blanket Order No.",BlanketOrderSalesLine."Document No.");
@@ -151,8 +120,8 @@ OBJECT Codeunit 87 Blanket Sales Order to Order
                     SalesOrderLine."Qty. to Asm. to Order (Base)" := SalesOrderLine."Quantity (Base)";
                   END;
                   SalesOrderLine.DefaultDeferralCode;
-
-                  SalesOrderLine.INSERT;
+                  IF IsSalesOrderLineToBeInserted(SalesOrderLine) THEN
+                    SalesOrderLine.INSERT;
 
                   IF ATOLink.AsmExistsForSalesLine(BlanketOrderSalesLine) THEN
                     ATOLink.MakeAsmOrderLinkedToSalesOrderLine(BlanketOrderSalesLine,SalesOrderLine);
@@ -175,6 +144,10 @@ OBJECT Codeunit 87 Blanket Sales Order to Order
 
             IF NOT ShouldRedistributeInvoiceAmount THEN
               SalesCalcDiscountByType.ResetRecalculateInvoiceDisc(SalesOrderHeader);
+
+            IF (NOT HideValidationDialog) AND (NOT CreditLimitExceeded) THEN
+              CustCheckCreditLimit.BlanketSalesOrderToOrderCheck(SalesOrderHeader);
+
             COMMIT;
 
             IF TempSalesLine.FIND('-') THEN
@@ -210,6 +183,41 @@ OBJECT Codeunit 87 Blanket Sales Order to Order
       QuantityOnOrders@1015 : Decimal;
       Text002@1002 : TextConst 'DAN=Der er intet at oprette.;ENU=There is nothing to create.';
       Text003@1017 : TextConst 'DAN=Fuldautomatisk reservation er ikke mulig.\Vil du reservere varerne manuelt?;ENU=Full automatic reservation was not possible.\Reserve items manually?';
+
+    LOCAL PROCEDURE CreateSalesHeader@6(SalesHeader@1000 : Record 36;PrepmtPercent@1001 : Decimal) CreditLimitExceeded : Boolean;
+    BEGIN
+      WITH SalesHeader DO BEGIN
+        SalesOrderHeader := SalesHeader;
+        SalesOrderHeader."Document Type" := SalesOrderHeader."Document Type"::Order;
+        IF NOT HideValidationDialog THEN
+          CreditLimitExceeded := CustCheckCreditLimit.SalesHeaderCheck(SalesOrderHeader);
+
+        SalesOrderHeader."No. Printed" := 0;
+        SalesOrderHeader.Status := SalesOrderHeader.Status::Open;
+        SalesOrderHeader."No." := '';
+
+        SalesOrderLine.LOCKTABLE;
+        SalesOrderHeader.INSERT(TRUE);
+
+        IF "Order Date" = 0D THEN
+          SalesOrderHeader."Order Date" := WORKDATE
+        ELSE
+          SalesOrderHeader."Order Date" := "Order Date";
+        IF "Posting Date" <> 0D THEN
+          SalesOrderHeader."Posting Date" := "Posting Date";
+        IF SalesOrderHeader."Posting Date" = 0D THEN
+          SalesOrderHeader."Posting Date" := WORKDATE;
+
+        SalesOrderHeader.InitFromSalesHeader(SalesHeader);
+        SalesOrderHeader.VALIDATE("Posting Date");
+        SalesOrderHeader."Outbound Whse. Handling Time" := "Outbound Whse. Handling Time";
+        SalesOrderHeader.Reserve := Reserve;
+
+        SalesOrderHeader."Prepayment %" := PrepmtPercent;
+
+        SalesOrderHeader.MODIFY;
+      END;
+    END;
 
     LOCAL PROCEDURE ResetQuantityFields@1(VAR TempSalesLine@1000 : Record 37);
     BEGIN
@@ -288,6 +296,17 @@ OBJECT Codeunit 87 Blanket Sales Order to Order
             END;
           UNTIL NEXT = 0;
       END;
+    END;
+
+    LOCAL PROCEDURE IsSalesOrderLineToBeInserted@5(SalesOrderLine@1000 : Record 37) : Boolean;
+    VAR
+      AttachedToSalesLine@1001 : Record 37;
+    BEGIN
+      IF SalesOrderLine."Attached to Line No." = 0 THEN
+        EXIT(TRUE);
+      EXIT(
+        AttachedToSalesLine.GET(
+          SalesOrderLine."Document Type",SalesOrderLine."Document No.",SalesOrderLine."Attached to Line No."));
     END;
 
     LOCAL PROCEDURE CopyCommentsFromBlanketToOrder@4(BlanketOrderSalesHeader@1000 : Record 36);

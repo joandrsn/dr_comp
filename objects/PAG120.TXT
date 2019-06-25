@@ -2,9 +2,9 @@ OBJECT Page 120 G/L Budget Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -39,7 +39,7 @@ OBJECT Page 120 G/L Budget Entries
                    COPYFILTER("Budget Name",GLBudgetName.Name);
                    GLBudgetName.FINDFIRST;
                  END;
-                 CurrPage.EDITABLE := NOT GLBudgetName.Blocked;
+                 CurrPage.EDITABLE := NOT GLBudgetName.Blocked AND IsEditable;
                  GLSetup.GET;
                  "Global Dimension 1 CodeEnable" := GLSetup."Global Dimension 1 Code" <> '';
                  "Global Dimension 2 CodeEnable" := GLSetup."Global Dimension 2 Code" <> '';
@@ -109,7 +109,7 @@ OBJECT Page 120 G/L Budget Entries
     OnDeleteRecord=BEGIN
                      IF "Entry No." < LowestModifiedEntryNo THEN
                        LowestModifiedEntryNo := "Entry No.";
-                     EXIT(TRUE);
+                     EXIT(IsEditable);
                    END;
 
     ActionList=ACTIONS
@@ -227,6 +227,7 @@ OBJECT Page 120 G/L Budget Entries
       "Budget Dimension 2 CodeEnable"@19071456 : Boolean INDATASET;
       "Budget Dimension 3 CodeEnable"@19074873 : Boolean INDATASET;
       "Budget Dimension 4 CodeEnable"@19060014 : Boolean INDATASET;
+      IsEditable@1003 : Boolean;
 
     LOCAL PROCEDURE GetFirstGLAcc@3(GLAccFilter@1000 : Text[250]) : Code[20];
     VAR
@@ -273,7 +274,7 @@ OBJECT Page 120 G/L Budget Entries
       END;
     END;
 
-    LOCAL PROCEDURE GetFirstBusUnit@5(BusUnitFilter@1000 : Text[250]) : Code[10];
+    LOCAL PROCEDURE GetFirstBusUnit@5(BusUnitFilter@1000 : Text[250]) : Code[20];
     VAR
       BusUnit@1001 : Record 220;
     BEGIN
@@ -284,6 +285,11 @@ OBJECT Page 120 G/L Budget Entries
 
         EXIT('');
       END;
+    END;
+
+    PROCEDURE SetEditable@6(NewIsEditable@1000 : Boolean);
+    BEGIN
+      IsEditable := NewIsEditable;
     END;
 
     BEGIN

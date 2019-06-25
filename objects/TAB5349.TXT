@@ -2,16 +2,16 @@ OBJECT Table 5349 CRM Incident
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=incident;
-    CaptionML=[DAN=Case;
-               ENU=Case];
+    CaptionML=[DAN=CRM Incident;
+               ENU=CRM Incident];
     Description=Service request case associated with a contract.;
   }
   FIELDS

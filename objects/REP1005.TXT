@@ -2,9 +2,9 @@ OBJECT Report 1005 Job Journal - Test
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -176,9 +176,12 @@ OBJECT Report 1005 Job Journal - Test
                                       Type::Resource:
                                         IF NOT Res.GET("No.") THEN
                                           AddError(STRSUBSTNO(Text005,"No."))
-                                        ELSE
+                                        ELSE BEGIN
+                                          IF Res."Privacy Blocked" THEN
+                                            AddError(STRSUBSTNO(Text006,Res.FIELDCAPTION("Privacy Blocked"),FALSE,"No."));
                                           IF Res.Blocked THEN
                                             AddError(STRSUBSTNO(Text006,Res.FIELDCAPTION(Blocked),FALSE,"No."));
+                                        END;
                                       Type::Item:
                                         IF NOT Item.GET("No.") THEN
                                           AddError(STRSUBSTNO(Text007,"No."))
@@ -2361,6 +2364,7 @@ OBJECT Report 1005 Job Journal - Test
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

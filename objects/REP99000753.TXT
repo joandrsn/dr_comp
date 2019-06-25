@@ -2,9 +2,9 @@ OBJECT Report 99000753 Quantity Explosion of BOM
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -1637,6 +1637,7 @@ OBJECT Report 99000753 Quantity Explosion of BOM
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

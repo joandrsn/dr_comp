@@ -2,9 +2,9 @@ OBJECT Report 106 Customer Detailed Aging
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -469,19 +469,19 @@ OBJECT Report 106 Customer Detailed Aging
                   <Width>3.50144cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.23112cm</Width>
+                  <Width>2.03465cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.79941cm</Width>
+                  <Width>1.40647cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.63822cm</Width>
+                  <Width>1.52034cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.08913cm</Width>
+                  <Width>2.59996cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.46834cm</Width>
+                  <Width>2.66481cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -2718,16 +2718,16 @@ OBJECT Report 106 Customer Detailed Aging
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>12.58931cm</Width>
+                  <Width>11.99989cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.63822cm</Width>
+                  <Width>1.54653cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.08913cm</Width>
+                  <Width>2.57376cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.46834cm</Width>
+                  <Width>2.66481cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -3271,6 +3271,7 @@ OBJECT Report 106 Customer Detailed Aging
               </Style>
             </Textbox>
             <Textbox Name="Customer_Detailed_AgingCaption1">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -3370,6 +3371,7 @@ OBJECT Report 106 Customer Detailed Aging
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

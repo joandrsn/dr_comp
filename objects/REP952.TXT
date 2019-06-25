@@ -2,9 +2,9 @@ OBJECT Report 952 Suggest Job Jnl. Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -54,6 +54,7 @@ OBJECT Report 952 Suggest Job Jnl. Lines
                              JobJnlLine."Time Sheet Line No." := TimeSheetDetail."Time Sheet Line No.";
                              JobJnlLine."Time Sheet Date" := TimeSheetDetail.Date;
                              JobJnlLine.VALIDATE("Job No.",TimeSheetDetail."Job No.");
+                             JobJnlLine."Source Code" := JobJnlTemplate."Source Code";
                              IF TimeSheetDetail."Job Task No." <> '' THEN
                                JobJnlLine.VALIDATE("Job Task No.",TimeSheetDetail."Job Task No.");
                              JobJnlLine.VALIDATE(Type,JobJnlLine.Type::Resource);
@@ -67,7 +68,6 @@ OBJECT Report 952 Suggest Job Jnl. Lines
                              JobJnlLine.Description := TempTimeSheetLine.Description;
                              JobJnlLine.VALIDATE(Quantity,QtyToPost);
                              JobJnlLine.VALIDATE(Chargeable,TempTimeSheetLine.Chargeable);
-                             JobJnlLine."Source Code" := JobJnlTemplate."Source Code";
                              JobJnlLine."Reason Code" := JobJnlBatch."Reason Code";
                              JobJnlLine.INSERT;
                            END;
@@ -96,28 +96,33 @@ OBJECT Report 952 Suggest Job Jnl. Lines
                              ENU=Options] }
 
       { 2   ;2   ;Field     ;
+                  Name=StartingDate;
                   CaptionML=[DAN=Startdato;
                              ENU=Starting Date];
                   SourceExpr=StartingDate }
 
       { 1   ;2   ;Field     ;
+                  Name=EndingDate;
                   CaptionML=[DAN=Slutdato;
                              ENU=Ending Date];
                   SourceExpr=EndingDate }
 
       { 3   ;2   ;Field     ;
+                  Name=ResourceNoFilter;
                   CaptionML=[DAN=Ressourcenummerfilter;
                              ENU=Resource No. Filter];
                   SourceExpr=ResourceNoFilter;
                   TableRelation=Resource }
 
       { 4   ;2   ;Field     ;
+                  Name=JobNoFilter;
                   CaptionML=[DAN=Sagsnummerfilter;
                              ENU=Job No. Filter];
                   SourceExpr=JobNoFilter;
                   TableRelation=Job }
 
       { 5   ;2   ;Field     ;
+                  Name=JobTaskNoFilter;
                   CaptionML=[DAN=Sagsopgavenummerfilter;
                              ENU=Job Task No. Filter];
                   SourceExpr=JobTaskNoFilter;

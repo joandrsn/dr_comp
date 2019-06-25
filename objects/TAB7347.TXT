@@ -2,9 +2,9 @@ OBJECT Table 7347 Internal Movement Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -31,7 +31,6 @@ OBJECT Table 7347 Internal Movement Line
 
     CaptionML=[DAN=Linje - intern flytning;
                ENU=Internal Movement Line];
-    PasteIsValid=No;
     LookupPageID=Page7361;
   }
   FIELDS
@@ -116,6 +115,10 @@ OBJECT Table 7347 Internal Movement Line
 
                                                                 IF CurrFieldNo = FIELDNO(Quantity) THEN
                                                                   CheckBinContentQty;
+
+                                                                IF NOT xRec.ISEMPTY THEN
+                                                                  IF NOT CheckQtyItemTrackingLines THEN
+                                                                    ERROR(ItemTrackingErr,"Item No.",TABLECAPTION);
                                                               END;
 
                                                    CaptionML=[DAN=Antal;
@@ -207,6 +210,7 @@ OBJECT Table 7347 Internal Movement Line
       Text001@1006 : TextConst 'DAN=må ikke være mere end %1 enheder;ENU=must not be greater than %1 units';
       Text002@1007 : TextConst 'DAN=%1 kan ikke omdøbes.;ENU=You cannot rename a %1.';
       LastLineNo@1012 : Integer;
+      ItemTrackingErr@1005 : TextConst '@@@=Item tracking numbers should not be higher than the item quantity.;DAN=Varesporingsnumre, der defineres for varen %1 i %2, er højere end vareantallet.\\Juster varesporingsnummeret, og øg vareantallet, hvis det er relevant.;ENU=Item tracking numbers defined for item %1 in the %2 are higher than the item quantity.\\Adjust the item tracking numbers and then increase the item quantity, if relevant.';
 
     PROCEDURE SetUpNewLine@3(LastInternalMovementLine@1000 : Record 7347);
     VAR
@@ -384,6 +388,34 @@ OBJECT Table 7347 Internal Movement Line
       TESTFIELD("Item No.");
       TESTFIELD("Qty. (Base)");
       WhseWorksheetLine.INIT;
+      SetFilterWhseWorksheetLine(WhseWorksheetLine);
+      WhseItemTrackingLinesForm.SetSource(WhseWorksheetLine,DATABASE::"Internal Movement Line");
+      WhseItemTrackingLinesForm.RUNMODAL;
+    END;
+
+    LOCAL PROCEDURE CheckQtyItemTrackingLines@2() : Boolean;
+    VAR
+      WhseWorksheetLine@1001 : Record 7326;
+      TotalWhseItemTrackingLine@1025 : Record 6550;
+      ItemTrackingMgt@1002 : Codeunit 6500;
+      SourceQuantityArray@1028 : ARRAY [2] OF Decimal;
+      UndefinedQtyArray@1027 : ARRAY [2] OF Decimal;
+      WhseSNRequired@1004 : Boolean;
+      WhseLNRequired@1003 : Boolean;
+    BEGIN
+      ItemTrackingMgt.CheckWhseItemTrkgSetup("Item No.",WhseSNRequired,WhseLNRequired,FALSE);
+      IF WhseSNRequired OR WhseLNRequired THEN BEGIN
+        WhseWorksheetLine.INIT;
+        SetFilterWhseWorksheetLine(WhseWorksheetLine);
+        EXIT(
+          ItemTrackingMgt.UpdateQuantities(
+            WhseWorksheetLine,TotalWhseItemTrackingLine,SourceQuantityArray,UndefinedQtyArray,DATABASE::"Internal Movement Line"));
+      END;
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE SetFilterWhseWorksheetLine@4(VAR WhseWorksheetLine@1000 : Record 7326);
+    BEGIN
       WhseWorksheetLine."Whse. Document Type" :=
         WhseWorksheetLine."Whse. Document Type"::"Internal Movement";
       WhseWorksheetLine."Whse. Document No." := "No.";
@@ -393,8 +425,6 @@ OBJECT Table 7347 Internal Movement Line
       WhseWorksheetLine."Qty. (Base)" := "Qty. (Base)";
       WhseWorksheetLine."Qty. to Handle (Base)" := "Qty. (Base)";
       WhseWorksheetLine."Qty. per Unit of Measure" := "Qty. per Unit of Measure";
-      WhseItemTrackingLinesForm.SetSource(WhseWorksheetLine,DATABASE::"Internal Movement Line");
-      WhseItemTrackingLinesForm.RUNMODAL;
     END;
 
     LOCAL PROCEDURE GetNextLineNo@16() : Integer;

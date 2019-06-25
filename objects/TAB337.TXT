@@ -2,9 +2,9 @@ OBJECT Table 337 Reservation Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -86,6 +86,7 @@ OBJECT Table 337 Reservation Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Oprettet af;
                                                               ENU=Created By] }
     { 27  ;   ;Changed By          ;Code50        ;TableRelation=User."User Name";
@@ -96,6 +97,7 @@ OBJECT Table 337 Reservation Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Ændret af;
                                                               ENU=Changed By] }
     { 28  ;   ;Positive            ;Boolean       ;CaptionML=[DAN=Positiv;
@@ -182,8 +184,9 @@ OBJECT Table 337 Reservation Entry
   {
     {    ;Entry No.,Positive                      ;Clustered=Yes }
     {    ;Source ID,Source Ref. No.,Source Type,Source Subtype,Source Batch Name,Source Prod. Order Line,Reservation Status,Shipment Date,Expected Receipt Date;
-                                                   SumIndexFields=Quantity (Base),Quantity;
+                                                   SumIndexFields=Quantity (Base),Quantity,Qty. to Handle (Base),Qty. to Invoice (Base);
                                                    MaintainSIFTIndex=No }
+    {    ;Item No.,Variant Code,Location Code      }
     {    ;Item No.,Variant Code,Location Code,Reservation Status,Shipment Date,Expected Receipt Date,Serial No.,Lot No.;
                                                    SumIndexFields=Quantity (Base);
                                                    MaintainSIFTIndex=No }

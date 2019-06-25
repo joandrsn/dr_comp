@@ -2,9 +2,9 @@ OBJECT Report 1306 Mini Sales - Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -985,7 +985,7 @@ OBJECT Report 1306 Mini Sales - Invoice
       TotalInclVATTextLbl@1002 : TextConst 'DAN=I alt %1 inkl. moms;ENU=Total %1 Incl. VAT';
       SalesInvoiceNoLbl@1004 : TextConst 'DAN=Salg - faktura %1;ENU=Sales - Invoice %1';
       TotalExclVATTextLbl@1006 : TextConst 'DAN=I alt %1 ekskl. moms;ENU=Total %1 Excl. VAT';
-      SalespersonLbl@1003 : TextConst 'DAN=Sælger;ENU=Sales person';
+      SalespersonLbl@1003 : TextConst 'DAN=Sælger;ENU=Salesperson';
       CompanyInfoBankAccNoLbl@1045 : TextConst 'DAN=Kontonr.;ENU=Account No.';
       CompanyInfoBankNameLbl@1046 : TextConst 'DAN=Bank;ENU=Bank';
       CompanyInfoGiroNoLbl@1049 : TextConst 'DAN=Gironr.;ENU=Giro No.';
@@ -9326,8 +9326,8 @@ OBJECT Report 1306 Mini Sales - Invoice
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=1,false,true)</Hidden>
                   </Visibility>
@@ -9367,9 +9367,8 @@ OBJECT Report 1306 Mini Sales - Invoice
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Left>0.4cm</Left>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=3,false,true)</Hidden>
                   </Visibility>
@@ -9411,8 +9410,8 @@ OBJECT Report 1306 Mini Sales - Invoice
                   <Value>=System.Convert.ToBase64String(Fields!CompanyPicture.Value)</Value>
                   <MIMEType>image/bmp</MIMEType>
                   <Sizing>FitProportional</Sizing>
-                  <Height>3cm</Height>
-                  <Width>6cm</Width>
+                  <Height>14mm</Height>
+                  <Width>60mm</Width>
                   <Visibility>
                     <Hidden>=iif(First(Fields!CompanyLogoPosition.Value, "DataSet_Result")=2,false,true)</Hidden>
                   </Visibility>

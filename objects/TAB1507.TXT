@@ -2,9 +2,9 @@ OBJECT Table 1507 Workflow Step Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -73,9 +73,11 @@ OBJECT Table 1507 Workflow Step Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Order               ;Integer       ;CaptionML=[DAN=Rækkefølge;
+    { 1   ;   ;Order               ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Rækkefølge;
                                                               ENU=Order] }
-    { 2   ;   ;Indent              ;Integer       ;CaptionML=[DAN=Indrykning;
+    { 2   ;   ;Indent              ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Indrykning;
                                                               ENU=Indent] }
     { 3   ;   ;Event Description   ;Text250       ;TableRelation="Workflow Event".Description;
                                                    OnValidate=VAR
@@ -111,9 +113,11 @@ OBJECT Table 1507 Workflow Step Buffer
                                                             END;
 
                                                    ValidateTableRelation=No;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Hændelsesbeskrivelse;
                                                               ENU=Event Description] }
-    { 4   ;   ;Condition           ;Text100       ;CaptionML=[DAN=Betingelse;
+    { 4   ;   ;Condition           ;Text100       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Betingelse;
                                                               ENU=Condition] }
     { 5   ;   ;Response Description;Text250       ;TableRelation="Workflow Response".Description;
                                                    OnValidate=VAR
@@ -147,27 +151,34 @@ OBJECT Table 1507 Workflow Step Buffer
                                                               END;
 
                                                    ValidateTableRelation=No;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Svarbeskrivelse;
                                                               ENU=Response Description] }
     { 7   ;   ;Event Step ID       ;Integer       ;TableRelation="Workflow Step".ID WHERE (Workflow Code=FIELD(Workflow Code),
                                                                                            Type=CONST(Event));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Id for hændelsestrin;
                                                               ENU=Event Step ID] }
     { 8   ;   ;Response Step ID    ;Integer       ;TableRelation="Workflow Step".ID WHERE (Workflow Code=FIELD(Workflow Code),
                                                                                            Type=CONST(Response));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Id for svartrin;
                                                               ENU=Response Step ID] }
     { 9   ;   ;Workflow Code       ;Code20        ;TableRelation=Workflow.Code;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Workflowkode;
                                                               ENU=Workflow Code] }
     { 10  ;   ;Parent Event Step ID;Integer       ;TableRelation="Workflow Step".ID WHERE (Workflow Code=FIELD(Workflow Code),
                                                                                            Type=CONST(Event));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Id for overordnet hændelsestrin;
                                                               ENU=Parent Event Step ID] }
     { 11  ;   ;Previous Workflow Step ID;Integer  ;TableRelation="Workflow Step".ID WHERE (Workflow Code=FIELD(Workflow Code));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Id for foregående workflowtrin;
                                                               ENU=Previous Workflow Step ID] }
-    { 12  ;   ;Response Description Style;Text30  ;CaptionML=[DAN=Svarbeskrivelsestype;
+    { 12  ;   ;Response Description Style;Text30  ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Svarbeskrivelsestype;
                                                               ENU=Response Description Style] }
     { 14  ;   ;Entry Point         ;Boolean       ;OnValidate=VAR
                                                                 WorkflowStep@1000 : Record 1502;
@@ -179,13 +190,17 @@ OBJECT Table 1507 Workflow Step Buffer
                                                                 WorkflowStep.MODIFY(TRUE);
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Startpunkt;
                                                               ENU=Entry Point] }
-    { 15  ;   ;Sequence No.        ;Integer       ;CaptionML=[DAN=Rækkefølgenr.;
+    { 15  ;   ;Sequence No.        ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Rækkefølgenr.;
                                                               ENU=Sequence No.] }
-    { 16  ;   ;Next Step Description;Text250      ;CaptionML=[DAN=Beskrivelse af næste trin;
+    { 16  ;   ;Next Step Description;Text250      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beskrivelse af næste trin;
                                                               ENU=Next Step Description] }
-    { 17  ;   ;Argument            ;GUID          ;CaptionML=[DAN=Argument;
+    { 17  ;   ;Argument            ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Argument;
                                                               ENU=Argument] }
     { 18  ;   ;Template            ;Boolean       ;FieldClass=FlowField;
                                                    CalcFormula=Lookup(Workflow.Template WHERE (Code=FIELD(Workflow Code)));
@@ -765,6 +780,8 @@ OBJECT Table 1507 Workflow Step Buffer
         TempWorkflowStepBuffer.COPY(Rec,TRUE);
         TempWorkflowStepBuffer.SETRANGE("Workflow Code","Workflow Code");
         TempWorkflowStepBuffer.SETFILTER(Order,'<%1',Order);
+        IF Indent > 0 THEN
+          TempWorkflowStepBuffer.SETFILTER(Indent,'<%1',Indent);
         IF TempWorkflowStepBuffer.FINDLAST THEN
           ParentEventWorkflowStep.GET(TempWorkflowStepBuffer."Workflow Code",TempWorkflowStepBuffer."Event Step ID");
       END;

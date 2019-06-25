@@ -2,13 +2,14 @@ OBJECT Codeunit 1218 Map Incoming Doc to Purch Doc
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
     TableNo=1220;
+    Permissions=TableData 1221=d;
     OnRun=VAR
             ErrorMessage@1000 : Record 700;
             IncomingDocument@1001 : Record 130;

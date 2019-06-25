@@ -2,9 +2,9 @@ OBJECT Codeunit 397 Mail
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -243,11 +243,11 @@ OBJECT Codeunit 397 Mail
     LOCAL PROCEDURE GetActiveDirectoryMailFromUser@16() : Text;
     VAR
       FileManagement@1000 : Codeunit 419;
-      MailHelpers@1002 : DotNet "'Microsoft.Dynamics.Nav.SMTP, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.SMTP.MailHelpers" RUNONCLIENT;
+      ActiveDirectoryEmailAddress@1001 : Text;
     BEGIN
       IF FileManagement.CanRunDotNetOnClient THEN
-        IF CANLOADTYPE(MailHelpers) THEN
-          EXIT(MailHelpers.TryGetEmailAddressFromActiveDirectory);
+        IF TryGetEmailAddressFromActiveDirectory(ActiveDirectoryEmailAddress) THEN;
+      EXIT(ActiveDirectoryEmailAddress);
     END;
 
     LOCAL PROCEDURE GetAuthenticationEmailFromUserTable@15() : Text;
@@ -266,6 +266,15 @@ OBJECT Codeunit 397 Mail
       UserSetup.SETRANGE("User ID",USERID);
       IF UserSetup.FINDFIRST THEN
         EXIT(UserSetup."E-Mail");
+    END;
+
+    [TryFunction]
+    LOCAL PROCEDURE TryGetEmailAddressFromActiveDirectory@19(VAR ActiveDirectoryEmailAddress@1000 : Text);
+    VAR
+      MailHelpers@1002 : DotNet "'Microsoft.Dynamics.Nav.SMTP, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.SMTP.MailHelpers" RUNONCLIENT;
+    BEGIN
+      IF CANLOADTYPE(MailHelpers) THEN
+        ActiveDirectoryEmailAddress := MailHelpers.TryGetEmailAddressFromActiveDirectory;
     END;
 
     PROCEDURE FormatTextForHtml@3(Text@1003 : Text) : Text;

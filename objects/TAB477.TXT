@@ -2,9 +2,9 @@ OBJECT Table 477 Report Inbox
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -16,7 +16,8 @@ OBJECT Table 477 Report Inbox
     { 1   ;   ;Entry No.           ;Integer       ;AutoIncrement=Yes;
                                                    CaptionML=[DAN=Løbenummer;
                                                               ENU=Entry No.] }
-    { 2   ;   ;User ID             ;Text65        ;CaptionML=[DAN=Bruger-id;
+    { 2   ;   ;User ID             ;Text65        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    Editable=No }
     { 3   ;   ;Report Output       ;BLOB          ;CaptionML=[DAN=Rapportresultat;
@@ -76,7 +77,11 @@ OBJECT Table 477 Report Inbox
         MESSAGE(ReportIsEmptyMsg);
         EXIT;
       END;
-      FileName := DELCHR("Report Name",'=','\/:*?"<>|') + Suffix;
+      IF "Report Name" <> '' THEN
+        FileName := DELCHR("Report Name",'=','/:*?"<>|') + Suffix
+      ELSE
+        FileName := DELCHR(Description,'=','/:*?"<>|') + Suffix;
+
       "Report Output".CREATEINSTREAM(Instr);
       Downloaded := DOWNLOADFROMSTREAM(Instr,FileDownLoadTxt,'','',FileName);
 

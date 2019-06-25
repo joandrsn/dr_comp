@@ -2,9 +2,9 @@ OBJECT Table 5997 Standard Service Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -19,7 +19,6 @@ OBJECT Table 5997 Standard Service Line
 
     CaptionML=[DAN=Standardservicelinje;
                ENU=Standard Service Line];
-    PasteIsValid=No;
   }
   FIELDS
   {
@@ -82,6 +81,7 @@ OBJECT Table 5997 Standard Service Line
                                                                     Type::Resource:
                                                                       BEGIN
                                                                         Res.GET("No.");
+                                                                        Res.CheckResourcePrivacyBlocked(FALSE);
                                                                         Res.TESTFIELD(Blocked,FALSE);
                                                                         Res.TESTFIELD("Gen. Prod. Posting Group");
                                                                         Description := Res.Name;

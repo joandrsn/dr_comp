@@ -2,9 +2,9 @@ OBJECT Codeunit 5811 Change Exp. Cost Post. to G/L
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -57,7 +57,7 @@ OBJECT Codeunit 5811 Change Exp. Cost Post. to G/L
       ValueEntry@1001 : Record 5802;
       PostValueEntryToGL@1006 : Record 5811;
       OldItemNo@1004 : Code[20];
-      LastUpdateTime@1005 : Time;
+      LastUpdateDateTime@1005 : DateTime;
       RecordNo@1002 : Integer;
       NoOfRecords@1003 : Integer;
     BEGIN
@@ -66,7 +66,7 @@ OBJECT Codeunit 5811 Change Exp. Cost Post. to G/L
         Text005);
 
       ValueEntry.LOCKTABLE;
-      LastUpdateTime := TIME;
+      LastUpdateDateTime := CURRENTDATETIME;
 
       IF PostValueEntryToGL.FINDSET THEN
         REPEAT
@@ -87,9 +87,9 @@ OBJECT Codeunit 5811 Change Exp. Cost Post. to G/L
               OldItemNo := "Item No.";
             END;
 
-            IF TIME - LastUpdateTime >= 1000 THEN BEGIN
+            IF CURRENTDATETIME - LastUpdateDateTime >= 1000 THEN BEGIN
               Window.UPDATE(2,ROUND(RecordNo / NoOfRecords * 10000,1));
-              LastUpdateTime := TIME;
+              LastUpdateDateTime := CURRENTDATETIME;
             END;
 
             IF (Quantity <> "Invoiced Quantity") AND (Quantity <> 0) THEN

@@ -2,9 +2,9 @@ OBJECT Report 497 Batch Post Purchase Invoices
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -36,6 +36,8 @@ OBJECT Report 497 Batch Post Purchase Invoices
 
                                   IF CalcInvDisc THEN
                                     CalculateInvoiceDiscount;
+
+                                  BatchConfirmUpdateDeferralDate(BatchConfirm,ReplacePostingDate,PostingDateReq);
 
                                   Counter := Counter + 1;
                                   Window.UPDATE(1,"No.");
@@ -95,6 +97,7 @@ OBJECT Report 497 Batch Post Purchase Invoices
                               }
 
       { 3   ;2   ;Field     ;
+                  Name=ReplaceDocumentDate;
                   CaptionML=[DAN=Erstat bilagsdato;
                              ENU=Replace Document Date];
                   SourceExpr=ReplaceDocumentDate }
@@ -133,6 +136,7 @@ OBJECT Report 497 Batch Post Purchase Invoices
       ReplaceDocumentDate@1013 : Boolean;
       CalcInvDisc@1014 : Boolean;
       Text003@1015 : TextConst 'DAN=Den valutakurs, som er knyttet til den nye bogføringsdato i købshovedet, gælder ikke for købslinjerne.;ENU=The exchange rate associated with the new posting date on the purchase header will not apply to the purchase lines.';
+      BatchConfirm@1016 : ' ,Skip,Update';
 
     LOCAL PROCEDURE CalculateInvoiceDiscount@1();
     BEGIN

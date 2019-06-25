@@ -2,9 +2,9 @@ OBJECT Table 485 Business Chart Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -17,34 +17,44 @@ OBJECT Table 485 Business Chart Buffer
   }
   FIELDS
   {
-    { 1   ;   ;ID                  ;Integer       ;CaptionML=[DAN=Id;
+    { 1   ;   ;ID                  ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Id;
                                                               ENU=ID] }
-    { 2   ;   ;Chart Type          ;Option        ;CaptionML=[DAN=Diagramtype;
+    { 2   ;   ;Chart Type          ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Diagramtype;
                                                               ENU=Chart Type];
                                                    OptionCaptionML=[DAN=Punkt,,Boble,Linje,,Trinlinje,,,,,Søjlediagram,StabletSøjlediagram,StabletSøjlediagram100,Områdediagram,,StabletOmrådediagram,StabletOmrådediagram100,Cirkeldiagram,Kransediagram,,,Interval,,,,Radar,,,,,,,,Tragt;
                                                                     ENU=Point,,Bubble,Line,,StepLine,,,,,Column,StackedColumn,StackedColumn100,Area,,StackedArea,StackedArea100,Pie,Doughnut,,,Range,,,,Radar,,,,,,,,Funnel];
                                                    OptionString=Point,,Bubble,Line,,StepLine,,,,,Column,StackedColumn,StackedColumn100,Area,,StackedArea,StackedArea100,Pie,Doughnut,,,Range,,,,Radar,,,,,,,,Funnel }
-    { 3   ;   ;Data Type           ;Option        ;CaptionML=[DAN=Datatype;
+    { 3   ;   ;Data Type           ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Datatype;
                                                               ENU=Data Type];
                                                    OptionCaptionML=[DAN=Streng,Heltal,Decimal,DatoKlokkeslæt;
                                                                     ENU=String,Integer,Decimal,DateTime];
                                                    OptionString=String,Integer,Decimal,DateTime }
-    { 4   ;   ;XML                 ;BLOB          ;CaptionML=[DAN=XML;
+    { 4   ;   ;XML                 ;BLOB          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=XML;
                                                               ENU=XML] }
-    { 5   ;   ;Drill-Down X Index  ;Integer       ;CaptionML=[DAN=Detailudledning x-indeks;
+    { 5   ;   ;Drill-Down X Index  ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Detailudledning x-indeks;
                                                               ENU=Drill-Down X Index] }
-    { 6   ;   ;Drill-Down Y Value  ;Decimal       ;CaptionML=[DAN=Detailudledning y-værdi;
+    { 6   ;   ;Drill-Down Y Value  ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Detailudledning y-værdi;
                                                               ENU=Drill-Down Y Value] }
-    { 7   ;   ;Drill-Down Measure Index;Integer   ;CaptionML=[DAN=Detailudledning målindeks;
+    { 7   ;   ;Drill-Down Measure Index;Integer   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Detailudledning målindeks;
                                                               ENU=Drill-Down Measure Index] }
-    { 8   ;   ;Period Length       ;Option        ;CaptionML=[DAN=Periodelængde;
+    { 8   ;   ;Period Length       ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Periodelængde;
                                                               ENU=Period Length];
                                                    OptionCaptionML=[DAN=Dag,Uge,Måned,Kvartal,År,Regnskabsperiode,Ingen;
                                                                     ENU=Day,Week,Month,Quarter,Year,Accounting Period,None];
                                                    OptionString=Day,Week,Month,Quarter,Year,Accounting Period,None }
-    { 9   ;   ;Period Filter Start Date;Date      ;CaptionML=[DAN=Startdato for periodefilter;
+    { 9   ;   ;Period Filter Start Date;Date      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Startdato for periodefilter;
                                                               ENU=Period Filter Start Date] }
-    { 10  ;   ;Period Filter End Date;Date        ;CaptionML=[DAN=Slutdato for periodefilter;
+    { 10  ;   ;Period Filter End Date;Date        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Slutdato for periodefilter;
                                                               ENU=Period Filter End Date] }
   }
   KEYS

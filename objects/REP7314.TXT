@@ -2,9 +2,9 @@ OBJECT Report 7314 Whse. Change Unit of Measure
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -51,7 +51,8 @@ OBJECT Report 7314 Whse. Change Unit of Measure
                              ENU=Options] }
 
       { 1   ;2   ;Field     ;
-                  SourceExpr="Action Type" }
+                  SourceExpr="Action Type";
+                  Editable=FALSE }
 
       { 5   ;2   ;Field     ;
                   SourceExpr="Qty. to Handle";
@@ -62,7 +63,8 @@ OBJECT Report 7314 Whse. Change Unit of Measure
                              ENU=From] }
 
       { 3   ;3   ;Field     ;
-                  SourceExpr="Unit of Measure Code" }
+                  SourceExpr="Unit of Measure Code";
+                  Editable=FALSE }
 
       { 8   ;2   ;Group     ;
                   CaptionML=[DAN=Til;

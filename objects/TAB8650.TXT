@@ -2,9 +2,9 @@ OBJECT Table 8650 DataExch-RapidStart Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,9 +13,11 @@ OBJECT Table 8650 DataExch-RapidStart Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Node ID             ;Text250       ;CaptionML=[DAN=Node-id;
+    { 1   ;   ;Node ID             ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Node-id;
                                                               ENU=Node ID] }
-    { 2   ;   ;RapidStart No.      ;Integer       ;CaptionML=[DAN=RapidStart-nr.;
+    { 2   ;   ;RapidStart No.      ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=RapidStart-nr.;
                                                               ENU=RapidStart No.] }
   }
   KEYS

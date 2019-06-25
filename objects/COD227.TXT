@@ -2,9 +2,9 @@ OBJECT Codeunit 227 VendEntry-Apply Posted Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-04-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.51333;
   }
   PROPERTIES
   {
@@ -20,7 +20,7 @@ OBJECT Codeunit 227 VendEntry-Apply Posted Entries
     VAR
       PostingApplicationMsg@1000 : TextConst 'DAN=Udligningen bogføres...;ENU=Posting application...';
       MustNotBeBeforeErr@1002 : TextConst 'DAN=Den angivne bogføringsdato må ikke ligge før bogføringsdatoen for kreditorposten.;ENU=The posting date entered must not be before the posting date on the vendor ledger entry.';
-      NoEntriesAppliedErr@1003 : TextConst 'DAN=Applikationen kunne ikke bogføres, fordi én eller flere valgte poster har samme fortegn som den post, du anvender.;ENU=The application could not be posted, because one or more selected entries have the same sign as the entry you are applying to.';
+      NoEntriesAppliedErr@1003 : TextConst '@@@=%1 - Caption of "Applies to ID" field of Gen. Journal Line;DAN=Der kan ikke bogføres, fordi du ikke har angivet, hvilken post der skal udlignes. Du skal angive en post i feltet %1 for en eller flere åbne poster.;ENU=Cannot post because you did not specify which entry to apply. You must specify an entry in the %1 field for one or more open entries.';
       UnapplyPostedAfterThisEntryErr@1018 : TextConst 'DAN=Før du kan annullere udligningen af denne post, skal du først annullere udligningen af alle udligningsposter, der er bogført efter denne post.;ENU=Before you can unapply this entry, you must first unapply all application entries that were posted after this entry.';
       NoApplicationEntryErr@1017 : TextConst 'DAN=Kreditorløbenr. %1 har ikke en udligningspost.;ENU=Vendor Ledger Entry No. %1 does not have an application entry.';
       UnapplyingMsg@1015 : TextConst 'DAN=Annullerer udligning og bogfører...;ENU=Unapplying and posting...';
@@ -38,10 +38,9 @@ OBJECT Codeunit 227 VendEntry-Apply Posted Entries
       PaymentToleranceMgt@1011 : Codeunit 426;
     BEGIN
       WITH VendLedgEntry DO BEGIN
-        PaymentToleranceMgt.ApplyPostedEntriesMode;
         IF NOT PreviewMode THEN
           IF NOT PaymentToleranceMgt.PmtTolVend(VendLedgEntry) THEN
-            EXIT;
+            ERROR('');
         GET("Entry No.");
 
         IF ApplicationDate = 0D THEN
@@ -117,7 +116,7 @@ OBJECT Codeunit 227 VendEntry-Apply Posted Entries
 
         EntryNoAfterApplication := FindLastApplDtldVendLedgEntry;
         IF EntryNoAfterApplication = EntryNoBeforeApplication THEN
-          ERROR(NoEntriesAppliedErr);
+          ERROR(STRSUBSTNO(NoEntriesAppliedErr,GenJnlLine.FIELDCAPTION("Applies-to ID")));
 
         IF PreviewMode THEN
           ERROR(GenJnlPostPreview.GetPreviewModeErrMessage);
@@ -228,6 +227,8 @@ OBJECT Codeunit 227 VendEntry-Apply Posted Entries
       SourceCodeSetup@1006 : Record 242;
       GenJnlLine@1005 : Record 81;
       DateComprReg@1014 : Record 87;
+      TempVendorLedgerEntry@1015 : TEMPORARY Record 25;
+      AdjustExchangeRates@1016 : Report 595;
       GenJnlPostLine@1003 : Codeunit 12;
       GenJnlPostPreview@1011 : Codeunit 19;
       Window@1002 : Dialog;
@@ -295,7 +296,9 @@ OBJECT Codeunit 227 VendEntry-Apply Posted Entries
         GenJnlLine."Source Currency Code" := "Currency Code";
         GenJnlLine."System-Created Entry" := TRUE;
         Window.OPEN(UnapplyingMsg);
+        CollectAffectedLedgerEntries(TempVendorLedgerEntry,DtldVendLedgEntry2);
         GenJnlPostLine.UnapplyVendLedgEntry(GenJnlLine,DtldVendLedgEntry2);
+        AdjustExchangeRates.AdjustExchRateVend(GenJnlLine,TempVendorLedgerEntry);
 
         IF PreviewMode THEN
           ERROR(GenJnlPostPreview.GetPreviewModeErrMessage);
@@ -379,6 +382,30 @@ OBJECT Codeunit 227 VendEntry-Apply Posted Entries
       END;
     END;
 
+    LOCAL PROCEDURE CollectAffectedLedgerEntries@31(VAR TempVendorLedgerEntry@1000 : TEMPORARY Record 25;DetailedVendorLedgEntry2@1001 : Record 380);
+    VAR
+      DetailedVendorLedgEntry@1002 : Record 380;
+    BEGIN
+      TempVendorLedgerEntry.DELETEALL;
+      WITH DetailedVendorLedgEntry DO BEGIN
+        IF DetailedVendorLedgEntry2."Transaction No." = 0 THEN BEGIN
+          SETCURRENTKEY("Application No.","Vendor No.","Entry Type");
+          SETRANGE("Application No.",DetailedVendorLedgEntry2."Application No.");
+        END ELSE BEGIN
+          SETCURRENTKEY("Transaction No.","Vendor No.","Entry Type");
+          SETRANGE("Transaction No.",DetailedVendorLedgEntry2."Transaction No.");
+        END;
+        SETRANGE("Vendor No.",DetailedVendorLedgEntry2."Vendor No.");
+        SETRANGE(Unapplied,FALSE);
+        SETFILTER("Entry Type",'<>%1',"Entry Type"::"Initial Entry");
+        IF FINDSET THEN
+          REPEAT
+            TempVendorLedgerEntry."Entry No." := "Vendor Ledger Entry No.";
+            IF TempVendorLedgerEntry.INSERT THEN;
+          UNTIL NEXT = 0;
+      END;
+    END;
+
     LOCAL PROCEDURE FindLastApplTransactionEntry@11(VendLedgEntryNo@1000 : Integer) : Integer;
     VAR
       DtldVendLedgEntry@1001 : Record 380;
@@ -399,7 +426,10 @@ OBJECT Codeunit 227 VendEntry-Apply Posted Entries
     PROCEDURE PreviewApply@16(VendorLedgerEntry@1003 : Record 25;DocumentNo@1002 : Code[20];ApplicationDate@1001 : Date);
     VAR
       GenJnlPostPreview@1004 : Codeunit 19;
+      PaymentToleranceMgt@1005 : Codeunit 426;
     BEGIN
+      IF NOT PaymentToleranceMgt.PmtTolVend(VendorLedgerEntry) THEN
+        EXIT;
       PreviewMode := TRUE;
       GenJnlPostPreview.Start;
       IF NOT Apply(VendorLedgerEntry,DocumentNo,ApplicationDate) THEN BEGIN

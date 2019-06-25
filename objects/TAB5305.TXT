@@ -2,9 +2,9 @@ OBJECT Table 5305 Outlook Synch. User Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -65,6 +65,7 @@ OBJECT Table 5305 Outlook Synch. User Setup
 
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    NotBlank=Yes }
@@ -150,7 +151,8 @@ OBJECT Table 5305 Outlook Synch. User Setup
                                                    OptionString=Bidirectional,Microsoft Dynamics NAV to Outlook,Outlook to Microsoft Dynamics NAV }
     { 6   ;   ;Last Synch. Time    ;DateTime      ;CaptionML=[DAN=Tidspunkt for sidste synkronisering;
                                                               ENU=Last Synch. Time] }
-    { 7   ;   ;Record GUID         ;GUID          ;CaptionML=[DAN=Record-GUID;
+    { 7   ;   ;Record GUID         ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-GUID;
                                                               ENU=Record GUID];
                                                    Editable=No }
     { 8   ;   ;No. of Elements     ;Integer       ;FieldClass=FlowField;

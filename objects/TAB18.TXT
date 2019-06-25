@@ -2,13 +2,20 @@ OBJECT Table 18 Customer
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=26-09-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974,NAVDK9.00.00.44974;
+    Version List=NAVW19.00.00.50637,NAVDK9.00.00.50637;
   }
   PROPERTIES
   {
-    Permissions=TableData 21=r;
+    Permissions=TableData 21=r,
+                TableData 167=r,
+                TableData 249=rd,
+                TableData 5900=r,
+                TableData 5940=rm,
+                TableData 5965=rm,
+                TableData 7002=rd,
+                TableData 7004=rd;
     DataCaptionFields=No.,Name;
     OnInsert=BEGIN
                IF "No." = '' THEN BEGIN
@@ -30,28 +37,7 @@ OBJECT Table 18 Customer
     OnModify=BEGIN
                "Last Date Modified" := TODAY;
 
-               IF (Name <> xRec.Name) OR
-                  ("Search Name" <> xRec."Search Name") OR
-                  ("Name 2" <> xRec."Name 2") OR
-                  (Address <> xRec.Address) OR
-                  ("Address 2" <> xRec."Address 2") OR
-                  (City <> xRec.City) OR
-                  ("Phone No." <> xRec."Phone No.") OR
-                  ("Telex No." <> xRec."Telex No.") OR
-                  ("Territory Code" <> xRec."Territory Code") OR
-                  ("Currency Code" <> xRec."Currency Code") OR
-                  ("Language Code" <> xRec."Language Code") OR
-                  ("Salesperson Code" <> xRec."Salesperson Code") OR
-                  ("Country/Region Code" <> xRec."Country/Region Code") OR
-                  ("Fax No." <> xRec."Fax No.") OR
-                  ("Telex Answer Back" <> xRec."Telex Answer Back") OR
-                  ("VAT Registration No." <> xRec."VAT Registration No.") OR
-                  ("Post Code" <> xRec."Post Code") OR
-                  (County <> xRec.County) OR
-                  ("E-Mail" <> xRec."E-Mail") OR
-                  ("Home Page" <> xRec."Home Page") OR
-                  (Contact <> xRec.Contact)
-               THEN BEGIN
+               IF IsContactUpdateNeeded THEN BEGIN
                  MODIFY;
                  UpdateContFromCust.OnModify(Rec);
                  IF NOT FIND THEN BEGIN
@@ -133,10 +119,6 @@ OBJECT Table 18 Customer
                END;
 
                SalesOrderLine.SETCURRENTKEY("Document Type","Bill-to Customer No.");
-               SalesOrderLine.SETFILTER(
-                 "Document Type",'%1|%2',
-                 SalesOrderLine."Document Type"::Order,
-                 SalesOrderLine."Document Type"::"Return Order");
                SalesOrderLine.SETRANGE("Bill-to Customer No.","No.");
                IF SalesOrderLine.FINDFIRST THEN
                  ERROR(
@@ -217,8 +199,7 @@ OBJECT Table 18 Customer
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Name;
-                                                   OnValidate=BEGIN
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   SalesSetup.GET;
                                                                   NoSeriesMgt.TestManual(SalesSetup."Customer Nos.");
@@ -228,6 +209,7 @@ OBJECT Table 18 Customer
                                                                   "Invoice Disc. Code" := "No.";
                                                               END;
 
+                                                   AltSearchField=Search Name;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 2   ;   ;Name                ;Text50        ;OnValidate=BEGIN
@@ -326,7 +308,11 @@ OBJECT Table 18 Customer
     { 28  ;   ;Fin. Charge Terms Code;Code10      ;TableRelation="Finance Charge Terms";
                                                    CaptionML=[DAN=Rentebetingelseskode;
                                                               ENU=Fin. Charge Terms Code] }
-    { 29  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 29  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
+                                                   OnValidate=BEGIN
+                                                                ValidateSalesPersonCode;
+                                                              END;
+
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 30  ;   ;Shipment Method Code;Code10        ;TableRelation="Shipment Method";
@@ -366,7 +352,18 @@ OBJECT Table 18 Customer
                                                    CaptionML=[DAN=Bemærkning;
                                                               ENU=Comment];
                                                    Editable=No }
-    { 39  ;   ;Blocked             ;Option        ;CaptionML=[DAN=Spærret;
+    { 39  ;   ;Blocked             ;Option        ;OnValidate=BEGIN
+                                                                IF (Blocked <> Blocked::All) AND "Privacy Blocked" THEN
+                                                                  IF GUIALLOWED THEN
+                                                                    IF CONFIRM(ConfirmBlockedPrivacyBlockedQst) THEN
+                                                                      "Privacy Blocked" := FALSE
+                                                                    ELSE
+                                                                      ERROR('')
+                                                                  ELSE
+                                                                    ERROR(CanNotChangeBlockedDueToPrivacyBlockedErr);
+                                                              END;
+
+                                                   CaptionML=[DAN=Spærret;
                                                               ENU=Blocked];
                                                    OptionCaptionML=[DAN=" ,Lever,Fakturer,Alle";
                                                                     ENU=" ,Ship,Invoice,All"];
@@ -866,22 +863,23 @@ OBJECT Table 18 Customer
                                                                 ICPartner@1002 : Record 413;
                                                               BEGIN
                                                                 IF xRec."IC Partner Code" <> "IC Partner Code" THEN BEGIN
-                                                                  CustLedgEntry.SETCURRENTKEY("Customer No.","Posting Date");
-                                                                  CustLedgEntry.SETRANGE("Customer No.","No.");
-                                                                  AccountingPeriod.SETRANGE(Closed,FALSE);
-                                                                  IF AccountingPeriod.FINDFIRST THEN
-                                                                    CustLedgEntry.SETFILTER("Posting Date",'>=%1',AccountingPeriod."Starting Date");
-                                                                  IF CustLedgEntry.FINDFIRST THEN
-                                                                    IF NOT CONFIRM(Text011,FALSE,TABLECAPTION) THEN
-                                                                      "IC Partner Code" := xRec."IC Partner Code";
-
-                                                                  CustLedgEntry.RESET;
                                                                   IF NOT CustLedgEntry.SETCURRENTKEY("Customer No.",Open) THEN
                                                                     CustLedgEntry.SETCURRENTKEY("Customer No.");
                                                                   CustLedgEntry.SETRANGE("Customer No.","No.");
                                                                   CustLedgEntry.SETRANGE(Open,TRUE);
                                                                   IF CustLedgEntry.FINDLAST THEN
                                                                     ERROR(Text012,FIELDCAPTION("IC Partner Code"),TABLECAPTION);
+
+                                                                  CustLedgEntry.RESET;
+                                                                  CustLedgEntry.SETCURRENTKEY("Customer No.","Posting Date");
+                                                                  CustLedgEntry.SETRANGE("Customer No.","No.");
+                                                                  AccountingPeriod.SETRANGE(Closed,FALSE);
+                                                                  IF AccountingPeriod.FINDFIRST THEN BEGIN
+                                                                    CustLedgEntry.SETFILTER("Posting Date",'>=%1',AccountingPeriod."Starting Date");
+                                                                    IF CustLedgEntry.FINDFIRST THEN
+                                                                      IF NOT CONFIRM(Text011,FALSE,TABLECAPTION) THEN
+                                                                        "IC Partner Code" := xRec."IC Partner Code";
+                                                                  END;
                                                                 END;
 
                                                                 IF "IC Partner Code" <> '' THEN BEGIN
@@ -985,6 +983,15 @@ OBJECT Table 18 Customer
                                                    OptionCaptionML=[DAN=" ,Virksomhed,Person";
                                                                     ENU=" ,Company,Person"];
                                                    OptionString=[ ,Company,Person] }
+    { 150 ;   ;Privacy Blocked     ;Boolean       ;OnValidate=BEGIN
+                                                                IF "Privacy Blocked" THEN
+                                                                  Blocked := Blocked::All
+                                                                ELSE
+                                                                  Blocked := Blocked::" ";
+                                                              END;
+
+                                                   CaptionML=[DAN=Beskyttelse af personlige oplysninger spærret;
+                                                              ENU=Privacy Blocked] }
     { 288 ;   ;Preferred Bank Account;Code10      ;TableRelation="Customer Bank Account".Code WHERE (Customer No.=FIELD(No.));
                                                    CaptionML=[DAN=Foretrukken bankkonto;
                                                               ENU=Preferred Bank Account] }
@@ -1316,6 +1323,7 @@ OBJECT Table 18 Customer
       ServContract@1026 : Record 5965;
       ServHeader@1034 : Record 5900;
       ServiceItem@1027 : Record 5940;
+      SalespersonPurchaser@1060 : Record 13;
       PaymentToleranceMgt@1038 : Codeunit 426;
       NoSeriesMgt@1011 : Codeunit 396;
       MoveEntries@1012 : Codeunit 361;
@@ -1340,6 +1348,10 @@ OBJECT Table 18 Customer
       Text13606@1101100001 : TextConst 'DAN=indeholder ikke et gyldigt 13-cifret EAN-nr.;ENU=does not contain a valid, 13-digit EAN No.';
       AllowPaymentToleranceQst@1037 : TextConst 'DAN=Vil du tillade betalingstolerance for poster, der aktuelt er åbne?;ENU=Do you want to allow payment tolerance for entries that are currently open?';
       RemovePaymentRoleranceQst@1019 : TextConst 'DAN=Vil du fjerne betalingstolerance fra poster, der aktuelt er åbne?;ENU=Do you want to remove payment tolerance from entries that are currently open?';
+      PrivacyBlockedActionErr@1061 : TextConst '@@@="%1 = action (create or post), %2 = customer code.";DAN=Du kan ikke %1 denne bilagstype, når beskyttelse af personlige oplysninger spærret for debitor %2.;ENU=You cannot %1 this type of document when Customer %2 is blocked for privacy.';
+      PrivacyBlockedGenericTxt@1062 : TextConst '@@@="%1 = customer code";DAN=Beskyttelse af personlige oplysninger spærret må ikke være gældende for debitoren %1.;ENU=Privacy Blocked must not be true for customer %1.';
+      ConfirmBlockedPrivacyBlockedQst@1071 : TextConst 'DAN=Hvis du ændrer feltet Spærret, ændres feltet Beskyttelse af personlige oplysninger spærret til Nej. Vil du fortsætte?;ENU=If you change the Blocked field, the Privacy Blocked field is changed to No. Do you want to continue?';
+      CanNotChangeBlockedDueToPrivacyBlockedErr@1072 : TextConst 'DAN=Feltet Spærret kan ikke ændres, fordi brugeren er blokeret af sikkerhedsmæssige årsager.;ENU=The Blocked field cannot be changed because the user is blocked for privacy reasons.';
 
     PROCEDURE AssistEdit@2(OldCust@1000 : Record 18) : Boolean;
     VAR
@@ -1396,6 +1408,9 @@ OBJECT Table 18 Customer
     PROCEDURE CheckBlockedCustOnDocs@5(Cust2@1000 : Record 18;DocType@1001 : 'Quote,Order,Invoice,Credit Memo,Blanket Order,Return Order';Shipment@1005 : Boolean;Transaction@1003 : Boolean);
     BEGIN
       WITH Cust2 DO BEGIN
+        IF "Privacy Blocked" THEN
+          CustPrivacyBlockedErrorMessage(Cust2,Transaction);
+
         IF ((Blocked = Blocked::All) OR
             ((Blocked = Blocked::Invoice) AND (DocType IN [DocType::Quote,DocType::Order,DocType::Invoice,DocType::"Blanket Order"])) OR
             ((Blocked = Blocked::Ship) AND (DocType IN [DocType::Quote,DocType::Order,DocType::"Blanket Order"]) AND
@@ -1410,6 +1425,9 @@ OBJECT Table 18 Customer
     PROCEDURE CheckBlockedCustOnJnls@7(Cust2@1003 : Record 18;DocType@1002 : ' ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund';Transaction@1000 : Boolean);
     BEGIN
       WITH Cust2 DO BEGIN
+        IF "Privacy Blocked" THEN
+          CustPrivacyBlockedErrorMessage(Cust2,Transaction);
+
         IF (Blocked = Blocked::All) OR
            ((Blocked = Blocked::Invoice) AND (DocType IN [DocType::Invoice,DocType::" "]))
         THEN
@@ -1426,6 +1444,23 @@ OBJECT Table 18 Customer
       ELSE
         Action := Text005;
       ERROR(Text006,Action,Cust2."No.",Cust2.Blocked);
+    END;
+
+    PROCEDURE CustPrivacyBlockedErrorMessage@72(Cust2@1001 : Record 18;Transaction@1000 : Boolean);
+    VAR
+      Action@1002 : Text[30];
+    BEGIN
+      IF Transaction THEN
+        Action := Text004
+      ELSE
+        Action := Text005;
+
+      ERROR(PrivacyBlockedActionErr,Action,Cust2."No.");
+    END;
+
+    PROCEDURE GetPrivacyBlockedGenericErrorText@73(Cust2@1001 : Record 18) : Text[250];
+    BEGIN
+      EXIT(STRSUBSTNO(PrivacyBlockedGenericTxt,Cust2."No."));
     END;
 
     PROCEDURE DisplayMap@8();
@@ -1462,14 +1497,16 @@ OBJECT Table 18 Customer
       SalesOutstandingAmountFromShipment@1001 : Decimal;
       ServOutstandingAmountFromShipment@1003 : Decimal;
       InvoicedPrepmtAmountLCY@1004 : Decimal;
+      RetRcdNotInvAmountLCY@1006 : Decimal;
     BEGIN
       SalesOutstandingAmountFromShipment := SalesLine.OutstandingInvoiceAmountFromShipment("No.");
       ServOutstandingAmountFromShipment := ServiceLine.OutstandingInvoiceAmountFromShipment("No.");
       InvoicedPrepmtAmountLCY := GetInvoicedPrepmtAmountLCY;
+      RetRcdNotInvAmountLCY := GetReturnRcdNotInvAmountLCY;
 
       EXIT("Balance (LCY)" + "Outstanding Orders (LCY)" + "Shipped Not Invoiced (LCY)" + "Outstanding Invoices (LCY)" +
         "Outstanding Serv. Orders (LCY)" + "Serv Shipped Not Invoiced(LCY)" + "Outstanding Serv.Invoices(LCY)" -
-        SalesOutstandingAmountFromShipment - ServOutstandingAmountFromShipment - InvoicedPrepmtAmountLCY);
+        SalesOutstandingAmountFromShipment - ServOutstandingAmountFromShipment - InvoicedPrepmtAmountLCY - RetRcdNotInvAmountLCY);
     END;
 
     PROCEDURE GetSalesLCY@13() : Decimal;
@@ -1520,6 +1557,18 @@ OBJECT Table 18 Customer
         OverDueBalance := CustLedgEntryRemainAmtQuery.Sum_Remaining_Amt_LCY;
     END;
 
+    PROCEDURE ShowOverdueEntries@25();
+    VAR
+      CustLedgEntry@1000 : Record 21;
+      DtldCustLedgEntry@1001 : Record 379;
+    BEGIN
+      DtldCustLedgEntry.SETFILTER("Customer No.","No.");
+      COPYFILTER("Global Dimension 1 Filter",DtldCustLedgEntry."Initial Entry Global Dim. 1");
+      COPYFILTER("Global Dimension 2 Filter",DtldCustLedgEntry."Initial Entry Global Dim. 2");
+      COPYFILTER("Currency Filter",DtldCustLedgEntry."Currency Code");
+      CustLedgEntry.DrillDownOnOverdueEntries(DtldCustLedgEntry);
+    END;
+
     PROCEDURE GetLegalEntityType@6() : Text;
     BEGIN
       EXIT(FORMAT("Partner Type"));
@@ -1548,6 +1597,17 @@ OBJECT Table 18 Customer
       SEPADirectDebitMandate@1001 : Record 1230;
     BEGIN
       EXIT(SEPADirectDebitMandate.GetDefaultMandate("No.",Date) <> '');
+    END;
+
+    PROCEDURE GetReturnRcdNotInvAmountLCY@53() : Decimal;
+    VAR
+      SalesLine@1000 : Record 37;
+    BEGIN
+      SalesLine.SETCURRENTKEY("Document Type","Bill-to Customer No.");
+      SalesLine.SETRANGE("Document Type",SalesLine."Document Type"::"Return Order");
+      SalesLine.SETRANGE("Bill-to Customer No.","No.");
+      SalesLine.CALCSUMS("Return Rcd. Not Invd. (LCY)");
+      EXIT(SalesLine."Return Rcd. Not Invd. (LCY)");
     END;
 
     PROCEDURE GetInvoicedPrepmtAmountLCY@18() : Decimal;
@@ -1623,11 +1683,53 @@ OBJECT Table 18 Customer
       END;
     END;
 
+    LOCAL PROCEDURE ValidateSalesPersonCode@1900();
+    BEGIN
+      IF "Salesperson Code" <> '' THEN
+        IF SalespersonPurchaser.GET("Salesperson Code") THEN
+          IF SalespersonPurchaser.VerifySalesPersonPurchaserPrivacyBlocked(SalespersonPurchaser) THEN
+            ERROR(SalespersonPurchaser.GetPrivacyBlockedGenericText(SalespersonPurchaser,TRUE))
+    END;
+
     PROCEDURE GetBillToCustomerNo@27() : Code[20];
     BEGIN
       IF "Bill-to Customer No." <> '' THEN
         EXIT("Bill-to Customer No.");
       EXIT("No.");
+    END;
+
+    LOCAL PROCEDURE IsContactUpdateNeeded@48() : Boolean;
+    VAR
+      CustContUpdate@1001 : Codeunit 5056;
+      UpdateNeeded@1000 : Boolean;
+    BEGIN
+      UpdateNeeded :=
+        (Name <> xRec.Name) OR
+        ("Search Name" <> xRec."Search Name") OR
+        ("Name 2" <> xRec."Name 2") OR
+        (Address <> xRec.Address) OR
+        ("Address 2" <> xRec."Address 2") OR
+        (City <> xRec.City) OR
+        ("Phone No." <> xRec."Phone No.") OR
+        ("Telex No." <> xRec."Telex No.") OR
+        ("Territory Code" <> xRec."Territory Code") OR
+        ("Currency Code" <> xRec."Currency Code") OR
+        ("Language Code" <> xRec."Language Code") OR
+        ("Salesperson Code" <> xRec."Salesperson Code") OR
+        ("Country/Region Code" <> xRec."Country/Region Code") OR
+        ("Fax No." <> xRec."Fax No.") OR
+        ("Telex Answer Back" <> xRec."Telex Answer Back") OR
+        ("VAT Registration No." <> xRec."VAT Registration No.") OR
+        ("Post Code" <> xRec."Post Code") OR
+        (County <> xRec.County) OR
+        ("E-Mail" <> xRec."E-Mail") OR
+        ("Home Page" <> xRec."Home Page") OR
+        (Contact <> xRec.Contact);
+
+      IF NOT UpdateNeeded AND NOT ISTEMPORARY THEN
+        UpdateNeeded := CustContUpdate.ContactNameIsBlank("No.");
+
+      EXIT(UpdateNeeded);
     END;
 
     BEGIN

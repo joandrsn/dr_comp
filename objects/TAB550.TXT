@@ -2,9 +2,9 @@ OBJECT Table 550 VAT Rate Change Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -193,6 +193,10 @@ OBJECT Table 550 VAT Rate Change Setup
                                                    TestTableRelation=No;
                                                    CaptionML=[DAN=Ressourcefilter;
                                                               ENU=Resource Filter] }
+    { 103 ;   ;Ignore Status on Service Docs.;Boolean;
+                                                   InitValue=Yes;
+                                                   CaptionML=[DAN=Ignorer status på servicedok.;
+                                                              ENU=Ignore Status on Service Docs.] }
   }
   KEYS
   {

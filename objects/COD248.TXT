@@ -2,9 +2,9 @@ OBJECT Codeunit 248 VAT Lookup Ext. Data Hndl
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -58,7 +58,7 @@ OBJECT Codeunit 248 VAT Lookup Ext. Data Hndl
         ERROR(MissingWebServiceURLErr);
       SOAPWebServiceRequestMgt.SetGlobals(InStream,GeneralLedgerSetup."VAT Reg. No. Validation URL",'','');
       SOAPWebServiceRequestMgt.DisableHttpsCheck;
-      SOAPWebServiceRequestMgt.SetTimeout(5000);
+      SOAPWebServiceRequestMgt.SetTimeout(60000);
 
       IF SOAPWebServiceRequestMgt.SendRequestToWebService THEN BEGIN
         SOAPWebServiceRequestMgt.GetResponseContent(ResponseInStream);
@@ -93,12 +93,12 @@ OBJECT Codeunit 248 VAT Lookup Ext. Data Hndl
 
     LOCAL PROCEDURE InsertLogEntry@4(ResponseBodyTempBlob@1000 : Record 99008535);
     VAR
+      XMLDOMManagement@1001 : Codeunit 6224;
       XMLDocOut@1012 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
       InStream@1009 : InStream;
     BEGIN
       ResponseBodyTempBlob.Blob.CREATEINSTREAM(InStream);
-      XMLDocOut := XMLDocOut.XmlDocument;
-      XMLDocOut.Load(InStream);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(InStream,XMLDocOut);
 
       VATRegistrationLogMgt.LogVerification(VATRegistrationLog,XMLDocOut,NamespaceTxt);
     END;

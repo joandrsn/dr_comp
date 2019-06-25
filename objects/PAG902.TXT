@@ -2,9 +2,9 @@ OBJECT Page 902 Assembly Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -178,24 +178,31 @@ OBJECT Page 902 Assembly Orders
                       ActionContainerType=ActionItems;
                       Image=Action }
       { 27      ;2   ;Action    ;
-                      Name=Re&lease;
+                      Name=Release;
                       ShortCutKey=Ctrl+F9;
                       CaptionML=[DAN=F&rigiv;
                                  ENU=Re&lease];
                       Image=ReleaseDoc;
-                      OnAction=BEGIN
-                                 CODEUNIT.RUN(CODEUNIT::"Release Assembly Document",Rec);
+                      OnAction=VAR
+                                 AssemblyHeader@1000 : Record 900;
+                               BEGIN
+                                 AssemblyHeader := Rec;
+                                 AssemblyHeader.FIND;
+                                 CODEUNIT.RUN(CODEUNIT::"Release Assembly Document",AssemblyHeader);
                                END;
                                 }
       { 31      ;2   ;Action    ;
-                      Name=Re&open;
+                      Name=Reopen;
                       CaptionML=[DAN=&Åbn igen;
                                  ENU=Re&open];
                       Image=ReOpen;
                       OnAction=VAR
+                                 AssemblyHeader@1000 : Record 900;
                                  ReleaseAssemblyDoc@1001 : Codeunit 903;
                                BEGIN
-                                 ReleaseAssemblyDoc.Reopen(Rec);
+                                 AssemblyHeader := Rec;
+                                 AssemblyHeader.FIND;
+                                 ReleaseAssemblyDoc.Reopen(AssemblyHeader);
                                END;
                                 }
       { 15      ;1   ;ActionGroup;

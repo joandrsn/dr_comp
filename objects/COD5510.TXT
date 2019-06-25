@@ -2,9 +2,9 @@ OBJECT Codeunit 5510 Production Journal Mgt
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -90,24 +90,22 @@ OBJECT Codeunit 5510 Production Journal Mgt
             InsertComponents(ProdOrderLine,TRUE,0); // With no Routing Link or illegal Routing Link
 
             REPEAT
-              IF NOT SubcontractingWorkCenterUsed(ProdOrderRtngLine) THEN BEGIN
-                InsertOutputJnlLine(ProdOrderRtngLine,ProdOrderLine);
+              InsertOutputJnlLine(ProdOrderRtngLine,ProdOrderLine);
 
-                // Components connected by Routing Link
-                IF ProdOrderRtngLine."Routing Link Code" <> '' THEN BEGIN
-                  ProdOrderComp.RESET;
-                  ProdOrderComp.SETCURRENTKEY(Status,"Prod. Order No.","Routing Link Code");
-                  ProdOrderComp.SETRANGE(Status,ProdOrder.Status);
-                  ProdOrderComp.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-                  ProdOrderComp.SETRANGE("Routing Link Code",ProdOrderRtngLine."Routing Link Code");
-                  ProdOrderComp.SETRANGE("Prod. Order Line No.",ProdOrderLine."Line No.");
-                  ProdOrderComp.SETFILTER("Item No.",'<>%1','');
-                  IF ProdOrderComp.FIND('-') THEN
-                    REPEAT
-                      // Create Consumption Item Journal-line
-                      InsertConsumptionJnlLine(ProdOrderComp,ProdOrderLine,1);
-                    UNTIL ProdOrderComp.NEXT = 0;
-                END;
+              // Components connected by Routing Link
+              IF ProdOrderRtngLine."Routing Link Code" <> '' THEN BEGIN
+                ProdOrderComp.RESET;
+                ProdOrderComp.SETCURRENTKEY(Status,"Prod. Order No.","Routing Link Code");
+                ProdOrderComp.SETRANGE(Status,ProdOrder.Status);
+                ProdOrderComp.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
+                ProdOrderComp.SETRANGE("Routing Link Code",ProdOrderRtngLine."Routing Link Code");
+                ProdOrderComp.SETRANGE("Prod. Order Line No.",ProdOrderLine."Line No.");
+                ProdOrderComp.SETFILTER("Item No.",'<>%1','');
+                IF ProdOrderComp.FIND('-') THEN
+                  REPEAT
+                    // Create Consumption Item Journal-line
+                    InsertConsumptionJnlLine(ProdOrderComp,ProdOrderLine,1);
+                  UNTIL ProdOrderComp.NEXT = 0;
               END;
             UNTIL ProdOrderRtngLine.NEXT = 0;
           END ELSE BEGIN
@@ -308,7 +306,10 @@ OBJECT Codeunit 5510 Production Journal Mgt
         ItemJnlLine.VALIDATE("Run Time",0);
         IF ("Location Code" <> '') AND (ProdOrderRtngLine."Next Operation No." = '') THEN
           ItemJnlLine.CheckWhse("Location Code",QtyToPost);
-        ItemJnlLine.VALIDATE("Output Quantity",QtyToPost);
+        IF ItemJnlLine.SubcontractingWorkCenterUsed THEN
+          ItemJnlLine.VALIDATE("Output Quantity",0)
+        ELSE
+          ItemJnlLine.VALIDATE("Output Quantity",QtyToPost);
 
         IF ProdOrderRtngLine."Routing Status" = ProdOrderRtngLine."Routing Status"::Finished THEN
           ItemJnlLine.Finished := TRUE;
@@ -440,16 +441,6 @@ OBJECT Codeunit 5510 Production Journal Mgt
 
         EXIT(FALSE);
       END;
-    END;
-
-    PROCEDURE SubcontractingWorkCenterUsed@9(ProdOrderRtngLine@1001 : Record 5409) : Boolean;
-    VAR
-      WorkCenter@1000 : Record 99000754;
-    BEGIN
-      WITH ProdOrderRtngLine DO
-        IF Type = Type::"Work Center" THEN
-          IF WorkCenter.GET("No.") THEN
-            EXIT(WorkCenter."Subcontractor No." <> '');
     END;
 
     BEGIN

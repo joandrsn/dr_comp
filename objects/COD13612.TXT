@@ -2,9 +2,9 @@ OBJECT Codeunit 13612 OIOUBL Export Issued Reminder
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVDK8.00;
+    Version List=NAVDK9.00.00.47042;
   }
   PROPERTIES
   {
@@ -15,6 +15,7 @@ OBJECT Codeunit 13612 OIOUBL Export Issued Reminder
             IssuedReminderLine@1101100008 : Record 298;
             IssuedReminderLine2@1101100007 : Record 298;
             RBMgt@1060002 : Codeunit 419;
+            XMLDOMManagement@1060012 : Codeunit 6224;
             XMLCurrNode@1101100005 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
             XMLdocOut@1101100004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
             XMLNewChild@1101100003 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
@@ -47,8 +48,6 @@ OBJECT Codeunit 13612 OIOUBL Export Issued Reminder
             IF NOT IssuedReminderLine.FINDSET THEN
               EXIT;
 
-            XMLdocOut := XMLdocOut.XmlDocument;
-
             FromFile := RBMgt.ServerTempFileName('');
 
             // Reminder
@@ -63,7 +62,7 @@ OBJECT Codeunit 13612 OIOUBL Export Issued Reminder
               'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
               'xsi:schemaLocation="urn:oasis:names:specification:ubl:schema:xsd:Reminder-2 UBL-Reminder-2.0.xsd"/> ';
 
-            XMLdocOut.LoadXml := Header;
+            XMLDOMManagement.LoadXMLDocumentFromText(Header,XMLdocOut);
             XMLCurrNode := XMLdocOut.DocumentElement;
 
             WITH OIOUBLDOMManagement DO BEGIN
@@ -679,7 +678,7 @@ OBJECT Codeunit 13612 OIOUBL Export Issued Reminder
 
     PROCEDURE GetPaymentChannelCode@1060014() : Text[7];
     BEGIN
-      EXIT(CompanyInfo."Country/Region Code" + ':' + 'BANK');
+      EXIT(CompanyInfo.GetPaymentChannelCode);
     END;
 
     PROCEDURE GetTaxCategoryID@1060038(Type@1060000 : 'Normal VAT,Reverse Charge VAT,Full VAT,Sales Tax';VATPercent@1060001 : Decimal) : Text[15];

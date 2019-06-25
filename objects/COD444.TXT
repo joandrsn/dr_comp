@@ -2,9 +2,9 @@ OBJECT Codeunit 444 Purchase-Post Prepayments
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -437,7 +437,8 @@ OBJECT Codeunit 444 Purchase-Post Prepayments
         ApplyFilter(PurchHeader,DocumentType,PurchLine);
         IF FIND('-') THEN
           REPEAT
-            Found := PrepmtAmount(PurchLine,DocumentType) <> 0;
+            IF NOT Found THEN
+              Found := PrepmtAmount(PurchLine,DocumentType) <> 0;
             IF ("Prepayment VAT Identifier" = '') AND ("Prepmt. Amt. Inv." = 0) THEN BEGIN
               UpdatePrepmtSetupFields;
               MODIFY;
@@ -460,7 +461,9 @@ OBJECT Codeunit 444 Purchase-Post Prepayments
           AmountToLCY(
             PurchHeader,TotalPrepmtInvLineBuf."Amount Incl. VAT",TotalPrepmtInvLineBufLCY."Amount Incl. VAT");
         IF VAT THEN
-          PrepmtInvLineBuf.Amount := ROUND(PrepmtInvLineBuf."Amount Incl. VAT" / (1 + PrepmtInvLineBuf."VAT %" / 100))
+          PrepmtInvLineBuf.Amount :=
+            AmountToLCY(
+              PurchHeader,TotalPrepmtInvLineBuf.Amount,TotalPrepmtInvLineBufLCY.Amount)
         ELSE
           PrepmtInvLineBuf.Amount := PrepmtInvLineBuf."Amount Incl. VAT";
         PrepmtInvLineBuf."VAT Amount" := PrepmtInvLineBuf."Amount Incl. VAT" - PrepmtInvLineBuf.Amount;

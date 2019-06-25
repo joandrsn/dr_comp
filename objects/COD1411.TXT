@@ -2,9 +2,9 @@ OBJECT Codeunit 1411 Doc. Exch. Links
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -22,6 +22,7 @@ OBJECT Codeunit 1411 Doc. Exch. Links
 
     PROCEDURE UpdateDocumentRecord@49(DocRecRef@1002 : RecordRef;DocIdentifier@1000 : Text;DocOrigIdentifier@1005 : Text);
     BEGIN
+      DocRecRef.FIND;
       CASE DocRecRef.NUMBER OF
         DATABASE::"Sales Invoice Header":
           SetInvoiceDocSent(DocRecRef,DocIdentifier,DocOrigIdentifier);

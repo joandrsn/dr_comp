@@ -2,9 +2,9 @@ OBJECT Codeunit 432 Consolidate
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -987,6 +987,10 @@ OBJECT Codeunit 432 Consolidate
             TempDimSetEntry2.INSERT;
           UNTIL TempDimBufOut.NEXT = 0;
           GenJnlLine."Dimension Set ID" := DimMgt.GetDimensionSetID(TempDimSetEntry2);
+        END ELSE BEGIN
+          GenJnlLine."Shortcut Dimension 1 Code" := '';
+          GenJnlLine."Shortcut Dimension 2 Code" := '';
+          GenJnlLine."Dimension Set ID" := 0;
         END;
         GenJnlPostLineTmp(GenJnlLine);
         ExchRateAdjAmount := ExchRateAdjAmount + GenJnlLine.Amount;
@@ -1199,8 +1203,8 @@ OBJECT Codeunit 432 Consolidate
       TempGenJnlLine.Amount := ROUND(TempGenJnlLine.Amount);
       TempGenJnlLine."Line No." := NextLineNo;
       TempGenJnlLine."System-Created Entry" := TRUE;
-      DimMgt.UpdateGlobalDimFromDimSetID(GenJnlLine."Dimension Set ID",
-        GenJnlLine."Shortcut Dimension 1 Code",GenJnlLine."Shortcut Dimension 2 Code");
+      DimMgt.UpdateGlobalDimFromDimSetID(TempGenJnlLine."Dimension Set ID",
+        TempGenJnlLine."Shortcut Dimension 1 Code",TempGenJnlLine."Shortcut Dimension 2 Code");
       TempGenJnlLine.INSERT;
     END;
 

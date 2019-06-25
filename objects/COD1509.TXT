@@ -2,9 +2,9 @@ OBJECT Codeunit 1509 Notification Entry Dispatcher
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -164,7 +164,7 @@ OBJECT Codeunit 1509 Notification Entry Dispatcher
       EmailItem."From Name" := COMPANYNAME;
       EmailItem.Subject := NotificationMailSubjectTxt;
       EmailItem."Send to" := UserSetup."E-Mail";
-      EmailItem.Body.CREATEOUTSTREAM(OutStream);
+      EmailItem.Body.CREATEOUTSTREAM(OutStream,TEXTENCODING::UTF8);
       OutStream.WRITE(Body);
 
       IF MailManagement.IsSMTPEnabled AND MailManagement.IsEnabled THEN BEGIN
@@ -190,6 +190,7 @@ OBJECT Codeunit 1509 Notification Entry Dispatcher
       RecordLink@1001 : Record 2000000068;
       DataTypeManagement@1006 : Codeunit 701;
       PageManagement@1005 : Codeunit 700;
+      TypeHelper@1004 : Codeunit 10;
       RecRef@1007 : RecordRef;
       Link@1000 : Text;
     BEGIN
@@ -207,7 +208,7 @@ OBJECT Codeunit 1509 Notification Entry Dispatcher
           URL2 := COPYSTR(Link,MAXSTRLEN(URL1) + 1,MAXSTRLEN(URL2));
         Description := COPYSTR(FORMAT(NotificationEntry."Triggered By Record"),1,250);
         Type := Type::Note;
-        WriteNoteText(RecordLink,Body);
+        TypeHelper.WriteRecordLinkNote(RecordLink,Body);
         Created := CURRENTDATETIME;
         "User ID" := NotificationEntry."Created By";
         Company := COMPANYNAME;
@@ -217,38 +218,6 @@ OBJECT Codeunit 1509 Notification Entry Dispatcher
       END;
 
       EXIT(FALSE);
-    END;
-
-    LOCAL PROCEDURE WriteNoteText@7(VAR RecordLink@1000 : Record 2000000068;Note@1001 : Text);
-    VAR
-      SystemUTF8Encoder@1011 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.UTF8Encoding";
-      SystemByteArray@1010 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Array";
-      OStr@1008 : OutStream;
-      c1@1005 : Byte;
-      c2@1004 : Byte;
-      x@1003 : Integer;
-      y@1002 : Integer;
-      i@1009 : Integer;
-    BEGIN
-      SystemUTF8Encoder := SystemUTF8Encoder.UTF8Encoding;
-      SystemByteArray := SystemUTF8Encoder.GetBytes(Note);
-
-      RecordLink.Note.CREATEOUTSTREAM(OStr);
-      x := SystemByteArray.Length DIV 128;
-      IF x > 1 THEN
-        y := SystemByteArray.Length - 128 * (x - 1)
-      ELSE
-        y := SystemByteArray.Length;
-      c1 := y;
-      OStr.WRITE(c1);
-      IF x > 0 THEN BEGIN
-        c2 := x;
-        OStr.WRITE(c2);
-      END;
-      FOR i := 0 TO SystemByteArray.Length - 1 DO BEGIN
-        c1 := SystemByteArray.GetValue(i);
-        OStr.WRITE(c1);
-      END;
     END;
 
     PROCEDURE GetAggregatedEmailMessageBody@9(VAR NotificationEntry@1003 : Record 1511;NotificationTemplate@1002 : Record 1510) AggregatedNotificationBody : Text;

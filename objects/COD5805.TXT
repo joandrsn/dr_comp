@@ -2,9 +2,9 @@ OBJECT Codeunit 5805 Item Charge Assgnt. (Purch.)
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -188,14 +188,29 @@ OBJECT Codeunit 5805 Item Charge Assgnt. (Purch.)
       UNTIL FromReturnRcptLine.NEXT = 0;
     END;
 
-    PROCEDURE SuggestAssgnt@5(PurchLine2@1000 : Record 39;TotalQtyToAssign@1001 : Decimal;TotalAmtToAssign@1003 : Decimal);
+    PROCEDURE SuggestAssgnt@5(PurchLine@1000 : Record 39;TotalQtyToAssign@1001 : Decimal;TotalAmtToAssign@1003 : Decimal);
     VAR
+      ItemChargeAssgntPurch@1004 : Record 5805;
       Selection@1002 : Integer;
     BEGIN
-      Selection := STRMENU(Text000,2);
+      WITH PurchLine DO BEGIN
+        ItemChargeAssgntPurch.SETRANGE("Document Type","Document Type");
+        ItemChargeAssgntPurch.SETRANGE("Document No.","Document No.");
+        ItemChargeAssgntPurch.SETRANGE("Document Line No.","Line No.");
+      END;
+      IF ItemChargeAssgntPurch.ISEMPTY THEN
+        EXIT;
+
+      ItemChargeAssgntPurch.SETFILTER("Applies-to Doc. Type",'<>%1',ItemChargeAssgntPurch."Applies-to Doc. Type"::"Transfer Receipt");
+      IF ItemChargeAssgntPurch.ISEMPTY THEN
+        Selection := 1
+      ELSE
+        Selection := STRMENU(Text000,2);
+
       IF Selection = 0 THEN
         EXIT;
-      SuggestAssgnt2(PurchLine2,TotalQtyToAssign,TotalAmtToAssign,Selection);
+
+      SuggestAssgnt2(PurchLine,TotalQtyToAssign,TotalAmtToAssign,Selection);
     END;
 
     PROCEDURE SuggestAssgnt2@9(PurchLine2@1000 : Record 39;TotalQtyToAssign@1001 : Decimal;TotalAmtToAssign@1021 : Decimal;Selection@1018 : Integer);
@@ -244,9 +259,6 @@ OBJECT Codeunit 5805 Item Charge Assgnt. (Purch.)
                   ROUND(
                     ItemChargeAssgntPurch2."Qty. to Assign" / TotalQtyToAssign * TotalAmtToAssign,
                     Currency."Amount Rounding Precision");
-                ItemChargeAssgntPurch2."Unit Cost" :=
-                  ROUND(ItemChargeAssgntPurch2."Amount to Assign" / ItemChargeAssgntPurch2."Qty. to Assign",
-                    Currency."Unit-Amount Rounding Precision");
                 TotalQtyToAssign -= ItemChargeAssgntPurch2."Qty. to Assign";
                 TotalAmtToAssign -= ItemChargeAssgntPurch2."Amount to Assign";
                 RemainingNumOfLines := RemainingNumOfLines - 1;
@@ -359,10 +371,6 @@ OBJECT Codeunit 5805 Item Charge Assgnt. (Purch.)
                     ROUND(
                       ItemChargeAssgntPurch2."Qty. to Assign" / TotalQtyToAssign * TotalAmtToAssign,
                       Currency."Amount Rounding Precision");
-                  IF ItemChargeAssgntPurch2."Qty. to Assign" <> 0 THEN
-                    ItemChargeAssgntPurch2."Unit Cost" :=
-                      ROUND(ItemChargeAssgntPurch2."Amount to Assign" / ItemChargeAssgntPurch2."Qty. to Assign",
-                        Currency."Unit-Amount Rounding Precision");
                   TotalQtyToAssign -= ItemChargeAssgntPurch2."Qty. to Assign";
                   TotalAmtToAssign -= ItemChargeAssgntPurch2."Amount to Assign";
                   TotalAppliesToDocLineAmount -= TempItemChargeAssgntPurch."Applies-to Doc. Line Amount";
@@ -372,6 +380,116 @@ OBJECT Codeunit 5805 Item Charge Assgnt. (Purch.)
           END;
           TempItemChargeAssgntPurch.DELETEALL;
         END;
+      END;
+    END;
+
+    PROCEDURE SuggestAssgntFromLine@11(VAR FromItemChargeAssignmentPurch@1000 : Record 5805);
+    VAR
+      Currency@1014 : Record 4;
+      PurchHeader@1003 : Record 38;
+      ItemChargeAssignmentPurch@1007 : Record 5805;
+      TempItemChargeAssgntPurch@1008 : TEMPORARY Record 5805;
+      TotalAmountToAssign@1013 : Decimal;
+      TotalQtyToAssign@1012 : Decimal;
+      ItemChargeAssgntLineAmt@1001 : Decimal;
+      ItemChargeAssgntLineQty@1011 : Decimal;
+    BEGIN
+      WITH FromItemChargeAssignmentPurch DO BEGIN
+        PurchHeader.GET("Document Type","Document No.");
+        IF NOT Currency.GET(PurchHeader."Currency Code") THEN
+          Currency.InitRoundingPrecision;
+
+        GetItemChargeAssgntLineAmounts(
+          "Document Type","Document No.","Document Line No.",
+          ItemChargeAssgntLineQty,ItemChargeAssgntLineAmt);
+
+        IF NOT ItemChargeAssignmentPurch.GET("Document Type","Document No.","Document Line No.","Line No.") THEN
+          EXIT;
+
+        ItemChargeAssignmentPurch."Qty. to Assign" := "Qty. to Assign";
+        ItemChargeAssignmentPurch."Amount to Assign" := "Amount to Assign";
+        ItemChargeAssignmentPurch.MODIFY;
+
+        ItemChargeAssignmentPurch.SETRANGE("Document Type","Document Type");
+        ItemChargeAssignmentPurch.SETRANGE("Document No.","Document No.");
+        ItemChargeAssignmentPurch.SETRANGE("Document Line No.","Document Line No.");
+        ItemChargeAssignmentPurch.CALCSUMS("Qty. to Assign","Amount to Assign");
+        TotalQtyToAssign := ItemChargeAssignmentPurch."Qty. to Assign";
+        TotalAmountToAssign := ItemChargeAssignmentPurch."Amount to Assign";
+
+        IF TotalAmountToAssign = ItemChargeAssgntLineAmt THEN
+          EXIT;
+
+        IF TotalQtyToAssign = ItemChargeAssgntLineQty THEN BEGIN
+          TotalAmountToAssign := ItemChargeAssgntLineAmt;
+          ItemChargeAssignmentPurch.FINDSET;
+          REPEAT
+            IF NOT ItemChargeAssignmentPurch.PurchLineInvoiced THEN BEGIN
+              TempItemChargeAssgntPurch := ItemChargeAssignmentPurch;
+              TempItemChargeAssgntPurch.INSERT;
+            END;
+          UNTIL ItemChargeAssignmentPurch.NEXT = 0;
+
+          IF TempItemChargeAssgntPurch.FINDSET THEN BEGIN
+            REPEAT
+              ItemChargeAssignmentPurch.GET(
+                TempItemChargeAssgntPurch."Document Type",
+                TempItemChargeAssgntPurch."Document No.",
+                TempItemChargeAssgntPurch."Document Line No.",
+                TempItemChargeAssgntPurch."Line No.");
+              IF TotalQtyToAssign <> 0 THEN BEGIN
+                ItemChargeAssignmentPurch."Amount to Assign" :=
+                  ROUND(
+                    ItemChargeAssignmentPurch."Qty. to Assign" / TotalQtyToAssign * TotalAmountToAssign,
+                    Currency."Amount Rounding Precision");
+                TotalQtyToAssign -= ItemChargeAssignmentPurch."Qty. to Assign";
+                TotalAmountToAssign -= ItemChargeAssignmentPurch."Amount to Assign";
+                ItemChargeAssignmentPurch.MODIFY;
+              END;
+            UNTIL TempItemChargeAssgntPurch.NEXT = 0;
+          END;
+        END;
+
+        ItemChargeAssignmentPurch.GET("Document Type","Document No.","Document Line No.","Line No.");
+      END;
+
+      FromItemChargeAssignmentPurch := ItemChargeAssignmentPurch;
+    END;
+
+    LOCAL PROCEDURE GetItemChargeAssgntLineAmounts@14(DocumentType@1000 : Option;DocumentNo@1001 : Code[20];DocumentLineNo@1002 : Integer;VAR ItemChargeAssgntLineQty@1003 : Decimal;VAR ItemChargeAssgntLineAmt@1004 : Decimal);
+    VAR
+      PurchLine@1005 : Record 39;
+      PurchHeader@1006 : Record 38;
+      Currency@1007 : Record 4;
+    BEGIN
+      PurchHeader.GET(DocumentType,DocumentNo);
+      IF NOT Currency.GET(PurchHeader."Currency Code") THEN
+        Currency.InitRoundingPrecision;
+
+      WITH PurchLine DO BEGIN
+        GET(DocumentType,DocumentNo,DocumentLineNo);
+        TESTFIELD(Type,Type::"Charge (Item)");
+        TESTFIELD("No.");
+        TESTFIELD(Quantity);
+
+        IF ("Inv. Discount Amount" = 0) AND
+           ("Line Discount Amount" = 0) AND
+           (NOT PurchHeader."Prices Including VAT")
+        THEN
+          ItemChargeAssgntLineAmt := "Line Amount"
+        ELSE
+          IF PurchHeader."Prices Including VAT" THEN
+            ItemChargeAssgntLineAmt :=
+              ROUND(("Line Amount" - "Inv. Discount Amount") / (1 + "VAT %" / 100),
+                Currency."Amount Rounding Precision")
+          ELSE
+            ItemChargeAssgntLineAmt := "Line Amount" - "Inv. Discount Amount";
+
+        ItemChargeAssgntLineAmt :=
+          ROUND(
+            ItemChargeAssgntLineAmt * ("Qty. to Invoice" / Quantity),
+            Currency."Amount Rounding Precision");
+        ItemChargeAssgntLineQty := "Qty. to Invoice";
       END;
     END;
 

@@ -2,9 +2,9 @@ OBJECT Table 5404 Item Unit of Measure
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -138,14 +138,14 @@ OBJECT Table 5404 Item Unit of Measure
     BEGIN
       WhseEntry.SETRANGE("Item No.","Item No.");
       WhseEntry.SETRANGE("Unit of Measure Code",xRec.Code);
-      Location.FIND('-');
-      REPEAT
-        IF Bin.GET(Location.Code,Location."Adjustment Bin Code") THEN BEGIN
-          WhseEntry.SETRANGE("Zone Code",Bin."Zone Code");
-          IF NOT WhseEntry.ISEMPTY THEN
-            ERROR(CannotModifyUOMWithWhseEntriesErr,TABLECAPTION,xRec.Code,"Item No.");
-        END;
-      UNTIL Location.NEXT = 0;
+      IF Location.FINDSET THEN
+        REPEAT
+          IF Bin.GET(Location.Code,Location."Adjustment Bin Code") THEN BEGIN
+            WhseEntry.SETRANGE("Zone Code",Bin."Zone Code");
+            IF NOT WhseEntry.ISEMPTY THEN
+              ERROR(CannotModifyUOMWithWhseEntriesErr,TABLECAPTION,xRec.Code,"Item No.");
+          END;
+        UNTIL Location.NEXT = 0;
     END;
 
     PROCEDURE TestItemSetup@2();
@@ -205,7 +205,7 @@ OBJECT Table 5404 Item Unit of Measure
       IF NOT PurchLine.ISEMPTY THEN
         ERROR(
           CannotModifyUnitOfMeasureErr,TABLECAPTION,xRec.Code,"Item No.",
-          PurchLine.TABLECAPTION,PurchLine.FIELDCAPTION("Qty. to Receive"));
+          PurchLine.TABLECAPTION,PurchLine.FIELDCAPTION("Outstanding Quantity"));
     END;
 
     LOCAL PROCEDURE CheckNoOutstandingQtySalesLine@10();
@@ -219,7 +219,7 @@ OBJECT Table 5404 Item Unit of Measure
       IF NOT SalesLine.ISEMPTY THEN
         ERROR(
           CannotModifyUnitOfMeasureErr,TABLECAPTION,xRec.Code,"Item No.",
-          SalesLine.TABLECAPTION,SalesLine.FIELDCAPTION("Qty. to Ship"));
+          SalesLine.TABLECAPTION,SalesLine.FIELDCAPTION("Outstanding Quantity"));
     END;
 
     LOCAL PROCEDURE CheckNoOutstandingQtyTransferLine@11();
@@ -232,7 +232,7 @@ OBJECT Table 5404 Item Unit of Measure
       IF NOT TransferLine.ISEMPTY THEN
         ERROR(
           CannotModifyUnitOfMeasureErr,TABLECAPTION,xRec.Code,"Item No.",
-          TransferLine.TABLECAPTION,TransferLine.FIELDCAPTION("Qty. to Ship"));
+          TransferLine.TABLECAPTION,TransferLine.FIELDCAPTION("Outstanding Quantity"));
     END;
 
     LOCAL PROCEDURE CheckNoRemQtyProdOrderLine@12();
@@ -274,7 +274,7 @@ OBJECT Table 5404 Item Unit of Measure
       IF NOT ServiceLine.ISEMPTY THEN
         ERROR(
           CannotModifyUnitOfMeasureErr,TABLECAPTION,xRec.Code,"Item No.",
-          ServiceLine.TABLECAPTION,ServiceLine.FIELDCAPTION("Qty. to Ship"));
+          ServiceLine.TABLECAPTION,ServiceLine.FIELDCAPTION("Outstanding Quantity"));
     END;
 
     LOCAL PROCEDURE CheckNoRemQtyAssemblyHeader@6();

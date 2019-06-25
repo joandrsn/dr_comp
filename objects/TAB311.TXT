@@ -2,9 +2,9 @@ OBJECT Table 311 Sales & Receivables Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50785,NAVDK9.00.00.50785;
   }
   PROPERTIES
   {
@@ -119,6 +119,21 @@ OBJECT Table 311 Sales & Receivables Setup
                                                    OptionString=No Logo,Left,Center,Right }
     { 32  ;   ;Check Prepmt. when Posting;Boolean ;CaptionML=[DAN=Kontroller forudbetaling ved bogføring;
                                                               ENU=Check Prepmt. when Posting] }
+    { 33  ;   ;Prepmt. Auto Update Frequency;Option;
+                                                   OnValidate=VAR
+                                                                PrepaymentMgt@1000 : Codeunit 441;
+                                                              BEGIN
+                                                                IF "Prepmt. Auto Update Frequency" = xRec."Prepmt. Auto Update Frequency" THEN
+                                                                  EXIT;
+
+                                                                PrepaymentMgt.CreateAndStartJobQueueEntrySales("Prepmt. Auto Update Frequency");
+                                                              END;
+
+                                                   CaptionML=[DAN=Frekvens for automatisk opdatering af forudbetaling;
+                                                              ENU=Prepmt. Auto Update Frequency];
+                                                   OptionCaptionML=[DAN=Aldrig,Dagligt,Ugentligt;
+                                                                    ENU=Never,Daily,Weekly];
+                                                   OptionString=Never,Daily,Weekly }
     { 35  ;   ;Default Posting Date;Option        ;CaptionML=[DAN=Standardbogføringsdato;
                                                               ENU=Default Posting Date];
                                                    OptionCaptionML=[DAN=Arbejdsdato,Ingen dato;
@@ -166,6 +181,8 @@ OBJECT Table 311 Sales & Receivables Setup
     { 45  ;   ;Direct Debit Mandate Nos.;Code10   ;TableRelation="No. Series";
                                                    CaptionML=[DAN=Direct Debit-betalingsaftalenumre;
                                                               ENU=Direct Debit Mandate Nos.] }
+    { 46  ;   ;Allow Document Deletion Before;Date;CaptionML=[DAN=Tillad sletning af dokument før;
+                                                              ENU=Allow Document Deletion Before] }
     { 5800;   ;Posted Return Receipt Nos.;Code10  ;TableRelation="No. Series";
                                                    AccessByPermission=TableData 6660=R;
                                                    CaptionML=[DAN=Bogførte returvaremodt.numre;
@@ -198,6 +215,9 @@ OBJECT Table 311 Sales & Receivables Setup
     { 7102;   ;Salesperson Dimension Code;Code20  ;TableRelation=Dimension;
                                                    CaptionML=[DAN=Dimensionskode for sælger;
                                                               ENU=Salesperson Dimension Code] }
+    { 7103;   ;Freight G/L Acc. No.;Code20        ;TableRelation="G/L Account";
+                                                   CaptionML=[DAN=Finanskontonr. for fragt;
+                                                              ENU=Freight G/L Acc. No.] }
     { 13600;  ;OIOUBL Invoice Path ;Text250       ;CaptionML=[DAN=OIOUBL-fakturasti;
                                                               ENU=OIOUBL Invoice Path] }
     { 13601;  ;OIOUBL Cr. Memo Path;Text250       ;CaptionML=[DAN=OIOUBL-kreditnotasti;

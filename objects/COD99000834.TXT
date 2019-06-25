@@ -2,9 +2,9 @@ OBJECT Codeunit 99000834 Purch. Line-Reserve
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -144,7 +144,7 @@ OBJECT Codeunit 99000834 Purch. Line-Reserve
       EXIT(ReservEntry.FINDLAST);
     END;
 
-    LOCAL PROCEDURE ReservEntryExist@21(PurchLine@1000 : Record 39) : Boolean;
+    PROCEDURE ReservEntryExist@21(PurchLine@1000 : Record 39) : Boolean;
     VAR
       ReservEntry@1001 : Record 337;
     BEGIN
@@ -287,6 +287,8 @@ OBJECT Codeunit 99000834 Purch. Line-Reserve
     PROCEDURE TransferPurchLineToItemJnlLine@32(VAR PurchLine@1000 : Record 39;VAR ItemJnlLine@1001 : Record 83;TransferQty@1002 : Decimal;VAR CheckApplToItemEntry@1004 : Boolean) : Decimal;
     VAR
       OldReservEntry@1003 : Record 337;
+      OppositeReservEntry@1006 : Record 337;
+      NotFullyReserved@1005 : Boolean;
     BEGIN
       IF NOT FindReservEntry(PurchLine,OldReservEntry) THEN
         EXIT(TransferQty);
@@ -324,9 +326,19 @@ OBJECT Codeunit 99000834 Purch. Line-Reserve
           OldReservEntry.TESTFIELD("Variant Code",PurchLine."Variant Code");
           OldReservEntry.TESTFIELD("Location Code",PurchLine."Location Code");
 
-          IF CheckApplToItemEntry AND (OldReservEntry."Item Tracking" <> OldReservEntry."Item Tracking"::None) THEN BEGIN
-            OldReservEntry.TESTFIELD("Appl.-to Item Entry");
-            CreateReservEntry.SetApplyToEntryNo(OldReservEntry."Appl.-to Item Entry");
+          IF CheckApplToItemEntry THEN BEGIN
+            IF OldReservEntry."Reservation Status" = OldReservEntry."Reservation Status"::Reservation THEN BEGIN
+              OppositeReservEntry.GET(OldReservEntry."Entry No.",NOT OldReservEntry.Positive);
+              IF OppositeReservEntry."Source Type" <> DATABASE::"Item Ledger Entry" THEN
+                NotFullyReserved := TRUE;
+            END ELSE
+              NotFullyReserved := TRUE;
+
+            IF OldReservEntry."Item Tracking" <> OldReservEntry."Item Tracking"::None THEN BEGIN
+              OldReservEntry.TESTFIELD("Appl.-to Item Entry");
+              CreateReservEntry.SetApplyToEntryNo(OldReservEntry."Appl.-to Item Entry");
+              CheckApplToItemEntry := FALSE;
+            END;
           END;
 
           TransferQty := CreateReservEntry.TransferReservEntry(DATABASE::"Item Journal Line",
@@ -335,7 +347,7 @@ OBJECT Codeunit 99000834 Purch. Line-Reserve
               ItemJnlLine."Qty. per Unit of Measure",OldReservEntry,TransferQty);
 
         UNTIL (ReservEngineMgt.NEXTRecord(OldReservEntry) = 0) OR (TransferQty = 0);
-        CheckApplToItemEntry := FALSE;
+        CheckApplToItemEntry := CheckApplToItemEntry AND NotFullyReserved;
       END;
       EXIT(TransferQty);
     END;
@@ -509,6 +521,7 @@ OBJECT Codeunit 99000834 Purch. Line-Reserve
     VAR
       SourceSpecification@1000 : Record 336;
     BEGIN
+      CLEAR(TempInvoicingSpecification);
       IF PurchLine.Type <> PurchLine.Type::Item THEN
         EXIT;
       IF ((PurchLine."Document Type" = PurchLine."Document Type"::Invoice) AND

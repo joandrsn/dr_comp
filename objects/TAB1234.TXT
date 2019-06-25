@@ -2,9 +2,9 @@ OBJECT Table 1234 CSV Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,11 +13,14 @@ OBJECT Table 1234 CSV Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+    { 1   ;   ;Line No.            ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Linjenr.;
                                                               ENU=Line No.] }
-    { 2   ;   ;Field No.           ;Integer       ;CaptionML=[DAN=Feltnr.;
+    { 2   ;   ;Field No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Feltnr.;
                                                               ENU=Field No.] }
-    { 3   ;   ;Value               ;Text250       ;CaptionML=[DAN=Værdi;
+    { 3   ;   ;Value               ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Værdi;
                                                               ENU=Value] }
   }
   KEYS

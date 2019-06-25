@@ -2,9 +2,9 @@ OBJECT Table 1514 Sent Notification Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -22,9 +22,11 @@ OBJECT Table 1514 Sent Notification Entry
                                                    OptionCaptionML=[DAN=Ny record,Godkendelse,Forfald;
                                                                     ENU=New Record,Approval,Overdue];
                                                    OptionString=New Record,Approval,Overdue }
-    { 4   ;   ;Recipient User ID   ;Code50        ;CaptionML=[DAN=Modtagers bruger-id;
+    { 4   ;   ;Recipient User ID   ;Code50        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Modtagers bruger-id;
                                                               ENU=Recipient User ID] }
-    { 5   ;   ;Triggered By Record ;RecordID      ;CaptionML=[DAN=Udløst af record;
+    { 5   ;   ;Triggered By Record ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Udløst af record;
                                                               ENU=Triggered By Record] }
     { 6   ;   ;Link Target Page    ;Integer       ;TableRelation="Page Metadata".ID;
                                                    CaptionML=[DAN=Side, der linkes til;
@@ -35,6 +37,7 @@ OBJECT Table 1514 Sent Notification Entry
     { 9   ;   ;Created Date-Time   ;DateTime      ;CaptionML=[DAN=Oprettet dato/klokkeslæt;
                                                               ENU=Created Date-Time] }
     { 10  ;   ;Created By          ;Code50        ;TableRelation=User."User Name";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Oprettet af;
                                                               ENU=Created By] }
     { 11  ;   ;Sent Date-Time      ;DateTime      ;CaptionML=[DAN=Dato og klokkeslæt for afsendelse;

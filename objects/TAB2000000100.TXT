@@ -2,7 +2,7 @@ OBJECT Table 2000000100 Debugger Breakpoint
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=30-05-19;
     Time=12:00:00;
     Version List=;
   }
@@ -23,7 +23,7 @@ OBJECT Table 2000000100 Debugger Breakpoint
                                                    OptionCaptionML=[DAN=,Table,,Report,,Codeunit,XMLport,,Page,Query;
                                                                     ENU=,Table,,Report,,Codeunit,XMLport,,Page,Query];
                                                    OptionString=,Table,,Report,,Codeunit,XMLport,,Page,Query }
-    { 9   ;   ;Object ID           ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=FIELD(Object Type));
+    { 9   ;   ;Object ID           ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=FIELD(Object Type));
                                                    CaptionML=[DAN=Objekt-id;
                                                               ENU=Object ID] }
     { 10  ;   ;Object Name         ;Text30        ;FieldClass=FlowField;

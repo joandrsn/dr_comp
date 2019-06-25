@@ -2,9 +2,9 @@ OBJECT Report 205 Order Confirmation
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -123,19 +123,21 @@ OBJECT Report 205 Order Confirmation
                                       ShowShippingAddr := TRUE;
 
                                   IF Print THEN BEGIN
-                                    IF ArchiveDocument THEN
+                                    IF ShowRequestPage AND ArchiveDocument OR
+                                       NOT ShowRequestPage AND SalesSetup."Archive Quotes and Orders"
+                                    THEN
                                       ArchiveManagement.StoreSalesDocument("Sales Header",LogInteraction);
 
                                     IF LogInteraction THEN BEGIN
                                       CALCFIELDS("No. of Archived Versions");
                                       IF "Bill-to Contact No." <> '' THEN
                                         SegManagement.LogDocument(
-                                          3,"No.","Doc. No. Occurrence",
+                                          SegManagement.SalesOrderConfirmInterDocType,"No.","Doc. No. Occurrence",
                                           "No. of Archived Versions",DATABASE::Contact,"Bill-to Contact No."
                                           ,"Salesperson Code","Campaign No.","Posting Description","Opportunity No.")
                                       ELSE
                                         SegManagement.LogDocument(
-                                          3,"No.","Doc. No. Occurrence",
+                                          SegManagement.SalesOrderConfirmInterDocType,"No.","Doc. No. Occurrence",
                                           "No. of Archived Versions",DATABASE::Customer,"Bill-to Customer No.",
                                           "Salesperson Code","Campaign No.","Posting Description","Opportunity No.");
                                     END;
@@ -1119,6 +1121,7 @@ OBJECT Report 205 Order Confirmation
                    LogInteraction := SegManagement.FindInteractTmplCode(3) <> '';
 
                    LogInteractionEnable := LogInteraction;
+                   ShowRequestPage := TRUE;
                  END;
 
     }
@@ -1303,6 +1306,7 @@ OBJECT Report 205 Order Confirmation
       ShipmentMethodCaptionLbl@9854 : TextConst 'DAN=Leveringsform;ENU=Shipment Method';
       DocumentDateCaptionLbl@7509 : TextConst 'DAN=Bilagsdato;ENU=Document Date';
       AllowInvDiscCaptionLbl@2645 : TextConst 'DAN=Tillad fakturarabat;ENU=Allow Invoice Discount';
+      ShowRequestPage@1087 : Boolean;
 
     PROCEDURE InitializeRequest@1(NoOfCopiesFrom@1000 : Integer;ShowInternalInfoFrom@1001 : Boolean;ArchiveDocumentFrom@1002 : Boolean;LogInteractionFrom@1003 : Boolean;PrintFrom@1004 : Boolean;DisplayAsmInfo@1005 : Boolean);
     BEGIN
@@ -16285,16 +16289,16 @@ Cstr(Fields!EmailCaption.Value)
             </Style>
           </Tablix>
         </ReportItems>
-        <Height>12.2917in</Height>
+        <Height>31.22092cm</Height>
         <Style>
           <FontFamily>Segoe UI</FontFamily>
           <FontSize>8pt</FontSize>
         </Style>
       </Body>
-      <Width>7.34617in</Width>
+      <Width>18.65927cm</Width>
       <Page>
         <PageHeader>
-          <Height>4.23833in</Height>
+          <Height>10.76536cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -16302,10 +16306,10 @@ Cstr(Fields!EmailCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>12.82557cm</Left>
-              <Height>40pt</Height>
-              <Width>5.8337cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <Visibility>
                 <Hidden>=iif(IsNothing(Fields!CompanyInfo2Picture.Value) = true,true,false)</Hidden>
               </Visibility>
@@ -16320,10 +16324,10 @@ Cstr(Fields!EmailCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>6.25404cm</Left>
-              <Height>40pt</Height>
-              <Width>6.53625cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>1</ZIndex>
               <Visibility>
                 <Hidden>=iif(IsNothing(Fields!CompanyInfo1Picture.Value) = true,true,false)</Hidden>
@@ -16339,11 +16343,9 @@ Cstr(Fields!EmailCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Top>0pt</Top>
-              <Left>0pt</Left>
-              <Height>40pt</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Visibility>
                 <Hidden>=iif(IsNothing(Fields!CompanyInfo3Picture.Value) = true,true,false)</Hidden>
@@ -17927,12 +17929,15 @@ Cstr(Fields!EmailCaption.Value)
             <FontSize>8pt</FontSize>
           </Style>
         </PageHeader>
+        <PageHeight>29.7cm</PageHeight>
+        <PageWidth>21cm</PageWidth>
         <InteractiveHeight>11in</InteractiveHeight>
-        <InteractiveWidth>8.5in</InteractiveWidth>
-        <LeftMargin>0.69444in</LeftMargin>
-        <RightMargin>0.41667in</RightMargin>
-        <TopMargin>0.41667in</TopMargin>
-        <BottomMargin>0.58333in</BottomMargin>
+        <InteractiveWidth>8.3in</InteractiveWidth>
+        <LeftMargin>1.5cm</LeftMargin>
+        <RightMargin>0cm</RightMargin>
+        <TopMargin>1.05834cm</TopMargin>
+        <BottomMargin>1.48166cm</BottomMargin>
+        <ColumnSpacing>1.27cm</ColumnSpacing>
         <Style>
           <FontFamily>Segoe UI</FontFamily>
           <FontSize>8pt</FontSize>
@@ -17996,7 +18001,7 @@ End Function
 </Code>
   <Language>=User!Language</Language>
   <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
-  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportUnitType>Cm</rd:ReportUnitType>
   <rd:ReportID>1c018c53-9485-45b8-86c3-49eb2763c85f</rd:ReportID>
 </Report>
     END_OF_RDLDATA

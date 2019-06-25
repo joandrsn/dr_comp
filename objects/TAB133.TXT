@@ -2,9 +2,9 @@ OBJECT Table 133 Incoming Document Attachment
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -54,7 +54,8 @@ OBJECT Table 133 Incoming Document Attachment
                                                               ENU=Line No.] }
     { 3   ;   ;Created Date-Time   ;DateTime      ;CaptionML=[DAN=Oprettet dato/klokkeslæt;
                                                               ENU=Created Date-Time] }
-    { 4   ;   ;Created By User Name;Code50        ;CaptionML=[DAN=Brugernavn for oprettelse;
+    { 4   ;   ;Created By User Name;Code50        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Brugernavn for oprettelse;
                                                               ENU=Created By User Name] }
     { 5   ;   ;Name                ;Text50        ;CaptionML=[DAN=Navn;
                                                               ENU=Name] }
@@ -329,7 +330,7 @@ OBJECT Table 133 Incoming Document Attachment
       TempBlob.INIT;
       TempBlob.Blob := Content;
       TempBlob.Blob.CREATEINSTREAM(InStream);
-      IF NOT XMLDOMManagement.LoadXMLDocumentFromInStream(InStream,XMLRootNode) THEN
+      IF NOT XMLDOMManagement.LoadXMLNodeFromInStream(InStream,XMLRootNode) THEN
         EXIT;
       IF NOT IncomingDocument.GET("Incoming Document Entry No.") THEN
         EXIT;

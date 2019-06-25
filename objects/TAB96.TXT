@@ -2,12 +2,13 @@ OBJECT Table 96 G/L Budget Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
+    Permissions=TableData 366=rd;
     OnInsert=VAR
                TempDimSetEntry@1000 : TEMPORARY Record 480;
              BEGIN
@@ -40,6 +41,7 @@ OBJECT Table 96 G/L Budget Entry
 
     OnDelete=BEGIN
                CheckIfBlocked;
+               DeleteAnalysisViewBudgetEntries;
              END;
 
     CaptionML=[DAN=Finansbudgetpost;
@@ -89,7 +91,7 @@ OBJECT Table 96 G/L Budget Entry
                                                    AutoFormatType=1 }
     { 9   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
-    { 10  ;   ;Business Unit Code  ;Code10        ;TableRelation="Business Unit";
+    { 10  ;   ;Business Unit Code  ;Code20        ;TableRelation="Business Unit";
                                                    CaptionML=[DAN=Konc.virksomhedskode;
                                                               ENU=Business Unit Code] }
     { 11  ;   ;User ID             ;Code50        ;TableRelation=User."User Name";
@@ -100,6 +102,7 @@ OBJECT Table 96 G/L Budget Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    Editable=No }
@@ -114,6 +117,8 @@ OBJECT Table 96 G/L Budget Entry
 
                                                    OnLookup=BEGIN
                                                               "Budget Dimension 1 Code" := OnLookupDimCode(2,"Budget Dimension 1 Code");
+                                                              ValidateDimValue(GLBudgetName."Budget Dimension 1 Code","Budget Dimension 1 Code");
+                                                              UpdateDimensionSetId(GLBudgetName."Budget Dimension 1 Code","Budget Dimension 1 Code");
                                                             END;
 
                                                    AccessByPermission=TableData 348=R;
@@ -131,6 +136,8 @@ OBJECT Table 96 G/L Budget Entry
 
                                                    OnLookup=BEGIN
                                                               "Budget Dimension 2 Code" := OnLookupDimCode(3,"Budget Dimension 2 Code");
+                                                              ValidateDimValue(GLBudgetName."Budget Dimension 2 Code","Budget Dimension 2 Code");
+                                                              UpdateDimensionSetId(GLBudgetName."Budget Dimension 2 Code","Budget Dimension 2 Code");
                                                             END;
 
                                                    AccessByPermission=TableData 348=R;
@@ -148,6 +155,8 @@ OBJECT Table 96 G/L Budget Entry
 
                                                    OnLookup=BEGIN
                                                               "Budget Dimension 3 Code" := OnLookupDimCode(4,"Budget Dimension 3 Code");
+                                                              ValidateDimValue(GLBudgetName."Budget Dimension 3 Code","Budget Dimension 3 Code");
+                                                              UpdateDimensionSetId(GLBudgetName."Budget Dimension 3 Code","Budget Dimension 3 Code");
                                                             END;
 
                                                    AccessByPermission=TableData 350=R;
@@ -165,6 +174,8 @@ OBJECT Table 96 G/L Budget Entry
 
                                                    OnLookup=BEGIN
                                                               "Budget Dimension 4 Code" := OnLookupDimCode(5,"Budget Dimension 4 Code");
+                                                              ValidateDimValue(GLBudgetName."Budget Dimension 4 Code","Budget Dimension 4 Code");
+                                                              UpdateDimensionSetId(GLBudgetName."Budget Dimension 4 Code","Budget Dimension 4 Code");
                                                             END;
 
                                                    AccessByPermission=TableData 350=R;
@@ -297,10 +308,11 @@ OBJECT Table 96 G/L Budget Entry
 
     LOCAL PROCEDURE GetCaptionClass@7(BudgetDimType@1000 : Integer) : Text[250];
     BEGIN
-      IF GETFILTER("Budget Name") <> '' THEN
-        IF GLBudgetName.Name <> GETRANGEMIN("Budget Name") THEN
-          IF NOT GLBudgetName.GET(GETRANGEMIN("Budget Name")) THEN
-            CLEAR(GLBudgetName);
+      IF GETFILTER("Budget Name") <> '' THEN BEGIN
+        GLBudgetName.SETFILTER(Name,GETFILTER("Budget Name"));
+        IF NOT GLBudgetName.FINDFIRST THEN
+          CLEAR(GLBudgetName);
+      END;
       CASE BudgetDimType OF
         1:
           BEGIN
@@ -395,6 +407,15 @@ OBJECT Table 96 G/L Budget Entry
       DimMgt.GetDimensionSet(TempDimSetEntry,"Dimension Set ID");
       UpdateDimSet(TempDimSetEntry,DimCode,DimValueCode);
       "Dimension Set ID" := DimMgt.GetDimensionSetID(TempDimSetEntry);
+    END;
+
+    LOCAL PROCEDURE DeleteAnalysisViewBudgetEntries@10();
+    VAR
+      AnalysisViewBudgetEntry@1000 : Record 366;
+    BEGIN
+      AnalysisViewBudgetEntry.SETRANGE("Budget Name","Budget Name");
+      AnalysisViewBudgetEntry.SETRANGE("Entry No.","Entry No.");
+      AnalysisViewBudgetEntry.DELETEALL;
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Table 418 IC Inbox Transaction
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -189,12 +189,11 @@ OBJECT Table 418 IC Inbox Transaction
       THEN BEGIN
         ICInboxPurchHeader.GET("Transaction No.","IC Partner Code","Transaction Source");
         IF ICInboxPurchHeader."Your Reference" <> '' THEN BEGIN
-          PurchHeader.SETRANGE("No.",ICInboxPurchHeader."Your Reference");
+          PurchHeader.SETRANGE("Your Reference",ICInboxPurchHeader."Your Reference");
           IF PurchHeader.FINDFIRST THEN
             MESSAGE(Text003,ICInboxPurchHeader."IC Transaction No.",ICInboxPurchHeader."Your Reference")
           ELSE BEGIN
-            PurchInvHeader.SETCURRENTKEY("Order No.");
-            PurchInvHeader.SETRANGE("Order No.",ICInboxPurchHeader."Your Reference");
+            PurchInvHeader.SETRANGE("Your Reference",ICInboxPurchHeader."Your Reference");
             IF PurchInvHeader.FINDFIRST THEN
               IF NOT CONFIRM(Text004,TRUE,ICInboxPurchHeader."Your Reference",ICInboxPurchHeader."IC Transaction No.") THEN
                 "Line Action" := xRec."Line Action";

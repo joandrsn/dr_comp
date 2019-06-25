@@ -2,9 +2,9 @@ OBJECT Page 917 Component - Item FactBox
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
@@ -26,6 +26,8 @@ OBJECT Page 917 Component - Item FactBox
 
     { 2   ;1   ;Field     ;
                 Name=Item No.;
+                CaptionML=[DAN=Varenr.;
+                           ENU=Item No.];
                 SourceExpr=ShowNo;
                 OnDrillDown=BEGIN
                               AssemblyInfoPaneManagement.LookupItem(Rec);
@@ -34,6 +36,8 @@ OBJECT Page 917 Component - Item FactBox
 
     { 19  ;1   ;Field     ;
                 Name=Required Quantity;
+                CaptionML=[DAN=Påkrævet antal;
+                           ENU=Required Quantity];
                 DecimalPlaces=0:5;
                 BlankZero=Yes;
                 SourceExpr=ShowRequiredQty }
@@ -46,10 +50,14 @@ OBJECT Page 917 Component - Item FactBox
 
     { 21  ;2   ;Field     ;
                 Name=Due Date;
+                CaptionML=[DAN=Forfaldsdato;
+                           ENU=Due Date];
                 SourceExpr=ShowDueDate }
 
     { 11  ;2   ;Field     ;
                 Name=Item Availability;
+                CaptionML=[DAN=Varedisponering;
+                           ENU=Item Availability];
                 DecimalPlaces=0:5;
                 BlankZero=Yes;
                 SourceExpr=AssemblyInfoPaneManagement.CalcAvailability(Rec);
@@ -61,30 +69,40 @@ OBJECT Page 917 Component - Item FactBox
 
     { 10  ;2   ;Field     ;
                 Name=Available Inventory;
+                CaptionML=[DAN=Disponibel beholdning;
+                           ENU=Available Inventory];
                 DecimalPlaces=0:5;
                 BlankZero=Yes;
                 SourceExpr=AssemblyInfoPaneManagement.CalcAvailableInventory(Rec) }
 
     { 13  ;2   ;Field     ;
                 Name=Scheduled Receipt;
+                CaptionML=[DAN=Fastlagt tilgang;
+                           ENU=Scheduled Receipt];
                 DecimalPlaces=0:5;
                 BlankZero=Yes;
                 SourceExpr=AssemblyInfoPaneManagement.CalcScheduledReceipt(Rec) }
 
     { 14  ;2   ;Field     ;
                 Name=Reserved Receipt;
+                CaptionML=[DAN=Reserveret modtagelse;
+                           ENU=Reserved Receipt];
                 DecimalPlaces=0:5;
                 BlankZero=Yes;
                 SourceExpr=AssemblyInfoPaneManagement.CalcReservedReceipt(Rec) }
 
     { 12  ;2   ;Field     ;
                 Name=Gross Requirement;
+                CaptionML=[DAN=Bruttobehov;
+                           ENU=Gross Requirement];
                 DecimalPlaces=0:5;
                 BlankZero=Yes;
                 SourceExpr=AssemblyInfoPaneManagement.CalcGrossRequirement(Rec) }
 
     { 15  ;2   ;Field     ;
                 Name=Reserved Requirement;
+                CaptionML=[DAN=Reserveret behov;
+                           ENU=Reserved Requirement];
                 DecimalPlaces=0:5;
                 BlankZero=Yes;
                 SourceExpr=AssemblyInfoPaneManagement.CalcReservedRequirement(Rec) }

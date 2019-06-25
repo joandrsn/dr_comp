@@ -2,9 +2,9 @@ OBJECT Report 418 Arch. Sales Return Order
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -10998,10 +10998,11 @@ Fields!CustAddr_7_.Value + Chr(177)+ Fields!CustAddr_8_.Value + Chr(177), 1)</Hi
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(3))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.63492cm</Top>
-              <Left>12.06349cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(3) = "",true,false)</Hidden>
               </Visibility>
@@ -11012,10 +11013,11 @@ Fields!CustAddr_7_.Value + Chr(177)+ Fields!CustAddr_8_.Value + Chr(177), 1)</Hi
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(2))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.63492cm</Top>
-              <Left>6.03175cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>1</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(2) = "",true,false)</Hidden>
@@ -11027,9 +11029,10 @@ Fields!CustAddr_7_.Value + Chr(177)+ Fields!CustAddr_8_.Value + Chr(177), 1)</Hi
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Code.GetPicture(1))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.63492cm</Top>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Visibility>
                 <Hidden>=iif(Code.GetPicture(1) = "",true,false)</Hidden>

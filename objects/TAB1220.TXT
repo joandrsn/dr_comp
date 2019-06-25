@@ -2,13 +2,14 @@ OBJECT Table 1220 Data Exch.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
-    Permissions=TableData 1221=rimd;
+    Permissions=TableData 1220=i,
+                TableData 1221=rimd;
     OnDelete=VAR
                DataExchField@1000 : Record 1221;
              BEGIN
@@ -72,15 +73,19 @@ OBJECT Table 1220 Data Exch.
     VAR
       DataExchLineDef@1001 : Record 1227;
     BEGIN
+      DataExchLineDef.SETRANGE("Data Exch. Def Code",DataExchDef.Code);
+      IF DataExchLineDef.FINDFIRST THEN;
+
+      INIT;
+      "Data Exch. Def Code" := DataExchDef.Code;
+      "Data Exch. Line Def Code" := DataExchLineDef.Code;
+
       DataExchDef.TESTFIELD("Ext. Data Handling Codeunit");
       CODEUNIT.RUN(DataExchDef."Ext. Data Handling Codeunit",Rec);
 
       IF NOT "File Content".HASVALUE THEN
         EXIT(FALSE);
-      DataExchLineDef.SETRANGE("Data Exch. Def Code",DataExchDef.Code);
-      DataExchLineDef.FINDFIRST;
-      "Data Exch. Def Code" := DataExchDef.Code;
-      "Data Exch. Line Def Code" := DataExchLineDef.Code;
+
       INSERT;
       EXIT(TRUE);
     END;

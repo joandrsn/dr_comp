@@ -2,9 +2,9 @@ OBJECT Report 5625 Insurance - Tot. Value Insured
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -1305,6 +1305,7 @@ First(Fields!CurrReport_PAGENOCaption.Value))</Hidden>
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -1322,8 +1323,8 @@ First(Fields!CurrReport_PAGENOCaption.Value))</Hidden>
                 </Paragraph>
               </Paragraphs>
               <Top>0.846cm</Top>
-              <Left>14.9cm</Left>
-              <Width>3.25cm</Width>
+              <Left>12.9cm</Left>
+              <Width>5.25cm</Width>
               <ZIndex>4</ZIndex>
               <Visibility>
                 <Hidden>=IIf(Code.GetData(4) = "",True,False)</Hidden>

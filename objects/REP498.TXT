@@ -2,9 +2,9 @@ OBJECT Report 498 Batch Post Purch. Credit Memos
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -36,6 +36,8 @@ OBJECT Report 498 Batch Post Purch. Credit Memos
 
                                   IF CalcInvDisc THEN
                                     CalculateInvoiceDiscount;
+
+                                  BatchConfirmUpdateDeferralDate(BatchConfirm,ReplacePostingDate,PostingDateReq);
 
                                   Counter := Counter + 1;
                                   Window.UPDATE(1,"No.");
@@ -135,6 +137,7 @@ OBJECT Report 498 Batch Post Purch. Credit Memos
       ReplaceDocumentDate@1015 : Boolean;
       CalcInvDisc@1016 : Boolean;
       Text003@1012 : TextConst 'DAN=Den valutakurs, som er knyttet til den nye bogføringsdato i købshovedet, gælder ikke for købslinjerne.;ENU=The exchange rate associated with the new posting date on the purchase header will not apply to the purchase lines.';
+      BatchConfirm@1013 : ' ,Skip,Update';
 
     LOCAL PROCEDURE CalculateInvoiceDiscount@1();
     BEGIN

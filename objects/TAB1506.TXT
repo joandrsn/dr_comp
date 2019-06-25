@@ -2,9 +2,9 @@ OBJECT Table 1506 Workflow Table Relation Value
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -38,13 +38,15 @@ OBJECT Table 1506 Workflow Table Relation Value
                                                               ENU=Related Field ID] }
     { 8   ;   ;Value               ;Text250       ;CaptionML=[DAN=Værdi;
                                                               ENU=Value] }
-    { 9   ;   ;Record ID           ;RecordID      ;CaptionML=[DAN=Record-id;
+    { 9   ;   ;Record ID           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-id;
                                                               ENU=Record ID] }
   }
   KEYS
   {
     {    ;Workflow Step Instance ID,Workflow Code,Workflow Step ID,Table ID,Field ID,Related Table ID,Related Field ID;
                                                    Clustered=Yes }
+    {    ;Record ID                                }
   }
   FIELDGROUPS
   {

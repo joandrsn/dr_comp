@@ -2,9 +2,9 @@ OBJECT Report 99001026 Replan Production Order
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -36,27 +36,12 @@ OBJECT Report 99001026 Replan Production Order
                                  Text002);
                              END;
 
-               OnAfterGetRecord=VAR
-                                  ProdOrderLine@1001 : Record 5406;
-                                BEGIN
+               OnAfterGetRecord=BEGIN
                                   IF (CalcMethod = CalcMethod::"One level") AND NOT First THEN
                                     CurrReport.BREAK;
 
                                   Window.UPDATE(1,Status);
                                   Window.UPDATE(2,"No.");
-                                  ProdOrderLine.LOCKTABLE;
-
-                                  ProdOrderLine.SETRANGE(Status,Status);
-                                  ProdOrderLine.SETRANGE("Prod. Order No.","No.");
-                                  IF ProdOrderLine.FIND('-') THEN
-                                    REPEAT
-                                      ProdOrderLine.BlockDynamicTracking(TRUE);
-                                      IF ProdOrderLine."Planning Level Code" > 0 THEN BEGIN
-                                        ProdOrderLine.CALCFIELDS("Reserved Qty. (Base)");
-                                        IF ProdOrderLine."Reserved Qty. (Base)" = 0 THEN
-                                          ProdOrderLine.DELETE(TRUE);
-                                      END;
-                                    UNTIL ProdOrderLine.NEXT = 0;
 
                                   IF "Replan Ref. No." = '' THEN BEGIN
                                     "Replan Ref. No." := "No.";
@@ -71,6 +56,9 @@ OBJECT Report 99001026 Replan Production Order
                                     IF CalcMethod <> CalcMethod::"No Levels" THEN
                                       DeleteProdOrders("Production Order","Low-Level Code",CalcMethod = CalcMethod::"All levels");
                                   END;
+
+                                  DeleteUnreservedLowLevelProdOrderLines("Production Order");
+
                                   CreateProdOrderLines.CheckStructure(
                                     Status,"No.",Direction,TRUE,TRUE);
                                 END;
@@ -159,6 +147,7 @@ OBJECT Report 99001026 Replan Production Order
 
                OnAfterGetRecord=VAR
                                   SKU@1001 : TEMPORARY Record 5700;
+                                  StockkeepingUnit@1009 : Record 5700;
                                   CompItem@1000 : Record 27;
                                   MainProdOrder@1002 : Record 5405;
                                   ProdOrder@1003 : Record 5405;
@@ -168,6 +157,7 @@ OBJECT Report 99001026 Replan Production Order
                                   GetPlanningParameters@1011 : Codeunit 99000855;
                                   InvtProfileOffsetting@1010 : Codeunit 99000854;
                                   ReqQty@1007 : Decimal;
+                                  WithInventory@1008 : Boolean;
                                 BEGIN
                                   BlockDynamicTracking(TRUE);
                                   VALIDATE("Routing Link Code");
@@ -186,12 +176,15 @@ OBJECT Report 99001026 Replan Production Order
                                   CompItem.SETRANGE("Location Filter","Location Code");
                                   CompItem.SETRANGE("Date Filter",0D,"Due Date");
 
-                                  AvailabilityMgt.ExpectedQtyOnHand(
-                                    CompItem,
-                                    TRUE,
-                                    0,
-                                    ReqQty,
-                                    "Due Date");
+                                  IF StockkeepingUnit.GET("Location Code","Item No.","Variant Code") THEN
+                                    WithInventory := StockkeepingUnit."Include Inventory"
+                                  ELSE
+                                    WithInventory := CompItem."Include Inventory";
+
+                                  IF WithInventory THEN
+                                    CompItem.CALCFIELDS(Inventory);
+
+                                  AvailabilityMgt.ExpectedQtyOnHand(CompItem,TRUE,0,ReqQty,"Due Date");
 
                                   IF ReqQty >= 0 THEN
                                     CurrReport.SKIP;
@@ -331,6 +324,58 @@ OBJECT Report 99001026 Replan Production Order
             ProdOrder.DELETE(TRUE);
           END;
         UNTIL ProdOrderComponent.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE DeleteUnreservedLowLevelProdOrderLines@3(ProdOrder@1002 : Record 5405);
+    VAR
+      ProdOrderLine@1001 : Record 5406;
+      ExtReservedQtyBase@1000 : Decimal;
+    BEGIN
+      WITH ProdOrderLine DO BEGIN
+        LOCKTABLE;
+        SETRANGE(Status,ProdOrder.Status);
+        SETRANGE("Prod. Order No.",ProdOrder."No.");
+        IF FIND('-') THEN
+          REPEAT
+            IF "Planning Level Code" > 0 THEN BEGIN
+              CALCFIELDS("Reserved Qty. (Base)");
+              IF "Reserved Qty. (Base)" = 0 THEN
+                DELETE(TRUE)
+              ELSE BEGIN
+                ExtReservedQtyBase := CalcQtyReservedFromExternalDemand(ProdOrderLine,DATABASE::"Prod. Order Component");
+                VALIDATE("Quantity (Base)",ExtReservedQtyBase);
+                IF "Quantity (Base)" > 0 THEN
+                  MODIFY(TRUE)
+                ELSE
+                  DELETE(TRUE);
+              END;
+            END;
+          UNTIL NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcQtyReservedFromExternalDemand@13(ProdOrderLine@1008 : Record 5406;SourceType@1006 : Integer) ReservedQtyBase : Decimal;
+    VAR
+      ReservEntry@1007 : Record 337;
+      ReservEntryFrom@1001 : Record 337;
+      ProdOrderLineReserve@1000 : Codeunit 99000837;
+    BEGIN
+      ReservedQtyBase := 0;
+
+      WITH ReservEntry DO BEGIN
+        SETCURRENTKEY("Source ID","Source Ref. No.","Source Type","Source Subtype","Source Batch Name");
+        SETRANGE("Reservation Status","Reservation Status"::Reservation);
+        ProdOrderLineReserve.FilterReservFor(ReservEntry,ProdOrderLine);
+
+        IF FINDSET THEN
+          REPEAT
+            ReservEntryFrom.GET("Entry No.",NOT Positive);
+            IF (ReservEntryFrom."Source Type" <> SourceType) OR (ReservEntryFrom."Source ID" <> ProdOrderLine."Prod. Order No.") OR
+               (ReservEntryFrom."Source Subtype" <> ProdOrderLine.Status)
+            THEN
+              ReservedQtyBase += "Quantity (Base)";
+          UNTIL NEXT = 0;
+      END;
     END;
 
     BEGIN

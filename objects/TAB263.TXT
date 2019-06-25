@@ -2,9 +2,9 @@ OBJECT Table 263 Intrastat Jnl. Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-04-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51333;
   }
   PROPERTIES
   {
@@ -45,7 +45,6 @@ OBJECT Table 263 Intrastat Jnl. Line
                                                               ENU=Date] }
     { 6   ;   ;Tariff No.          ;Code20        ;TableRelation="Tariff Number";
                                                    OnValidate=BEGIN
-                                                                TESTFIELD("Item No.",'');
                                                                 GetItemDescription;
                                                               END;
 
@@ -134,10 +133,8 @@ OBJECT Table 263 Intrastat Jnl. Line
 
                                                                 IF "Item No." = '' THEN
                                                                   CLEAR(Item)
-                                                                ELSE BEGIN
+                                                                ELSE
                                                                   Item.GET("Item No.");
-                                                                  Item.TESTFIELD("Tariff No.");
-                                                                END;
 
                                                                 Name := Item.Description;
                                                                 "Tariff No." := Item."Tariff No.";

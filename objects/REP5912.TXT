@@ -2,9 +2,9 @@ OBJECT Report 5912 Service - Credit Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.48628,NAVDK9.00.00.48628;
   }
   PROPERTIES
   {
@@ -10329,10 +10329,11 @@ OBJECT Report 5912 Service - Credit Memo
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Convert.ToBase64String(Fields!CompanyInfo2Picture.Value))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.74074cm</Top>
-              <Left>11.94847cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.17216cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <Visibility>
                 <Hidden>=iif((IsNothing(Fields!CompanyInfo2Picture.Value)) = TRUE,TRUE,FALSE)</Hidden>
               </Visibility>
@@ -10367,10 +10368,11 @@ OBJECT Report 5912 Service - Credit Memo
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Convert.ToBase64String(Fields!CompanyInfo1Picture.Value))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.74074cm</Top>
-              <Left>5.83037cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>2</ZIndex>
               <Visibility>
                 <Hidden>=iif((IsNothing(Fields!CompanyInfo1Picture.Value)) = TRUE,TRUE,FALSE)</Hidden>
@@ -10406,10 +10408,10 @@ OBJECT Report 5912 Service - Credit Memo
               <Source>Database</Source>
               <Value>=Convert.FromBase64String(Convert.ToBase64String(Fields!CompanyInfoPicture.Value))</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Top>0.74074cm</Top>
-              <Left>0.39683cm</Left>
-              <Height>3.96cm</Height>
-              <Width>6.16cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Top>1cm</Top>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>4</ZIndex>
               <Visibility>
                 <Hidden>=iif((IsNothing(Fields!CompanyInfoPicture.Value)) = TRUE,TRUE,FALSE)</Hidden>

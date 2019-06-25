@@ -2,9 +2,9 @@ OBJECT Table 5079 Marketing Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -62,7 +62,7 @@ OBJECT Table 5079 Marketing Setup
                                                    InitValue=Yes;
                                                    CaptionML=[DAN=Overfør kommunikationsdetaljer;
                                                               ENU=Inherit Communication Details] }
-    { 28  ;   ;Default Salesperson Code;Code10    ;TableRelation=Salesperson/Purchaser;
+    { 28  ;   ;Default Salesperson Code;Code20    ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Standardsælgerkode;
                                                               ENU=Default Salesperson Code] }
     { 29  ;   ;Default Territory Code;Code10      ;TableRelation=Territory;
@@ -167,7 +167,8 @@ OBJECT Table 5079 Marketing Setup
                                                    MinValue=0 }
     { 71  ;   ;Exchange Service URL;Text250       ;CaptionML=[DAN=URL-adresse til Exchange-tjeneste;
                                                               ENU=Exchange Service URL] }
-    { 72  ;   ;Exchange Account User Name;Text250 ;CaptionML=[DAN=Brugernavn til Exchange-konto;
+    { 72  ;   ;Exchange Account User Name;Text250 ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Brugernavn til Exchange-konto;
                                                               ENU=Exchange Account User Name] }
     { 73  ;   ;Exchange Account Password Key;GUID ;CaptionML=[DAN=Adgangskodenøgle til Exchange-konto;
                                                               ENU=Exchange Account Password Key] }

@@ -2,9 +2,9 @@ OBJECT Table 1020 Job Usage Link
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -13,13 +13,14 @@ OBJECT Table 1020 Job Usage Link
   }
   FIELDS
   {
-    { 1   ;   ;Job No.             ;Code20        ;TableRelation="Job Planning Line"."Job No.";
+    { 1   ;   ;Job No.             ;Code20        ;TableRelation=Job;
                                                    CaptionML=[DAN=Sagsnr.;
                                                               ENU=Job No.] }
-    { 2   ;   ;Job Task No.        ;Code20        ;TableRelation="Job Planning Line"."Job Task No.";
+    { 2   ;   ;Job Task No.        ;Code20        ;TableRelation="Job Task"."Job Task No." WHERE (Job No.=FIELD(Job No.));
                                                    CaptionML=[DAN=Sagsopgavenr.;
                                                               ENU=Job Task No.] }
-    { 3   ;   ;Line No.            ;Integer       ;TableRelation="Job Planning Line"."Line No.";
+    { 3   ;   ;Line No.            ;Integer       ;TableRelation="Job Planning Line"."Line No." WHERE (Job No.=FIELD(Job No.),
+                                                                                                       Job Task No.=FIELD(Job Task No.));
                                                    CaptionML=[DAN=Linjenr.;
                                                               ENU=Line No.] }
     { 4   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;

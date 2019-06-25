@@ -2,9 +2,9 @@ OBJECT Table 5640 Main Asset Component
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -22,7 +22,6 @@ OBJECT Table 5640 Main Asset Component
 
     CaptionML=[DAN=Hovedanlæg;
                ENU=Main Asset Component];
-    PasteIsValid=No;
   }
   FIELDS
   {

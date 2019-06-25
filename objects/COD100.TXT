@@ -2,9 +2,9 @@ OBJECT Codeunit 100 Calc. G/L Acc. Where-Used
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -171,15 +171,20 @@ OBJECT Codeunit 100 Calc. G/L Acc. Where-Used
       PAGE.RUNMODAL(0,GLAccWhereUsed);
     END;
 
+    PROCEDURE InsertGroupForRecord@28(VAR TempGLAccountWhereUsed@1006 : TEMPORARY Record 180;TableID@1005 : Integer;TableCaption@1004 : Text[80];GLAccNo@1003 : Code[20];GLAccNo2@1002 : Code[20];FieldCaption@1001 : Text[80];Key@1000 : ARRAY [8] OF Text[80]);
+    BEGIN
+      TempGLAccountWhereUsed."Table ID" := TableID;
+      TempGLAccountWhereUsed."Table Name" := TableCaption;
+      GLAccWhereUsed.COPY(TempGLAccountWhereUsed,TRUE);
+      InsertGroup(GLAccNo,GLAccNo2,FieldCaption,Key);
+    END;
+
     LOCAL PROCEDURE InsertGroup@10(GLAccNo@1000 : Code[20];GLAccNo2@1001 : Code[20];FieldCaption@1003 : Text[80];Key@1002 : ARRAY [8] OF Text[80]);
     BEGIN
       IF GLAccNo = GLAccNo2 THEN BEGIN
-        IF NextEntryNo = 0 THEN BEGIN
-          IF GLAccWhereUsed.FINDLAST THEN
-            NextEntryNo := GLAccWhereUsed."Entry No." + 1
-          ELSE
-            NextEntryNo := 1;
-        END;
+        IF NextEntryNo = 0 THEN
+          NextEntryNo := GetWhereUsedNextEntryNo;
+
         GLAccWhereUsed."Field Name" := FieldCaption;
         IF Key[1] <> '' THEN
           GLAccWhereUsed.Line := Key[1] + '=' + Key[4]
@@ -227,6 +232,8 @@ OBJECT Codeunit 100 Calc. G/L Acc. Where-Used
       CheckServiceContractAccGr(GLAccNo);
       CheckICPartner(GLAccNo);
       CheckPaymentMethod(GLAccNo);
+
+      OnAfterCheckPostingGroups(GLAccWhereUsed,GLAccNo);
     END;
 
     LOCAL PROCEDURE CheckCurrency@6(GLAccNo@1000 : Code[20]);
@@ -634,6 +641,21 @@ OBJECT Codeunit 100 Calc. G/L Acc. Where-Used
             END
           UNTIL NEXT = 0;
       END;
+    END;
+
+    LOCAL PROCEDURE GetWhereUsedNextEntryNo@24() : Integer;
+    VAR
+      TempGLAccountWhereUsed@1000 : TEMPORARY Record 180;
+    BEGIN
+      TempGLAccountWhereUsed.COPY(GLAccWhereUsed,TRUE);
+      IF TempGLAccountWhereUsed.FINDLAST THEN
+        EXIT(TempGLAccountWhereUsed."Entry No." + 1);
+      EXIT(1);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterCheckPostingGroups@20(VAR TempGLAccountWhereUsed@1001 : TEMPORARY Record 180;GLAccNo@1000 : Code[20]);
+    BEGIN
     END;
 
     BEGIN

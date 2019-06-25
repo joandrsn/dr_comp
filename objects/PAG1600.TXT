@@ -2,9 +2,9 @@ OBJECT Page 1600 Outlook Mail Engine
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -26,7 +26,7 @@ OBJECT Page 1600 Outlook Mail Engine
                END;
 
     OnAfterGetRecord=VAR
-                       Contact@1003 : Record 5050;
+                       Contact2@1003 : Record 5050;
                      BEGIN
                        IF TempEmail <> '' THEN
                          IF COUNT = 1 THEN BEGIN
@@ -36,8 +36,8 @@ OBJECT Page 1600 Outlook Mail Engine
                            ELSE
                              RedirectContactToCompany("Company No.");
                          END ELSE BEGIN
-                           Contact.SETFILTER("No.",CreateFilterString);
-                           PAGE.RUN(PAGE::"Outlook Mail Engine",Contact);
+                           Contact2.SETFILTER("No.",CreateFilterString);
+                           PAGE.RUN(PAGE::"Outlook Mail Engine",Contact2);
                          END;
                      END;
 

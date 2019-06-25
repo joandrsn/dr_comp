@@ -2,9 +2,9 @@ OBJECT Report 5899 Calculate Inventory Value
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -412,7 +412,6 @@ OBJECT Report 5899 Calculate Inventory Value
       ShowDialog@1000 : Boolean;
       IncludeExpectedCost@1001 : Boolean;
       Text011@1006 : TextConst 'DAN=Du kan ikke regulere værdier ved at foretage en beregning pr. vare for varen %1 ved at bruge bogføringsdatoen %2. Du kan kun bruge bogføringsdatoen %3 til denne periode.;ENU=You cannot revalue by Calculate Per Item for item %1 using posting date %2. You can only use the posting date %3 for this period.';
-      Text012@1007 : TextConst 'DAN='''';ENU=''''';
       "By LocationEnable"@19076268 : Boolean INDATASET;
       "By VariantEnable"@19005255 : Boolean INDATASET;
       CalcBaseEnable@19032955 : Boolean INDATASET;
@@ -488,18 +487,17 @@ OBJECT Report 5899 Calculate Inventory Value
       WITH ValueEntry DO BEGIN
         "Item No." := Item."No.";
         "Valuation Date" := PostingDate;
-        IF ValJnlBuffer.GETFILTER("Location Code") <> Text012 THEN
-          "Location Code" := ValJnlBuffer.GETFILTER("Location Code");
-        IF ValJnlBuffer.GETFILTER("Variant Code") <> Text012 THEN
-          "Variant Code" := ValJnlBuffer.GETFILTER("Variant Code");
+        IF ValJnlBuffer.GETFILTER("Location Code") <> '' THEN
+          "Location Code" := ValJnlBuffer.GETRANGEMIN("Location Code");
+        IF ValJnlBuffer.GETFILTER("Variant Code") <> '' THEN
+          "Variant Code" := ValJnlBuffer.GETRANGEMIN("Variant Code");
         SumCostsTillValuationDate(ValueEntry);
-        AverageQty := "Item Ledger Entry Quantity";
-        AverageCost := "Cost Amount (Actual)" + "Cost Amount (Expected)";
+        AverageQty := "Invoiced Quantity";
+        AverageCost := "Cost Amount (Actual)";
 
         CalcNotComplInvcdTransfer(NotComplInvQty,NotComplInvValue);
-        AverageQty := AverageQty - NotComplInvQty;
-        IF (AverageQty > 0) AND (NotComplInvValue < 0) THEN
-          AverageCost := AverageCost + (InvtValueCalc / BufferQty * AverageQty + NotComplInvValue);
+        AverageQty -= NotComplInvQty;
+        AverageCost -= NotComplInvValue;
 
         RESET;
         SETRANGE("Item No.",Item."No.");
@@ -510,11 +508,9 @@ OBJECT Report 5899 Calculate Inventory Value
         SETRANGE("Item Charge No.",'');
         SETFILTER("Posting Date",'>%1',PostingDate);
         SETFILTER("Entry Type",'<>%1',"Entry Type"::Revaluation);
-        IF FINDSET THEN
-          REPEAT
-            AverageQty := AverageQty - "Item Ledger Entry Quantity";
-            AverageCost := AverageCost - "Cost Amount (Actual)" - "Cost Amount (Expected)";
-          UNTIL NEXT = 0;
+        CALCSUMS("Invoiced Quantity","Cost Amount (Actual)");
+        AverageQty -= "Invoiced Quantity";
+        AverageCost -= "Cost Amount (Actual)";
       END;
 
       IF AverageQty <> 0 THEN BEGIN
@@ -540,8 +536,8 @@ OBJECT Report 5899 Calculate Inventory Value
           SETCURRENTKEY("Item No.",Positive,"Location Code","Variant Code");
           SETRANGE("Item No.",Item."No.");
           SETRANGE(Positive,i = 1);
-          Item.COPYFILTER("Location Filter","Location Code");
-          Item.COPYFILTER("Variant Filter","Variant Code");
+          SETFILTER("Location Code",ValJnlBuffer.GETFILTER("Location Code"));
+          SETFILTER("Variant Code",ValJnlBuffer.GETFILTER("Variant Code"));
           IF FIND('-') THEN
             REPEAT
               IF (Quantity = "Invoiced Quantity") AND
@@ -550,7 +546,7 @@ OBJECT Report 5899 Calculate Inventory Value
                  ("Invoiced Quantity" <> 0)
               THEN BEGIN
                 RemQty := Quantity;
-                RemInvValue := CalculateRemInventoryValue("Entry No.",Quantity,RemQty,FALSE,PostingDate);
+                RemInvValue := CalcItemLedgEntryActualCostTillPostingDate("Entry No.",PostingDate);
                 NotComplInvQty := NotComplInvQty + RemQty;
                 NotComplInvValue := NotComplInvValue + RemInvValue;
               END;
@@ -641,7 +637,7 @@ OBJECT Report 5899 Calculate Inventory Value
                 UpdatedStdCostSKU."Item No." := ItemNo2;
                 UpdatedStdCostSKU."Location Code" := LocationCode2;
                 UpdatedStdCostSKU."Variant Code" := VariantCode2;
-                UpdatedStdCostSKU.INSERT;
+                IF UpdatedStdCostSKU.INSERT THEN;
               END ELSE
                 VALIDATE("Inventory Value (Revalued)","Inventory Value (Calculated)");
             END;
@@ -696,6 +692,21 @@ OBJECT Report 5899 Calculate Inventory Value
         SETRANGE("Location Code",LocationCode);
         SETRANGE("Applies-to Entry",ApplyToEntry);
         EXIT(NOT ISEMPTY);
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcItemLedgEntryActualCostTillPostingDate@98(ItemLedgEntryNo@1001 : Integer;PostingDate@1002 : Date) : Decimal;
+    VAR
+      ValueEntry@1000 : Record 5802;
+    BEGIN
+      WITH ValueEntry DO BEGIN
+        SETCURRENTKEY("Item Ledger Entry No.");
+        SETRANGE("Item Ledger Entry No.",ItemLedgEntryNo);
+        SETFILTER("Posting Date",'<=%1',PostingDate);
+        SETFILTER("Entry Type",'<>%1',"Entry Type"::Rounding);
+        SETRANGE("Expected Cost",FALSE);
+        CALCSUMS("Cost Amount (Actual)");
+        EXIT("Cost Amount (Actual)");
       END;
     END;
 

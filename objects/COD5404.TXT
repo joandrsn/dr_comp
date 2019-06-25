@@ -2,9 +2,9 @@ OBJECT Codeunit 5404 Lead-Time Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -22,6 +22,7 @@ OBJECT Codeunit 5404 Lead-Time Management
       GetPlanningParameters@1005 : Codeunit 99000855;
       CalendarMgmt@1006 : Codeunit 7600;
       CalChange@1000 : Record 7602;
+      LeadTimeCalcNegativeErr@1007 : TextConst 'DAN=Mængden af tid til at genopbygge elementet må ikke være negativ.;ENU=The amount of time to replenish the item must not be negative.';
 
     PROCEDURE PurchaseLeadTime@1(ItemNo@1000 : Code[20];LocationCode@1001 : Code[10];VariantCode@1002 : Code[10];VendorNo@1003 : Code[20]) : Code[20];
     VAR
@@ -259,6 +260,12 @@ OBJECT Codeunit 5404 Lead-Time Management
 
       EVALUATE(DateFormula,DateFormulaText);
       EXIT(CALCDATE(DateFormula,WORKDATE) = WORKDATE);
+    END;
+
+    PROCEDURE CheckLeadTimeIsNotNegative@8(LeadTimeDateFormula@1000 : DateFormula);
+    BEGIN
+      IF CALCDATE(LeadTimeDateFormula,WORKDATE) < WORKDATE THEN
+        ERROR(LeadTimeCalcNegativeErr);
     END;
 
     BEGIN

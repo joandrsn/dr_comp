@@ -2,9 +2,9 @@ OBJECT Table 78 Printer Selection
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -30,9 +30,10 @@ OBJECT Table 78 Printer Selection
 
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
-    { 2   ;   ;Report ID           ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Report));
+    { 2   ;   ;Report ID           ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Report));
                                                    CaptionML=[DAN=Rapport-id;
                                                               ENU=Report ID] }
     { 3   ;   ;Printer Name        ;Text250       ;TableRelation=Printer;

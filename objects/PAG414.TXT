@@ -2,9 +2,9 @@ OBJECT Page 414 G/L Balance
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -194,6 +194,25 @@ OBJECT Page 414 G/L Balance
                            END;
                             }
 
+    { 2   ;2   ;Field     ;
+                Name=DateFilter;
+                CaptionML=[DAN=Datofilter;
+                           ENU=Date Filter];
+                SourceExpr=DateFilter;
+                Importance=Promoted;
+                OnValidate=VAR
+                             ApplicationManagement@1000 : Codeunit 1;
+                             MakeDateFilter@1001 : Text[1024];
+                           BEGIN
+                             MakeDateFilter := COPYSTR(DateFilter,1,MAXSTRLEN(MakeDateFilter));
+                             IF ApplicationManagement.MakeDateFilter(MakeDateFilter) = 0 THEN;
+                             DateFilter := MakeDateFilter;
+                             SETFILTER("Date Filter",DateFilter);
+                             DateFilter := GETFILTER("Date Filter");
+                             CurrPage.UPDATE;
+                           END;
+                            }
+
     { 5   ;1   ;Group     ;
                 IndentationColumnName=NameIndent;
                 IndentationControls=Name;
@@ -256,6 +275,7 @@ OBJECT Page 414 G/L Balance
       DebitCreditTotals@1003 : Boolean;
       Emphasize@19074284 : Boolean INDATASET;
       NameIndent@19079073 : Integer INDATASET;
+      DateFilter@1004 : Text;
 
     LOCAL PROCEDURE FindPeriod@1(SearchText@1000 : Code[10]);
     VAR
@@ -304,6 +324,7 @@ OBJECT Page 414 G/L Balance
           "Date Filter",
           GETRANGEMIN("Date Filter"),
           CLOSINGDATE(GETRANGEMAX("Date Filter")));
+      DateFilter := GETFILTER("Date Filter");
     END;
 
     LOCAL PROCEDURE ClosingEntryFilterOnAfterValid@19030533();

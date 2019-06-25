@@ -2,9 +2,9 @@ OBJECT Codeunit 8614 Config. XML Exchange
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -15,7 +15,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
   CODE
   {
     VAR
-      FileMgt@1003 : Codeunit 419;
+      FileManagement@1003 : Codeunit 419;
       ConfigPackageMgt@1000 : Codeunit 8611;
       ConfigProgressBar@1004 : Codeunit 8615;
       ConfigValidateMgt@1021 : Codeunit 8617;
@@ -26,21 +26,22 @@ OBJECT Codeunit 8614 Config. XML Exchange
       Advanced@1001 : Boolean;
       CalledFromCode@1002 : Boolean;
       PackageAllreadyContainsDataQst@1006 : TextConst 'DAN=Pakken %1 indeholder allerede data, der overskrives af importen. Vil du fortsætte?;ENU=Package %1 already contains data that will be overwritten by the import. Do you want to continue?';
-      TableContainsRecordsQst@1013 : TextConst 'DAN=Tabellen %1 i pakken %2 indeholder %3 records, der overskrives af importen. Vil du fortsætte?;ENU=Table %1 in package %2 contains %3 records that will be overwritten by the import. Do you want to continue?';
-      MissingInExcelFileErr@1011 : TextConst 'DAN=%1 mangler i Excel-filen.;ENU=%1 is missing in the Excel file.';
-      Text014@1020 : TextConst 'DAN=Eksporterer pakke;ENU=Exporting package';
-      Text017@1017 : TextConst 'DAN=Indlæser pakke;ENU=Importing package';
+      TableContainsRecordsQst@1013 : TextConst '@@@="%1=The ID of the table being imported. %2=The Config Package Code. %3=The number of records in the config package.";DAN=Tabellen %1 i pakken %2 indeholder %3 records, der overskrives af importen. Vil du fortsætte?;ENU=Table %1 in the package %2 contains %3 records that will be overwritten by the import. Do you want to continue?';
+      MissingInExcelFileErr@1011 : TextConst '@@@="%1=The Package Code field caption.";DAN=%1 mangler i Excel-filen.;ENU=%1 is missing in the Excel file.';
+      ExportPackageTxt@1020 : TextConst 'DAN=Eksporterer pakke;ENU=Exporting package';
+      ImportPackageTxt@1017 : TextConst 'DAN=Indlæser pakke;ENU=Importing package';
       Text026@1010 : TextConst 'DAN=Pakke%1.rapidstart;ENU=Package%1.rapidstart';
-      Text027@1009 : TextConst 'DAN=Hent;ENU=Download';
-      Text028@1008 : TextConst 'DAN=Indlæs fil;ENU=Import File';
+      DownloadTxt@1009 : TextConst 'DAN=Hent;ENU=Download';
+      ImportFileTxt@1008 : TextConst 'DAN=Indlæs fil;ENU=Import File';
       FileDialogFilterTxt@1007 : TextConst '@@@="Only translate ''RapidStart Files'' {Split=r""[\|\(]\*\.[^ |)]*[|) ]?""}";DAN=RapidStart-fil (*.rapidstart)|*.rapidstart|Alle filer (*.*)|*.*;ENU=RapidStart file (*.rapidstart)|*.rapidstart|All Files (*.*)|*.*';
       ExcelMode@1028 : Boolean;
       HideDialog@1005 : Boolean;
-      Text031@1025 : TextConst '@@@={Locked};DAN=DataList;ENU=DataList';
+      DataListTxt@1025 : TextConst '@@@={Locked};DAN=DataList;ENU=DataList';
       TableDoesNotExistErr@1015 : TextConst 'DAN=Der opstod en fejl ved indlæsningen af tabellen %1. Tabellen findes ikke i databasen.;ENU=An error occurred while importing the %1 table. The table does not exist in the database.';
       WrongFileTypeErr@1018 : TextConst 'DAN=Den angivne fil kunne ikke indlæses, da den ikke er en gyldig RapidStart-pakkefil.;ENU=The specified file could not be imported because it is not a valid RapidStart package file.';
       ExportFromWksht@1019 : Boolean;
-      RecordProgressTxt@1022 : TextConst 'DAN=Importér %1 poster;ENU=Import %1 records';
+      RecordProgressTxt@1022 : TextConst '@@@="%1=The name of the table being imported.";DAN=Importér %1 poster;ENU=Import %1 records';
+      AddPrefixMode@1023 : Boolean;
 
     LOCAL PROCEDURE AddXMLComment@35(VAR PackageXML@1102 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";VAR Node@1100 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";Comment@1001 : Text[250]);
     VAR
@@ -104,6 +105,8 @@ OBJECT Codeunit 8614 Config. XML Exchange
         XMLDOMMgt.AddAttribute(FieldNode,GetElementName(ConfigPackageField.FIELDNAME("Primary Key")),'1');
       IF ConfigPackageField."Validate Field" THEN
         XMLDOMMgt.AddAttribute(FieldNode,GetElementName(ConfigPackageField.FIELDNAME("Validate Field")),'1');
+      IF ConfigPackageField."Create Missing Codes" THEN
+        XMLDOMMgt.AddAttribute(FieldNode,GetElementName(ConfigPackageField.FIELDNAME("Create Missing Codes")),'1');
       IF ConfigPackageField."Processing Order" <> 0 THEN
         XMLDOMMgt.AddAttribute(
           FieldNode,GetElementName(ConfigPackageField.FIELDNAME("Processing Order")),FORMAT(ConfigPackageField."Processing Order"));
@@ -130,7 +133,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
         UNTIL ConfigPackageField.NEXT = 0;
     END;
 
-    LOCAL PROCEDURE ApplyPackageFilter@7(ConfigPackageTable@1001 : Record 8613;VAR RecRef@1000 : RecordRef);
+    PROCEDURE ApplyPackageFilter@7(ConfigPackageTable@1001 : Record 8613;VAR RecRef@1000 : RecordRef);
     VAR
       ConfigPackageFilter@1002 : Record 8626;
       FieldRef@1003 : FieldRef;
@@ -184,19 +187,20 @@ OBJECT Codeunit 8614 Config. XML Exchange
       ApplyPackageFilter(ConfigPackageTable,RecRef);
       IF RecRef.FINDSET THEN
         REPEAT
-          RecordNode := PackageXML.CreateElement(GetElementName(ConfigPackageTable."Table Name"));
+          RecordNode := PackageXML.CreateElement(GetTableElementName(ConfigPackageTable."Table Name"));
           TableNode.AppendChild(RecordNode);
 
           ConfigPackageField.SETRANGE("Package Code",ConfigPackageTable."Package Code");
           ConfigPackageField.SETRANGE("Table ID",ConfigPackageTable."Table ID");
           ConfigPackageField.SETRANGE("Include Field",TRUE);
           ConfigPackageField.SETRANGE(Dimension,FALSE);
+          ConfigPackageField.SETCURRENTKEY("Package Code","Table ID","Processing Order");
           IF ConfigPackageField.FINDSET THEN
             REPEAT
               FieldRef := RecRef.FIELD(ConfigPackageField."Field ID");
               IF Field.GET(RecRef.NUMBER,FieldRef.NUMBER) THEN BEGIN
                 FieldNode :=
-                  PackageXML.CreateElement(GetElementName(ConfigValidateMgt.CheckName(FieldRef.NAME)));
+                  PackageXML.CreateElement(GetFieldElementName(ConfigValidateMgt.CheckName(FieldRef.NAME)));
                 FieldNode.InnerText := FormatFieldValue(FieldRef,ConfigPackage."Language ID");
                 IF Advanced AND ConfigPackageField."Localize Field" THEN
                   AddXMLComment(PackageXML,FieldNode,'_locComment_text="{MaxLength=' + FORMAT(Field.Len) + '}"');
@@ -216,7 +220,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
           ExportMetadata := FALSE;
         UNTIL RecRef.NEXT = 0
       ELSE BEGIN
-        RecordNode := PackageXML.CreateElement(GetElementName(ConfigPackageTable."Table Name"));
+        RecordNode := PackageXML.CreateElement(GetTableElementName(ConfigPackageTable."Table Name"));
         TableNode.AppendChild(RecordNode);
 
         ConfigPackageField.SETRANGE("Package Code",ConfigPackageTable."Package Code");
@@ -227,7 +231,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
           REPEAT
             FieldRef := RecRef.FIELD(ConfigPackageField."Field ID");
             FieldNode :=
-              PackageXML.CreateElement(GetElementName(ConfigValidateMgt.CheckName(FieldRef.NAME)));
+              PackageXML.CreateElement(GetFieldElementName(ConfigValidateMgt.CheckName(FieldRef.NAME)));
             FieldNode.InnerText := '';
             RecordNode.AppendChild(FieldNode);
             IF NOT ExcelMode THEN
@@ -270,17 +274,17 @@ OBJECT Codeunit 8614 Config. XML Exchange
       ExportPackageXMLDocument(PackageXML,ConfigPackageTable,ConfigPackage,Advanced);
 
       IF NOT CalledFromCode THEN
-        XMLDataFile := FileMgt.ServerTempFileName('');
+        XMLDataFile := FileManagement.ServerTempFileName('');
       FileFilter := GetFileDialogFilter;
       IF ToFile = '' THEN
         ToFile := STRSUBSTNO(Text026,ConfigPackage.Code);
       PackageXML.Save(XMLDataFile);
 
       IF NOT CalledFromCode THEN BEGIN
-        CompressedFileName := FileMgt.ServerTempFileName('');
+        CompressedFileName := FileManagement.ServerTempFileName('');
         ConfigPckgCompressionMgt.ServersideCompress(XMLDataFile,CompressedFileName);
 
-        FileMgt.DownloadHandler(CompressedFileName,Text027,'',FileFilter,ToFile);
+        FileManagement.DownloadHandler(CompressedFileName,DownloadTxt,'',FileFilter,ToFile);
       END;
 
       EXIT(TRUE);
@@ -296,11 +300,12 @@ OBJECT Codeunit 8614 Config. XML Exchange
 
       IF Advanced THEN
         LocXML := '<_locDefinition><_locDefault _loc="locNone"/></_locDefinition>';
-      PackageXML.LoadXml(
+      XMLDOMMgt.LoadXMLDocumentFromText(
         STRSUBSTNO(
           '<?xml version="1.0" encoding="UTF-16" standalone="yes"?><%1>%2</%1>',
           GetPackageTag,
-          LocXML));
+          LocXML),
+        PackageXML);
 
       IF NOT ExcelMode THEN BEGIN
         DocumentElement := PackageXML.DocumentElement;
@@ -319,7 +324,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
       END;
 
       IF NOT HideDialog THEN
-        ConfigProgressBar.Init(ConfigPackageTable.COUNT,1,Text014);
+        ConfigProgressBar.Init(ConfigPackageTable.COUNT,1,ExportPackageTxt);
       IF ConfigPackageTable.FINDSET THEN
         REPEAT
           ConfigPackageTable.CALCFIELDS("Table Name");
@@ -338,7 +343,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
       ServerFileName@1000 : Text;
       DecompressedFileName@1001 : Text;
     BEGIN
-      ServerFileName := FileMgt.ServerTempFileName('.xml');
+      ServerFileName := FileManagement.ServerTempFileName('.xml');
       IF UploadXMLPackage(ServerFileName) THEN BEGIN
         DecompressedFileName := DecompressPackage(ServerFileName);
 
@@ -352,8 +357,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
     VAR
       PackageXML@1100 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
     BEGIN
-      PackageXML := PackageXML.XmlDocument;
-      PackageXML.Load(XMLDataFile);
+      XMLDOMMgt.LoadXMLDocumentFromFile(XMLDataFile,PackageXML);
 
       EXIT(ImportPackageXMLDocument(PackageXML));
     END;
@@ -362,8 +366,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
     VAR
       PackageXML@1100 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
     BEGIN
-      PackageXML := PackageXML.XmlDocument;
-      PackageXML.Load(InStream);
+      XMLDOMMgt.LoadXMLDocumentFromInStream(InStream,PackageXML);
 
       EXIT(ImportPackageXMLDocument(PackageXML));
     END;
@@ -373,6 +376,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
       ConfigPackage@1004 : Record 8623;
       ConfigPackageRecord@1008 : Record 8614;
       ConfigPackageData@1010 : Record 8615;
+      ConfigPackageTable@1009 : Record 8613;
       DocumentElement@1101 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlElement";
       TableNodes@1102 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNodeList";
       TableNode@1002 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
@@ -425,14 +429,18 @@ OBJECT Codeunit 8614 Config. XML Exchange
 
       TableNodes := DocumentElement.ChildNodes;
       IF NOT HideDialog THEN
-        ConfigProgressBar.Init(TableNodes.Count,1,Text017);
+        ConfigProgressBar.Init(TableNodes.Count,1,ImportPackageTxt);
       FOR NodeCount := 0 TO (TableNodes.Count - 1) DO BEGIN
         TableNode := TableNodes.Item(NodeCount);
         IF EVALUATE(TableID,FORMAT(TableNode.FirstChild.InnerText)) THEN BEGIN
-          CheckTable(TableID);
           FillPackageMetadataFromXML(PackageCode,TableID,TableNode);
-          IF PackageDataExistsInXML(PackageCode,TableID,TableNode) THEN
-            FillPackageDataFromXML(PackageCode,TableID,TableNode);
+          IF NOT TableObjectExists(TableID) THEN BEGIN
+            ConfigPackageMgt.InsertPackageTableWithoutValidation(ConfigPackageTable,PackageCode,TableID);
+            ConfigPackageMgt.InitPackageRecord(ConfigPackageRecord,PackageCode,TableID);
+            ConfigPackageMgt.RecordError(ConfigPackageRecord,0,COPYSTR(STRSUBSTNO(TableDoesNotExistErr,TableID),1,250));
+          END ELSE
+            IF PackageDataExistsInXML(PackageCode,TableID,TableNode) THEN
+              FillPackageDataFromXML(PackageCode,TableID,TableNode);
         END;
         IF ExcelMode THEN
           CASE TRUE OF // Dimensions
@@ -514,7 +522,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
       FieldNode@1008 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
       Value@1006 : Text;
     BEGIN
-      IF (TableID <> 0) AND (NOT ConfigPackageTable.GET(PackageCode,TableID)) THEN BEGIN
+      IF (TableID > 0) AND (NOT ConfigPackageTable.GET(PackageCode,TableID)) THEN BEGIN
         IF NOT ExcelMode THEN BEGIN
           ConfigPackageTable.INIT;
           ConfigPackageTable."Package Code" := PackageCode;
@@ -582,6 +590,9 @@ OBJECT Codeunit 8614 Config. XML Exchange
                     IF NOT ISNULL(FieldNode) AND NOT ExcelMode THEN BEGIN
                       Value := GetAttribute(GetElementName(ConfigPackageField.FIELDNAME("Validate Field")),FieldNode);
                       ConfigPackageField."Validate Field" := (Value = '1') AND
+                        NOT ConfigPackageMgt.ValidateException(TableID,Field."No.");
+                      Value := GetAttribute(GetElementName(ConfigPackageField.FIELDNAME("Create Missing Codes")),FieldNode);
+                      ConfigPackageField."Create Missing Codes" := (Value = '1') AND
                         NOT ConfigPackageMgt.ValidateException(TableID,Field."No.");
                       Value := GetAttribute(GetElementName(ConfigPackageField.FIELDNAME("Processing Order")),FieldNode);
                       IF Value <> '' THEN
@@ -766,6 +777,22 @@ OBJECT Codeunit 8614 Config. XML Exchange
       EXIT(NameIn);
     END;
 
+    PROCEDURE GetFieldElementName@20(NameIn@1000 : Text[250]) : Text[250];
+    BEGIN
+      IF AddPrefixMode THEN
+        NameIn := COPYSTR('Field_' + NameIn,1,MAXSTRLEN(NameIn));
+
+      EXIT(GetElementName(NameIn));
+    END;
+
+    PROCEDURE GetTableElementName@24(NameIn@1000 : Text[250]) : Text[250];
+    BEGIN
+      IF AddPrefixMode THEN
+        NameIn := COPYSTR('Table_' + NameIn,1,MAXSTRLEN(NameIn));
+
+      EXIT(GetElementName(NameIn));
+    END;
+
     LOCAL PROCEDURE GetNodeValue@26(VAR RecordNode@1100 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";FieldNodeName@1001 : Text[250]) : Text[250];
     VAR
       FieldNode@1101 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
@@ -777,7 +804,7 @@ OBJECT Codeunit 8614 Config. XML Exchange
 
     LOCAL PROCEDURE GetPackageTag@8() : Text;
     BEGIN
-      EXIT(Text031);
+      EXIT(DataListTxt);
     END;
 
     PROCEDURE GetXSDType@3(TableID@1000 : Integer;FieldID@1001 : Integer) : Text[30];
@@ -828,30 +855,28 @@ OBJECT Codeunit 8614 Config. XML Exchange
       ExportFromWksht := NewExportFromWksht;
     END;
 
-    LOCAL PROCEDURE CheckTable@18(TableId@1000 : Integer);
+    PROCEDURE SetPrefixMode@25(PrefixMode@1000 : Boolean);
+    BEGIN
+      AddPrefixMode := PrefixMode;
+    END;
+
+    LOCAL PROCEDURE TableObjectExists@18(TableId@1000 : Integer) : Boolean;
     VAR
       AllObj@1001 : Record 2000000038;
     BEGIN
-      AllObj.SETRANGE("Object Type",AllObj."Object Type"::Table);
-      AllObj.SETRANGE("Object ID",TableId);
-      IF AllObj.ISEMPTY THEN BEGIN
-        IF NOT HideDialog THEN
-          ConfigProgressBar.Close;
-
-        ERROR(TableDoesNotExistErr,TableId);
-      END;
+      EXIT(AllObj.GET(AllObj."Object Type"::Table,TableId));
     END;
 
     PROCEDURE DecompressPackage@6(ServerFileName@1000 : Text) DecompressedFileName : Text;
     BEGIN
-      DecompressedFileName := FileMgt.ServerTempFileName('');
+      DecompressedFileName := FileManagement.ServerTempFileName('');
       IF NOT ConfigPckgCompressionMgt.ServersideDecompress(ServerFileName,DecompressedFileName) THEN
         ERROR(WrongFileTypeErr);
     END;
 
     LOCAL PROCEDURE UploadXMLPackage@23(ServerFileName@1000 : Text) : Boolean;
     BEGIN
-      EXIT(UPLOAD(Text028,'',GetFileDialogFilter,'',ServerFileName));
+      EXIT(UPLOAD(ImportFileTxt,'',GetFileDialogFilter,'',ServerFileName));
     END;
 
     PROCEDURE GetFileDialogFilter@15() : Text;

@@ -2,9 +2,9 @@ OBJECT Report 595 Adjust Exchange Rates
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-04-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.51333;
   }
   PROPERTIES
   {
@@ -174,7 +174,7 @@ OBJECT Report 595 Adjust Exchange Rates
                                     GenJnlLine."Document No." := PostingDocNo;
                                     GenJnlLine."Account Type" := GenJnlLine."Account Type"::"Bank Account";
                                     GenJnlLine.VALIDATE("Account No.","No.");
-                                    GenJnlLine.Description := PADSTR(STRSUBSTNO(PostingDescription,Currency.Code,AdjBase),STRLEN(PostingDescription));
+                                    GenJnlLine.Description := PADSTR(STRSUBSTNO(PostingDescription,Currency.Code,AdjBase),MAXSTRLEN(GenJnlLine.Description));
                                     GenJnlLine.VALIDATE(Amount,0);
                                     GenJnlLine."Amount (LCY)" := AdjAmount;
                                     GenJnlLine."Source Currency Code" := Currency.Code;
@@ -335,6 +335,8 @@ OBJECT Report 595 Adjust Exchange Rates
                              END;
 
                OnAfterGetRecord=BEGIN
+                                  TempDtldCustLedgEntrySums.DELETEALL;
+
                                   IF FirstEntry THEN BEGIN
                                     TempCustLedgerEntry.FIND('-');
                                     FirstEntry := FALSE
@@ -435,6 +437,8 @@ OBJECT Report 595 Adjust Exchange Rates
                              END;
 
                OnAfterGetRecord=BEGIN
+                                  TempDtldVendLedgEntrySums.DELETEALL;
+
                                   IF FirstEntry THEN BEGIN
                                     TempVendorLedgerEntry.FIND('-');
                                     FirstEntry := FALSE
@@ -562,6 +566,7 @@ OBJECT Report 595 Adjust Exchange Rates
                                       UNTIL TaxJurisdiction.NEXT = 0;
                                     VATEntry.SETRANGE("Tax Jurisdiction Code");
                                   END;
+                                  CLEAR(VATEntryTotalBase);
                                 END;
                                  }
 
@@ -776,8 +781,10 @@ OBJECT Report 595 Adjust Exchange Rates
       Text017@1017 : TextConst 'DAN="Indholdet i %1 på %2 %3 skal være %4. Når denne %2 bruges i tabellen %5, bliver valutakursreguleringen defineret i feltet %6 i tabellen %7. %2 %3 bruges i feltet %8 i tabellen %5. ";ENU="%1 on %2 %3 must be %4. When this %2 is used in %5, the exchange rate adjustment is defined in the %6 field in the %7. %2 %3 is used in the %8 field in the %5. "';
       DtldCustLedgEntry@1019 : Record 379;
       TempDtldCustLedgEntry@1003 : TEMPORARY Record 379;
+      TempDtldCustLedgEntrySums@1096 : TEMPORARY Record 379;
       DtldVendLedgEntry@1020 : Record 380;
       TempDtldVendLedgEntry@1018 : TEMPORARY Record 380;
+      TempDtldVendLedgEntrySums@1098 : TEMPORARY Record 380;
       ExchRateAdjReg@1021 : Record 86;
       CustPostingGr@1022 : Record 92;
       VendPostingGr@1023 : Record 93;
@@ -838,6 +845,7 @@ OBJECT Report 595 Adjust Exchange Rates
       EndDate@1067 : Date;
       EndDateReq@1068 : Date;
       Correction@1069 : Boolean;
+      HideUI@1097 : Boolean;
       OK@1070 : Boolean;
       AdjCustVendBank@1071 : Boolean;
       AdjGLAcc@1072 : Boolean;
@@ -858,7 +866,7 @@ OBJECT Report 595 Adjust Exchange Rates
           "Document No." := PostingDocNo;
           "Account Type" := "Account Type"::"G/L Account";
           VALIDATE("Account No.",GLAccNo);
-          Description := PADSTR(STRSUBSTNO(PostingDescription,CurrencyCode2,AdjBase2),STRLEN(PostingDescription));
+          Description := PADSTR(STRSUBSTNO(PostingDescription,CurrencyCode2,AdjBase2),MAXSTRLEN(Description));
           VALIDATE(Amount,PostingAmount);
           "Source Currency Code" := CurrencyCode2;
           "IC Partner Code" := ICCode;
@@ -1421,13 +1429,13 @@ OBJECT Report 595 Adjust Exchange Rates
         SetUnrealizedGainLossFilterCust(DtldCustLedgEntry,"Entry No.");
         DtldCustLedgEntry.CALCSUMS("Amount (LCY)");
 
-        SetUnrealizedGainLossFilterCust(TempDtldCustLedgEntry,"Entry No.");
-        TempDtldCustLedgEntry.CALCSUMS("Amount (LCY)","Debit Amount (LCY)","Credit Amount (LCY)");
-        OldAdjAmount := DtldCustLedgEntry."Amount (LCY)" + TempDtldCustLedgEntry."Amount (LCY)";
-        "Remaining Amt. (LCY)" := "Remaining Amt. (LCY)" + TempDtldCustLedgEntry."Amount (LCY)";
-        "Debit Amount (LCY)" := "Debit Amount (LCY)" + TempDtldCustLedgEntry."Amount (LCY)";
-        "Credit Amount (LCY)" := "Credit Amount (LCY)" + TempDtldCustLedgEntry."Amount (LCY)";
-        TempDtldCustLedgEntry.RESET;
+        SetUnrealizedGainLossFilterCust(TempDtldCustLedgEntrySums,"Entry No.");
+        TempDtldCustLedgEntrySums.CALCSUMS("Amount (LCY)");
+        OldAdjAmount := DtldCustLedgEntry."Amount (LCY)" + TempDtldCustLedgEntrySums."Amount (LCY)";
+        "Remaining Amt. (LCY)" := "Remaining Amt. (LCY)" + TempDtldCustLedgEntrySums."Amount (LCY)";
+        "Debit Amount (LCY)" := "Debit Amount (LCY)" + TempDtldCustLedgEntrySums."Amount (LCY)";
+        "Credit Amount (LCY)" := "Credit Amount (LCY)" + TempDtldCustLedgEntrySums."Amount (LCY)";
+        TempDtldCustLedgEntrySums.RESET;
 
         // Modify Currency factor on Customer Ledger Entry
         IF "Adjusted Currency Factor" <> Currency2."Currency Factor" THEN BEGIN
@@ -1462,7 +1470,7 @@ OBJECT Report 595 Adjust Exchange Rates
                   TempDtldCustLedgEntry."Entry Type" := TempDtldCustLedgEntry."Entry Type"::"Unrealized Gain";
                   HandleCustDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldCustLedgEntry."Amount (LCY)");
-                  TempDtldCustLedgEntry.INSERT;
+                  InsertTempDtldCustomerLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
                   GainsAmount := AdjAmount;
                   Adjust := TRUE;
@@ -1470,12 +1478,12 @@ OBJECT Report 595 Adjust Exchange Rates
               (AdjAmount < 0):
                 IF -AdjAmount <= OldAdjAmount THEN BEGIN
                   TempDtldCustLedgEntry."Amount (LCY)" := AdjAmount;
-                  TempDtldCustLedgEntry."Entry Type" := TempDtldCustLedgEntry."Entry Type"::"Unrealized Gain";
+                  TempDtldCustLedgEntry."Entry Type" := TempDtldCustLedgEntry."Entry Type"::"Unrealized Loss";
                   HandleCustDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldCustLedgEntry."Amount (LCY)");
-                  TempDtldCustLedgEntry.INSERT;
+                  InsertTempDtldCustomerLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
-                  GainsAmount := AdjAmount;
+                  LossesAmount := AdjAmount;
                   Adjust := TRUE;
                 END ELSE BEGIN
                   AdjAmount := AdjAmount + OldAdjAmount;
@@ -1483,14 +1491,14 @@ OBJECT Report 595 Adjust Exchange Rates
                   TempDtldCustLedgEntry."Entry Type" := TempDtldCustLedgEntry."Entry Type"::"Unrealized Gain";
                   HandleCustDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldCustLedgEntry."Amount (LCY)");
-                  TempDtldCustLedgEntry.INSERT;
+                  InsertTempDtldCustomerLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
                   AdjExchRateBufIndex :=
                     AdjExchRateBufferUpdate(
                       "Currency Code",Customer."Customer Posting Group",
                       0,0,-OldAdjAmount,-OldAdjAmount,0,DimEntryNo,PostingDate2,Customer."IC Partner Code");
                   TempDtldCustLedgEntry."Transaction No." := AdjExchRateBufIndex;
-                  TempDtldCustLedgEntry.MODIFY;
+                  ModifyTempDtldCustomerLedgerEntry;
                   Adjust := FALSE;
                 END;
             END;
@@ -1502,7 +1510,7 @@ OBJECT Report 595 Adjust Exchange Rates
                   TempDtldCustLedgEntry."Entry Type" := TempDtldCustLedgEntry."Entry Type"::"Unrealized Loss";
                   HandleCustDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldCustLedgEntry."Amount (LCY)");
-                  TempDtldCustLedgEntry.INSERT;
+                  InsertTempDtldCustomerLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
                   LossesAmount := AdjAmount;
                   Adjust := TRUE;
@@ -1510,12 +1518,12 @@ OBJECT Report 595 Adjust Exchange Rates
               (AdjAmount > 0):
                 IF AdjAmount <= -OldAdjAmount THEN BEGIN
                   TempDtldCustLedgEntry."Amount (LCY)" := AdjAmount;
-                  TempDtldCustLedgEntry."Entry Type" := TempDtldCustLedgEntry."Entry Type"::"Unrealized Loss";
+                  TempDtldCustLedgEntry."Entry Type" := TempDtldCustLedgEntry."Entry Type"::"Unrealized Gain";
                   HandleCustDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldCustLedgEntry."Amount (LCY)");
-                  TempDtldCustLedgEntry.INSERT;
+                  InsertTempDtldCustomerLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
-                  LossesAmount := AdjAmount;
+                  GainsAmount := AdjAmount;
                   Adjust := TRUE;
                 END ELSE BEGIN
                   AdjAmount := OldAdjAmount + AdjAmount;
@@ -1523,14 +1531,14 @@ OBJECT Report 595 Adjust Exchange Rates
                   TempDtldCustLedgEntry."Entry Type" := TempDtldCustLedgEntry."Entry Type"::"Unrealized Loss";
                   HandleCustDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldCustLedgEntry."Amount (LCY)");
-                  TempDtldCustLedgEntry.INSERT;
+                  InsertTempDtldCustomerLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
                   AdjExchRateBufIndex :=
                     AdjExchRateBufferUpdate(
                       "Currency Code",Customer."Customer Posting Group",
                       0,0,-OldAdjAmount,0,-OldAdjAmount,DimEntryNo,PostingDate2,Customer."IC Partner Code");
                   TempDtldCustLedgEntry."Transaction No." := AdjExchRateBufIndex;
-                  TempDtldCustLedgEntry.MODIFY;
+                  ModifyTempDtldCustomerLedgerEntry;
                   Adjust := FALSE;
                 END;
             END;
@@ -1548,19 +1556,20 @@ OBJECT Report 595 Adjust Exchange Rates
                 GainsAmount := AdjAmount;
                 LossesAmount := 0;
               END;
-            TempDtldCustLedgEntry.INSERT;
+            InsertTempDtldCustomerLedgerEntry;
             NewEntryNo := NewEntryNo + 1;
           END;
 
           TotalAdjAmount := TotalAdjAmount + AdjAmount;
-          Window.UPDATE(4,TotalAdjAmount);
+          IF NOT HideUI THEN
+            Window.UPDATE(4,TotalAdjAmount);
           AdjExchRateBufIndex :=
             AdjExchRateBufferUpdate(
               "Currency Code",Customer."Customer Posting Group",
               "Remaining Amount","Remaining Amt. (LCY)",TempDtldCustLedgEntry."Amount (LCY)",
               GainsAmount,LossesAmount,DimEntryNo,PostingDate2,Customer."IC Partner Code");
           TempDtldCustLedgEntry."Transaction No." := AdjExchRateBufIndex;
-          TempDtldCustLedgEntry.MODIFY;
+          ModifyTempDtldCustomerLedgerEntry;
         END;
       END;
     END;
@@ -1595,13 +1604,13 @@ OBJECT Report 595 Adjust Exchange Rates
         SetUnrealizedGainLossFilterVend(DtldVendLedgEntry,"Entry No.");
         DtldVendLedgEntry.CALCSUMS("Amount (LCY)");
 
-        SetUnrealizedGainLossFilterVend(TempDtldVendLedgEntry,"Entry No.");
-        TempDtldVendLedgEntry.CALCSUMS("Amount (LCY)","Debit Amount (LCY)","Credit Amount (LCY)");
-        OldAdjAmount := DtldVendLedgEntry."Amount (LCY)" + TempDtldVendLedgEntry."Amount (LCY)";
-        "Remaining Amt. (LCY)" := "Remaining Amt. (LCY)" + TempDtldVendLedgEntry."Amount (LCY)";
-        "Debit Amount (LCY)" := "Debit Amount (LCY)" + TempDtldVendLedgEntry."Amount (LCY)";
-        "Credit Amount (LCY)" := "Credit Amount (LCY)" + TempDtldVendLedgEntry."Amount (LCY)";
-        TempDtldVendLedgEntry.RESET;
+        SetUnrealizedGainLossFilterVend(TempDtldVendLedgEntrySums,"Entry No.");
+        TempDtldVendLedgEntrySums.CALCSUMS("Amount (LCY)");
+        OldAdjAmount := DtldVendLedgEntry."Amount (LCY)" + TempDtldVendLedgEntrySums."Amount (LCY)";
+        "Remaining Amt. (LCY)" := "Remaining Amt. (LCY)" + TempDtldVendLedgEntrySums."Amount (LCY)";
+        "Debit Amount (LCY)" := "Debit Amount (LCY)" + TempDtldVendLedgEntrySums."Amount (LCY)";
+        "Credit Amount (LCY)" := "Credit Amount (LCY)" + TempDtldVendLedgEntrySums."Amount (LCY)";
+        TempDtldVendLedgEntrySums.RESET;
 
         // Modify Currency factor on Vendor Ledger Entry
         IF "Adjusted Currency Factor" <> Currency2."Currency Factor" THEN BEGIN
@@ -1635,7 +1644,7 @@ OBJECT Report 595 Adjust Exchange Rates
                   TempDtldVendLedgEntry."Amount (LCY)" := AdjAmount;
                   TempDtldVendLedgEntry."Entry Type" := TempDtldVendLedgEntry."Entry Type"::"Unrealized Gain";
                   HandleVendDebitCredit(Amount,"Amount (LCY)",Correction,TempDtldVendLedgEntry."Amount (LCY)");
-                  TempDtldVendLedgEntry.INSERT;
+                  InsertTempDtldVendorLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
                   GainsAmount := AdjAmount;
                   Adjust := TRUE;
@@ -1643,12 +1652,12 @@ OBJECT Report 595 Adjust Exchange Rates
               (AdjAmount < 0):
                 IF -AdjAmount <= OldAdjAmount THEN BEGIN
                   TempDtldVendLedgEntry."Amount (LCY)" := AdjAmount;
-                  TempDtldVendLedgEntry."Entry Type" := TempDtldVendLedgEntry."Entry Type"::"Unrealized Gain";
+                  TempDtldVendLedgEntry."Entry Type" := TempDtldVendLedgEntry."Entry Type"::"Unrealized Loss";
                   HandleVendDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldVendLedgEntry."Amount (LCY)");
-                  TempDtldVendLedgEntry.INSERT;
+                  InsertTempDtldVendorLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
-                  GainsAmount := AdjAmount;
+                  LossesAmount := AdjAmount;
                   Adjust := TRUE;
                 END ELSE BEGIN
                   AdjAmount := AdjAmount + OldAdjAmount;
@@ -1656,14 +1665,14 @@ OBJECT Report 595 Adjust Exchange Rates
                   TempDtldVendLedgEntry."Entry Type" := TempDtldVendLedgEntry."Entry Type"::"Unrealized Gain";
                   HandleVendDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldVendLedgEntry."Amount (LCY)");
-                  TempDtldVendLedgEntry.INSERT;
+                  InsertTempDtldVendorLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
                   AdjExchRateBufIndex :=
                     AdjExchRateBufferUpdate(
                       "Currency Code",Vendor."Vendor Posting Group",
                       0,0,-OldAdjAmount,-OldAdjAmount,0,DimEntryNo,PostingDate2,Vendor."IC Partner Code");
                   TempDtldVendLedgEntry."Transaction No." := AdjExchRateBufIndex;
-                  TempDtldVendLedgEntry.MODIFY;
+                  ModifyTempDtldVendorLedgerEntry;
                   Adjust := FALSE;
                 END;
             END;
@@ -1674,7 +1683,7 @@ OBJECT Report 595 Adjust Exchange Rates
                   TempDtldVendLedgEntry."Amount (LCY)" := AdjAmount;
                   TempDtldVendLedgEntry."Entry Type" := TempDtldVendLedgEntry."Entry Type"::"Unrealized Loss";
                   HandleVendDebitCredit(Amount,"Amount (LCY)",Correction,TempDtldVendLedgEntry."Amount (LCY)");
-                  TempDtldVendLedgEntry.INSERT;
+                  InsertTempDtldVendorLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
                   LossesAmount := AdjAmount;
                   Adjust := TRUE;
@@ -1682,12 +1691,12 @@ OBJECT Report 595 Adjust Exchange Rates
               (AdjAmount > 0):
                 IF AdjAmount <= -OldAdjAmount THEN BEGIN
                   TempDtldVendLedgEntry."Amount (LCY)" := AdjAmount;
-                  TempDtldVendLedgEntry."Entry Type" := TempDtldVendLedgEntry."Entry Type"::"Unrealized Loss";
+                  TempDtldVendLedgEntry."Entry Type" := TempDtldVendLedgEntry."Entry Type"::"Unrealized Gain";
                   HandleVendDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldVendLedgEntry."Amount (LCY)");
-                  TempDtldVendLedgEntry.INSERT;
+                  InsertTempDtldVendorLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
-                  LossesAmount := AdjAmount;
+                  GainsAmount := AdjAmount;
                   Adjust := TRUE;
                 END ELSE BEGIN
                   AdjAmount := OldAdjAmount + AdjAmount;
@@ -1695,14 +1704,14 @@ OBJECT Report 595 Adjust Exchange Rates
                   TempDtldVendLedgEntry."Entry Type" := TempDtldVendLedgEntry."Entry Type"::"Unrealized Loss";
                   HandleVendDebitCredit(
                     Amount,"Amount (LCY)",Correction,TempDtldVendLedgEntry."Amount (LCY)");
-                  TempDtldVendLedgEntry.INSERT;
+                  InsertTempDtldVendorLedgerEntry;
                   NewEntryNo := NewEntryNo + 1;
                   AdjExchRateBufIndex :=
                     AdjExchRateBufferUpdate(
                       "Currency Code",Vendor."Vendor Posting Group",
                       0,0,-OldAdjAmount,0,-OldAdjAmount,DimEntryNo,PostingDate2,Vendor."IC Partner Code");
                   TempDtldVendLedgEntry."Transaction No." := AdjExchRateBufIndex;
-                  TempDtldVendLedgEntry.MODIFY;
+                  ModifyTempDtldVendorLedgerEntry;
                   Adjust := FALSE;
                 END;
             END;
@@ -1721,21 +1730,138 @@ OBJECT Report 595 Adjust Exchange Rates
                 GainsAmount := AdjAmount;
                 LossesAmount := 0;
               END;
-            TempDtldVendLedgEntry.INSERT;
+            InsertTempDtldVendorLedgerEntry;
             NewEntryNo := NewEntryNo + 1;
           END;
 
           TotalAdjAmount := TotalAdjAmount + AdjAmount;
-          Window.UPDATE(4,TotalAdjAmount);
+          IF NOT HideUI THEN
+            Window.UPDATE(4,TotalAdjAmount);
           AdjExchRateBufIndex :=
             AdjExchRateBufferUpdate(
               "Currency Code",Vendor."Vendor Posting Group",
               "Remaining Amount","Remaining Amt. (LCY)",
               TempDtldVendLedgEntry."Amount (LCY)",GainsAmount,LossesAmount,DimEntryNo,PostingDate2,Vendor."IC Partner Code");
           TempDtldVendLedgEntry."Transaction No." := AdjExchRateBufIndex;
-          TempDtldVendLedgEntry.MODIFY;
+          ModifyTempDtldVendorLedgerEntry;
         END;
       END;
+    END;
+
+    PROCEDURE AdjustExchRateCust@269(GenJournalLine@1007 : Record 81;VAR TempCustLedgerEntry@1000 : TEMPORARY Record 21);
+    VAR
+      CustLedgerEntry@1003 : Record 21;
+      DetailedCustLedgEntry@1006 : Record 379;
+      PostingDate2@1004 : Date;
+    BEGIN
+      WITH CustLedgerEntry DO BEGIN
+        PostingDate2 := GenJournalLine."Posting Date";
+        IF TempCustLedgerEntry.FINDSET THEN
+          REPEAT
+            GET(TempCustLedgerEntry."Entry No.");
+            SETRANGE("Date Filter",0D,PostingDate2);
+            CALCFIELDS("Remaining Amount","Remaining Amt. (LCY)");
+            IF ShouldAdjustEntry(
+                 PostingDate2,"Currency Code","Remaining Amount","Remaining Amt. (LCY)","Adjusted Currency Factor")
+            THEN BEGIN
+              InitVariablesForSetLedgEntry(GenJournalLine);
+              SetCustLedgEntry(CustLedgerEntry);
+              AdjustCustomerLedgerEntry(CustLedgerEntry,PostingDate2);
+
+              DetailedCustLedgEntry.SETCURRENTKEY("Cust. Ledger Entry No.");
+              DetailedCustLedgEntry.SETRANGE("Cust. Ledger Entry No.","Entry No.");
+              DetailedCustLedgEntry.SETFILTER("Posting Date",'%1..',CALCDATE('<+1D>',PostingDate2));
+              IF DetailedCustLedgEntry.FINDSET THEN
+                REPEAT
+                  AdjustCustomerLedgerEntry(CustLedgerEntry,DetailedCustLedgEntry."Posting Date");
+                UNTIL DetailedCustLedgEntry.NEXT = 0;
+              HandlePostAdjmt(1);
+            END;
+          UNTIL TempCustLedgerEntry.NEXT = 0;
+      END;
+    END;
+
+    PROCEDURE AdjustExchRateVend@270(GenJournalLine@1007 : Record 81;VAR TempVendLedgerEntry@1000 : TEMPORARY Record 25);
+    VAR
+      VendLedgerEntry@1003 : Record 25;
+      DetailedVendLedgEntry@1006 : Record 380;
+      PostingDate2@1004 : Date;
+    BEGIN
+      WITH VendLedgerEntry DO BEGIN
+        PostingDate2 := GenJournalLine."Posting Date";
+        IF TempVendLedgerEntry.FINDSET THEN
+          REPEAT
+            GET(TempVendLedgerEntry."Entry No.");
+            SETRANGE("Date Filter",0D,PostingDate2);
+            CALCFIELDS("Remaining Amount","Remaining Amt. (LCY)");
+            IF ShouldAdjustEntry(
+                 PostingDate2,"Currency Code","Remaining Amount","Remaining Amt. (LCY)","Adjusted Currency Factor")
+            THEN BEGIN
+              InitVariablesForSetLedgEntry(GenJournalLine);
+              SetVendLedgEntry(VendLedgerEntry);
+              AdjustVendorLedgerEntry(VendLedgerEntry,PostingDate2);
+
+              DetailedVendLedgEntry.SETCURRENTKEY("Vendor Ledger Entry No.");
+              DetailedVendLedgEntry.SETRANGE("Vendor Ledger Entry No.","Entry No.");
+              DetailedVendLedgEntry.SETFILTER("Posting Date",'%1..',CALCDATE('<+1D>',PostingDate2));
+              IF DetailedVendLedgEntry.FINDSET THEN
+                REPEAT
+                  AdjustVendorLedgerEntry(VendLedgerEntry,DetailedVendLedgEntry."Posting Date");
+                UNTIL DetailedVendLedgEntry.NEXT = 0;
+              HandlePostAdjmt(2);
+            END;
+          UNTIL TempVendLedgerEntry.NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE SetCustLedgEntry@36(CustLedgerEntryToAdjust@1000 : Record 21);
+    BEGIN
+      Customer.GET(CustLedgerEntryToAdjust."Customer No.");
+      AddCurrency(CustLedgerEntryToAdjust."Currency Code",CustLedgerEntryToAdjust."Adjusted Currency Factor");
+      DtldCustLedgEntry.LOCKTABLE;
+      CustLedgerEntry.LOCKTABLE;
+      IF DtldCustLedgEntry.FINDLAST THEN
+        NewEntryNo := DtldCustLedgEntry."Entry No." + 1
+      ELSE
+        NewEntryNo := 1;
+    END;
+
+    LOCAL PROCEDURE SetVendLedgEntry@37(VendLedgerEntryToAdjust@1000 : Record 25);
+    BEGIN
+      Vendor.GET(VendLedgerEntryToAdjust."Vendor No.");
+      AddCurrency(VendLedgerEntryToAdjust."Currency Code",VendLedgerEntryToAdjust."Adjusted Currency Factor");
+      DtldVendLedgEntry.LOCKTABLE;
+      VendorLedgerEntry.LOCKTABLE;
+      IF DtldVendLedgEntry.FINDLAST THEN
+        NewEntryNo := DtldVendLedgEntry."Entry No." + 1
+      ELSE
+        NewEntryNo := 1;
+    END;
+
+    LOCAL PROCEDURE ShouldAdjustEntry@47(PostingDate@1000 : Date;CurCode@1001 : Code[10];RemainingAmount@1002 : Decimal;RemainingAmtLCY@1004 : Decimal;AdjCurFactor@1003 : Decimal) : Boolean;
+    BEGIN
+      EXIT(ROUND(CurrExchRate.ExchangeAmtFCYToLCYAdjmt(PostingDate,CurCode,RemainingAmount,AdjCurFactor)) - RemainingAmtLCY <> 0);
+    END;
+
+    LOCAL PROCEDURE InitVariablesForSetLedgEntry@41(GenJournalLine@1000 : Record 81);
+    BEGIN
+      InitializeRequest(GenJournalLine."Posting Date",GenJournalLine."Posting Date",Text016,GenJournalLine."Posting Date");
+      PostingDocNo := GenJournalLine."Document No.";
+      HideUI := TRUE;
+      GLSetup.GET;
+      SourceCodeSetup.GET;
+      IF ExchRateAdjReg.FINDLAST THEN
+        ExchRateAdjReg.INIT;
+    END;
+
+    LOCAL PROCEDURE AddCurrency@38(CurrencyCode@1000 : Code[10];CurrencyFactor@1002 : Decimal);
+    VAR
+      CurrencyToAdd@1001 : Record 4;
+    BEGIN
+      CurrencyToAdd.GET(CurrencyCode);
+      Currency2 := CurrencyToAdd;
+      Currency2."Currency Factor" := CurrencyFactor;
+      Currency2.INSERT;
     END;
 
     LOCAL PROCEDURE InitDtldCustLedgEntry@27(CustLedgEntry@1000 : Record 21;VAR DtldCustLedgEntry@1001 : Record 379);
@@ -1755,6 +1881,8 @@ OBJECT Report 595 Adjust Exchange Rates
         DtldCustLedgEntry."Initial Entry Global Dim. 2" := "Global Dimension 2 Code";
         DtldCustLedgEntry."Initial Document Type" := "Document Type";
       END;
+
+      OnAfterInitDtldCustLedgerEntry(DtldCustLedgEntry);
     END;
 
     LOCAL PROCEDURE InitDtldVendLedgEntry@28(VendLedgEntry@1001 : Record 25;VAR DtldVendLedgEntry@1000 : Record 380);
@@ -1774,6 +1902,8 @@ OBJECT Report 595 Adjust Exchange Rates
         DtldVendLedgEntry."Initial Entry Global Dim. 2" := "Global Dimension 2 Code";
         DtldVendLedgEntry."Initial Document Type" := "Document Type";
       END;
+
+      OnAfterInitDtldVendLedgerEntry(DtldVendLedgEntry);
     END;
 
     LOCAL PROCEDURE SetUnrealizedGainLossFilterCust@22(VAR DtldCustLedgEntry@1000 : Record 379;EntryNo@1001 : Integer);
@@ -1794,6 +1924,44 @@ OBJECT Report 595 Adjust Exchange Rates
         SETRANGE("Vendor Ledger Entry No.",EntryNo);
         SETRANGE("Entry Type","Entry Type"::"Unrealized Loss","Entry Type"::"Unrealized Gain");
       END;
+    END;
+
+    LOCAL PROCEDURE InsertTempDtldCustomerLedgerEntry@30();
+    BEGIN
+      TempDtldCustLedgEntry.INSERT;
+      TempDtldCustLedgEntrySums := TempDtldCustLedgEntry;
+      TempDtldCustLedgEntrySums.INSERT;
+    END;
+
+    LOCAL PROCEDURE InsertTempDtldVendorLedgerEntry@29();
+    BEGIN
+      TempDtldVendLedgEntry.INSERT;
+      TempDtldVendLedgEntrySums := TempDtldVendLedgEntry;
+      TempDtldVendLedgEntrySums.INSERT;
+    END;
+
+    LOCAL PROCEDURE ModifyTempDtldCustomerLedgerEntry@33();
+    BEGIN
+      TempDtldCustLedgEntry.MODIFY;
+      TempDtldCustLedgEntrySums := TempDtldCustLedgEntry;
+      TempDtldCustLedgEntrySums.MODIFY;
+    END;
+
+    LOCAL PROCEDURE ModifyTempDtldVendorLedgerEntry@32();
+    BEGIN
+      TempDtldVendLedgEntry.MODIFY;
+      TempDtldVendLedgEntrySums := TempDtldVendLedgEntry;
+      TempDtldVendLedgEntrySums.MODIFY;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterInitDtldCustLedgerEntry@35(VAR DetailedCustLedgEntry@1000 : Record 379);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterInitDtldVendLedgerEntry@34(VAR DetailedVendorLedgEntry@1000 : Record 380);
+    BEGIN
     END;
 
     BEGIN

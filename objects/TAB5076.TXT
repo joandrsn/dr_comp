@@ -2,9 +2,9 @@ OBJECT Table 5076 Segment Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -67,7 +67,7 @@ OBJECT Table 5076 Segment Header
 
                                                    CaptionML=[DAN=Kampagnenr.;
                                                               ENU=Campaign No.] }
-    { 4   ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 4   ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=BEGIN
                                                                 UpdateSegLines(FIELDCAPTION("Salesperson Code"),CurrFieldNo <> 0);
                                                               END;

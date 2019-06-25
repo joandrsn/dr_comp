@@ -2,9 +2,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=21-12-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.49741;
   }
   PROPERTIES
   {
@@ -31,10 +31,7 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
     VAR
       ProdOrderRtngLine@1004 : Record 5409;
     BEGIN
-      ProdOrderRtngLine.SETRANGE(Status,Status);
-      ProdOrderRtngLine.SETRANGE("Prod. Order No.",ProdOrderNo);
-      ProdOrderRtngLine.SETRANGE("Routing Reference No.",RoutingRefNo);
-      ProdOrderRtngLine.SETRANGE("Routing No.",RoutingNo);
+      SetRoutingFilter(ProdOrderRtngLine,Status,ProdOrderNo,RoutingNo,RoutingRefNo);
       ProdOrderRtngLine.SETRANGE(Recalculate,TRUE);
       ProdOrderRtngLine.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine."Routing Status"::Finished);
 
@@ -71,12 +68,10 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
       ProdOrderRtngLine@1001 : Record 5409;
       ProdOrderRtngLine2@1002 : Record 5409;
     BEGIN
-      ProdOrderRtngLine.SETRANGE(Status,ProdOrderLine.Status);
-      ProdOrderRtngLine.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-      ProdOrderRtngLine.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
-      ProdOrderRtngLine.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
+      SetRoutingFilter(
+        ProdOrderRtngLine,ProdOrderLine.Status,ProdOrderLine."Prod. Order No.",
+        ProdOrderLine."Routing No.",ProdOrderLine."Routing Reference No.");
       ProdOrderRtngLine.MODIFYALL("Next Operation No.",'');
-      ProdOrderRtngLine.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine."Routing Status"::Finished);
 
       IF ProdOrderRtngLine.FIND('-') THEN
         REPEAT
@@ -85,7 +80,6 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
           ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
           ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
           ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
-          ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
           IF ProdOrderRtngLine2.FIND('>') THEN BEGIN
             ProdOrderRtngLine."Next Operation No." := ProdOrderRtngLine2."Operation No.";
             ProdOrderRtngLine.MODIFY;
@@ -98,21 +92,17 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
       ProdOrderRtngLine@1001 : Record 5409;
       ProdOrderRtngLine2@1002 : Record 5409;
     BEGIN
-      ProdOrderRtngLine.SETRANGE(Status,ProdOrderLine.Status);
-      ProdOrderRtngLine.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-      ProdOrderRtngLine.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
-      ProdOrderRtngLine.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
+      SetRoutingFilter(
+        ProdOrderRtngLine,ProdOrderLine.Status,ProdOrderLine."Prod. Order No.",
+        ProdOrderLine."Routing No.",ProdOrderLine."Routing Reference No.");
       ProdOrderRtngLine.MODIFYALL("Previous Operation No.",'');
-      ProdOrderRtngLine.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine."Routing Status"::Finished);
 
       IF ProdOrderRtngLine.FIND('-') THEN
         REPEAT
           IF ProdOrderRtngLine."Next Operation No." <> '' THEN BEGIN
-            ProdOrderRtngLine2.SETRANGE(Status,ProdOrderLine.Status);
-            ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-            ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
-            ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
-            ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
+            SetRoutingFilter(
+              ProdOrderRtngLine2,ProdOrderLine.Status,ProdOrderLine."Prod. Order No.",
+              ProdOrderLine."Routing No.",ProdOrderLine."Routing Reference No.");
             ProdOrderRtngLine2.SETFILTER("Operation No.",ProdOrderRtngLine."Next Operation No.");
             IF ProdOrderRtngLine2.FIND('-') THEN
               REPEAT
@@ -148,11 +138,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
         ELSE
           ProdOrderRtngLine."Sequence No. (Actual)" := 1;
 
-        ProdOrderRtngLine2.SETRANGE(Status,ProdOrderRtngLine.Status);
-        ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-        ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
-        ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-        ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
+        SetRoutingFilter(
+          ProdOrderRtngLine2,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+          ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
         IF ProdOrderRtngLine."Next Operation No." <> '' THEN BEGIN
           ProdOrderRtngLine2.SETFILTER("Operation No.",ProdOrderRtngLine."Next Operation No.");
           IF ProdOrderRtngLine2.FIND('-') THEN
@@ -183,11 +171,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
       END ELSE BEGIN
         SequenceNo := 1;
         ProdOrderRtngLine2 := ProdOrderRtngLine;
-        ProdOrderRtngLine2.SETRANGE(Status,ProdOrderRtngLine.Status);
-        ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-        ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
-        ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-        ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
+        SetRoutingFilter(
+          ProdOrderRtngLine2,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+          ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
         IF ProdOrderRtngLine2.FIND THEN
           REPEAT
             IF TotalCalculation THEN
@@ -220,11 +206,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
         ELSE
           ProdOrderRtngLine."Sequence No. (Actual)" := 1;
 
-        ProdOrderRtngLine2.SETRANGE(Status,ProdOrderRtngLine.Status);
-        ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-        ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
-        ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-        ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
+        SetRoutingFilter(
+          ProdOrderRtngLine2,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+          ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
         IF ProdOrderRtngLine."Previous Operation No." <> '' THEN BEGIN
           ProdOrderRtngLine2.SETFILTER("Operation No.",ProdOrderRtngLine."Previous Operation No.");
           IF ProdOrderRtngLine2.FIND('-') THEN
@@ -256,11 +240,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
       END ELSE BEGIN
         SequenceNo := 1;
         ProdOrderRtngLine2 := ProdOrderRtngLine;
-        ProdOrderRtngLine2.SETRANGE(Status,ProdOrderRtngLine.Status);
-        ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-        ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
-        ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-        ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
+        SetRoutingFilter(
+          ProdOrderRtngLine2,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+          ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
         IF ProdOrderRtngLine2.FIND THEN
           REPEAT
             IF TotalCalculation THEN
@@ -278,11 +260,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
       ProdOrderRtngLine@1001 : Record 5409;
       MaxSeq@1002 : Integer;
     BEGIN
-      ProdOrderRtngLine.SETRANGE(Status,ProdOrderLine.Status);
-      ProdOrderRtngLine.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-      ProdOrderRtngLine.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
-      ProdOrderRtngLine.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
-      ProdOrderRtngLine.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine."Routing Status"::Finished);
+      SetRoutingFilter(
+        ProdOrderRtngLine,ProdOrderLine.Status,ProdOrderLine."Prod. Order No.",
+        ProdOrderLine."Routing No.",ProdOrderLine."Routing Reference No.");
 
       IF ProdOrderRtngLine.FIND('-') THEN
         REPEAT
@@ -304,12 +284,10 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
       ProdOrderRtngLine@1001 : Record 5409;
       MaxSeq@1002 : Integer;
     BEGIN
-      ProdOrderRtngLine.SETRANGE(Status,ProdOrderLine.Status);
-      ProdOrderRtngLine.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-      ProdOrderRtngLine.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
-      ProdOrderRtngLine.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
+      SetRoutingFilter(
+        ProdOrderRtngLine,ProdOrderLine.Status,ProdOrderLine."Prod. Order No.",
+        ProdOrderLine."Routing No.",ProdOrderLine."Routing Reference No.");
       ProdOrderRtngLine.MODIFYALL("Sequence No. (Forward)",0);
-      ProdOrderRtngLine.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine."Routing Status"::Finished);
 
       MaxSeq := ProdOrderRtngLine.COUNT;
 
@@ -330,20 +308,17 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
            ProdOrderRtngLine."Routing Reference No.",
            ProdOrderRtngLine."Routing No.")
       THEN BEGIN
-        ProdOrderLine.SETRANGE(Status,ProdOrderRtngLine.Status);
-        ProdOrderLine.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-        ProdOrderLine.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-        ProdOrderLine.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
+        SetOrderLineRoutingFilter(
+          ProdOrderLine,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+          ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
         ProdOrderLine.FINDFIRST;
 
         Calculate(ProdOrderLine);
       END;
-      ProdOrderRtngLine2.SETRANGE(Status,ProdOrderRtngLine.Status);
-      ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-      ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-      ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
+      SetRoutingFilter(
+        ProdOrderRtngLine2,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+        ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
       ProdOrderRtngLine2.MODIFYALL("Sequence No. (Actual)",0);
-      ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
 
       MaxSeq := ProdOrderRtngLine2.COUNT;
 
@@ -373,20 +348,16 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
 
       ProdOrderRtngLine.SETCURRENTKEY(
         Status,"Prod. Order No.","Routing Reference No.","Routing No.","Sequence No. (Backward)");
-      ProdOrderRtngLine.SETRANGE(Status,ProdOrderLine.Status);
-      ProdOrderRtngLine.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-      ProdOrderRtngLine.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
-      ProdOrderRtngLine.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
-      ProdOrderRtngLine.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine."Routing Status"::Finished);
+      SetRoutingFilter(
+        ProdOrderRtngLine,ProdOrderLine.Status,ProdOrderLine."Prod. Order No.",
+        ProdOrderLine."Routing No.",ProdOrderLine."Routing Reference No.");
 
       IF ProdOrderRtngLine.FIND('-') THEN
         REPEAT
           IF ProdOrderRtngLine."Next Operation No." <> '' THEN BEGIN
-            ProdOrderRtngLine2.SETRANGE(Status,ProdOrderRtngLine.Status);
-            ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-            ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-            ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
-            ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
+            SetRoutingFilter(
+              ProdOrderRtngLine2,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+              ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
             ProdOrderRtngLine2.SETFILTER("Operation No.",ProdOrderRtngLine."Next Operation No.");
             CalcScrapFactor := 0;
             CalcScrapQty := 0;
@@ -433,11 +404,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
       ProdOrderRtngLine2@1002 : Record 5409;
       NoOfProcesses@1003 : Integer;
     BEGIN
-      ProdOrderRtngLine.SETRANGE(Status,ProdOrderLine.Status);
-      ProdOrderRtngLine.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-      ProdOrderRtngLine.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
-      ProdOrderRtngLine.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
-      ProdOrderRtngLine.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine."Routing Status"::Finished);
+      SetRoutingFilter(
+        ProdOrderRtngLine,ProdOrderLine.Status,ProdOrderLine."Prod. Order No.",
+        ProdOrderLine."Routing No.",ProdOrderLine."Routing Reference No.");
 
       ProdOrderRtngLine.SETFILTER("Next Operation No.",'%1','');
 
@@ -500,11 +469,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
 
       IF ProdOrderRtngLine.FIND('-') THEN
         REPEAT
-          ProdOrderRtngLine2.SETRANGE(Status,ProdOrderRtngLine.Status);
-          ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-          ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-          ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
-          ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
+          SetRoutingFilter(
+            ProdOrderRtngLine2,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+            ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
           ProdOrderRtngLine2.SETFILTER("Operation No.",ProdOrderRtngLine."Previous Operation No.");
           IF NOT ProdOrderRtngLine2.FINDFIRST THEN
             ERROR(
@@ -519,11 +486,9 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
 
       IF ProdOrderRtngLine.FIND('-') THEN
         REPEAT
-          ProdOrderRtngLine2.SETRANGE(Status,ProdOrderRtngLine.Status);
-          ProdOrderRtngLine2.SETRANGE("Prod. Order No.",ProdOrderRtngLine."Prod. Order No.");
-          ProdOrderRtngLine2.SETRANGE("Routing Reference No.",ProdOrderRtngLine."Routing Reference No.");
-          ProdOrderRtngLine2.SETRANGE("Routing No.",ProdOrderRtngLine."Routing No.");
-          ProdOrderRtngLine2.SETFILTER("Routing Status",'<>%1',ProdOrderRtngLine2."Routing Status"::Finished);
+          SetRoutingFilter(
+            ProdOrderRtngLine2,ProdOrderRtngLine.Status,ProdOrderRtngLine."Prod. Order No.",
+            ProdOrderRtngLine."Routing No.",ProdOrderRtngLine."Routing Reference No.");
           ProdOrderRtngLine2.SETFILTER("Operation No.",ProdOrderRtngLine."Next Operation No.");
           IF NOT ProdOrderRtngLine2.FINDFIRST THEN
             ERROR(Text008,ProdOrderRtngLine."Routing No.");
@@ -541,10 +506,7 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
       WITH FilteredProdOrderRtngLineSet DO BEGIN
         IF NOT FINDFIRST THEN
           EXIT;
-        ProdOrderLine.SETRANGE(Status,Status);
-        ProdOrderLine.SETRANGE("Prod. Order No.","Prod. Order No.");
-        ProdOrderLine.SETRANGE("Routing No.","Routing No.");
-        ProdOrderLine.SETRANGE("Routing Reference No.","Routing Reference No.");
+        SetOrderLineRoutingFilter(ProdOrderLine,Status,"Prod. Order No.","Routing No.","Routing Reference No.");
         IF ProdOrderLine.FINDSET(FALSE) THEN
           REPEAT
             ProdOrderComponent.SETCURRENTKEY(Status,"Prod. Order No.","Prod. Order Line No.","Line No.");
@@ -572,6 +534,22 @@ OBJECT Codeunit 99000772 Prod. Order Route Management
           UNTIL ProdOrderLine.NEXT = 0;
       END;
       EXIT(NOT ErrorOccured);
+    END;
+
+    LOCAL PROCEDURE SetRoutingFilter@15(VAR ProdOrderRtngLine@1000 : Record 5409;Status@1001 : Option;ProdOrderNo@1002 : Code[20];RoutingNo@1004 : Code[20];RoutingRefNo@1003 : Integer);
+    BEGIN
+      ProdOrderRtngLine.SETRANGE(Status,Status);
+      ProdOrderRtngLine.SETRANGE("Prod. Order No.",ProdOrderNo);
+      ProdOrderRtngLine.SETRANGE("Routing Reference No.",RoutingRefNo);
+      ProdOrderRtngLine.SETRANGE("Routing No.",RoutingNo);
+    END;
+
+    LOCAL PROCEDURE SetOrderLineRoutingFilter@17(VAR ProdOrderLine@1004 : Record 5406;Status@1003 : Option;ProdOrderNo@1002 : Code[20];RoutingNo@1001 : Code[20];RoutingRefNo@1000 : Integer);
+    BEGIN
+      ProdOrderLine.SETRANGE(Status,Status);
+      ProdOrderLine.SETRANGE("Prod. Order No.",ProdOrderNo);
+      ProdOrderLine.SETRANGE("Routing Reference No.",RoutingRefNo);
+      ProdOrderLine.SETRANGE("Routing No.",RoutingNo);
     END;
 
     BEGIN

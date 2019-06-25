@@ -2,16 +2,16 @@ OBJECT Table 5347 CRM Productpricelevel
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=productpricelevel;
-    CaptionML=[DAN=Price List Item;
-               ENU=Price List Item];
+    CaptionML=[DAN=CRM Productpricelevel;
+               ENU=CRM Productpricelevel];
     Description=Information about how to price a product in the specified price level, including pricing method, rounding option, and discount type based on a specified product unit.;
   }
   FIELDS

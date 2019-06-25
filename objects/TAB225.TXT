@@ -2,9 +2,9 @@ OBJECT Table 225 Post Code
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49741;
   }
   PROPERTIES
   {
@@ -87,6 +87,13 @@ OBJECT Table 225 Post Code
           PostCodeRec.SETRANGE("Search City",SearchCity);
         IF NOT PostCodeRec.FINDFIRST THEN
           EXIT;
+
+        IF CountryCode <> '' THEN BEGIN
+          PostCodeRec.SETRANGE("Country/Region Code",CountryCode);
+          IF NOT PostCodeRec.FINDFIRST THEN
+            PostCodeRec.SETRANGE("Country/Region Code");
+        END;
+
         PostCodeRec2.COPY(PostCodeRec);
         IF UseDialog AND (PostCodeRec2.NEXT = 1) THEN
           IF PAGE.RUNMODAL(PAGE::"Post Codes",PostCodeRec,PostCodeRec.Code) <> ACTION::LookupOK THEN
@@ -110,6 +117,13 @@ OBJECT Table 225 Post Code
           PostCodeRec.SETRANGE(Code,PostCode);
         IF NOT PostCodeRec.FINDFIRST THEN
           EXIT;
+
+        IF CountryCode <> '' THEN BEGIN
+          PostCodeRec.SETRANGE("Country/Region Code",CountryCode);
+          IF NOT PostCodeRec.FINDFIRST THEN
+            PostCodeRec.SETRANGE("Country/Region Code");
+        END;
+
         PostCodeRec2.COPY(PostCodeRec);
         IF UseDialog AND (PostCodeRec2.NEXT = 1) AND GUIALLOWED THEN
           IF PAGE.RUNMODAL(PAGE::"Post Codes",PostCodeRec,PostCodeRec.Code) <> ACTION::LookupOK THEN

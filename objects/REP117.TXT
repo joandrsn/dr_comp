@@ -2,9 +2,9 @@ OBJECT Report 117 Reminder
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -335,6 +335,11 @@ OBJECT Report 117 Reminder
                DataItemTable=Table298;
                DataItemTableView=SORTING(Reminder No.,Line No.);
                OnPreDataItem=BEGIN
+                               CLEAR(CompanyInfo.Picture);
+                               CLEAR(CompanyInfo1.Picture);
+                               CLEAR(CompanyInfo2.Picture);
+                               CLEAR(CompanyInfo3.Picture);
+
                                IF FINDLAST THEN BEGIN
                                  EndLineNo := "Line No." + 1;
                                  REPEAT
@@ -2112,6 +2117,7 @@ OBJECT Report 117 Reminder
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
                                                   <FontSize>8pt</FontSize>
+                                                  <TextAlign>Right</TextAlign>
                                                 </Style>
                                               </Paragraph>
                                             </Paragraphs>
@@ -11396,7 +11402,7 @@ Cstr(Fields!CompanyInfoEMail.Value)
           <FontSize>8pt</FontSize>
         </Style>
       </Body>
-      <Width>17.97261cm</Width>
+      <Width>18cm</Width>
       <Page>
         <PageHeader>
           <Height>9.41211cm</Height>
@@ -12774,9 +12780,8 @@ Cstr(Fields!CompanyInfoEMail.Value)
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
               <Sizing>FitProportional</Sizing>
-              <Top>0.2399cm</Top>
-              <Height>40pt</Height>
-              <Width>5.94902cm</Width>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>44</ZIndex>
               <Visibility>
                 <Hidden>=IIF(ISNOTHING(Fields!CompanyInfo1Picture.Value)= TRUE,TRUE,FALSE)</Hidden>
@@ -12792,10 +12797,9 @@ Cstr(Fields!CompanyInfoEMail.Value)
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
               <Sizing>FitProportional</Sizing>
-              <Top>0.2399cm</Top>
-              <Left>5.95608cm</Left>
-              <Height>40pt</Height>
-              <Width>5.99425cm</Width>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>45</ZIndex>
               <Visibility>
                 <Hidden>=IIF(ISNOTHING(Fields!CompanyInfo2Picture.Value)= TRUE,TRUE,FALSE)</Hidden>
@@ -12811,10 +12815,9 @@ Cstr(Fields!CompanyInfoEMail.Value)
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
               <Sizing>FitProportional</Sizing>
-              <Top>0.2399cm</Top>
-              <Left>11.96091cm</Left>
-              <Height>40pt</Height>
-              <Width>5.99633cm</Width>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>46</ZIndex>
               <Visibility>
                 <Hidden>=IIF(ISNOTHING(Fields!CompanyInfo3Picture.Value)= TRUE,TRUE,FALSE)</Hidden>

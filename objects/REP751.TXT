@@ -2,9 +2,9 @@ OBJECT Report 751 Save as Standard Item Journal
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -134,7 +134,7 @@ OBJECT Report 751 Save as Standard Item Journal
         StdItemJnl.INSERT(TRUE);
 
       NextLineNo := 10000;
-      IF ItemJnlLine.FIND('-') THEN
+      IF ItemJnlLine.FINDSET THEN
         REPEAT
           StdItemJnlLine."Line No." := NextLineNo;
           NextLineNo := NextLineNo + 10000;
@@ -148,10 +148,8 @@ OBJECT Report 751 Save as Standard Item Journal
             StdItemJnlLine."Unit Cost" := 0;
             StdItemJnlLine."Indirect Cost %" := 0;
           END;
-          IF NOT SaveQuantity THEN BEGIN
-            StdItemJnlLine.Quantity := 0;
-            StdItemJnlLine.Amount := 0;
-          END;
+          IF NOT SaveQuantity THEN
+            StdItemJnlLine.VALIDATE(Quantity,0);
           StdItemJnlLine.INSERT(TRUE);
         UNTIL ItemJnlLine.NEXT = 0;
 

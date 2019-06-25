@@ -2,16 +2,16 @@ OBJECT Table 5346 CRM Pricelevel
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=pricelevel;
-    CaptionML=[DAN=Price List;
-               ENU=Price List];
+    CaptionML=[DAN=CRM Pricelevel;
+               ENU=CRM Pricelevel];
     Description=Entity that defines pricing levels.;
   }
   FIELDS

@@ -2,9 +2,9 @@ OBJECT Report 116 Statement
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -418,6 +418,7 @@ OBJECT Report 116 Statement
                                     CustBalance := CustBalance + Amount;
                                     IsNewCustCurrencyGroup := IsFirstPrintLine;
                                     IsFirstPrintLine := FALSE;
+                                    ClearCompanyPicture;
                                   END;
                                 END;
                                  }
@@ -458,7 +459,11 @@ OBJECT Report 116 Statement
     { 7720;3   ;DataItem;CustLedgEntryFooter ;
                DataItemTable=Table2000000026;
                DataItemTableView=SORTING(Number)
-                                 WHERE(Number=CONST(1)) }
+                                 WHERE(Number=CONST(1));
+               OnAfterGetRecord=BEGIN
+                                  ClearCompanyPicture;
+                                END;
+                                 }
 
     { 51  ;4   ;Column  ;CurrencyCode3_CustLedgEntryFooter;
                SourceExpr=CurrencyCode3 }
@@ -489,9 +494,13 @@ OBJECT Report 116 Statement
                OnAfterGetRecord=VAR
                                   CustLedgEntry@1000 : Record 21;
                                 BEGIN
-                                  IF IncludeAgingBand THEN
+                                  IF IncludeAgingBand THEN BEGIN
                                     IF ("Posting Date" > EndDate) AND ("Due Date" >= EndDate) THEN
                                       CurrReport.SKIP;
+                                    IF DateChoice = DateChoice::"Due Date" THEN
+                                      IF "Due Date" >= EndDate THEN
+                                        CurrReport.SKIP;
+                                  END;
                                   CustLedgEntry := CustLedgEntry2;
                                   CustLedgEntry.SETRANGE("Date Filter",0D,EndDate);
                                   CustLedgEntry.CALCFIELDS("Remaining Amount");
@@ -503,6 +512,8 @@ OBJECT Report 116 Statement
                                     UpdateBuffer(Currency2.Code,GetDate("Posting Date","Due Date"),"Remaining Amount");
                                   IF "Due Date" >= EndDate THEN
                                     CurrReport.SKIP;
+
+                                  ClearCompanyPicture;
                                 END;
 
                DataItemLinkReference=Customer;
@@ -558,6 +569,7 @@ OBJECT Report 116 Statement
 
                OnAfterGetRecord=BEGIN
                                   IF Number = 1 THEN BEGIN
+                                    ClearCompanyPicture;
                                     IF NOT AgingBandBuf.FIND('-') THEN
                                       CurrReport.BREAK;
                                   END ELSE
@@ -886,6 +898,7 @@ OBJECT Report 116 Statement
       ChosenOutputMethod@1064 : Integer;
       PrintRemaining@1062 : Boolean;
       ShowPrintRemaining@1061 : Boolean INDATASET;
+      FirstCustomerPrinted@1071 : Boolean;
 
     LOCAL PROCEDURE GetDate@3(PostingDate@1000 : Date;DueDate@1001 : Date) : Date;
     BEGIN
@@ -1016,6 +1029,17 @@ OBJECT Report 116 Statement
         ERROR(BlankEndDateErr);
       IF StartDate > EndDate THEN
         ERROR(StartDateLaterTheEndDateErr);
+    END;
+
+    LOCAL PROCEDURE ClearCompanyPicture@15();
+    BEGIN
+      IF FirstCustomerPrinted THEN BEGIN
+        CLEAR(CompanyInfo.Picture);
+        CLEAR(CompanyInfo1.Picture);
+        CLEAR(CompanyInfo2.Picture);
+        CLEAR(CompanyInfo3.Picture);
+      END;
+      FirstCustomerPrinted := TRUE;
     END;
 
     BEGIN
@@ -5232,7 +5256,7 @@ Cstr(Fields!CustBalanceCaption.Value)
         <Height>2.30732in</Height>
         <Style />
       </Body>
-      <Width>7.06245in</Width>
+      <Width>18cm</Width>
       <Page>
         <PageHeader>
           <Height>4.18764in</Height>
@@ -6301,10 +6325,9 @@ Cstr(Fields!CustBalanceCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>0.00281in</Left>
-              <Height>40pt</Height>
-              <Width>5.72209cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>40</ZIndex>
               <Visibility>
                 <Hidden>=IIF(IsNothing(Fields!CompanyInfo1Picture.Value)=TRUE,TRUE,FALSE)</Hidden>
@@ -6319,10 +6342,10 @@ Cstr(Fields!CustBalanceCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>2.29727in</Left>
-              <Height>40pt</Height>
-              <Width>5.73466cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>41</ZIndex>
               <Visibility>
                 <Hidden>=IIF(ISNOTHING(Fields!CompanyInfo2Picture.Value) =  TRUE, TRUE, FALSE)</Hidden>
@@ -6337,10 +6360,10 @@ Cstr(Fields!CustBalanceCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>4.62445in</Left>
-              <Height>40pt</Height>
-              <Width>6.18537cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>42</ZIndex>
               <Visibility>
                 <Hidden>=IIF(ISNOTHING(Fields!CompanyInfo3Picture.Value) =  TRUE, TRUE, FALSE)</Hidden>

@@ -2,9 +2,9 @@ OBJECT Codeunit 89 Sales-Post + Email
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -59,7 +59,8 @@ OBJECT Codeunit 89 Sales-Post + Email
                 SalesInvHeader."No." := "No."
               ELSE
                 SalesInvHeader."No." := "Last Posting No.";
-              SalesInvHeader.GET(SalesInvHeader."No.");
+              SalesInvHeader.FIND;
+              SalesInvHeader.SETRECFILTER;
               ReportDistributionManagement.InitializeFrom(HideMailDialog);
               ReportDistributionManagement.EmailDocumentReport(SalesInvHeader);
             END;
@@ -69,7 +70,8 @@ OBJECT Codeunit 89 Sales-Post + Email
                 SalesCrMemoHeader."No." := "No."
               ELSE
                 SalesCrMemoHeader."No." := "Last Posting No.";
-              SalesCrMemoHeader.GET(SalesCrMemoHeader."No.");
+              SalesCrMemoHeader.FIND;
+              SalesCrMemoHeader.SETRECFILTER;
               ReportDistributionManagement.InitializeFrom(HideMailDialog);
               ReportDistributionManagement.EmailDocumentReport(SalesCrMemoHeader);
             END

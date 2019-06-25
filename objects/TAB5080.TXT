@@ -2,9 +2,9 @@ OBJECT Table 5080 To-do
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -112,7 +112,7 @@ OBJECT Table 5080 To-do
 
                                                    CaptionML=[DAN=Teamkode;
                                                               ENU=Team Code] }
-    { 3   ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 3   ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=BEGIN
                                                                 IF (xRec."Salesperson Code" <> "Salesperson Code") AND
                                                                    ("No." <> '') AND
@@ -360,7 +360,7 @@ OBJECT Table 5080 To-do
                                                    CaptionML=[DAN=Kontaktnavn;
                                                               ENU=Contact Name];
                                                    Editable=No }
-    { 19  ;   ;Team Name           ;Text30        ;FieldClass=FlowField;
+    { 19  ;   ;Team Name           ;Text50        ;FieldClass=FlowField;
                                                    CalcFormula=Lookup(Team.Name WHERE (Code=FIELD(Team Code)));
                                                    CaptionML=[DAN=Teamnavn;
                                                               ENU=Team Name];
@@ -570,7 +570,7 @@ OBJECT Table 5080 To-do
                                                    OptionCaptionML=[DAN=Arrangør,Sælgerdeltager,Kontaktdeltager,Team;
                                                                     ENU=Organizer,Salesperson Attendee,Contact Attendee,Team];
                                                    OptionString=Organizer,Salesperson Attendee,Contact Attendee,Team }
-    { 46  ;   ;Completed By        ;Code10        ;TableRelation=Salesperson/Purchaser.Code;
+    { 46  ;   ;Completed By        ;Code20        ;TableRelation=Salesperson/Purchaser.Code;
                                                    OnValidate=BEGIN
                                                                 IF (xRec."Completed By" = '') AND
                                                                    ("Completed By" <> '')
@@ -581,6 +581,7 @@ OBJECT Table 5080 To-do
                                                                     "Completed By" := '';
                                                               END;
 
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Afsluttet af;
                                                               ENU=Completed By] }
     { 47  ;   ;Ending Date         ;Date          ;OnValidate=BEGIN
@@ -692,7 +693,7 @@ OBJECT Table 5080 To-do
       Text040@1052 : TextConst 'DAN=Opgavenr. %1 lukkes og genåbnes. Den vil blive omfordelt til %2, og de tilhørende sælgeropgaver for teammedlemmerne vil blive slettet. Vil du fortsætte?;ENU=To-do no. %1 is closed and will be reopened. It will be reassigned to %2, and the corresponding salesperson to-dos for team members will be deleted. Do you want to continue?';
       Text041@1053 : TextConst 'DAN=Opgavenr. %1 lukkes. Den vil blive åbnet igen og omfordelt til %2. Vil du fortsætte?;ENU=To-do no. %1 is closed. It will be reopened and reassigned to %2. Do you want to continue?';
       Text042@1054 : TextConst 'DAN=Opgavenr. %1 lukkes. Vil du åbne den igen og omfordele den til %2-teamet?;ENU=To-do no. %1 is closed. Do you want to reopen it and assign to the %2 team?';
-      SalespersonFilter@1058 : Code[10];
+      SalespersonFilter@1058 : Code[20];
       ContactFilter@1057 : Code[20];
       Text043@1068 : TextConst 'DAN=Feltet %1 skal udfyldes.;ENU=You must fill in the %1 field.';
       Text047@1072 : TextConst 'DAN=Du kan ikke bruge guiden til at oprette en vedhæftet fil. Du kan oprette en vedhæftet fil i vinduet Interaktionsskabelon.;ENU=You cannot use the wizard to create an attachment. You can create an attachment in the Interaction Template window.';
@@ -896,7 +897,7 @@ OBJECT Table 5080 To-do
       Todo@1007 : Record 5080;
       TeamSalesperson@1008 : Record 5084;
       Attendee2@1010 : Record 5199;
-      SalespersonCode@1009 : Code[10];
+      SalespersonCode@1009 : Code[20];
       Window@1013 : Dialog;
       AttendeeCounter@1017 : Integer;
       TotalAttendees@1018 : Integer;
@@ -1364,16 +1365,22 @@ OBJECT Table 5080 To-do
 
     PROCEDURE GetEndDateTime@18();
     BEGIN
-      IF (Type <> Type::Meeting) OR "All Day Event" THEN BEGIN
+      IF (Type <> Type::Meeting) OR "All Day Event" THEN
         IF "Start Time" <> 0T THEN
           TempEndDateTime := CREATEDATETIME(Date - 1,"Start Time") + Duration
-        ELSE
+        ELSE BEGIN
           TempEndDateTime := CREATEDATETIME(Date,0T) + Duration;
-      END ELSE
+          IF "All Day Event" THEN
+            TempEndDateTime := CREATEDATETIME(DT2DATE(TempEndDateTime - 1000),0T);
+        END
+      ELSE
         TempEndDateTime := CREATEDATETIME(Date,"Start Time") + Duration;
 
       "Ending Date" := DT2DATE(TempEndDateTime);
-      "Ending Time" := DT2TIME(TempEndDateTime);
+      IF "All Day Event" THEN
+        "Ending Time" := 0T
+      ELSE
+        "Ending Time" := DT2TIME(TempEndDateTime);
     END;
 
     LOCAL PROCEDURE UpdateAttendeeTodos@12(OldTodoNo@1003 : Code[20]);
@@ -1830,7 +1837,7 @@ OBJECT Table 5080 To-do
       Todo@1000 : Record 5080;
       Attendee@1001 : Record 5199;
       AttendeeLineNo@1002 : Integer;
-      SalespersonCode@1005 : Code[10];
+      SalespersonCode@1005 : Code[20];
     BEGIN
       MODIFY;
       IF Type = Type::Meeting THEN BEGIN
@@ -1911,7 +1918,7 @@ OBJECT Table 5080 To-do
       Todo@1003 : Record 5080;
       AttendeeLineNo@1004 : Integer;
       SendInvitation@1005 : Boolean;
-      SalespersonCode@1006 : Code[10];
+      SalespersonCode@1006 : Code[20];
       TodoNo@1007 : Code[20];
     BEGIN
       MODIFY;

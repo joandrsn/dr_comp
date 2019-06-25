@@ -2,9 +2,9 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -19,7 +19,7 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
               IF FIND('-') THEN
                 REPEAT
                   IF ("Last Counting Period Update" < "Next Counting Start Date") AND
-                     (WORKDATE >= "Next Counting Start Date") AND (WORKDATE <= "Next Counting End Date")
+                     (WORKDATE >= "Next Counting Start Date")
                   THEN
                     InsertTempPhysCountBuffer(
                       "No.",'','',"Shelf No.","Phys Invt Counting Period Code",
@@ -37,7 +37,7 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
               IF FIND('-') THEN
                 REPEAT
                   IF ("Last Counting Period Update" < "Next Counting Start Date") AND
-                     (WORKDATE >= "Next Counting Start Date") AND (WORKDATE <= "Next Counting End Date")
+                     (WORKDATE >= "Next Counting Start Date")
                   THEN
                     InsertTempPhysCountBuffer(
                       "Item No.","Variant Code","Location Code",
@@ -282,15 +282,14 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
       END;
     END;
 
-    PROCEDURE CalcPeriod@1(LastDate@1004 : Date;VAR NextCountingStartDate@1005 : Date;VAR NextCountingEndDate@1001 : Date;CountFrequency@1002 : Integer;UpdateCountingPeriod@1006 : Boolean);
+    PROCEDURE CalcPeriod@1(LastDate@1004 : Date;VAR NextCountingStartDate@1005 : Date;VAR NextCountingEndDate@1001 : Date;CountFrequency@1002 : Integer);
     VAR
       Calendar@1013 : Record 2000000007;
-      OldStartDate@1009 : Date;
       LastCountDate@1003 : Date;
-      NextStartDate@1008 : Date;
       YearEndDate@1007 : Date;
       StartDate@1012 : Date;
       EndDate@1011 : Date;
+      Periods@1014 : ARRAY [4] OF Date;
       Days@1000 : Decimal;
       i@1010 : Integer;
     BEGIN
@@ -310,35 +309,36 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
       CASE CountFrequency OF
         1,2,3,4,6,12:
           BEGIN
-            IF StartDate > LastCountDate THEN BEGIN
-              i := DATE2DMY(LastCountDate,3);
-              Calendar.RESET;
-              Calendar.SETRANGE("Period Type",Calendar."Period Type"::Year);
-              Calendar.SETRANGE("Period No.",i);
-              Calendar.FIND('-');
-              StartDate := Calendar."Period Start";
-            END;
-            Calendar.RESET;
-            Calendar.SETRANGE("Period Type",Calendar."Period Type"::Month);
-            Calendar.SETFILTER("Period Start",'>= %1',StartDate);
-            Calendar.FIND('-');
-            WHILE StartDate <= LastCountDate DO BEGIN
-              OldStartDate := StartDate;
+            FindCurrentPhysInventoryPeriod(Calendar,StartDate,EndDate,LastCountDate,CountFrequency);
+            IF LastDate <> 0D THEN BEGIN
               Calendar.NEXT(12 / CountFrequency);
-              StartDate := Calendar."Period Start";
+              StartDate := EndDate + 1;
               EndDate := NORMALDATE(Calendar."Period Start") - 1;
             END;
-            StartDate := OldStartDate;
-            IF UpdateCountingPeriod THEN BEGIN
-              IF LastDate <> 0D THEN BEGIN
-                Calendar.NEXT(12 / CountFrequency);
-                StartDate := EndDate + 1;
-                EndDate := NORMALDATE(Calendar."Period Start") - 1;
-              END;
-              NextCountingStartDate := StartDate;
-              NextCountingEndDate := EndDate;
-            END;
-          END
+            NextCountingStartDate := StartDate;
+            NextCountingEndDate := EndDate;
+          END;
+        24:
+          BEGIN
+            FindCurrentPhysInventoryPeriod(Calendar,StartDate,EndDate,LastCountDate,12);
+            Days := (EndDate - StartDate + 1) DIV 2; // number of days in half a month
+            Periods[1] := StartDate;
+            Periods[2] := StartDate + Days;
+            Calendar.NEXT;
+            StartDate := EndDate + 1;
+            EndDate := NORMALDATE(Calendar."Period Start") - 1;
+            Days := (EndDate - StartDate + 1) DIV 2;
+            Periods[3] := StartDate;
+            Periods[4] := StartDate + Days;
+            i := 0;
+            REPEAT
+              i += 1;
+            UNTIL (LastCountDate >= Periods[i]) AND (LastCountDate <= (Periods[i + 1] - 1));
+            IF LastDate <> 0D THEN
+              i += 1;
+            NextCountingStartDate := Periods[i];
+            NextCountingEndDate := Periods[i + 1] - 1;
+          END;
         ELSE BEGIN
           Calendar.RESET;
           Calendar.SETRANGE("Period Type",Calendar."Period Type"::Date);
@@ -346,20 +346,21 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
           Calendar.SETRANGE("Period No.");
           Days := (Calendar.COUNT DIV CountFrequency);
           IF NextCountingStartDate <> 0D THEN BEGIN
-            Calendar.RESET;
-            Calendar.SETRANGE("Period Start",NextCountingStartDate,NextCountingEndDate);
-            StartDate := CALCDATE('<+1D>',Calendar.GETRANGEMAX("Period Start"));
-            OldStartDate := CALCDATE('<-1D>',Calendar.GETRANGEMIN("Period Start"));
-            IF LastCountDate < OldStartDate THEN
-              UpdateCountingPeriod := FALSE;
-          END;
-          NextStartDate := CALCDATE('<+' + FORMAT(Days) + 'D>',LastCountDate);
-          IF UpdateCountingPeriod THEN
-            IF LastDate = 0D THEN BEGIN
-              EndDate := CALCDATE('<+' + FORMAT(Days) + 'D>',NextStartDate);
-              NextCountingStartDate := NextStartDate;
-              NextCountingEndDate := EndDate;
+            IF LastCountDate < NextCountingStartDate THEN
+              EXIT;
+            StartDate := NextCountingStartDate;
+            EndDate := NextCountingEndDate;
+            WHILE LastCountDate >= StartDate DO BEGIN
+              StartDate := EndDate + 1;
+              EndDate := CALCDATE('<+' + FORMAT(Days) + 'D>',StartDate);
             END;
+          END;
+
+          IF LastDate = 0D THEN
+            NextCountingStartDate := CALCDATE('<+' + FORMAT(Days) + 'D>',LastCountDate)
+          ELSE
+            NextCountingStartDate := StartDate;
+          NextCountingEndDate := CALCDATE('<+' + FORMAT(Days) + 'D>',NextCountingStartDate);
         END;
       END;
     END;
@@ -409,7 +410,7 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
           "Last Counting Period Update" := WORKDATE;
           CalcPeriod(
             "Last Counting Period Update","Next Counting Start Date","Next Counting End Date",
-            PhysInvtCount."Count Frequency per Year",TRUE);
+            PhysInvtCount."Count Frequency per Year");
           MODIFY;
         UNTIL NEXT = 0;
       END;
@@ -437,7 +438,7 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
           "Last Counting Period Update" := WORKDATE;
           CalcPeriod(
             "Last Counting Period Update","Next Counting Start Date","Next Counting End Date",
-            PhysInvtCount."Count Frequency per Year",TRUE);
+            PhysInvtCount."Count Frequency per Year");
           MODIFY;
         UNTIL NEXT = 0;
       END;
@@ -514,6 +515,30 @@ OBJECT Codeunit 7380 Phys. Invt. Count.-Management
     PROCEDURE SetHideValidationDialog@7380(NewHideValidationDialog@1000 : Boolean);
     BEGIN
       HideValidationDialog := NewHideValidationDialog;
+    END;
+
+    LOCAL PROCEDURE FindCurrentPhysInventoryPeriod@10(VAR Calendar@1002 : Record 2000000007;VAR StartDate@1011 : Date;VAR EndDate@1003 : Date;LastDate@1010 : Date;CountFrequency@1000 : Integer);
+    VAR
+      OldStartDate@1008 : Date;
+    BEGIN
+      IF StartDate > LastDate THEN BEGIN
+        Calendar.RESET;
+        Calendar.SETRANGE("Period Type",Calendar."Period Type"::Year);
+        Calendar.SETRANGE("Period No.",DATE2DMY(LastDate,3));
+        Calendar.FINDFIRST;
+        StartDate := Calendar."Period Start";
+      END;
+      Calendar.RESET;
+      Calendar.SETRANGE("Period Type",Calendar."Period Type"::Month);
+      Calendar.SETFILTER("Period Start",'>=%1',StartDate);
+      Calendar.FINDFIRST;
+      WHILE StartDate <= LastDate DO BEGIN
+        OldStartDate := StartDate;
+        Calendar.NEXT(12 / CountFrequency);
+        StartDate := Calendar."Period Start";
+        EndDate := NORMALDATE(Calendar."Period Start") - 1;
+      END;
+      StartDate := OldStartDate;
     END;
 
     BEGIN

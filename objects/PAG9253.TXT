@@ -2,9 +2,9 @@ OBJECT Page 9253 Dim. Value Combinations Matrix
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -457,6 +457,8 @@ OBJECT Page 9253 Dim. Value Combinations Matrix
       ShowColumnName := _ShowColumnName;
       MATRIX_CurrentNoOfMatrixColumn := CurrentNoOfMatrixColumn;
       Row := _Row;
+
+      SetColumnVisibility;
     END;
 
     LOCAL PROCEDURE MatrixOnAssistEdit@1(ColumnID@1009 : Integer);

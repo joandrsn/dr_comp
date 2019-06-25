@@ -2,9 +2,9 @@ OBJECT Codeunit 6638 Sales-Get Return Receipts
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -118,7 +118,7 @@ OBJECT Codeunit 6638 Sales-Get Return Receipts
           REPEAT
             IF ItemChargeAssgntSales."Qty. to Assign" <> 0 THEN BEGIN
               ItemChargeAssgntSales2 := ItemChargeAssgntSales;
-              ItemChargeAssgntSales2."Qty. to Assign" := QtyFactor * ItemChargeAssgntSales2."Qty. to Assign";
+              ItemChargeAssgntSales2."Qty. to Assign" := ROUND(QtyFactor * ItemChargeAssgntSales2."Qty. to Assign",0.00001);
               SalesLine2.SETRANGE("Return Receipt No.",ReturnRcptLine."Document No.");
               SalesLine2.SETRANGE("Return Receipt Line No.",ReturnRcptLine."Line No.");
               IF SalesLine2.FIND('-') THEN

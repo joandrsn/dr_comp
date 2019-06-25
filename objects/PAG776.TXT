@@ -2,9 +2,9 @@ OBJECT Page 776 Analysis Report Chart Matrix
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -244,7 +244,7 @@ OBJECT Page 776 Analysis Report Chart Matrix
             ColumnCaptions[ColumnNo] := AnalysisColumn."Column Header";
             ColumnLineNos[ColumnNo] := AnalysisColumn."Line No.";
           END;
-        UNTIL AnalysisColumn.NEXT = 0;
+        UNTIL (AnalysisColumn.NEXT = 0) OR (ColumnNo >= ARRAYLEN(ColumnCaptions));
       MaxColumns := ColumnNo;
       // Set unused columns to blank to prevent RTC to display control ID as caption
       FOR i := MaxColumns + 1 TO ARRAYLEN(ColumnCaptions) DO

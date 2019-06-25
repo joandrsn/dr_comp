@@ -2,9 +2,9 @@ OBJECT Codeunit 99000815 Reservation-Check Date Confl.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -33,6 +33,7 @@ OBJECT Codeunit 99000815 Reservation-Check Date Confl.
       ServLineReserve@1013 : Codeunit 99000842;
       JobPlanningLineReserve@1015 : Codeunit 1032;
       ReservMgt@1014 : Codeunit 99000845;
+      DateConflictMsg@1019 : TextConst '@@@=%1: Field(Reserved Quantity (Base)), %2: Field(Due Date);DAN=Ændringen skaber en konflikt med en eksisterende reservation på %2 for %1 enheder.\ \Reservationerne er blevet annulleret. Produktionsordren skal planlægges igen.;ENU=The change causes a date conflict with an existing reservation on %2 for %1 units.\ \The reservations have been canceled. The production order must be replanned.';
 
     PROCEDURE SalesLineCheck@2(SalesLine@1000 : Record 37;ForceRequest@1001 : Boolean);
     BEGIN
@@ -99,17 +100,21 @@ OBJECT Codeunit 99000815 Reservation-Check Date Confl.
       ReservMgt.AutoTrack(ProdOrderLine."Remaining Qty. (Base)");
     END;
 
-    PROCEDURE ProdOrderComponentCheck@10(ProdOrderComp@1000 : Record 5407;ForceRequest@1001 : Boolean) : Boolean;
+    PROCEDURE ProdOrderComponentCheck@10(ProdOrderComp@1000 : Record 5407;ForceRequest@1002 : Boolean;IsCritical@1001 : Boolean) : Boolean;
     BEGIN
       IF NOT ReserveProdOrderComp.FindReservEntry(ProdOrderComp,ReservEntry) THEN
-        EXIT;
+        EXIT(FALSE);
       IF DateConflict(ProdOrderComp."Due Date",ForceRequest) THEN
         IF ForceRequest THEN
-          IssueError(ProdOrderComp."Due Date");
+          IF IsCritical THEN
+            IssueError(ProdOrderComp."Due Date")
+          ELSE
+            IssueWarning(ProdOrderComp."Due Date");
       UpdateDate(ReservEntry,ProdOrderComp."Due Date");
       ReservMgt.SetProdOrderComponent(ProdOrderComp);
       ReservMgt.ClearSurplus;
       ReservMgt.AutoTrack(ProdOrderComp."Remaining Qty. (Base)");
+      EXIT(ForceRequest);
     END;
 
     PROCEDURE AssemblyHeaderCheck@15(AssemblyHeader@1000 : Record 900;ForceRequest@1001 : Boolean);
@@ -151,26 +156,28 @@ OBJECT Codeunit 99000815 Reservation-Check Date Confl.
       ReservMgt.AutoTrack(PlanningComponent."Net Quantity (Base)");
     END;
 
-    PROCEDURE TransferLineCheck@11(TransLine@1000 : Record 5741;ForceRequest@1001 : Boolean;Direction@1002 : 'Outbound,Inbound') : Boolean;
+    PROCEDURE TransferLineCheck@11(TransLine@1000 : Record 5741);
+    VAR
+      ResEntryFound@1003 : Boolean;
+      ForceRequest@1002 : Boolean;
+      Direction@1001 : 'Outbound,Inbound';
     BEGIN
-      IF NOT ReserveTransLine.FindReservEntry(TransLine,ReservEntry,Direction) THEN
-        EXIT;
-      CASE Direction OF
-        Direction::Outbound:
-          BEGIN
-            IF DateConflict(TransLine."Shipment Date",ForceRequest) THEN
-              IF ForceRequest THEN
-                IssueError(TransLine."Shipment Date");
-            UpdateDate(ReservEntry,TransLine."Shipment Date");
-          END;
-        Direction::Inbound:
-          BEGIN
-            IF DateConflict(TransLine."Receipt Date",ForceRequest) THEN
-              IF ForceRequest THEN
-                IssueError(TransLine."Receipt Date");
-            UpdateDate(ReservEntry,TransLine."Receipt Date");
-          END;
+      IF ReserveTransLine.FindReservEntry(TransLine,ReservEntry,Direction::Outbound) THEN BEGIN
+        ResEntryFound := TRUE;
+        ForceRequest := TRUE;
+        IF DateConflict(TransLine."Shipment Date",ForceRequest) THEN
+          IssueError(TransLine."Shipment Date");
+        UpdateDate(ReservEntry,TransLine."Shipment Date");
       END;
+      IF ReserveTransLine.FindReservEntry(TransLine,ReservEntry,Direction::Inbound) THEN BEGIN
+        ResEntryFound := TRUE;
+        ForceRequest := TRUE;
+        IF DateConflict(TransLine."Receipt Date",ForceRequest) THEN
+          IssueError(TransLine."Receipt Date");
+        UpdateDate(ReservEntry,TransLine."Receipt Date");
+      END;
+      IF NOT ResEntryFound THEN
+        EXIT;
       ReservMgt.SetTransferLine(TransLine,Direction);
       ReservMgt.ClearSurplus;
       ReservMgt.AutoTrack(TransLine."Outstanding Qty. (Base)");
@@ -218,7 +225,10 @@ OBJECT Codeunit 99000815 Reservation-Check Date Confl.
             THEN
               ReservEngineMgt.SplitTrackingConnection(FilterReservEntry,Date)
             ELSE
-              ReservEngineMgt.CloseReservEntry(FilterReservEntry,FALSE,FALSE)
+              IF SameProdOrderAutoReserve(FilterReservEntry) THEN
+                ReservEngineMgt.ModifyExpectedReceiptDate(FilterReservEntry,Date)
+              ELSE
+                ReservEngineMgt.CloseReservEntry(FilterReservEntry,FALSE,FALSE)
           ELSE
             ReservEngineMgt.ModifyShipmentDate(FilterReservEntry,Date)
         ELSE
@@ -271,6 +281,14 @@ OBJECT Codeunit 99000815 Reservation-Check Date Confl.
       ERROR(Text000 + Text001 + Text002,ReservQty,NewDate);
     END;
 
+    LOCAL PROCEDURE IssueWarning@17(NewDate@1000 : Date);
+    VAR
+      ReservQty@1001 : Decimal;
+    BEGIN
+      ReservQty := CalcReservQty(NewDate);
+      MESSAGE(DateConflictMsg,ReservQty,NewDate);
+    END;
+
     LOCAL PROCEDURE CalcReservQty@1010(NewDate@1102601000 : Date) : Decimal;
     VAR
       ReservEntry2@1102601002 : Record 337;
@@ -306,6 +324,27 @@ OBJECT Codeunit 99000815 Reservation-Check Date Confl.
       UNTIL ReservEntry2.NEXT = 0;
 
       EXIT(CreateReservEntry.SignFactor(ReservEntry2) * SumValue);
+    END;
+
+    LOCAL PROCEDURE SameProdOrderAutoReserve@16(FilterReservEntry@1000 : Record 337) : Boolean;
+    VAR
+      ProdOrderLineReservationEntry@1001 : Record 337;
+    BEGIN
+      IF FilterReservEntry."Source Type" = DATABASE::"Prod. Order Component" THEN
+        IF ProdOrderLineReservationEntry.GET(FilterReservEntry."Entry No.",NOT FilterReservEntry.Positive) THEN
+          IF ProdOrderLineReservationEntry."Source Type" = DATABASE::"Prod. Order Line" THEN
+            IF FilterReservEntry."Source ID" = ProdOrderLineReservationEntry."Source ID" THEN
+              EXIT(ProdOrderLineReservationEntry."Source Prod. Order Line" = GetSuppliedByLineNoByReservationEntry(FilterReservEntry));
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE GetSuppliedByLineNoByReservationEntry@18(ReservationEntry@1001 : Record 337) : Integer;
+    VAR
+      ProdOrderComponent@1000 : Record 5407;
+    BEGIN
+      WITH ReservationEntry DO
+        ProdOrderComponent.GET("Source Subtype","Source ID","Source Prod. Order Line","Source Ref. No.");
+      EXIT(ProdOrderComponent."Supplied-by Line No.");
     END;
 
     BEGIN

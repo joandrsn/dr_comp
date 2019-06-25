@@ -2,12 +2,13 @@ OBJECT Codeunit 5342 CRM Synch. Helper
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
+    Permissions=TableData 112=m;
     OnRun=BEGIN
           END;
 
@@ -112,7 +113,7 @@ OBJECT Codeunit 5342 CRM Synch. Helper
       FormattedCurrencyISOCode := FORMAT(UnformattedCurrencyISOCode,5);
 
       // Remove any trailing whitespaces, ex: transform 'DKK  ' into 'DKK'
-      FormattedCurrencyISOCode := DELCHR(FormattedCurrencyISOCode,'>',' ');
+      FormattedCurrencyISOCode := DELCHR(FormattedCurrencyISOCode);
     END;
 
     PROCEDURE GetOrCreateCRMDefaultPriceList@26(VAR CRMPricelevel@1000 : Record 5346);
@@ -120,6 +121,7 @@ OBJECT Codeunit 5342 CRM Synch. Helper
       CRMTransactioncurrency@1001 : Record 5345;
       CRMSetupDefaults@1002 : Codeunit 5334;
     BEGIN
+      CRMPricelevel.RESET;
       CRMPricelevel.SETRANGE(Name,CRMSetupDefaults.GetDefaultNAVPriceListName);
       IF NOT CRMPricelevel.FINDFIRST THEN BEGIN
         CRMPricelevel.Name := CRMSetupDefaults.GetDefaultNAVPriceListName;
@@ -175,7 +177,7 @@ OBJECT Codeunit 5342 CRM Synch. Helper
       // Search for CRM Base Currency by matching ISO code in NAV.
       GetCRMOrganizationSetup(CRMOrganization);
 
-      IF ToCurrencyISOCode = CRMOrganization.BaseCurrencySymbol THEN
+      IF ToCurrencyISOCode = DELCHR(CRMOrganization.BaseCurrencySymbol) THEN
         EXIT(1);
 
       CRMTransactioncurrency.SETRANGE(TransactionCurrencyId,CRMOrganization.BaseCurrencyId);
@@ -268,6 +270,12 @@ OBJECT Codeunit 5342 CRM Synch. Helper
       CRMProduct.StatusCode := CRMProduct.StatusCode::Active;
     END;
 
+    PROCEDURE SetCRMProductStateToRetired@48(VAR CRMProduct@1000 : Record 5348);
+    BEGIN
+      CRMProduct.StateCode := CRMProduct.StateCode::Retired;
+      CRMProduct.StatusCode := CRMProduct.StatusCode::Retired;
+    END;
+
     PROCEDURE SetContactParentCompany@2(AccountID@1003 : GUID;DestinationContactRecordRef@1007 : RecordRef) : Boolean;
     VAR
       CRMIntegrationRecord@1004 : Record 5331;
@@ -340,7 +348,7 @@ OBJECT Codeunit 5342 CRM Synch. Helper
       // Given a source NAV currency code, find a currency with the same ISO code in CRM and update the target CRM currency value if needed
 
       // In NAV, an empty currency means local currency (LCY)
-      IF DELCHR(CurrencyCode,'<>') = '' THEN BEGIN
+      IF DELCHR(CurrencyCode) = '' THEN BEGIN
         GeneralLedgerSetup.GET;
         CurrencyCode := GeneralLedgerSetup."LCY Code";
       END;
@@ -366,21 +374,32 @@ OBJECT Codeunit 5342 CRM Synch. Helper
     BEGIN
       CustLedgerEntry.SETRANGE("Document No.",SalesInvoiceHeader."No.");
       CustLedgerEntry.SETRANGE("Document Type",CustLedgerEntry."Document Type"::Invoice);
-      IF NOT CustLedgerEntry.FINDFIRST THEN
-        EXIT;
-      CustLedgerEntry.CALCFIELDS("Remaining Amount",Amount);
-      IF CustLedgerEntry."Remaining Amount" = 0 THEN BEGIN
-        CRMInvoice.StateCode := CRMInvoice.StateCode::Paid;
-        CRMInvoice.StatusCode := CRMInvoice.StatusCode::Complete;
-      END ELSE
-        IF CustLedgerEntry."Remaining Amount" <> CustLedgerEntry.Amount THEN BEGIN
-          CRMInvoice.StateCode := CRMInvoice.StateCode::Active;
-          CRMInvoice.StatusCode := CRMInvoice.StatusCode::Partial;
-        END ELSE BEGIN
-          CRMInvoice.StateCode := CRMInvoice.StateCode::Active;
-          CRMInvoice.StatusCode := CRMInvoice.StatusCode::Billed;
+      IF CustLedgerEntry.FINDFIRST THEN
+        UpdateCRMInvoiceStatusFromEntry(CRMInvoice,CustLedgerEntry);
+    END;
+
+    PROCEDURE UpdateCRMInvoiceStatusFromEntry@52(VAR CRMInvoice@1001 : Record 5355;CustLedgerEntry@1000 : Record 21);
+    BEGIN
+      WITH CRMInvoice DO BEGIN
+        IF StateCode <> StateCode::Active THEN BEGIN
+          StateCode := StateCode::Active;
+          StatusCode := StatusCode::Billed;
+          MODIFY; // Invoice should be Active to be updated
         END;
-      CRMInvoice.MODIFY;
+        CustLedgerEntry.CALCFIELDS("Remaining Amount",Amount);
+        IF CustLedgerEntry."Remaining Amount" = 0 THEN BEGIN
+          StateCode := StateCode::Paid;
+          StatusCode := StatusCode::Complete;
+        END ELSE
+          IF CustLedgerEntry."Remaining Amount" <> CustLedgerEntry.Amount THEN BEGIN
+            StateCode := StateCode::Paid;
+            StatusCode := StatusCode::Partial;
+          END ELSE BEGIN
+            StateCode := StateCode::Active;
+            StatusCode := StatusCode::Billed;
+          END;
+        MODIFY;
+      END;
     END;
 
     PROCEDURE UpdateCRMProductPriceIfNegative@6(VAR CRMProduct@1001 : Record 5348) : Boolean;
@@ -415,6 +434,42 @@ OBJECT Codeunit 5342 CRM Synch. Helper
       END;
 
       EXIT(FALSE);
+    END;
+
+    PROCEDURE UpdateCRMProductStateCodeIfChanged@49(VAR CRMProduct@1000 : Record 5348;NewBlocked@1009 : Boolean) : Boolean;
+    VAR
+      NewStateCode@1001 : Option;
+    BEGIN
+      IF NewBlocked THEN
+        NewStateCode := CRMProduct.StateCode::Retired
+      ELSE
+        NewStateCode := CRMProduct.StateCode::Active;
+
+      IF NewStateCode <> CRMProduct.StateCode THEN BEGIN
+        IF NewBlocked THEN
+          SetCRMProductStateToRetired(CRMProduct)
+        ELSE
+          SetCRMProductStateToActive(CRMProduct);
+        EXIT(TRUE);
+      END;
+
+      EXIT(FALSE);
+    END;
+
+    PROCEDURE UpdateItemBlockedIfChanged@50(VAR Item@1000 : Record 27;NewBlocked@1009 : Boolean) : Boolean;
+    BEGIN
+      IF Item.Blocked <> NewBlocked THEN BEGIN
+        Item.Blocked := NewBlocked;
+        EXIT(TRUE);
+      END;
+    END;
+
+    PROCEDURE UpdateResourceBlockedIfChanged@39(VAR Resource@1000 : Record 156;NewBlocked@1009 : Boolean) : Boolean;
+    BEGIN
+      IF Resource.Blocked <> NewBlocked THEN BEGIN
+        Resource.Blocked := NewBlocked;
+        EXIT(TRUE);
+      END;
     END;
 
     PROCEDURE UpdateCRMProductUoMFieldsIfChanged@5(VAR CRMProduct@1000 : Record 5348;UnitOfMeasureCode@1009 : Code[10]) : Boolean;
@@ -501,6 +556,17 @@ OBJECT Codeunit 5342 CRM Synch. Helper
       EXIT(FALSE);
     END;
 
+    PROCEDURE UpdateContactOnModifyCustomer@25(RecRef@1000 : RecordRef);
+    VAR
+      Customer@1002 : Record 18;
+      CustContUpdate@1001 : Codeunit 5056;
+    BEGIN
+      IF RecRef.NUMBER <> DATABASE::Customer THEN
+        EXIT;
+      RecRef.SETTABLE(Customer);
+      CustContUpdate.OnModify(Customer);
+    END;
+
     PROCEDURE UpdateSalesPersonCodeIfChanged@4(SourceRecordRef@1008 : RecordRef;VAR DestinationRecordRef@1009 : RecordRef;SourceOwnerIDFieldNo@1004 : Integer;SourceOwnerTypeFieldNo@1010 : Integer;AllowedOwnerTypeValue@1011 : Option;DestinationSalesPersonCodeFieldNo@1005 : Integer) : Boolean;
     VAR
       CRMIntegrationRecord@1003 : Record 5331;
@@ -559,6 +625,12 @@ OBJECT Codeunit 5342 CRM Synch. Helper
       // Return TRUE if the value was changed
       DestinationFieldRef.VALUE := NewFieldValue;
       EXIT(TRUE);
+    END;
+
+    PROCEDURE SetSalesInvoiceHeaderCoupledToCRM@30(VAR SalesInvoiceHeader@1000 : Record 112);
+    BEGIN
+      SalesInvoiceHeader."Coupled to CRM" := TRUE;
+      SalesInvoiceHeader.MODIFY;
     END;
 
     PROCEDURE GetValidCRMUnitOfMeasureRecords@46(VAR CRMUom@1007 : Record 5361;VAR CRMUomschedule@1001 : Record 5362;UnitOfMeasureCode@1002 : Code[10]);

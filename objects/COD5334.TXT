@@ -2,9 +2,9 @@ OBJECT Codeunit 5334 CRM Setup Defaults
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -487,8 +487,10 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         CRMProduct.FIELDNO(ModifiedOn),// IntegrationTableModifiedFieldNo
         '',// TableConfigTemplateCode
         '',// IntegrationTableConfigTemplateCode
-        IntegrationTableMapping.Direction::ToIntegrationTable,
+        IntegrationTableMapping.Direction::Bidirectional,
         TRUE);// SynchOnlyCoupledRecords
+
+      SetIntegrationTableFilterForCRMProduct(IntegrationTableMapping,CRMProduct,CRMProduct.ProductTypeCode::SalesInventory);
 
       // "No." > ProductNumber
       InsertIntegrationFieldMapping(
@@ -503,7 +505,7 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         IntegrationTableMappingName,
         Item.FIELDNO(Description),
         CRMProduct.FIELDNO(Name),
-        IntegrationFieldMapping.Direction::ToIntegrationTable,
+        IntegrationFieldMapping.Direction::Bidirectional,
         '',TRUE,FALSE);
 
       // Unit Price > Price
@@ -546,10 +548,18 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         IntegrationFieldMapping.Direction::ToIntegrationTable,
         '',TRUE,FALSE);
 
-      // Vendor No. > Vendor part number
+      // Vendor No. > Vendor ID
       InsertIntegrationFieldMapping(
         IntegrationTableMappingName,
         Item.FIELDNO("Vendor No."),
+        CRMProduct.FIELDNO(VendorID),
+        IntegrationFieldMapping.Direction::ToIntegrationTable,
+        '',TRUE,FALSE);
+
+      // Vendor Item No. > Vendor part number
+      InsertIntegrationFieldMapping(
+        IntegrationTableMappingName,
+        Item.FIELDNO("Vendor Item No."),
         CRMProduct.FIELDNO(VendorPartNumber),
         IntegrationFieldMapping.Direction::ToIntegrationTable,
         '',TRUE,FALSE);
@@ -560,6 +570,13 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         Item.FIELDNO(Inventory),
         CRMProduct.FIELDNO(QuantityOnHand),
         IntegrationFieldMapping.Direction::ToIntegrationTable,
+        '',TRUE,FALSE);
+
+      InsertIntegrationFieldMapping(
+        IntegrationTableMappingName,
+        Item.FIELDNO("Base Unit of Measure"),
+        CRMProduct.FIELDNO(DefaultUoMIdName),
+        IntegrationFieldMapping.Direction::Bidirectional,
         '',TRUE,FALSE);
 
       RecreateJobQueueEntry(30);
@@ -583,8 +600,10 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         CRMProduct.FIELDNO(ModifiedOn),// IntegrationTableModifiedFieldNo
         '',// TableConfigTemplateCode
         '',// IntegrationTableConfigTemplateCode
-        IntegrationTableMapping.Direction::ToIntegrationTable,
+        IntegrationTableMapping.Direction::Bidirectional,
         TRUE);// SynchOnlyCoupledRecords
+
+      SetIntegrationTableFilterForCRMProduct(IntegrationTableMapping,CRMProduct,CRMProduct.ProductTypeCode::Services);
 
       // "No." > ProductNumber
       InsertIntegrationFieldMapping(
@@ -599,7 +618,7 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         IntegrationTableMappingName,
         Resource.FIELDNO(Name),
         CRMProduct.FIELDNO(Name),
-        IntegrationFieldMapping.Direction::ToIntegrationTable,
+        IntegrationFieldMapping.Direction::Bidirectional,
         '',TRUE,FALSE);
 
       // Unit Price > Price
@@ -626,11 +645,11 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         IntegrationFieldMapping.Direction::ToIntegrationTable,
         '',TRUE,FALSE);
 
-      // Vendor No. > Vendor part number
+      // Vendor No. > Vendor ID
       InsertIntegrationFieldMapping(
         IntegrationTableMappingName,
         Resource.FIELDNO("Vendor No."),
-        CRMProduct.FIELDNO(VendorPartNumber),
+        CRMProduct.FIELDNO(VendorID),
         IntegrationFieldMapping.Direction::ToIntegrationTable,
         '',TRUE,FALSE);
 
@@ -881,6 +900,22 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         CRMInvoicedetail.FIELDNO(IsPriceOverridden),
         IntegrationFieldMapping.Direction::ToIntegrationTable,
         '1',TRUE,FALSE);
+
+      // Amount -> BaseAmount
+      InsertIntegrationFieldMapping(
+        IntegrationTableMappingName,
+        SalesInvoiceLine.FIELDNO(Amount),
+        CRMInvoicedetail.FIELDNO(BaseAmount),
+        IntegrationFieldMapping.Direction::ToIntegrationTable,
+        '',TRUE,FALSE);
+
+      // "Amount Including VAT" -> ExtendedAmount
+      InsertIntegrationFieldMapping(
+        IntegrationTableMappingName,
+        SalesInvoiceLine.FIELDNO("Amount Including VAT"),
+        CRMInvoicedetail.FIELDNO(ExtendedAmount),
+        IntegrationFieldMapping.Direction::ToIntegrationTable,
+        '',TRUE,FALSE);
     END;
 
     LOCAL PROCEDURE ResetUnitOfMeasureUoMScheduleMapping@11();
@@ -1045,7 +1080,10 @@ OBJECT Codeunit 5334 CRM Setup Defaults
 
     PROCEDURE GetAllowNonSecureConnections@20() : Boolean;
     BEGIN
-      EXIT(FALSE);
+      // Most OnPrem solutions uses http if running in a private domain. CRM Server only demands https if the system has been
+      // configured with internet connectivity, which is not the default. NAV Should not contrain the connection to CRM if the system
+      // admin has configured the CRM service to be on a private domain only.
+      EXIT(TRUE);
     END;
 
     PROCEDURE GetDefaultNAVPriceListName@17() : Text[100];
@@ -1275,6 +1313,14 @@ OBJECT Codeunit 5334 CRM Setup Defaults
         TempCRMConnectionSetup."Is User Mapping Required" := FALSE;
         TempCRMConnectionSetup.RegisterConnectionWithName(ConnectionName);
       END;
+    END;
+
+    LOCAL PROCEDURE SetIntegrationTableFilterForCRMProduct@27(VAR IntegrationTableMapping@1001 : Record 5335;CRMProduct@1000 : Record 5348;ProductTypeCode@1002 : Option);
+    BEGIN
+      CRMProduct.SETRANGE(ProductTypeCode,ProductTypeCode);
+      IntegrationTableMapping.SetIntegrationTableFilter(
+        GetTableFilterFromView(DATABASE::"CRM Product",CRMProduct.TABLECAPTION,CRMProduct.GETVIEW));
+      IntegrationTableMapping.MODIFY;
     END;
 
     BEGIN

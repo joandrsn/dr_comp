@@ -2,9 +2,9 @@ OBJECT Table 5768 Whse. Cross-Dock Opportunity
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -104,21 +104,15 @@ OBJECT Table 5768 Whse. Cross-Dock Opportunity
                                                               ENU=Qty. Needed (Base)];
                                                    DecimalPlaces=0:5;
                                                    Editable=No }
-    { 26  ;   ;Qty. to Cross-Dock  ;Decimal       ;OnValidate=VAR
-                                                                ReceiptLine@1000 : Record 7317;
-                                                              BEGIN
+    { 26  ;   ;Qty. to Cross-Dock  ;Decimal       ;OnValidate=BEGIN
                                                                 "Qty. to Cross-Dock (Base)" := CalcBaseQty("Qty. to Cross-Dock");
                                                                 CALCFIELDS("Qty. Cross-Docked (Base)");
                                                                 CalcQtyOnCrossDock(NotUsed,QtyOnCrossdockAllUomBase);
-                                                                IF ("Qty. Cross-Docked (Base)" + "Qty. to Cross-Dock (Base)" - xRec."Qty. to Cross-Dock (Base)") -
+                                                                IF ("Qty. Cross-Docked (Base)" + "Qty. to Cross-Dock (Base)" - xRec."Qty. to Cross-Dock (Base)") +
                                                                    QtyOnCrossdockAllUomBase >
                                                                    CalcQtyToHandleBase("Source Template Name","Source Name/No.","Source Line No.")
                                                                 THEN
-                                                                  ERROR(
-                                                                    Text001,
-                                                                    FIELDCAPTION("Qty. to Cross-Dock (Base)"),
-                                                                    ReceiptLine.FIELDCAPTION("Qty. to Receive (Base)"),
-                                                                    ReceiptLine.TABLECAPTION);
+                                                                  ERROR(CrossDockQtyExceedsReceiptQtyErr);
                                                               END;
 
                                                    CaptionML=[DAN=Antal til dir. afsend.;
@@ -223,7 +217,7 @@ OBJECT Table 5768 Whse. Cross-Dock Opportunity
   CODE
   {
     VAR
-      Text001@1001 : TextConst 'DAN=Summen af %1 i %3 må ikke overstige %2 i %4.;ENU=The sum of %1 on %3 must not exceed %2 on %4.';
+      CrossDockQtyExceedsReceiptQtyErr@1001 : TextConst 'DAN=Summen af felterne Antal til dir. afsend. og Antal til dir. afsendt (basis) må ikke overstige værdien i feltet Modtag (antal) på lagermodtagelseslinjen.;ENU=The sum of the Qty. to Cross-Dock and Qty. Cross-Docked (Base) fields must not exceed the value in the Qty. to Receive field on the warehouse receipt line.';
       QtyOnCrossdockAllUomBase@1006 : Decimal;
       NotUsed@1003 : Decimal;
 
@@ -242,13 +236,14 @@ OBJECT Table 5768 Whse. Cross-Dock Opportunity
 
           CrossDockMgt.CalcCrossDockedItems("Item No.","Variant Code",
             "Unit of Measure Code","Location Code",Dummy,QtyOnCrossDockBase);
+          QtyOnCrossDockBase += CrossDockMgt.CalcCrossDockReceivedNotCrossDocked("Location Code","Item No.","Variant Code");
 
           REPEAT
             CALCFIELDS("Qty. Cross-Docked (Base)");
-            IF ("Qty. Cross-Docked (Base)" - QtyOnCrossDockBase) >= QtyToHandleBase THEN
+            IF ("Qty. Cross-Docked (Base)" + QtyOnCrossDockBase) >= QtyToHandleBase THEN
               EXIT;
             IF "Qty. Needed (Base)" <> Rec."Qty. to Cross-Dock (Base)" THEN
-              IF (QtyToHandleBase - "Qty. Cross-Docked (Base)" + QtyOnCrossDockBase) > "Qty. Needed (Base)" THEN BEGIN
+              IF (QtyToHandleBase - "Qty. Cross-Docked (Base)" - QtyOnCrossDockBase) > "Qty. Needed (Base)" THEN BEGIN
                 VALIDATE(
                   "Qty. to Cross-Dock",
                   CalcQty("Qty. Needed (Base)","To-Src. Qty. per Unit of Meas."));
@@ -256,7 +251,7 @@ OBJECT Table 5768 Whse. Cross-Dock Opportunity
               END ELSE BEGIN
                 VALIDATE(
                   "Qty. to Cross-Dock",
-                  CalcQty(QtyToHandleBase - "Qty. Cross-Docked (Base)" + QtyOnCrossDockBase,"To-Src. Qty. per Unit of Meas."));
+                  CalcQty(QtyToHandleBase - "Qty. Cross-Docked (Base)" - QtyOnCrossDockBase,"To-Src. Qty. per Unit of Meas."));
                 MODIFY;
               END;
           UNTIL NEXT = 0;
@@ -301,6 +296,9 @@ OBJECT Table 5768 Whse. Cross-Dock Opportunity
         CrossDockMgt.CalcCrossDockedItems(ReceiptLine."Item No.",ReceiptLine."Variant Code",
           ReceiptLine."Unit of Measure Code",ReceiptLine."Location Code",QtyOnCrossDockUOMBase,
           QtyOnCrossDockAllUOMBase);
+        QtyOnCrossDockAllUOMBase +=
+          CrossDockMgt.CalcCrossDockReceivedNotCrossDocked(
+            ReceiptLine."Location Code",ReceiptLine."Item No.",ReceiptLine."Variant Code");
       END;
     END;
 

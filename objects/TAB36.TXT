@@ -2,14 +2,16 @@ OBJECT Table 36 Sales Header
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-02-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974,NAVDK9.00.00.44974;
+    Version List=NAVW19.00.00.51103,NAVDK9.00.00.51103;
   }
   PROPERTIES
   {
     DataCaptionFields=No.,Sell-to Customer Name;
-    OnInsert=BEGIN
+    OnInsert=VAR
+               ArchiveManagement@1000 : Codeunit 5063;
+             BEGIN
                InitInsert;
                InsertMode := TRUE;
 
@@ -20,12 +22,14 @@ OBJECT Table 36 Sales Header
                  VALIDATE("Sell-to Contact No.",GetFilterContNo);
 
                "Doc. No. Occurrence" := ArchiveManagement.GetNextOccurrenceNo(DATABASE::"Sales Header","Document Type","No.");
+
+               IF "Salesperson Code" = '' THEN
+                 SetDefaultSalesperson;
              END;
 
     OnDelete=VAR
-               Opp@1000 : Record 5092;
-               TempOpportunityEntry@1001 : TEMPORARY Record 5093;
                DOPaymentTransLogEntry@1002 : Record 829;
+               ArchiveManagement@1000 : Codeunit 5063;
              BEGIN
                IF DOPaymentTransLogEntry.FINDFIRST THEN
                  DOPaymentTransLogMgt.ValidateCanDeleteDocument("Payment Method Code","Document Type",FORMAT("Document Type"),"No.");
@@ -35,40 +39,17 @@ OBJECT Table 36 Sales Header
                    Text022,
                    RespCenter.TABLECAPTION,UserSetupMgt.GetSalesFilter);
 
-               IF ("Opportunity No." <> '') AND
-                  ("Document Type" IN ["Document Type"::Quote,"Document Type"::Order])
-               THEN
-                 IF Opp.GET("Opportunity No.") THEN BEGIN
-                   IF "Document Type" = "Document Type"::Order THEN BEGIN
-                     IF NOT CONFIRM(Text040,TRUE) THEN
-                       ERROR(Text044);
-                     TempOpportunityEntry.INIT;
-                     TempOpportunityEntry.VALIDATE("Opportunity No.",Opp."No.");
-                     TempOpportunityEntry."Sales Cycle Code" := Opp."Sales Cycle Code";
-                     TempOpportunityEntry."Contact No." := Opp."Contact No.";
-                     TempOpportunityEntry."Contact Company No." := Opp."Contact Company No.";
-                     TempOpportunityEntry."Salesperson Code" := Opp."Salesperson Code";
-                     TempOpportunityEntry."Campaign No." := Opp."Campaign No.";
-                     TempOpportunityEntry."Action Taken" := TempOpportunityEntry."Action Taken"::Lost;
-                     TempOpportunityEntry.INSERT;
-                     TempOpportunityEntry.SETRANGE("Action Taken",TempOpportunityEntry."Action Taken"::Lost);
-                     PAGE.RUNMODAL(PAGE::"Close Opportunity",TempOpportunityEntry);
-                     IF Opp.GET("Opportunity No.") THEN
-                       IF Opp.Status <> Opp.Status::Lost THEN
-                         ERROR(Text043);
-                   END;
-                   Opp."Sales Document Type" := Opp."Sales Document Type"::" ";
-                   Opp."Sales Document No." := '';
-                   Opp.MODIFY;
-                   "Opportunity No." := '';
-                 END;
-
                SalesPost.DeleteHeader(
                  Rec,SalesShptHeader,SalesInvHeader,SalesCrMemoHeader,ReturnRcptHeader,SalesInvHeaderPrepmt,SalesCrMemoHeaderPrepmt);
+
+               ArchiveManagement.AutoArchiveSalesDocument(Rec);
+
+               UpdateOpportunity;
+
                VALIDATE("Applies-to ID",'');
                VALIDATE("Incoming Document Entry No.",0);
 
-               ApprovalsMgmt.DeleteApprovalEntry(DATABASE::"Sales Header","Document Type","No.");
+               ApprovalsMgmt.DeleteApprovalEntries(RECORDID);
                SalesLine.RESET;
                SalesLine.LOCKTABLE;
 
@@ -95,63 +76,8 @@ OBJECT Table 36 Sales Header
                   (ReturnRcptHeader."No." <> '') OR
                   (SalesInvHeaderPrepmt."No." <> '') OR
                   (SalesCrMemoHeaderPrepmt."No." <> '')
-               THEN BEGIN
-                 COMMIT;
-
-                 IF SalesShptHeader."No." <> '' THEN
-                   IF CONFIRM(
-                        Text000,TRUE,
-                        SalesShptHeader."No.")
-                   THEN BEGIN
-                     SalesShptHeader.SETRECFILTER;
-                     SalesShptHeader.PrintRecords(TRUE);
-                   END;
-
-                 IF SalesInvHeader."No." <> '' THEN
-                   IF CONFIRM(
-                        Text001,TRUE,
-                        SalesInvHeader."No.")
-                   THEN BEGIN
-                     SalesInvHeader.SETRECFILTER;
-                     SalesInvHeader.PrintRecords(TRUE);
-                   END;
-
-                 IF SalesCrMemoHeader."No." <> '' THEN
-                   IF CONFIRM(
-                        Text002,TRUE,
-                        SalesCrMemoHeader."No.")
-                   THEN BEGIN
-                     SalesCrMemoHeader.SETRECFILTER;
-                     SalesCrMemoHeader.PrintRecords(TRUE);
-                   END;
-
-                 IF ReturnRcptHeader."No." <> '' THEN
-                   IF CONFIRM(
-                        Text023,TRUE,
-                        ReturnRcptHeader."No.")
-                   THEN BEGIN
-                     ReturnRcptHeader.SETRECFILTER;
-                     ReturnRcptHeader.PrintRecords(TRUE);
-                   END;
-
-                 IF SalesInvHeaderPrepmt."No." <> '' THEN
-                   IF CONFIRM(
-                        Text055,TRUE,
-                        SalesInvHeader."No.")
-                   THEN BEGIN
-                     SalesInvHeaderPrepmt.SETRECFILTER;
-                     SalesInvHeaderPrepmt.PrintRecords(TRUE);
-                   END;
-
-                 IF SalesCrMemoHeaderPrepmt."No." <> '' THEN
-                   IF CONFIRM(
-                        Text054,TRUE,
-                        SalesCrMemoHeaderPrepmt."No.")
-                   THEN BEGIN
-                     SalesCrMemoHeaderPrepmt.SETRECFILTER;
-                     SalesCrMemoHeaderPrepmt.PrintRecords(TRUE);
-                   END;
-               END;
+               THEN
+                 MESSAGE(PostedDocsToPrintCreatedMsg);
              END;
 
     OnRename=BEGIN
@@ -424,7 +350,7 @@ OBJECT Table 36 Sales Header
                                                                 "Invoice Disc. Code" := Cust."Invoice Disc. Code";
                                                                 "Customer Disc. Group" := Cust."Customer Disc. Group";
                                                                 "Language Code" := Cust."Language Code";
-                                                                "Salesperson Code" := Cust."Salesperson Code";
+                                                                SetSalespersonCode(Cust."Salesperson Code","Salesperson Code");
                                                                 "Combine Shipments" := Cust."Combine Shipments";
                                                                 Reserve := Cust.Reserve;
                                                                 IF "Document Type" = "Document Type"::Order THEN
@@ -475,7 +401,8 @@ OBJECT Table 36 Sales Header
                                                               ENU=Bill-to Address] }
     { 8   ;   ;Bill-to Address 2   ;Text50        ;CaptionML=[DAN=Faktureringsadresse 2;
                                                               ENU=Bill-to Address 2] }
-    { 9   ;   ;Bill-to City        ;Text30        ;TableRelation="Post Code".City;
+    { 9   ;   ;Bill-to City        ;Text30        ;TableRelation=IF (Bill-to Country/Region Code=CONST()) "Post Code".City
+                                                                 ELSE IF (Bill-to Country/Region Code=FILTER(<>'')) "Post Code".City WHERE (Country/Region Code=FIELD(Bill-to Country/Region Code));
                                                    OnValidate=BEGIN
                                                                 PostCode.ValidateCity(
                                                                   "Bill-to City","Bill-to Post Code","Bill-to County","Bill-to Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
@@ -583,7 +510,8 @@ OBJECT Table 36 Sales Header
                                                               ENU=Ship-to Address] }
     { 16  ;   ;Ship-to Address 2   ;Text50        ;CaptionML=[DAN=Leveringsadresse 2;
                                                               ENU=Ship-to Address 2] }
-    { 17  ;   ;Ship-to City        ;Text30        ;TableRelation="Post Code".City;
+    { 17  ;   ;Ship-to City        ;Text30        ;TableRelation=IF (Ship-to Country/Region Code=CONST()) "Post Code".City
+                                                                 ELSE IF (Ship-to Country/Region Code=FILTER(<>'')) "Post Code".City WHERE (Country/Region Code=FIELD(Ship-to Country/Region Code));
                                                    OnValidate=BEGIN
                                                                 PostCode.ValidateCity(
                                                                   "Ship-to City","Ship-to Post Code","Ship-to County","Ship-to Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
@@ -616,7 +544,8 @@ OBJECT Table 36 Sales Header
                                                                   "Prepmt. Cr. Memo No.","Prepmt. Cr. Memo No. Series",
                                                                   FIELDCAPTION("Prepmt. Cr. Memo No."),FIELDCAPTION("Prepmt. Cr. Memo No. Series"));
 
-                                                                VALIDATE("Document Date","Posting Date");
+                                                                IF "Incoming Document Entry No." = 0 THEN
+                                                                  VALIDATE("Document Date","Posting Date");
 
                                                                 IF ("Document Type" IN ["Document Type"::Invoice,"Document Type"::"Credit Memo"]) AND
                                                                    NOT ("Posting Date" = xRec."Posting Date")
@@ -718,7 +647,8 @@ OBJECT Table 36 Sales Header
 
                                                    CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code] }
-    { 29  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+    { 29  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(1,"Shortcut Dimension 1 Code");
                                                               END;
@@ -726,7 +656,8 @@ OBJECT Table 36 Sales Header
                                                    CaptionML=[DAN=Genvejsdimension 1-kode;
                                                               ENU=Shortcut Dimension 1 Code];
                                                    CaptionClass='1,2,1' }
-    { 30  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+    { 30  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(2,"Shortcut Dimension 2 Code");
                                                               END;
@@ -888,10 +819,12 @@ OBJECT Table 36 Sales Header
 
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code] }
-    { 43  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 43  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=VAR
                                                                 ApprovalEntry@1001 : Record 454;
                                                               BEGIN
+                                                                ValidateSalesPersonOnSalesHeader(Rec,FALSE,FALSE);
+
                                                                 ApprovalEntry.SETRANGE("Table ID",DATABASE::"Sales Header");
                                                                 ApprovalEntry.SETRANGE("Document Type","Document Type");
                                                                 ApprovalEntry.SETRANGE("Document No.","No.");
@@ -1068,11 +1001,11 @@ OBJECT Table 36 Sales Header
     { 74  ;   ;Gen. Bus. Posting Group;Code10     ;TableRelation="Gen. Business Posting Group";
                                                    OnValidate=BEGIN
                                                                 TESTFIELD(Status,Status::Open);
-                                                                IF xRec."Gen. Bus. Posting Group" <> "Gen. Bus. Posting Group" THEN
-                                                                  IF GenBusPostingGrp.ValidateVatBusPostingGroup(GenBusPostingGrp,"Gen. Bus. Posting Group") THEN BEGIN
+                                                                IF xRec."Gen. Bus. Posting Group" <> "Gen. Bus. Posting Group" THEN BEGIN
+                                                                  IF GenBusPostingGrp.ValidateVatBusPostingGroup(GenBusPostingGrp,"Gen. Bus. Posting Group") THEN
                                                                     "VAT Bus. Posting Group" := GenBusPostingGrp."Def. VAT Bus. Posting Group";
-                                                                    RecreateSalesLines(FIELDCAPTION("Gen. Bus. Posting Group"));
-                                                                  END;
+                                                                  RecreateSalesLines(FIELDCAPTION("Gen. Bus. Posting Group"));
+                                                                END;
                                                               END;
 
                                                    CaptionML=[DAN=Virksomhedsbogføringsgruppe;
@@ -1104,7 +1037,8 @@ OBJECT Table 36 Sales Header
                                                               ENU=Sell-to Address] }
     { 82  ;   ;Sell-to Address 2   ;Text50        ;CaptionML=[DAN=Kundeadresse 2;
                                                               ENU=Sell-to Address 2] }
-    { 83  ;   ;Sell-to City        ;Text30        ;TableRelation="Post Code".City;
+    { 83  ;   ;Sell-to City        ;Text30        ;TableRelation=IF (Sell-to Country/Region Code=CONST()) "Post Code".City
+                                                                 ELSE IF (Sell-to Country/Region Code=FILTER(<>'')) "Post Code".City WHERE (Country/Region Code=FIELD(Sell-to Country/Region Code));
                                                    OnValidate=BEGIN
                                                                 PostCode.ValidateCity(
                                                                   "Sell-to City","Sell-to Post Code","Sell-to County","Sell-to Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
@@ -1116,7 +1050,8 @@ OBJECT Table 36 Sales Header
                                                               ENU=Sell-to City] }
     { 84  ;   ;Sell-to Contact     ;Text50        ;CaptionML=[DAN=Kundeattention;
                                                               ENU=Sell-to Contact] }
-    { 85  ;   ;Bill-to Post Code   ;Code20        ;TableRelation="Post Code";
+    { 85  ;   ;Bill-to Post Code   ;Code20        ;TableRelation=IF (Bill-to Country/Region Code=CONST()) "Post Code"
+                                                                 ELSE IF (Bill-to Country/Region Code=FILTER(<>'')) "Post Code" WHERE (Country/Region Code=FIELD(Bill-to Country/Region Code));
                                                    OnValidate=BEGIN
                                                                 PostCode.ValidatePostCode(
                                                                   "Bill-to City","Bill-to Post Code","Bill-to County","Bill-to Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
@@ -1131,7 +1066,8 @@ OBJECT Table 36 Sales Header
     { 87  ;   ;Bill-to Country/Region Code;Code10 ;TableRelation=Country/Region;
                                                    CaptionML=[DAN=Lande-/områdekode til fakturering;
                                                               ENU=Bill-to Country/Region Code] }
-    { 88  ;   ;Sell-to Post Code   ;Code20        ;TableRelation="Post Code";
+    { 88  ;   ;Sell-to Post Code   ;Code20        ;TableRelation=IF (Sell-to Country/Region Code=CONST()) "Post Code"
+                                                                 ELSE IF (Sell-to Country/Region Code=FILTER(<>'')) "Post Code" WHERE (Country/Region Code=FIELD(Sell-to Country/Region Code));
                                                    OnValidate=BEGIN
                                                                 PostCode.ValidatePostCode(
                                                                   "Sell-to City","Sell-to Post Code","Sell-to County","Sell-to Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
@@ -1146,7 +1082,8 @@ OBJECT Table 36 Sales Header
     { 90  ;   ;Sell-to Country/Region Code;Code10 ;TableRelation=Country/Region;
                                                    CaptionML=[DAN=Lande-/områdekode for kunde;
                                                               ENU=Sell-to Country/Region Code] }
-    { 91  ;   ;Ship-to Post Code   ;Code20        ;TableRelation="Post Code";
+    { 91  ;   ;Ship-to Post Code   ;Code20        ;TableRelation=IF (Ship-to Country/Region Code=CONST()) "Post Code"
+                                                                 ELSE IF (Ship-to Country/Region Code=FILTER(<>'')) "Post Code" WHERE (Country/Region Code=FIELD(Ship-to Country/Region Code));
                                                    OnValidate=BEGIN
                                                                 PostCode.ValidatePostCode(
                                                                   "Ship-to City","Ship-to Post Code","Ship-to County","Ship-to Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
@@ -1214,11 +1151,11 @@ OBJECT Table 36 Sales Header
                                                                 IF "Payment Method Code" <> '' THEN
                                                                   PaymentMethod.GET("Payment Method Code");
                                                                 IF PaymentMethod."Direct Debit" THEN BEGIN
-                                                                  IF "Direct Debit Mandate ID" = '' THEN
-                                                                    "Direct Debit Mandate ID" := SEPADirectDebitMandate.GetDefaultMandate("Bill-to Customer No.","Due Date");
+                                                                  "Direct Debit Mandate ID" := SEPADirectDebitMandate.GetDefaultMandate("Bill-to Customer No.","Due Date");
                                                                   IF "Payment Terms Code" = '' THEN
                                                                     "Payment Terms Code" := PaymentMethod."Direct Debit Pmt. Terms Code";
-                                                                END;
+                                                                END ELSE
+                                                                  "Direct Debit Mandate ID" := '';
                                                                 "Bal. Account Type" := PaymentMethod."Bal. Account Type";
                                                                 "Bal. Account No." := PaymentMethod."Bal. Account No.";
                                                                 IF "Bal. Account No." <> '' THEN BEGIN
@@ -1703,6 +1640,10 @@ OBJECT Table 36 Sales Header
                                                               BEGIN
                                                                 TESTFIELD(Status,Status::Open);
 
+                                                                IF "Sell-to Contact No." <> '' THEN
+                                                                  IF Cont.GET("Sell-to Contact No.") THEN
+                                                                    Cont.CheckIfPrivacyBlockedGeneric;
+
                                                                 IF ("Sell-to Contact No." <> xRec."Sell-to Contact No.") AND
                                                                    (xRec."Sell-to Contact No." <> '')
                                                                 THEN BEGIN
@@ -1793,6 +1734,10 @@ OBJECT Table 36 Sales Header
                                                                 Cont@1002 : Record 5050;
                                                               BEGIN
                                                                 TESTFIELD(Status,Status::Open);
+
+                                                                IF "Bill-to Contact No." <> '' THEN
+                                                                  IF Cont.GET("Bill-to Contact No.") THEN
+                                                                    Cont.CheckIfPrivacyBlockedGeneric;
 
                                                                 IF ("Bill-to Contact No." <> xRec."Bill-to Contact No.") AND
                                                                    (xRec."Bill-to Contact No." <> '')
@@ -2009,7 +1954,7 @@ OBJECT Table 36 Sales Header
                                                                                          Document No.=FIELD(No.),
                                                                                          Qty. Shipped (Base)=FILTER(<>0)));
                                                    AccessByPermission=TableData 110=R;
-                                                   CaptionML=[DAN=Shipped;
+                                                   CaptionML=[DAN=Leveret;
                                                               ENU=Shipped];
                                                    Editable=No }
     { 5790;   ;Requested Delivery Date;Date       ;OnValidate=BEGIN
@@ -2128,6 +2073,7 @@ OBJECT Table 36 Sales Header
                                                                     RespCenter.TABLECAPTION,UserSetupMgt.GetSalesFilter2("Assigned User ID"));
                                                               END;
 
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
     { 13600;  ;EAN No.             ;Code13        ;OnValidate=BEGIN
@@ -2197,9 +2143,6 @@ OBJECT Table 36 Sales Header
   CODE
   {
     VAR
-      Text000@1000 : TextConst 'DAN=Ønsker du at udskrive leverance %1?;ENU=Do you want to print shipment %1?';
-      Text001@1001 : TextConst 'DAN=Ønsker du at udskrive faktura %1?;ENU=Do you want to print invoice %1?';
-      Text002@1002 : TextConst 'DAN=Ønsker du at udskrive kreditnota %1?;ENU=Do you want to print credit memo %1?';
       Text003@1003 : TextConst 'DAN=%1 kan ikke omdøbes.;ENU=You cannot rename a %1.';
       Text004@1004 : TextConst 'DAN=Skal %1 ændres?;ENU=Do you want to change %1?';
       Text005@1005 : TextConst 'DAN=Du kan ikke nulstille %1, fordi dokumentet stadig indeholder en eller flere linjer.;ENU=You cannot reset %1 because the document still has one or more lines.';
@@ -2210,12 +2153,11 @@ OBJECT Table 36 Sales Header
       Text014@1014 : TextConst 'DAN=Hvis du sletter dette dokument, opstår der et hul i nummerserien for bogførte kreditnotaer. Der oprettes en tom bogført kreditnota %1 for at udfylde hullet i nummerserien.\\Vil du fortsætte?;ENU=Deleting this document will cause a gap in the number series for posted credit memos. An empty posted credit memo %1 will be created to fill this gap in the number series.\\Do you want to continue?';
       Text015@1015 : TextConst 'DAN=Hvis du ændrer %1, slettes de eksisterende salgslinjer, og der oprettes nye salgslinjer på baggrund af de nye oplysninger i hovedet.\\Vil du ændre %1?;ENU=If you change %1, the existing sales lines will be deleted and new sales lines based on the new information on the header will be created.\\Do you want to change %1?';
       Text017@1017 : TextConst 'DAN=Du skal slette de eksisterende salgslinjer, før du kan ændre %1.;ENU=You must delete the existing sales lines before you can change %1.';
-      Text018@1018 : TextConst 'DAN=Du har ændret %1 på salgshovedet, men det er ikke blevet ændret på de eksisterende salgslinjer.\;ENU=You have changed %1 on the sales header, but it has not been changed on the existing sales lines.\';
+      LinesNotUpdatedMsg@1018 : TextConst '@@@=You have changed Order Date on the sales header, but it has not been changed on the existing sales lines.;DAN=Du har ændret %1 på salgshovedet, men det er ikke blevet ændret på de eksisterende salgslinjer.;ENU=You have changed %1 on the sales header, but it has not been changed on the existing sales lines.';
       Text019@1019 : TextConst 'DAN=Du skal opdatere de eksisterende salgslinjer manuelt.;ENU=You must update the existing sales lines manually.';
-      Text020@1020 : TextConst 'DAN=Ændringen kan påvirke den valutakurs, der blev brugt i prisberegningen på salgslinjerne.;ENU=The change may affect the exchange rate used in the price calculation of the sales lines.';
+      AffectExchangeRateMsg@1020 : TextConst 'DAN=Ændringen kan påvirke den valutakurs, der bruges til prisberegningen på salgslinjerne.;ENU=The change may affect the exchange rate that is used for price calculation on the sales lines.';
       Text021@1021 : TextConst 'DAN=Vil du opdatere valutakursen?;ENU=Do you want to update the exchange rate?';
       Text022@1022 : TextConst 'DAN=Du kan ikke slette dette bilag. Dit id tillader kun behandling fra %1 %2.;ENU=You cannot delete this document. Your identification is set up to process from %1 %2 only.';
-      Text023@1023 : TextConst 'DAN=Vil du udskrive returvaremodtagelse %1?;ENU=Do you want to print return receipt %1?';
       Text024@1024 : TextConst 'DAN=Du har redigeret feltet %1. Genberegningen af moms kan resultere i øredifferencer, så du skal kontrollere beløbene efter genberegningen. Vil du opdatere feltet %2 på linjerne, så den nye værdi for %1 afspejles?;ENU=You have modified the %1 field. The recalculation of VAT may cause penny differences, so you must check the amounts afterward. Do you want to update the %2 field on the lines to reflect the new value of %1?';
       Text027@1027 : TextConst 'DAN=Dit id tillader kun behandling fra %1 %2.;ENU=Your identification is set up to process from %1 %2 only.';
       Text028@1028 : TextConst 'DAN=%1 kan ikke ændres, når %2 er udfyldt.;ENU=You cannot change the %1 when the %2 has been filled in.';
@@ -2251,6 +2193,7 @@ OBJECT Table 36 Sales Header
       InvtSetup@1054 : Record 313;
       Location@1055 : Record 14;
       WhseRequest@1056 : Record 5765;
+      Salesperson@1932 : Record 13;
       ShippingAgentService@1057 : Record 5790;
       TempReqLine@1089 : TEMPORARY Record 246;
       UserSetupMgt@1058 : Codeunit 5700;
@@ -2263,7 +2206,6 @@ OBJECT Table 36 Sales Header
       DimMgt@1065 : Codeunit 408;
       ApprovalsMgmt@1082 : Codeunit 1535;
       WhseSourceHeader@1073 : Codeunit 5781;
-      ArchiveManagement@1075 : Codeunit 5063;
       SalesLineReserve@1066 : Codeunit 99000832;
       DOPaymentMgt@2000 : Codeunit 825;
       DOPaymentTransLogMgt@2001 : Codeunit 829;
@@ -2278,7 +2220,6 @@ OBJECT Table 36 Sales Header
       ReservEntry@1079 : Record 337;
       TempReservEntry@1080 : TEMPORARY Record 337;
       Text040@1083 : TextConst 'DAN=Der er knyttet en vundet salgsmulighed til denne ordre.\Den skal have statussen Tabt, før ordren kan slettes.\Vil du ændre status for denne salgsmulighed nu?;ENU=A won opportunity is linked to this order.\It has to be changed to status Lost before the Order can be deleted.\Do you want to change the status for this opportunity now?';
-      Text043@1087 : TextConst 'DAN=Guiden blev afbrudt;ENU=Wizard Aborted';
       Text044@1088 : TextConst 'DAN=Status for denne salgsmulighed er ikke blevet ændret. Sletningen af ordren blev afbrudt.;ENU=The status of the opportunity has not been changed. The program has aborted deleting the order.';
       SkipSellToContact@1016 : Boolean;
       SkipBillToContact@1025 : Boolean;
@@ -2291,8 +2232,6 @@ OBJECT Table 36 Sales Header
       Text051@1071 : TextConst 'DAN=Salgene %1 %2 findes allerede.;ENU=The sales %1 %2 already exists.';
       Text052@1098 : TextConst 'DAN=Salgene %1 %2 har varesporing. Vil du slette den alligevel?;ENU=The sales %1 %2 has item tracking. Do you want to delete it anyway?';
       Text053@1102 : TextConst 'DAN=Du skal annullere godkendelsesprocessen, hvis du vil ændre %1.;ENU=You must cancel the approval process if you wish to change the %1.';
-      Text055@1008 : TextConst 'DAN=Vil du udskrive forudbetalingsfakturaen %1?;ENU=Do you want to print prepayment invoice %1?';
-      Text054@1010 : TextConst 'DAN=Vil du udskrive forudbetalingskreditnotaen %1?;ENU=Do you want to print prepayment credit memo %1?';
       Text056@1105 : TextConst 'DAN=Hvis dette bilag slettes, opstår der et hul i nummerserien for forudbetalingsfakturaer. Der oprettes en tom forudbetalingsfaktura %1 for at udfylde hullet i nummerserien.\\Vil du fortsætte?;ENU=Deleting this document will cause a gap in the number series for prepayment invoices. An empty prepayment invoice %1 will be created to fill this gap in the number series.\\Do you want to continue?';
       Text057@1108 : TextConst 'DAN=Hvis dette bilag slettes, opstår der et hul i nummerserien for forudbetalingskreditnotaer. Der oprettes en tom forudbetalingskreditnota %1 for at udfylde hullet i nummerserien.\\Vil du fortsætte?;ENU=Deleting this document will cause a gap in the number series for prepayment credit memos. An empty prepayment credit memo %1 will be created to fill this gap in the number series.\\Do you want to continue?';
       Text061@1110 : TextConst 'DAN=%1 er konfigureret til kun at behandle emner fra %2 %3.;ENU=%1 is set up to process from %2 %3 only.';
@@ -2303,7 +2242,6 @@ OBJECT Table 36 Sales Header
       Text066@1095 : TextConst 'DAN=Du kan ikke ændre %1 til %2 grundet et åbent pluk (lager) på %3.;ENU=You cannot change %1 to %2 because an open inventory pick on the %3.';
       Text070@1096 : TextConst 'DAN=Du kan ikke ændre %1 til %2, fordi der findes en åben lagerleverance for %3.;ENU=You cannot change %1  to %2 because an open warehouse shipment exists for the %3.';
       BilltoCustomerNoChanged@1121 : Boolean;
-      Text071@1011 : TextConst 'DAN=Der er ubetalte forudbetalingsfakturaer, der er knyttet til dokumentet af typen %1 med nummer %2.;ENU=There are unpaid prepayment invoices that are related to the document of type %1 with the number %2.';
       Text072@1013 : TextConst 'DAN=Der er ubetalte forudbetalingsfakturaer, der er knyttet til dokumentet af typen %1 med nummer %2.;ENU=There are unpaid prepayment invoices related to the document of type %1 with the number %2.';
       OIOXMLDocumentEncode@1101100000 : Codeunit 13600;
       Text13606@1101100002 : TextConst 'DAN=indeholder ikke et gyldigt 13-cifret EAN-nr.;ENU=does not contain a valid, 13-digit EAN No.';
@@ -2311,6 +2249,9 @@ OBJECT Table 36 Sales Header
       DeferralLineQst@1144 : TextConst 'DAN=Vil du opdatere periodiseringsplanen for linjerne?;ENU=Do you want to update the deferral schedules for the lines?';
       SynchronizingMsg@1026 : TextConst 'DAN=Synkroniserer ...\ fra: Salgshoved med %1\ til: Montagehoved med %2.;ENU=Synchronizing ...\ from: Sales Header with %1\ to: Assembly Header with %2.';
       ShippingAdviceErr@1029 : TextConst 'DAN=Denne ordre skal være en fuld leverance.;ENU=This order must be a complete shipment.';
+      PostedDocsToPrintCreatedMsg@1084 : TextConst 'DAN=Et eller flere bilag er bogført under sletningen, som du kan udskrive fra det relaterede bogførte bilag.;ENU=One or more documents have been posted during deletion, which you can print from the related posted document.';
+      PrepaymentInvoicesNotPaidErr@1011 : TextConst '@@@=You cannot post the document of type Order with the number 1001 before all related prepayment invoices are posted.;DAN=Du kan ikke bogføre bilaget af typen %1 med nummeret %2, før alle relaterede forudbetalingsfakturaer er bogført.;ENU=You cannot post the document of type %1 with the number %2 before all related prepayment invoices are posted.';
+      SplitMessageTxt@1085 : TextConst '@@@=Some message text 1.\Some message text 2.;DAN=%1\%2;ENU=%1\%2';
 
     PROCEDURE InitInsert@61();
     BEGIN
@@ -2653,8 +2594,9 @@ OBJECT Table 36 Sales Header
 
               IF TempATOLink.AsmExistsForSalesLine(SalesLineTmp) THEN BEGIN
                 ATOLink := TempATOLink;
+                ATOLink."Document Line No." := SalesLine."Line No.";
                 ATOLink.INSERT;
-                SalesLine.AutoAsmToOrder;
+                ATOLink.UpdateAsmFromSalesLineATOExist(SalesLine);
                 TempATOLink.DELETE;
               END;
             UNTIL SalesLineTmp.NEXT = 0;
@@ -2675,20 +2617,26 @@ OBJECT Table 36 Sales Header
     END;
 
     LOCAL PROCEDURE MessageIfSalesLinesExist@5(ChangedFieldName@1000 : Text[100]);
+    VAR
+      MessageText@1001 : Text;
     BEGIN
-      IF SalesLinesExist AND NOT HideValidationDialog THEN
-        MESSAGE(
-          Text018 +
-          Text019,
-          ChangedFieldName);
+      IF SalesLinesExist AND NOT HideValidationDialog THEN BEGIN
+        MessageText := STRSUBSTNO(LinesNotUpdatedMsg,ChangedFieldName);
+        MessageText := STRSUBSTNO(SplitMessageTxt,MessageText,Text019);
+        MESSAGE(MessageText);
+      END;
     END;
 
     LOCAL PROCEDURE PriceMessageIfSalesLinesExist@7(ChangedFieldName@1000 : Text[100]);
+    VAR
+      MessageText@1001 : Text;
     BEGIN
-      IF SalesLinesExist AND NOT HideValidationDialog THEN
-        MESSAGE(
-          Text018 +
-          Text020,ChangedFieldName);
+      IF SalesLinesExist AND NOT HideValidationDialog THEN BEGIN
+        MessageText := STRSUBSTNO(LinesNotUpdatedMsg,ChangedFieldName);
+        IF "Currency Code" <> '' THEN
+          MessageText := STRSUBSTNO(SplitMessageTxt,MessageText,AffectExchangeRateMsg);
+        MESSAGE(MessageText);
+      END;
     END;
 
     LOCAL PROCEDURE UpdateCurrencyFactor@12();
@@ -3061,6 +3009,7 @@ OBJECT Table 36 Sales Header
     VAR
       ContBusRel@1003 : Record 5054;
       Cust@1001 : Record 18;
+      Contact@1002 : Record 5050;
     BEGIN
       IF Cust.GET(CustomerNo) THEN BEGIN
         IF Cust."Primary Contact No." <> '' THEN
@@ -3077,6 +3026,9 @@ OBJECT Table 36 Sales Header
         END;
         "Bill-to Contact" := Cust.Contact;
       END;
+      IF "Bill-to Contact No." <> '' THEN
+        IF Contact.GET("Bill-to Contact No.") THEN
+          Contact.CheckIfPrivacyBlockedGeneric;
     END;
 
     LOCAL PROCEDURE UpdateSellToCust@25(ContactNo@1002 : Code[20]);
@@ -3279,6 +3231,9 @@ OBJECT Table 36 Sales Header
     VAR
       WhseRequest@1000 : Record 5765;
     BEGIN
+      IF "Document Type" = "Document Type"::Order THEN
+        IF NOT IsApprovedForPosting THEN
+          EXIT;
       TESTFIELD(Status,Status::Released);
 
       WhseRequest.RESET;
@@ -3355,6 +3310,7 @@ OBJECT Table 36 Sales Header
     VAR
       ATOLink@1003 : Record 904;
       NewDimSetID@1002 : Integer;
+      ShippedReceivedItemLineDimChangeConfirmed@1004 : Boolean;
     BEGIN
       // Update all lines with changed dimensions.
 
@@ -3373,12 +3329,23 @@ OBJECT Table 36 Sales Header
           NewDimSetID := DimMgt.GetDeltaDimSetID(SalesLine."Dimension Set ID",NewParentDimSetID,OldParentDimSetID);
           IF SalesLine."Dimension Set ID" <> NewDimSetID THEN BEGIN
             SalesLine."Dimension Set ID" := NewDimSetID;
+
+            IF NOT HideValidationDialog AND GUIALLOWED THEN
+              VerifyShippedReceivedItemLineDimChange(ShippedReceivedItemLineDimChangeConfirmed);
+
             DimMgt.UpdateGlobalDimFromDimSetID(
               SalesLine."Dimension Set ID",SalesLine."Shortcut Dimension 1 Code",SalesLine."Shortcut Dimension 2 Code");
             SalesLine.MODIFY;
             ATOLink.UpdateAsmDimFromSalesLine(SalesLine);
           END;
         UNTIL SalesLine.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE VerifyShippedReceivedItemLineDimChange@105(VAR ShippedReceivedItemLineDimChangeConfirmed@1000 : Boolean);
+    BEGIN
+      IF SalesLine.IsShippedReceivedItemDimChanged THEN
+        IF NOT ShippedReceivedItemLineDimChangeConfirmed THEN
+          ShippedReceivedItemLineDimChangeConfirmed := SalesLine.ConfirmShippedReceivedItemDimChange;
     END;
 
     PROCEDURE SetAmountToApply@35(AppliesToDocNo@1000 : Code[20];CustomerNo@1001 : Code[20]);
@@ -3671,13 +3638,13 @@ OBJECT Table 36 Sales Header
       EXIT(SalesLine.ISEMPTY);
     END;
 
-    LOCAL PROCEDURE IsApprovedForPosting@53() : Boolean;
+    PROCEDURE IsApprovedForPosting@53() : Boolean;
     VAR
       PrepaymentMgt@1001 : Codeunit 441;
     BEGIN
       IF ApprovalsMgmt.PrePostApprovalCheckSales(Rec) THEN BEGIN
         IF PrepaymentMgt.TestSalesPrepayment(Rec) THEN
-          ERROR(STRSUBSTNO(Text071,"Document Type","No."));
+          ERROR(STRSUBSTNO(PrepaymentInvoicesNotPaidErr,"Document Type","No."));
         IF "Document Type" = "Document Type"::Order THEN
           IF PrepaymentMgt.TestSalesPayment(Rec) THEN
             ERROR(STRSUBSTNO(Text072,"Document Type","No."));
@@ -3769,7 +3736,7 @@ OBJECT Table 36 Sales Header
       Opportunity.MODIFY;
     END;
 
-    LOCAL PROCEDURE SynchronizeAsmHeader@56();
+    PROCEDURE SynchronizeAsmHeader@56();
     VAR
       AsmHeader@1003 : Record 900;
       ATOLink@1002 : Record 904;
@@ -4029,6 +3996,7 @@ OBJECT Table 36 Sales Header
           SalesLine."Purch. Order Line No." := TempSalesLine."Purch. Order Line No.";
           SalesLine."Drop Shipment" := SalesLine."Purch. Order Line No." <> 0;
         END;
+        SalesLine.VALIDATE("Shipment Date",TempSalesLine."Shipment Date");
       END;
       SalesLine.INSERT;
     END;
@@ -4103,6 +4071,146 @@ OBJECT Table 36 Sales Header
         Confirmed := CONFIRM(DeferralLineQst,FALSE);
       IF Confirmed THEN
         UpdateSalesLines(SalesLine.FIELDCAPTION("Deferral Code"),FALSE);
+    END;
+
+    PROCEDURE BatchConfirmUpdateDeferralDate@88(VAR BatchConfirm@1000 : ' ,Skip,Update';ReplacePostingDate@1004 : Boolean;PostingDateReq@1003 : Date);
+    BEGIN
+      IF (NOT ReplacePostingDate) OR (PostingDateReq = "Posting Date") OR (BatchConfirm = BatchConfirm::Skip) THEN
+        EXIT;
+
+      IF NOT DeferralHeadersExist THEN
+        EXIT;
+
+      "Posting Date" := PostingDateReq;
+      CASE BatchConfirm OF
+        BatchConfirm::" ":
+          BEGIN
+            ConfirmUpdateDeferralDate;
+            IF Confirmed THEN
+              BatchConfirm := BatchConfirm::Update
+            ELSE
+              BatchConfirm := BatchConfirm::Skip;
+          END;
+        BatchConfirm::Update:
+          UpdateSalesLines(SalesLine.FIELDCAPTION("Deferral Code"),FALSE);
+      END;
+      COMMIT;
+    END;
+
+    LOCAL PROCEDURE UpdateOpportunity@86();
+    VAR
+      Opp@1002 : Record 5092;
+      OpportunityEntry@1001 : Record 5093;
+    BEGIN
+      IF NOT ("Opportunity No." <> '') OR NOT ("Document Type" IN ["Document Type"::Quote,"Document Type"::Order]) THEN
+        EXIT;
+
+      IF NOT Opp.GET("Opportunity No.") THEN
+        EXIT;
+
+      IF "Document Type" = "Document Type"::Order THEN BEGIN
+        IF NOT CONFIRM(Text040,TRUE) THEN
+          ERROR(Text044);
+
+        OpportunityEntry.SETRANGE("Opportunity No.","Opportunity No.");
+        OpportunityEntry.MODIFYALL(Active,FALSE);
+
+        OpportunityEntry.INIT;
+        OpportunityEntry.VALIDATE("Opportunity No.",Opp."No.");
+
+        OpportunityEntry.LOCKTABLE;
+        OpportunityEntry."Entry No." := GetOpportunityEntryNo;
+        OpportunityEntry."Sales Cycle Code" := Opp."Sales Cycle Code";
+        OpportunityEntry."Contact No." := Opp."Contact No.";
+        OpportunityEntry."Contact Company No." := Opp."Contact Company No.";
+        OpportunityEntry."Salesperson Code" := Opp."Salesperson Code";
+        OpportunityEntry."Campaign No." := Opp."Campaign No.";
+        OpportunityEntry."Action Taken" := OpportunityEntry."Action Taken"::Lost;
+        OpportunityEntry.Active := TRUE;
+        OpportunityEntry."Completed %" := 100;
+        OpportunityEntry."Estimated Value (LCY)" := GetOpportunityEntryEstimatedValue;
+        OpportunityEntry."Estimated Close Date" := Opp."Date Closed";
+        OpportunityEntry.INSERT(TRUE);
+      END;
+      Opp.FIND;
+      Opp."Sales Document Type" := Opp."Sales Document Type"::" ";
+      Opp."Sales Document No." := '';
+      Opp.MODIFY;
+      "Opportunity No." := '';
+    END;
+
+    LOCAL PROCEDURE GetOpportunityEntryNo@87() : Integer;
+    VAR
+      OpportunityEntry@1000 : Record 5093;
+    BEGIN
+      IF OpportunityEntry.FINDLAST THEN
+        EXIT(OpportunityEntry."Entry No." + 1);
+      EXIT(1);
+    END;
+
+    LOCAL PROCEDURE GetOpportunityEntryEstimatedValue@90() : Decimal;
+    VAR
+      OpportunityEntry@1000 : Record 5093;
+    BEGIN
+      OpportunityEntry.SETRANGE("Opportunity No.","Opportunity No.");
+      IF OpportunityEntry.FINDLAST THEN
+        EXIT(OpportunityEntry."Estimated Value (LCY)");
+    END;
+
+    LOCAL PROCEDURE SetSalespersonCode@433(SalesPersonCodeToCheck@1000 : Code[20];VAR SalesPersonCodeToAssign@1001 : Code[20]);
+    BEGIN
+      IF SalesPersonCodeToCheck <> '' THEN BEGIN
+        IF Salesperson.GET(SalesPersonCodeToCheck) THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN
+            SalesPersonCodeToAssign := ''
+          ELSE
+            SalesPersonCodeToAssign := SalesPersonCodeToCheck;
+      END ELSE
+        SalesPersonCodeToAssign := '';
+    END;
+
+    PROCEDURE ValidateSalesPersonOnSalesHeader@218(SalesHeader2@1000 : Record 36;IsTransaction@1001 : Boolean;IsPostAction@1002 : Boolean);
+    BEGIN
+      IF SalesHeader2."Salesperson Code" <> '' THEN
+        IF Salesperson.GET(SalesHeader2."Salesperson Code") THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN BEGIN
+            IF IsTransaction THEN
+              ERROR(Salesperson.GetPrivacyBlockedTransactionText(Salesperson,IsPostAction,TRUE));
+            IF NOT IsTransaction THEN
+              ERROR(Salesperson.GetPrivacyBlockedGenericText(Salesperson,TRUE));
+          END;
+    END;
+
+    PROCEDURE InitFromSalesHeader@109(SourceSalesHeader@1000 : Record 36);
+    BEGIN
+      "Document Date" := SourceSalesHeader."Document Date";
+      "Shipment Date" := SourceSalesHeader."Shipment Date";
+      "Shortcut Dimension 1 Code" := SourceSalesHeader."Shortcut Dimension 1 Code";
+      "Shortcut Dimension 2 Code" := SourceSalesHeader."Shortcut Dimension 2 Code";
+      "Dimension Set ID" := SourceSalesHeader."Dimension Set ID";
+      "Location Code" := SourceSalesHeader."Location Code";
+      "Ship-to Name" := SourceSalesHeader."Ship-to Name";
+      "Ship-to Name 2" := SourceSalesHeader."Ship-to Name 2";
+      "Ship-to Address" := SourceSalesHeader."Ship-to Address";
+      "Ship-to Address 2" := SourceSalesHeader."Ship-to Address 2";
+      "Ship-to City" := SourceSalesHeader."Ship-to City";
+      "Ship-to Post Code" := SourceSalesHeader."Ship-to Post Code";
+      "Ship-to County" := SourceSalesHeader."Ship-to County";
+      "Ship-to Country/Region Code" := SourceSalesHeader."Ship-to Country/Region Code";
+      "Ship-to Contact" := SourceSalesHeader."Ship-to Contact";
+    END;
+
+    LOCAL PROCEDURE SetDefaultSalesperson@124();
+    VAR
+      UserSetup@1000 : Record 91;
+    BEGIN
+      IF NOT UserSetup.GET(USERID) THEN
+        EXIT;
+
+      IF UserSetup."Salespers./Purch. Code" <> '' THEN
+        IF Salesperson.GET(UserSetup."Salespers./Purch. Code") THEN
+          IF NOT Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN
+            VALIDATE("Salesperson Code",UserSetup."Salespers./Purch. Code");
     END;
 
     BEGIN

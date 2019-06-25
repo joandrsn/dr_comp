@@ -2,9 +2,9 @@ OBJECT Page 5124 Opportunity Card
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -23,7 +23,15 @@ OBJECT Page 5124 Opportunity Card
              "Sales Cycle CodeEditable" := TRUE;
            END;
 
-    OnAfterGetCurrRecord=BEGIN
+    OnAfterGetCurrRecord=VAR
+                           Contact@1000 : Record 5050;
+                         BEGIN
+                           IF "Contact No." <> '' THEN
+                             IF Contact.GET("Contact No.") THEN
+                               Contact.CheckIfPrivacyBlockedGeneric;
+                           IF "Contact Company No." <> '' THEN
+                             IF Contact.GET("Contact Company No.") THEN
+                               Contact.CheckIfPrivacyBlockedGeneric;
                            UpdateEditable;
                          END;
 
@@ -97,6 +105,7 @@ OBJECT Page 5124 Opportunity Card
                                END;
                                 }
       { 33      ;2   ;Action    ;
+                      Name=AssignSalesQuote;
                       CaptionML=[DAN=Tildel salgs&tilbud;
                                  ENU=Assign Sales &Quote];
                       Image=Allocate;
@@ -167,7 +176,12 @@ OBJECT Page 5124 Opportunity Card
     { 8   ;2   ;Field     ;
                 SourceExpr="Contact No.";
                 Editable="Contact No.Editable";
-                OnValidate=BEGIN
+                OnValidate=VAR
+                             Contact@1000 : Record 5050;
+                           BEGIN
+                             IF "Contact No." <> '' THEN
+                               IF Contact.GET("Contact No.") THEN
+                                 Contact.CheckIfPrivacyBlockedGeneric;
                              ContactNoOnAfterValidate;
                            END;
                             }

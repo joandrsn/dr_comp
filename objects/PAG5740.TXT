@@ -2,9 +2,9 @@ OBJECT Page 5740 Transfer Order
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -194,24 +194,32 @@ OBJECT Page 5740 Transfer Order
                                  ENU=P&osting];
                       Image=Post }
       { 66      ;2   ;Action    ;
+                      Name=Post;
                       ShortCutKey=F9;
                       Ellipsis=Yes;
                       CaptionML=[DAN=&Bogfør;
                                  ENU=P&ost];
-                      RunObject=Codeunit 5706;
                       Promoted=Yes;
                       PromotedIsBig=Yes;
                       Image=PostOrder;
-                      PromotedCategory=Process }
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"TransferOrder-Post (Yes/No)",Rec);
+                               END;
+                                }
       { 67      ;2   ;Action    ;
+                      Name=PostAndPrint;
                       ShortCutKey=Shift+F9;
                       CaptionML=[DAN=Bogfør og &udskriv;
                                  ENU=Post and &Print];
-                      RunObject=Codeunit 5707;
                       Promoted=Yes;
                       PromotedIsBig=Yes;
                       Image=PostPrint;
-                      PromotedCategory=Process }
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"TransferOrder-Post + Print",Rec);
+                               END;
+                                }
       { 1900000006;0 ;ActionContainer;
                       ActionContainerType=Reports }
       { 1901320106;1 ;Action    ;
@@ -439,37 +447,37 @@ OBJECT Page 5740 Transfer Order
 
     LOCAL PROCEDURE ShipmentDateOnAfterValidate@19068710();
     BEGIN
-      CurrPage.TransferLines.PAGE.UpdateForm(TRUE);
+      CurrPage.TransferLines.PAGE.UpdateForm(FALSE);
     END;
 
     LOCAL PROCEDURE ShippingAgentServiceCodeOnAfte@19046563();
     BEGIN
-      CurrPage.TransferLines.PAGE.UpdateForm(TRUE);
+      CurrPage.TransferLines.PAGE.UpdateForm(FALSE);
     END;
 
     LOCAL PROCEDURE ShippingAgentCodeOnAfterValida@19008956();
     BEGIN
-      CurrPage.TransferLines.PAGE.UpdateForm(TRUE);
+      CurrPage.TransferLines.PAGE.UpdateForm(FALSE);
     END;
 
     LOCAL PROCEDURE ShippingTimeOnAfterValidate@19029567();
     BEGIN
-      CurrPage.TransferLines.PAGE.UpdateForm(TRUE);
+      CurrPage.TransferLines.PAGE.UpdateForm(FALSE);
     END;
 
     LOCAL PROCEDURE OutboundWhseHandlingTimeOnAfte@19078070();
     BEGIN
-      CurrPage.TransferLines.PAGE.UpdateForm(TRUE);
+      CurrPage.TransferLines.PAGE.UpdateForm(FALSE);
     END;
 
     LOCAL PROCEDURE ReceiptDateOnAfterValidate@19074743();
     BEGIN
-      CurrPage.TransferLines.PAGE.UpdateForm(TRUE);
+      CurrPage.TransferLines.PAGE.UpdateForm(FALSE);
     END;
 
     LOCAL PROCEDURE InboundWhseHandlingTimeOnAfter@19076948();
     BEGIN
-      CurrPage.TransferLines.PAGE.UpdateForm(TRUE);
+      CurrPage.TransferLines.PAGE.UpdateForm(FALSE);
     END;
 
     BEGIN

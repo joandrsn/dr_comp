@@ -2,9 +2,9 @@ OBJECT Table 482 Reclas. Dimension Set Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -25,6 +25,7 @@ OBJECT Table 482 Reclas. Dimension Set Buffer
                                                                 END;
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Dimensionskode;
                                                               ENU=Dimension Code];
                                                    NotBlank=Yes }
@@ -33,31 +34,35 @@ OBJECT Table 482 Reclas. Dimension Set Buffer
                                                                 "Dimension Value ID" := GetDimValID("Dimension Code","Dimension Value Code");
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Dimensionsværdikode;
                                                               ENU=Dimension Value Code] }
-    { 3   ;   ;Dimension Value ID  ;Integer       ;CaptionML=[DAN=Dimensionsværdi-id;
+    { 3   ;   ;Dimension Value ID  ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dimensionsværdi-id;
                                                               ENU=Dimension Value ID] }
     { 4   ;   ;New Dimension Value Code;Code20    ;TableRelation="Dimension Value".Code WHERE (Dimension Code=FIELD(Dimension Code));
                                                    OnValidate=BEGIN
                                                                 "New Dimension Value ID" := GetDimValID("Dimension Code","New Dimension Value Code");
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Ny dimensionsværdikode;
                                                               ENU=New Dimension Value Code] }
-    { 5   ;   ;New Dimension Value ID;Integer     ;CaptionML=[DAN=Nyt dimensionsværdi-id;
+    { 5   ;   ;New Dimension Value ID;Integer     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Nyt dimensionsværdi-id;
                                                               ENU=New Dimension Value ID] }
     { 6   ;   ;Dimension Name      ;Text30        ;FieldClass=FlowField;
                                                    CalcFormula=Lookup(Dimension.Name WHERE (Code=FIELD(Dimension Code)));
                                                    CaptionML=[DAN=Dimensionsnavn;
                                                               ENU=Dimension Name];
                                                    Editable=No }
-    { 7   ;   ;Dimension Value Name;Text30        ;FieldClass=FlowField;
+    { 7   ;   ;Dimension Value Name;Text50        ;FieldClass=FlowField;
                                                    CalcFormula=Lookup("Dimension Value".Name WHERE (Dimension Code=FIELD(Dimension Code),
                                                                                                     Code=FIELD(Dimension Value Code)));
                                                    CaptionML=[DAN=Dimensionsværdinavn;
                                                               ENU=Dimension Value Name];
                                                    Editable=No }
-    { 8   ;   ;New Dimension Value Name;Text30    ;FieldClass=FlowField;
+    { 8   ;   ;New Dimension Value Name;Text50    ;FieldClass=FlowField;
                                                    CalcFormula=Lookup("Dimension Value".Name WHERE (Dimension Code=FIELD(Dimension Code),
                                                                                                     Code=FIELD(New Dimension Value Code)));
                                                    CaptionML=[DAN=Nyt dimensionsværdinavn;

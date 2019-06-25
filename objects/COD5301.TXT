@@ -2,9 +2,9 @@ OBJECT Codeunit 5301 Outlook Synch. NAV Mgt
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=24-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49146;
   }
   PROPERTIES
   {
@@ -936,28 +936,16 @@ OBJECT Codeunit 5301 Outlook Synch. NAV Mgt
                     OSynchField1.SETRANGE("Outlook Property",TempOSynchField."Outlook Property");
                     IF OSynchField1.FIND('-') THEN
                       REPEAT
-                        IF OSynchField1."Table No." = TempOSynchField."Table No." THEN BEGIN
-                          IF TempOSynchField."Table No." = 0 THEN
-                            DateTimeFieldRef := SynchRecRef.FIELD(OSynchField1."Field No.")
-                          ELSE
-                            DateTimeFieldRef := RelatedRecRef.FIELD(OSynchField1."Field No.");
-                        END ELSE BEGIN
-                          OSynchFilter.RESET;
-                          OSynchFilter.SETRANGE("Record GUID",OSynchField1."Record GUID");
-                          OSynchFilter.SETRANGE("Filter Type",OSynchFilter."Filter Type"::"Table Relation");
-
-                          DateTimeRecRef.OPEN(OSynchField1."Table No.");
-                          DateTimeRecRef.SETVIEW(OSynchSetupMgt.ComposeTableFilter(OSynchFilter,SynchRecRef));
-                          IF DateTimeRecRef.FIND('-') THEN
-                            DateTimeFieldRef := DateTimeRecRef.FIELD(OSynchField1."Field No.");
-                        END;
-
+                        GetDateTimeFieldRef(OSynchField1,TempOSynchField,SynchRecRef,RelatedRecRef,DateTimeFieldRef);
                         IF (FORMAT(DateTimeFieldRef.TYPE) = 'Date') AND (FORMAT(DateTimeFieldRef.VALUE) <> '') THEN
                           IF EVALUATE(TempDate,FORMAT(DateTimeFieldRef.VALUE)) THEN;
                         DateTimeRecRef.CLOSE;
                       UNTIL OSynchField1.NEXT = 0;
 
-                    TempDateTime := OSynchTypeConversion.LocalDT2UTC(CREATEDATETIME(TempDate,TempTime));
+                    IF OSynchTypeConversion.RunningUTC THEN
+                      TempDateTime := OSynchTypeConversion.LocalDT2UTC(CREATEDATETIME(TempDate,TempTime))
+                    ELSE
+                      TempDateTime := CREATEDATETIME(TempDate,TempTime);
                     IF TempDate = 01014501D THEN
                       TempDateTime := CREATEDATETIME(TempDate,DT2TIME(TempDateTime));
                     XMLWriter.WriteElementTextContent(OSynchTypeConversion.SetDateTimeFormat(TempDateTime));
@@ -975,28 +963,16 @@ OBJECT Codeunit 5301 Outlook Synch. NAV Mgt
                     OSynchField1.SETRANGE("Outlook Property",TempOSynchField."Outlook Property");
                     IF OSynchField1.FIND('-') THEN
                       REPEAT
-                        IF OSynchField1."Table No." = TempOSynchField."Table No." THEN BEGIN
-                          IF TempOSynchField."Table No." = 0 THEN
-                            DateTimeFieldRef := SynchRecRef.FIELD(OSynchField1."Field No.")
-                          ELSE
-                            DateTimeFieldRef := RelatedRecRef.FIELD(OSynchField1."Field No.");
-                        END ELSE BEGIN
-                          OSynchFilter.RESET;
-                          OSynchFilter.SETRANGE("Record GUID",OSynchField1."Record GUID");
-                          OSynchFilter.SETRANGE("Filter Type",OSynchFilter."Filter Type"::"Table Relation");
-
-                          DateTimeRecRef.OPEN(OSynchField1."Table No.");
-                          DateTimeRecRef.SETVIEW(OSynchSetupMgt.ComposeTableFilter(OSynchFilter,SynchRecRef));
-                          IF DateTimeRecRef.FIND('-') THEN
-                            DateTimeFieldRef := DateTimeRecRef.FIELD(OSynchField1."Field No.");
-                        END;
-
+                        GetDateTimeFieldRef(OSynchField1,TempOSynchField,SynchRecRef,RelatedRecRef,DateTimeFieldRef);
                         IF (FORMAT(DateTimeFieldRef.TYPE) = 'Time') AND (FORMAT(DateTimeFieldRef.VALUE) <> '') THEN
                           IF EVALUATE(TempTime,FORMAT(DateTimeFieldRef.VALUE)) THEN;
                         DateTimeRecRef.CLOSE;
                       UNTIL OSynchField1.NEXT = 0;
 
-                    TempDateTime := OSynchTypeConversion.LocalDT2UTC(CREATEDATETIME(TempDate,TempTime));
+                    IF OSynchTypeConversion.RunningUTC THEN
+                      TempDateTime := OSynchTypeConversion.LocalDT2UTC(CREATEDATETIME(TempDate,TempTime))
+                    ELSE
+                      TempDateTime := CREATEDATETIME(TempDate,TempTime);
                     IF TempDate = 01014501D THEN
                       TempDateTime := CREATEDATETIME(TempDate,DT2TIME(TempDateTime));
                     XMLWriter.WriteElementTextContent(OSynchTypeConversion.SetDateTimeFormat(TempDateTime));
@@ -1460,6 +1436,27 @@ OBJECT Codeunit 5301 Outlook Synch. NAV Mgt
 
       OutlookSynchUserSetup.SETRANGE("User ID",UserID);
       EXIT(NOT OutlookSynchUserSetup.ISEMPTY);
+    END;
+
+    LOCAL PROCEDURE GetDateTimeFieldRef@8(OutlookSynchField@1001 : Record 5304;TempOutlookSynchField@1000 : TEMPORARY Record 5304;VAR SynchRecRef@1003 : RecordRef;VAR RelatedRecRef@1004 : RecordRef;VAR DateTimeFieldRef@1002 : FieldRef);
+    VAR
+      DateTimeRecRef@1005 : RecordRef;
+    BEGIN
+      IF OutlookSynchField."Table No." = TempOutlookSynchField."Table No." THEN BEGIN
+        IF TempOutlookSynchField."Table No." = 0 THEN
+          DateTimeFieldRef := SynchRecRef.FIELD(OutlookSynchField."Field No.")
+        ELSE
+          DateTimeFieldRef := RelatedRecRef.FIELD(OutlookSynchField."Field No.");
+      END ELSE BEGIN
+        OSynchFilter.RESET;
+        OSynchFilter.SETRANGE("Record GUID",OutlookSynchField."Record GUID");
+        OSynchFilter.SETRANGE("Filter Type",OSynchFilter."Filter Type"::"Table Relation");
+
+        DateTimeRecRef.OPEN(OutlookSynchField."Table No.");
+        DateTimeRecRef.SETVIEW(OSynchSetupMgt.ComposeTableFilter(OSynchFilter,SynchRecRef));
+        IF DateTimeRecRef.FIND('-') THEN
+          DateTimeFieldRef := DateTimeRecRef.FIELD(OutlookSynchField."Field No.");
+      END;
     END;
 
     BEGIN

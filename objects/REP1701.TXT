@@ -2,9 +2,9 @@ OBJECT Report 1701 Deferral Summary - Sales
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -2427,6 +2427,7 @@ OBJECT Report 1701 Deferral Summary - Sales
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

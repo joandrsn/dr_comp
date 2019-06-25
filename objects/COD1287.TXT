@@ -2,9 +2,9 @@ OBJECT Codeunit 1287 Exp. Bank Conv. Ext. Data Hndl
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -89,13 +89,13 @@ OBJECT Codeunit 1287 Exp. Bank Conv. Ext. Data Hndl
 
     LOCAL PROCEDURE PrepareSOAPRequestBody@12(VAR TempBodyTempBlob@1000 : TEMPORARY Record 99008535);
     VAR
+      XMLDOMManagement@1002 : Codeunit 6224;
       BodyContentInputStream@1004 : InStream;
       BodyContentOutputStream@1005 : OutStream;
       BodyContentXmlDoc@1003 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
     BEGIN
       TempBodyTempBlob.Blob.CREATEINSTREAM(BodyContentInputStream);
-      BodyContentXmlDoc := BodyContentXmlDoc.XmlDocument;
-      BodyContentXmlDoc.Load(BodyContentInputStream);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(BodyContentInputStream,BodyContentXmlDoc);
 
       AddNamespaceAttribute(BodyContentXmlDoc,'amcpaymentreq');
       AddNamespaceAttribute(BodyContentXmlDoc,'bank');
@@ -124,10 +124,10 @@ OBJECT Codeunit 1287 Exp. Bank Conv. Ext. Data Hndl
 
     LOCAL PROCEDURE CheckIfErrorsOccurred@8(VAR ResponseInStream@1001 : InStream;DataExchEntryNo@1002 : Integer);
     VAR
+      XMLDOMManagement@1003 : Codeunit 6224;
       ResponseXmlDoc@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
     BEGIN
-      ResponseXmlDoc := ResponseXmlDoc.XmlDocument;
-      ResponseXmlDoc.Load(ResponseInStream);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseInStream,ResponseXmlDoc);
 
       IF ResponseHasErrors(ResponseXmlDoc) THEN
         DisplayErrorFromResponse(ResponseXmlDoc,DataExchEntryNo);
@@ -221,8 +221,7 @@ OBJECT Codeunit 1287 Exp. Bank Conv. Ext. Data Hndl
       ResponseXmlDoc@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
       Found@1006 : Boolean;
     BEGIN
-      ResponseXmlDoc := ResponseXmlDoc.XmlDocument;
-      ResponseXmlDoc.Load(ResponseInStream);
+      XMLDOMMgt.LoadXMLDocumentFromInStream(ResponseInStream,ResponseXmlDoc);
 
       Found := XMLDOMMgt.FindNodeWithNamespace(ResponseXmlDoc.DocumentElement,
           BankDataConvServMgt.GetDataXPath(ResponseNodeTxt),'amc',BankDataConvServMgt.GetNamespace,DataXmlNode);

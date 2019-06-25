@@ -2,9 +2,9 @@ OBJECT Report 37 Balance Comp. - Prev. Year
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
@@ -5512,6 +5512,7 @@ OBJECT Report 37 Balance Comp. - Prev. Year
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -5623,7 +5624,8 @@ OBJECT Report 37 Balance Comp. - Prev. Year
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=Code.GetPageFooter(Globals.PageNumber, Globals.TotalPages)</Value>
+                      <Value>=System.String.Format(First(Fields!Page.Value,"DataSet_Result"), Globals!PageNumber , 
+iif(Globals!PageNumber = Globals!TotalPages , First(Fields!LastPage.Value,"DataSet_Result"),First(Fields!Conitnued.Value, "DataSet_Result")))</Value>
                       <Style>
                         <FontSize>9pt</FontSize>
                       </Style>

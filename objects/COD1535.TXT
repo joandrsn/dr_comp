@@ -2,9 +2,9 @@ OBJECT Codeunit 1535 Approvals Mgmt.
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -213,6 +213,9 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       IF ApprovalEntry.Status <> ApprovalEntry.Status::Open THEN
         ERROR(ApproveOnlyOpenRequestsErr);
 
+      IF ApprovalEntry."Approver ID" <> USERID THEN
+        CheckUserAsApprovalAdministrator;
+
       ApprovalEntry.VALIDATE(Status,ApprovalEntry.Status::Approved);
       ApprovalEntry.MODIFY(TRUE);
       OnApproveApprovalRequest(ApprovalEntry);
@@ -223,24 +226,22 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       IF ApprovalEntry.Status <> ApprovalEntry.Status::Open THEN
         ERROR(RejectOnlyOpenRequestsErr);
 
+      IF ApprovalEntry."Approver ID" <> USERID THEN
+        CheckUserAsApprovalAdministrator;
+
+      OnRejectApprovalRequest(ApprovalEntry);
       ApprovalEntry.VALIDATE(Status,ApprovalEntry.Status::Rejected);
       ApprovalEntry.MODIFY(TRUE);
-      OnRejectApprovalRequest(ApprovalEntry);
     END;
 
     PROCEDURE DelegateSelectedApprovalRequest@1(VAR ApprovalEntry@1000 : Record 454;CheckCurrentUser@1001 : Boolean);
-    VAR
-      UserSetup@1003 : Record 91;
     BEGIN
       IF ApprovalEntry.Status <> ApprovalEntry.Status::Open THEN
         ERROR(DelegateOnlyOpenRequestsErr);
 
-      IF CheckCurrentUser THEN BEGIN
-        UserSetup.GET(USERID);
-        IF NOT ((UserSetup."User ID" IN [ApprovalEntry."Sender ID",ApprovalEntry."Approver ID"]) OR UserSetup."Approval Administrator")
-        THEN
-          EXIT;
-      END;
+      IF CheckCurrentUser THEN
+        IF NOT (USERID IN [ApprovalEntry."Sender ID",ApprovalEntry."Approver ID"]) THEN
+          CheckUserAsApprovalAdministrator;
       SubstituteUserIdForApprovalEntry(ApprovalEntry)
     END;
 
@@ -363,7 +364,7 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       ApprovalEntry.SETRANGE("Record ID to Approve",RecRef.RECORDID);
       ApprovalEntry.SETFILTER(Status,'<>%1&<>%2',ApprovalEntry.Status::Rejected,ApprovalEntry.Status::Canceled);
       ApprovalEntry.SETRANGE("Workflow Step Instance ID",WorkflowStepInstance.ID);
-      IF ApprovalEntry.FINDSET(TRUE) THEN
+      IF ApprovalEntry.FINDSET(TRUE) THEN BEGIN
         REPEAT
           OldStatus := ApprovalEntry.Status;
           ApprovalEntry.VALIDATE(Status,ApprovalEntry.Status::Rejected);
@@ -371,6 +372,11 @@ OBJECT Codeunit 1535 Approvals Mgmt.
           IF OldStatus IN [ApprovalEntry.Status::Open,ApprovalEntry.Status::Approved] THEN
             CreateApprovalEntryNotification(ApprovalEntry,WorkflowStepInstance);
         UNTIL ApprovalEntry.NEXT = 0;
+        IF ApprovalEntry."Approver ID" <> ApprovalEntry."Sender ID" THEN BEGIN
+          ApprovalEntry."Approver ID" := ApprovalEntry."Sender ID";
+          CreateApprovalEntryNotification(ApprovalEntry,WorkflowStepInstance);
+        END;
+      END;
     END;
 
     PROCEDURE SendApprovalRequestFromRecord@33(RecRef@1004 : RecordRef;WorkflowStepInstance@1002 : Record 1504);
@@ -378,10 +384,11 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       ApprovalEntry@1001 : Record 454;
       ApprovalEntry2@1000 : Record 454;
     BEGIN
-      ApprovalEntry.SETCURRENTKEY("Table ID","Document Type","Document No.","Sequence No.");
+      ApprovalEntry.SETCURRENTKEY("Table ID","Record ID to Approve",Status,"Workflow Step Instance ID","Sequence No.");
       ApprovalEntry.SETRANGE("Table ID",RecRef.NUMBER);
       ApprovalEntry.SETRANGE("Record ID to Approve",RecRef.RECORDID);
       ApprovalEntry.SETRANGE(Status,ApprovalEntry.Status::Created);
+      ApprovalEntry.SETRANGE("Workflow Step Instance ID",WorkflowStepInstance.ID);
 
       IF ApprovalEntry.FINDFIRST THEN BEGIN
         ApprovalEntry2.COPYFILTERS(ApprovalEntry);
@@ -392,6 +399,8 @@ OBJECT Codeunit 1535 Approvals Mgmt.
             ApprovalEntry2.MODIFY(TRUE);
             CreateApprovalEntryNotification(ApprovalEntry2,WorkflowStepInstance);
           UNTIL ApprovalEntry2.NEXT = 0;
+        IF FindApprovedApprovalEntryForWorkflowUserGroup(ApprovalEntry,WorkflowStepInstance) THEN
+          OnApproveApprovalRequest(ApprovalEntry);
         EXIT;
       END;
 
@@ -412,9 +421,12 @@ OBJECT Codeunit 1535 Approvals Mgmt.
         EXIT;
       END;
 
+      IF FindOpenApprovalEntriesForWorkflowStepInstance(ApprovalEntry,WorkflowStepInstance) THEN
+        EXIT;
+
       ApprovalEntry2.SETCURRENTKEY("Table ID","Document Type","Document No.","Sequence No.");
       ApprovalEntry2.SETRANGE("Record ID to Approve",ApprovalEntry."Record ID to Approve");
-      ApprovalEntry2.SETRANGE(Status,ApprovalEntry.Status::Created);
+      ApprovalEntry2.SETRANGE(Status,ApprovalEntry2.Status::Created);
 
       IF ApprovalEntry2.FINDFIRST THEN BEGIN
         ApprovalEntry3.COPYFILTERS(ApprovalEntry2);
@@ -468,14 +480,14 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       CASE WorkflowStepArgument."Approver Limit Type" OF
         WorkflowStepArgument."Approver Limit Type"::"Approver Chain":
           BEGIN
-            CreateApprovalRequestForSalespersPurchaser(WorkflowStepArgument,ApprovalEntryArgument);
+            CreateApprovalRequestForSalespersPurchaser(WorkflowStepArgument,ApprovalEntryArgument,FALSE);
             CreateApprovalRequestForChainOfApprovers(WorkflowStepArgument,ApprovalEntryArgument);
           END;
         WorkflowStepArgument."Approver Limit Type"::"Direct Approver":
-          CreateApprovalRequestForSalespersPurchaser(WorkflowStepArgument,ApprovalEntryArgument);
+          CreateApprovalRequestForSalespersPurchaser(WorkflowStepArgument,ApprovalEntryArgument,FALSE);
         WorkflowStepArgument."Approver Limit Type"::"First Qualified Approver":
           BEGIN
-            CreateApprovalRequestForSalespersPurchaser(WorkflowStepArgument,ApprovalEntryArgument);
+            CreateApprovalRequestForSalespersPurchaser(WorkflowStepArgument,ApprovalEntryArgument,TRUE);
             CreateApprovalRequestForApproverWithSufficientLimit(WorkflowStepArgument,ApprovalEntryArgument);
           END;
       END;
@@ -545,14 +557,19 @@ OBJECT Codeunit 1535 Approvals Mgmt.
 
       SequenceNo := GetLastSequenceNo(ApprovalEntryArgument);
 
-      WITH ApprovalEntry DO BEGIN
-        SETCURRENTKEY("Record ID to Approve","Workflow Step Instance ID","Sequence No.");
-        SETRANGE("Table ID",ApprovalEntryArgument."Table ID");
-        SETRANGE("Record ID to Approve",ApprovalEntryArgument."Record ID to Approve");
-        SETRANGE("Workflow Step Instance ID",ApprovalEntryArgument."Workflow Step Instance ID");
-        SETRANGE(Status,Status::Created);
-        IF FINDLAST THEN
-          ApproverId := "Approver ID";
+      IF SequenceNo > 0 THEN
+        WITH ApprovalEntry DO BEGIN
+          SETCURRENTKEY("Record ID to Approve","Workflow Step Instance ID","Sequence No.");
+          SETRANGE("Table ID",ApprovalEntryArgument."Table ID");
+          SETRANGE("Record ID to Approve",ApprovalEntryArgument."Record ID to Approve");
+          SETRANGE("Workflow Step Instance ID",ApprovalEntryArgument."Workflow Step Instance ID");
+          SETRANGE(Status,Status::Created);
+          IF FINDLAST THEN
+            ApproverId := "Approver ID";
+        END
+      ELSE BEGIN
+        FindUserSetupBySalesPurchCode(UserSetup,ApprovalEntryArgument);
+        ApproverId := UserSetup."User ID";
       END;
 
       IF NOT UserSetup.GET(ApproverId) THEN
@@ -591,28 +608,30 @@ OBJECT Codeunit 1535 Approvals Mgmt.
         ERROR(UserIdNotInSetupErr,UsrId);
 
       UsrId := UserSetup."Approver ID";
-      IF NOT UserSetup.GET(UsrId) THEN
-        ERROR(ApproverUserIdNotInSetupErr,UserSetup."User ID");
+
+      IF NOT UserSetup.GET(UsrId) THEN BEGIN
+        IF NOT UserSetup."Approval Administrator" THEN
+          ERROR(ApproverUserIdNotInSetupErr,UserSetup."User ID");
+        UsrId := USERID;
+      END;
 
       SequenceNo += 1;
       MakeApprovalEntry(ApprovalEntryArgument,SequenceNo,UsrId,WorkflowStepArgument);
     END;
 
-    LOCAL PROCEDURE CreateApprovalRequestForSalespersPurchaser@21(WorkflowStepArgument@1006 : Record 1523;ApprovalEntryArgument@1000 : Record 454);
+    LOCAL PROCEDURE CreateApprovalRequestForSalespersPurchaser@21(WorkflowStepArgument@1006 : Record 1523;ApprovalEntryArgument@1000 : Record 454;SufficientApproverOnly@1003 : Boolean);
     VAR
       UserSetup@1001 : Record 91;
       SequenceNo@1002 : Integer;
     BEGIN
       SequenceNo := GetLastSequenceNo(ApprovalEntryArgument);
 
-      UserSetup.SETCURRENTKEY("Salespers./Purch. Code");
-      UserSetup.SETRANGE("Salespers./Purch. Code",ApprovalEntryArgument."Salespers./Purch. Code");
-      IF NOT UserSetup.FINDFIRST THEN
-        ERROR(PurchaserUserNotFoundErr,UserSetup."User ID",UserSetup.FIELDCAPTION("Salespers./Purch. Code"),
-          UserSetup."Salespers./Purch. Code");
+      FindUserSetupBySalesPurchCode(UserSetup,ApprovalEntryArgument);
 
-      SequenceNo += 1;
-      MakeApprovalEntry(ApprovalEntryArgument,SequenceNo,UserSetup."User ID",WorkflowStepArgument);
+      IF IsSufficientApprover(UserSetup,ApprovalEntryArgument) OR (NOT SufficientApproverOnly) THEN BEGIN
+        SequenceNo += 1;
+        MakeApprovalEntry(ApprovalEntryArgument,SequenceNo,UserSetup."User ID",WorkflowStepArgument);
+      END;
     END;
 
     LOCAL PROCEDURE CreateApprovalRequestForUser@22(WorkflowStepArgument@1001 : Record 1523;ApprovalEntryArgument@1000 : Record 454);
@@ -1016,32 +1035,10 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       EXIT(TRUE);
     END;
 
-    PROCEDURE DeleteApprovalEntry@35(TableId@1000 : Integer;DocumentType@1001 : Option;DocumentNo@1002 : Code[20]);
-    VAR
-      ApprovalEntry@1003 : Record 454;
-    BEGIN
-      ApprovalEntry.SETRANGE("Table ID",TableId);
-      ApprovalEntry.SETRANGE("Document Type",DocumentType);
-      ApprovalEntry.SETRANGE("Document No.",DocumentNo);
-      ApprovalEntry.DELETEALL;
-      DeleteApprovalCommentLine(TableId,DocumentType,DocumentNo);
-    END;
-
-    LOCAL PROCEDURE DeleteApprovalCommentLine@30(TableId@1002 : Integer;DocumentType@1001 : 'Quote,Order,Invoice,Credit Memo,Blanket Order,Return Order';DocumentNo@1000 : Code[20]);
-    VAR
-      ApprovalCommentLine@1003 : Record 455;
-    BEGIN
-      ApprovalCommentLine.SETRANGE("Table ID",TableId);
-      ApprovalCommentLine.SETRANGE("Document Type",DocumentType);
-      ApprovalCommentLine.SETRANGE("Document No.",DocumentNo);
-      ApprovalCommentLine.DELETEALL;
-    END;
-
     [EventSubscriber(Table,81,OnMoveGenJournalLine)]
     PROCEDURE PostApprovalEntriesMoveGenJournalLine@91(VAR Sender@1000 : Record 81;ToRecordID@1002 : RecordID);
     BEGIN
       PostApprovalEntries(Sender.RECORDID,ToRecordID,Sender."Document No.");
-      PostApprovalCommentLines(Sender.RECORDID,ToRecordID,Sender."Document No.");
     END;
 
     [EventSubscriber(Table,81,OnAfterDeleteEvent)]
@@ -1050,22 +1047,14 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       DeleteApprovalEntries(Rec.RECORDID);
     END;
 
-    [EventSubscriber(Table,81,OnAfterDeleteEvent)]
-    PROCEDURE DeleteApprovalCommentsAfterDeleteGenJournalLine@95(VAR Rec@1000 : Record 81;RunTrigger@1001 : Boolean);
-    BEGIN
-      DeleteApprovalCommentLines(Rec.RECORDID);
-    END;
-
     [EventSubscriber(Table,232,OnMoveGenJournalBatch)]
     PROCEDURE PostApprovalEntriesMoveGenJournalBatch@36(VAR Sender@1000 : Record 232;ToRecordID@1001 : RecordID);
     VAR
       RecordRestrictionMgt@1002 : Codeunit 1550;
     BEGIN
       PostApprovalEntries(Sender.RECORDID,ToRecordID,'');
-      PostApprovalCommentLines(Sender.RECORDID,ToRecordID,'');
       RecordRestrictionMgt.AllowRecordUsage(Sender.RECORDID);
       DeleteApprovalEntries(Sender.RECORDID);
-      DeleteApprovalCommentLines(Sender.RECORDID);
     END;
 
     [EventSubscriber(Table,232,OnAfterDeleteEvent)]
@@ -1074,22 +1063,10 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       DeleteApprovalEntries(Rec.RECORDID);
     END;
 
-    [EventSubscriber(Table,232,OnAfterDeleteEvent)]
-    PROCEDURE DeleteApprovalCommentsAfterDeleteGenJournalBatch@97(VAR Rec@1000 : Record 232;RunTrigger@1001 : Boolean);
-    BEGIN
-      DeleteApprovalCommentLines(Rec.RECORDID);
-    END;
-
     [EventSubscriber(Table,18,OnAfterDeleteEvent)]
     PROCEDURE DeleteApprovalEntriesAfterDeleteCustomer@99(VAR Rec@1000 : Record 18;RunTrigger@1001 : Boolean);
     BEGIN
       DeleteApprovalEntries(Rec.RECORDID);
-    END;
-
-    [EventSubscriber(Table,18,OnAfterDeleteEvent)]
-    PROCEDURE DeleteApprovalCommentsAfterDeleteCustomer@96(VAR Rec@1000 : Record 18;RunTrigger@1001 : Boolean);
-    BEGIN
-      DeleteApprovalCommentLines(Rec.RECORDID);
     END;
 
     PROCEDURE PostApprovalEntries@105(ApprovedRecordID@1003 : RecordID;PostedRecordID@1001 : RecordID;PostedDocNo@1002 : Code[20]);
@@ -1100,18 +1077,22 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       ApprovalEntry.SETAUTOCALCFIELDS("Pending Approvals","Number of Approved Requests","Number of Rejected Requests");
       ApprovalEntry.SETRANGE("Table ID",ApprovedRecordID.TABLENO);
       ApprovalEntry.SETRANGE("Record ID to Approve",ApprovedRecordID);
-      IF ApprovalEntry.FINDSET THEN
-        REPEAT
-          PostedApprovalEntry.INIT;
-          PostedApprovalEntry.TRANSFERFIELDS(ApprovalEntry);
-          PostedApprovalEntry."Number of Approved Requests" := ApprovalEntry."Number of Approved Requests";
-          PostedApprovalEntry."Number of Rejected Requests" := ApprovalEntry."Number of Rejected Requests";
-          PostedApprovalEntry."Table ID" := PostedRecordID.TABLENO;
-          PostedApprovalEntry."Document No." := PostedDocNo;
-          PostedApprovalEntry."Posted Record ID" := PostedRecordID;
-          PostedApprovalEntry."Entry No." := 0;
-          PostedApprovalEntry.INSERT(TRUE);
-        UNTIL ApprovalEntry.NEXT = 0;
+      IF NOT ApprovalEntry.FINDSET THEN
+        EXIT;
+
+      REPEAT
+        PostedApprovalEntry.INIT;
+        PostedApprovalEntry.TRANSFERFIELDS(ApprovalEntry);
+        PostedApprovalEntry."Number of Approved Requests" := ApprovalEntry."Number of Approved Requests";
+        PostedApprovalEntry."Number of Rejected Requests" := ApprovalEntry."Number of Rejected Requests";
+        PostedApprovalEntry."Table ID" := PostedRecordID.TABLENO;
+        PostedApprovalEntry."Document No." := PostedDocNo;
+        PostedApprovalEntry."Posted Record ID" := PostedRecordID;
+        PostedApprovalEntry."Entry No." := 0;
+        PostedApprovalEntry.INSERT(TRUE);
+      UNTIL ApprovalEntry.NEXT = 0;
+
+      PostApprovalCommentLines(ApprovedRecordID,PostedRecordID,PostedDocNo);
     END;
 
     LOCAL PROCEDURE PostApprovalCommentLines@90(ApprovedRecordID@1000 : RecordID;PostedRecordID@1003 : RecordID;PostedDocNo@1004 : Code[20]);
@@ -1149,7 +1130,8 @@ OBJECT Codeunit 1535 Approvals Mgmt.
     BEGIN
       PostedApprovalEntry.SETRANGE("Table ID",PostedRecordID.TABLENO);
       PostedApprovalEntry.SETRANGE("Posted Record ID",PostedRecordID);
-      PostedApprovalEntry.DELETEALL;
+      IF NOT PostedApprovalEntry.ISEMPTY THEN
+        PostedApprovalEntry.DELETEALL;
       DeletePostedApprovalCommentLines(PostedRecordID);
     END;
 
@@ -1157,7 +1139,7 @@ OBJECT Codeunit 1535 Approvals Mgmt.
     VAR
       PostedApprovalCommentLine@1003 : Record 457;
     BEGIN
-      PostedApprovalCommentLine.SETRANGE("Entry No.",PostedRecordID.TABLENO);
+      PostedApprovalCommentLine.SETRANGE("Table ID",PostedRecordID.TABLENO);
       PostedApprovalCommentLine.SETRANGE("Posted Record ID",PostedRecordID);
       PostedApprovalCommentLine.DELETEALL;
     END;
@@ -1217,8 +1199,6 @@ OBJECT Codeunit 1535 Approvals Mgmt.
     PROCEDURE GetApprovalComment@53(Variant@1000 : Variant);
     VAR
       ApprovalCommentLine@1001 : Record 455;
-      PurchaseHeader@1002 : Record 38;
-      SalesHeader@1003 : Record 36;
       ApprovalEntry@1004 : Record 454;
       RecRef@1005 : RecordRef;
     BEGIN
@@ -1229,25 +1209,7 @@ OBJECT Codeunit 1535 Approvals Mgmt.
           BEGIN
             ApprovalEntry := Variant;
             ApprovalCommentLine.SETRANGE("Table ID",ApprovalEntry."Table ID");
-            ApprovalCommentLine.SETRANGE("Document Type",ApprovalEntry."Document Type");
-            ApprovalCommentLine.SETRANGE("Document No.",ApprovalEntry."Document No.");
             ApprovalCommentLine.SETRANGE("Record ID to Approve",ApprovalEntry."Record ID to Approve");
-          END;
-        DATABASE::"Purchase Header":
-          BEGIN
-            PurchaseHeader := Variant;
-            ApprovalCommentLine.SETRANGE("Table ID",DATABASE::"Purchase Header");
-            ApprovalCommentLine.SETRANGE("Document Type",PurchaseHeader."Document Type");
-            ApprovalCommentLine.SETRANGE("Document No.",PurchaseHeader."No.");
-            ApprovalCommentLine.SETRANGE("Record ID to Approve",RecRef.RECORDID);
-          END;
-        DATABASE::"Sales Header":
-          BEGIN
-            SalesHeader := Variant;
-            ApprovalCommentLine.SETRANGE("Table ID",DATABASE::"Sales Header");
-            ApprovalCommentLine.SETRANGE("Document Type",SalesHeader."Document Type");
-            ApprovalCommentLine.SETRANGE("Document No.",SalesHeader."No.");
-            ApprovalCommentLine.SETRANGE("Record ID to Approve",RecRef.RECORDID);
           END;
         ELSE BEGIN
           ApprovalCommentLine.SETRANGE("Table ID",RecRef.NUMBER);
@@ -1430,16 +1392,17 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       ApprovalCommentLine.MODIFYALL("Record ID to Approve",NewRecordId,TRUE);
     END;
 
-    LOCAL PROCEDURE DeleteApprovalEntries@93(RecordIDToApprove@1000 : RecordID);
+    PROCEDURE DeleteApprovalEntries@93(RecordIDToApprove@1000 : RecordID);
     VAR
       ApprovalEntry@1001 : Record 454;
     BEGIN
       ApprovalEntry.SETRANGE("Table ID",RecordIDToApprove.TABLENO);
       ApprovalEntry.SETRANGE("Record ID to Approve",RecordIDToApprove);
       ApprovalEntry.DELETEALL(TRUE);
+      DeleteApprovalCommentLines(RecordIDToApprove);
     END;
 
-    LOCAL PROCEDURE DeleteApprovalCommentLines@92(RecordIDToApprove@1000 : RecordID);
+    PROCEDURE DeleteApprovalCommentLines@92(RecordIDToApprove@1000 : RecordID);
     VAR
       ApprovalCommentLine@1001 : Record 455;
     BEGIN
@@ -1448,7 +1411,7 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       ApprovalCommentLine.DELETEALL(TRUE);
     END;
 
-    PROCEDURE CopyApprovalEntryQuoteToOrder@66(TableID@1005 : Integer;FromDocNo@1006 : Code[20];ToDocNo@1007 : Code[20];ToRecID@1008 : RecordID);
+    PROCEDURE CopyApprovalEntryQuoteToOrder@101(FromRecID@1006 : RecordID;ToDocNo@1007 : Code[20];ToRecID@1008 : RecordID);
     VAR
       FromApprovalEntry@1000 : Record 454;
       ToApprovalEntry@1001 : Record 454;
@@ -1456,9 +1419,8 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       ToApprovalCommentLine@1003 : Record 455;
       LastEntryNo@1004 : Integer;
     BEGIN
-      FromApprovalEntry.SETRANGE("Table ID",TableID);
-      FromApprovalEntry.SETRANGE("Document Type",FromApprovalEntry."Document Type"::Quote);
-      FromApprovalEntry.SETRANGE("Document No.",FromDocNo);
+      FromApprovalEntry.SETRANGE("Table ID",FromRecID.TABLENO);
+      FromApprovalEntry.SETRANGE("Record ID to Approve",FromRecID);
       IF FromApprovalEntry.FINDSET THEN BEGIN
         ToApprovalEntry.FINDLAST;
         LastEntryNo := ToApprovalEntry."Entry No.";
@@ -1472,9 +1434,8 @@ OBJECT Codeunit 1535 Approvals Mgmt.
           ToApprovalEntry.INSERT;
         UNTIL FromApprovalEntry.NEXT = 0;
 
-        FromApprovalCommentLine.SETRANGE("Table ID",TableID);
-        FromApprovalCommentLine.SETRANGE("Document Type",FromApprovalCommentLine."Document Type"::Quote);
-        FromApprovalCommentLine.SETRANGE("Document No.",FromDocNo);
+        FromApprovalCommentLine.SETRANGE("Table ID",FromRecID.TABLENO);
+        FromApprovalCommentLine.SETRANGE("Record ID to Approve",FromRecID);
         IF FromApprovalCommentLine.FINDSET THEN BEGIN
           ToApprovalCommentLine.FINDLAST;
           LastEntryNo := ToApprovalCommentLine."Entry No.";
@@ -1514,6 +1475,57 @@ OBJECT Codeunit 1535 Approvals Mgmt.
       ApprovalEntry.SETRANGE("Record ID to Approve",RecId);
       ApprovalEntry.SETRANGE("Related to Change",FALSE);
       PAGE.RUNMODAL(PAGE::"Approval Entries",ApprovalEntry);
+    END;
+
+    LOCAL PROCEDURE FindUserSetupBySalesPurchCode@109(VAR UserSetup@1000 : Record 91;ApprovalEntryArgument@1001 : Record 454);
+    BEGIN
+      UserSetup.SETCURRENTKEY("Salespers./Purch. Code");
+      UserSetup.SETRANGE("Salespers./Purch. Code",ApprovalEntryArgument."Salespers./Purch. Code");
+      IF NOT UserSetup.FINDFIRST THEN
+        ERROR(
+          PurchaserUserNotFoundErr,UserSetup."User ID",UserSetup.FIELDCAPTION("Salespers./Purch. Code"),
+          UserSetup."Salespers./Purch. Code");
+    END;
+
+    LOCAL PROCEDURE CheckUserAsApprovalAdministrator@114();
+    VAR
+      UserSetup@1000 : Record 91;
+    BEGIN
+      UserSetup.GET(USERID);
+      UserSetup.TESTFIELD("Approval Administrator");
+    END;
+
+    LOCAL PROCEDURE FindApprovedApprovalEntryForWorkflowUserGroup@122(VAR ApprovalEntry@1000 : Record 454;WorkflowStepInstance@1005 : Record 1504) : Boolean;
+    VAR
+      WorkflowStepArgument@1001 : Record 1523;
+      WorkflowResponseHandling@1003 : Codeunit 1521;
+    BEGIN
+      WorkflowStepInstance.SETRANGE("Function Name",WorkflowResponseHandling.CreateApprovalRequestsCode);
+      WorkflowStepInstance.SETRANGE("Record ID",WorkflowStepInstance."Record ID");
+      WorkflowStepInstance.SETRANGE("Workflow Code",WorkflowStepInstance."Workflow Code");
+      WorkflowStepInstance.SETRANGE(Type,WorkflowStepInstance.Type::Response);
+      WorkflowStepInstance.SETRANGE(Status,WorkflowStepInstance.Status::Completed);
+      IF WorkflowStepInstance.FINDSET THEN
+        REPEAT
+          IF WorkflowStepArgument.GET(WorkflowStepInstance.Argument) THEN
+            IF WorkflowStepArgument."Approver Type" = WorkflowStepArgument."Approver Type"::"Workflow User Group" THEN BEGIN
+              ApprovalEntry.SETRANGE(Status,ApprovalEntry.Status::Approved);
+              EXIT(ApprovalEntry.FINDLAST);
+            END;
+        UNTIL WorkflowStepInstance.NEXT = 0;
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE FindOpenApprovalEntriesForWorkflowStepInstance@117(ApprovalEntry@1001 : Record 454;WorkflowStepInstance@1002 : Record 1504) : Boolean;
+    VAR
+      ApprovalEntry2@1000 : Record 454;
+    BEGIN
+      ApprovalEntry2.SETFILTER(
+        "Record ID to Approve",'%1|%2',
+        WorkflowStepInstance."Record ID",ApprovalEntry."Record ID to Approve");
+      ApprovalEntry2.SETRANGE(Status,ApprovalEntry2.Status::Open);
+      ApprovalEntry2.SETRANGE("Workflow Step Instance ID",ApprovalEntry."Workflow Step Instance ID");
+      EXIT(NOT ApprovalEntry2.ISEMPTY);
     END;
 
     BEGIN

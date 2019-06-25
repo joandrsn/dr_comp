@@ -2,9 +2,9 @@ OBJECT Page 660 Approval Comments
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -15,7 +15,7 @@ OBJECT Page 660 Approval Comments
     LinksAllowed=No;
     SourceTable=Table455;
     DelayedInsert=Yes;
-    DataCaptionFields=Document Type,Document No.;
+    DataCaptionFields=Record ID to Approve;
     PageType=List;
   }
   CONTROLS

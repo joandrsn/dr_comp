@@ -2,9 +2,9 @@ OBJECT Table 302 Finance Charge Memo Header
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365,NAVDK9.00.00.44365;
+    Version List=NAVW19.00.00.50087,NAVDK9.00.00.50087;
   }
   PROPERTIES
   {
@@ -325,6 +325,7 @@ OBJECT Table 302 Finance Charge Memo Header
                                                               ENU=Dimension Set ID];
                                                    Editable=No }
     { 9000;   ;Assigned User ID    ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
     { 13600;  ;EAN No.             ;Code13        ;OnValidate=BEGIN

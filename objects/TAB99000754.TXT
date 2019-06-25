@@ -2,9 +2,9 @@ OBJECT Table 99000754 Work Center
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -328,11 +328,11 @@ OBJECT Table 99000754 Work Center
                                                               ENU=Minimum Efficiency];
                                                    DecimalPlaces=0:5;
                                                    MinValue=0 }
-    { 35  ;   ;Calendar Rounding Precision;Decimal;InitValue=0,0001;
+    { 35  ;   ;Calendar Rounding Precision;Decimal;InitValue=0,00001;
                                                    CaptionML=[DAN=Kalenderafrundingspræcision;
                                                               ENU=Calendar Rounding Precision];
                                                    DecimalPlaces=0:5;
-                                                   MinValue=0,0001;
+                                                   MinValue=0,00001;
                                                    NotBlank=Yes }
     { 36  ;   ;Simulation Type     ;Option        ;CaptionML=[DAN=Simuleringstype;
                                                               ENU=Simulation Type];

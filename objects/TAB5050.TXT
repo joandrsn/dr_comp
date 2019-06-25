@@ -2,13 +2,26 @@ OBJECT Table 5050 Contact
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
-    Permissions=TableData 5065=r;
+    Permissions=TableData 36=rm,
+                TableData 5051=rd,
+                TableData 5052=rd,
+                TableData 5054=rd,
+                TableData 5056=rd,
+                TableData 5058=rd,
+                TableData 5060=rd,
+                TableData 5061=rd,
+                TableData 5065=rm,
+                TableData 5067=rd,
+                TableData 5080=rm,
+                TableData 5089=rd,
+                TableData 5092=rm,
+                TableData 5093=rm;
     DataCaptionFields=No.,Name;
     OnInsert=BEGIN
                RMSetup.GET;
@@ -60,6 +73,7 @@ OBJECT Table 5050 Contact
                InteractLogEntry@1010 : Record 5065;
                Opp@1011 : Record 5092;
                DOPaymentCreditCard@1017 : Record 827;
+               CompanyInformation@1013 : Record 79;
                CampaignTargetGrMgt@1016 : Codeunit 7030;
                VATRegistrationLogMgt@1012 : Codeunit 249;
              BEGIN
@@ -176,6 +190,8 @@ OBJECT Table 5050 Contact
                ContAltAddrDateRange.DELETEALL;
 
                VATRegistrationLogMgt.DeleteContactLog(Rec);
+
+               CompanyInformation.CheckDeleteIntrastatContact(CompanyInformation."Intrastat Contact Type"::Contact,"No.");
              END;
 
     OnRename=BEGIN
@@ -185,11 +201,11 @@ OBJECT Table 5050 Contact
     CaptionML=[DAN=Kontakt;
                ENU=Contact];
     LookupPageID=Page5052;
+    DrillDownPageID=Page5052;
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Name;
-                                                   OnValidate=BEGIN
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   RMSetup.GET;
                                                                   NoSeriesMgt.TestManual(RMSetup."Contact Nos.");
@@ -197,6 +213,7 @@ OBJECT Table 5050 Contact
                                                                 END;
                                                               END;
 
+                                                   AltSearchField=Search Name;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 2   ;   ;Name                ;Text50        ;OnValidate=BEGIN
@@ -238,7 +255,11 @@ OBJECT Table 5050 Contact
     { 24  ;   ;Language Code       ;Code10        ;TableRelation=Language;
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code] }
-    { 29  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 29  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
+                                                   OnValidate=BEGIN
+                                                                ValidateSalesPerson;
+                                                              END;
+
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 35  ;   ;Country/Region Code ;Code10        ;TableRelation=Country/Region;
@@ -298,6 +319,28 @@ OBJECT Table 5050 Contact
     { 107 ;   ;No. Series          ;Code10        ;TableRelation="No. Series";
                                                    CaptionML=[DAN=Nummerserie;
                                                               ENU=No. Series] }
+    { 150 ;   ;Privacy Blocked     ;Boolean       ;OnValidate=BEGIN
+                                                                IF NOT "Privacy Blocked" THEN
+                                                                  IF Minor THEN
+                                                                    IF NOT "Parental Consent Received" THEN
+                                                                      ERROR(ParentalConsentReceivedErr,"No.");
+                                                              END;
+
+                                                   CaptionML=[DAN=Beskyttelse af personlige oplysninger spærret;
+                                                              ENU=Privacy Blocked] }
+    { 151 ;   ;Minor               ;Boolean       ;OnValidate=BEGIN
+                                                                IF Minor THEN
+                                                                  VALIDATE("Privacy Blocked",TRUE);
+                                                              END;
+
+                                                   CaptionML=[DAN=Mindreårig;
+                                                              ENU=Minor] }
+    { 152 ;   ;Parental Consent Received;Boolean  ;OnValidate=BEGIN
+                                                                VALIDATE("Privacy Blocked",TRUE);
+                                                              END;
+
+                                                   CaptionML=[DAN=Forældresamtykke modtaget;
+                                                              ENU=Parental Consent Received] }
     { 5050;   ;Type                ;Option        ;OnValidate=BEGIN
                                                                 IF (CurrFieldNo <> 0) AND ("No." <> '') THEN BEGIN
                                                                   TypeChange;
@@ -593,7 +636,7 @@ OBJECT Table 5050 Contact
                                                    CaptionML=[DAN=Opgavepost findes;
                                                               ENU=To-do Entry Exists];
                                                    Editable=No }
-    { 5084;   ;Salesperson Filter  ;Code10        ;FieldClass=FlowFilter;
+    { 5084;   ;Salesperson Filter  ;Code20        ;FieldClass=FlowFilter;
                                                    TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerfilter;
                                                               ENU=Salesperson Filter] }
@@ -712,6 +755,7 @@ OBJECT Table 5050 Contact
       Text009@1009 : TextConst 'DAN=Recorden %2 i %1 er oprettet.;ENU=The %2 record of the %1 has been created.';
       Text010@1010 : TextConst 'DAN=Recorden %2 i %1 er ikke knyttet til andre tabeller.;ENU=The %2 record of the %1 is not linked with any other table.';
       RMSetup@1012 : Record 5079;
+      Salesperson@1927 : Record 13;
       Cont@1013 : Record 5050;
       ContBusRel@1014 : Record 5054;
       PostCode@1011 : Record 225;
@@ -730,6 +774,11 @@ OBJECT Table 5050 Contact
       Text029@1045 : TextConst 'DAN=Den samlede længde af for-, mellem- og efternavn overskrider den maksimale længde, der er tilladt for navnefeltet, med %1 tegn.;ENU=The total length of first name, middle name and surname is %1 character(s)longer than the maximum length allowed for the Name field.';
       Text032@1048 : TextConst 'DAN=Længden af %1 overskrider den maksimale længde, der er tilladt for feltet %1, med %2 tegn.;ENU=The length of %1 is %2 character(s)longer than the maximum length allowed for the %1 field.';
       Text033@1008 : TextConst 'DAN=Vinduet Opsætning af Online Map skal udfyldes, før du kan bruge Online Map.\Se Opsætning af Online Map i Hjælp.;ENU=Before you can use Online Map, you must fill in the Online Map Setup window.\See Setting Up Online Map in Help.';
+      PrivacyBlockedPostErr@2013 : TextConst '@@@="%1=contact no.";DAN=Du kan ikke bogføre denne bilagstype, fordi kontakten %1 er blokeret på grund af beskyttelse af personlige oplysninger.;ENU=You cannot post this type of document because contact %1 is blocked due to privacy.';
+      PrivacyBlockedCreateErr@2011 : TextConst '@@@="%1=contact no.";DAN=Du kan ikke oprette denne bilagstype, fordi kontakten %1 er blokeret på grund af beskyttelse af personlige oplysninger.;ENU=You cannot create this type of document because contact %1 is blocked due to privacy.';
+      PrivacyBlockedGenericErr@2014 : TextConst '@@@="%1=contact no.";DAN=Du kan ikke anvende kontakten %1, fordi de er markeret som blokeret pga. beskyttelse af personlige oplysninger.;ENU=You cannot use contact %1 because they are marked as blocked due to privacy.';
+      ParentalConsentReceivedErr@2026 : TextConst '@@@="%1=contact no.";DAN=Beskyttelse af personlige oplysninger spærret kan ikke slettes, før Forældresamtykke modtaget indstilles til Sand for mindreårig kontakt %1.;ENU=Privacy Blocked cannot be cleared until Parental Consent Received is set to true for minor contact %1.';
+      ProfileForMinorErr@2027 : TextConst 'DAN=Du kan ikke bruge profiler for kontakter, der er markeret som Mindreårig.;ENU=You cannot use profiles for contacts marked as Minor.';
 
     PROCEDURE OnModify@4(xRec@1005 : Record 5050);
     VAR
@@ -984,6 +1033,7 @@ OBJECT Table 5050 Contact
       DefaultDim@1005 : Record 352;
       DefaultDim2@1004 : Record 352;
     BEGIN
+      CheckIfPrivacyBlockedGeneric;
       TESTFIELD("Company No.");
       RMSetup.GET;
       RMSetup.TESTFIELD("Bus. Rel. Code for Customers");
@@ -1022,12 +1072,22 @@ OBJECT Table 5050 Contact
       Cust.MODIFY;
 
       IF CustTemplate.Code <> '' THEN BEGIN
-        Cust."Territory Code" := "Territory Code";
-        Cust."Currency Code" := ContComp."Currency Code";
-        Cust."Country/Region Code" := "Country/Region Code";
+        IF "Territory Code" = '' THEN
+          Cust."Territory Code" := CustTemplate."Territory Code"
+        ELSE
+          Cust."Territory Code" := "Territory Code";
+        IF "Currency Code" = '' THEN
+          Cust."Currency Code" := CustTemplate."Currency Code"
+        ELSE
+          Cust."Currency Code" := "Currency Code";
+        IF "Country/Region Code" = '' THEN
+          Cust."Country/Region Code" := CustTemplate."Country/Region Code"
+        ELSE
+          Cust."Country/Region Code" := "Country/Region Code";
         Cust."Customer Posting Group" := CustTemplate."Customer Posting Group";
         Cust."Customer Price Group" := CustTemplate."Customer Price Group";
-        Cust."Invoice Disc. Code" := CustTemplate."Invoice Disc. Code";
+        IF CustTemplate."Invoice Disc. Code" <> '' THEN
+          Cust."Invoice Disc. Code" := CustTemplate."Invoice Disc. Code";
         Cust."Customer Disc. Group" := CustTemplate."Customer Disc. Group";
         Cust."Allow Line Disc." := CustTemplate."Allow Line Disc.";
         Cust."Gen. Bus. Posting Group" := CustTemplate."Gen. Bus. Posting Group";
@@ -1062,6 +1122,7 @@ OBJECT Table 5050 Contact
       Vend@1000 : Record 23;
       ContComp@1001 : Record 5050;
     BEGIN
+      CheckIfPrivacyBlockedGeneric;
       TESTFIELD("Company No.");
       RMSetup.GET;
       RMSetup.TESTFIELD("Bus. Rel. Code for Vendors");
@@ -1112,6 +1173,8 @@ OBJECT Table 5050 Contact
       ContBusRel."No." := BankAcc."No.";
       ContBusRel.INSERT(TRUE);
 
+      CheckIfPrivacyBlockedGeneric;
+
       UpdateCustVendBank.UpdateBankAccount(ContComp,ContBusRel);
 
       MESSAGE(Text009,BankAcc.TABLECAPTION,BankAcc."No.");
@@ -1122,6 +1185,7 @@ OBJECT Table 5050 Contact
       Cust@1001 : Record 18;
       ContBusRel@1000 : Record 5054;
     BEGIN
+      CheckIfPrivacyBlockedGeneric;
       TESTFIELD("Company No.");
       RMSetup.GET;
       RMSetup.TESTFIELD("Bus. Rel. Code for Customers");
@@ -1140,6 +1204,7 @@ OBJECT Table 5050 Contact
 
     PROCEDURE CreateVendorLink@6();
     BEGIN
+      CheckIfPrivacyBlockedGeneric;
       TESTFIELD("Company No.");
       RMSetup.GET;
       RMSetup.TESTFIELD("Bus. Rel. Code for Vendors");
@@ -1151,6 +1216,7 @@ OBJECT Table 5050 Contact
 
     PROCEDURE CreateBankAccountLink@9();
     BEGIN
+      CheckIfPrivacyBlockedGeneric;
       TESTFIELD("Company No.");
       RMSetup.GET;
       RMSetup.TESTFIELD("Bus. Rel. Code for Bank Accs.");
@@ -1176,6 +1242,7 @@ OBJECT Table 5050 Contact
     VAR
       SegmentLine@1000 : TEMPORARY Record 5077;
     BEGIN
+      CheckIfPrivacyBlockedGeneric;
       SegmentLine.CreateInteractionFromContact(Rec);
     END;
 
@@ -1571,6 +1638,35 @@ OBJECT Table 5050 Contact
         MapMgt.MakeSelection(DATABASE::Contact,GETPOSITION)
       ELSE
         MESSAGE(Text033);
+    END;
+
+    PROCEDURE CheckIfMinorForProfiles@52();
+    BEGIN
+      IF Minor THEN
+        ERROR(ProfileForMinorErr);
+    END;
+
+    PROCEDURE CheckIfPrivacyBlocked@48(IsPosting@1000 : Boolean);
+    BEGIN
+      IF "Privacy Blocked" THEN BEGIN
+        IF IsPosting THEN
+          ERROR(PrivacyBlockedPostErr,"No.");
+        ERROR(PrivacyBlockedCreateErr,"No.");
+      END;
+    END;
+
+    PROCEDURE CheckIfPrivacyBlockedGeneric@50();
+    BEGIN
+      IF "Privacy Blocked" THEN
+        ERROR(PrivacyBlockedGenericErr,"No.");
+    END;
+
+    LOCAL PROCEDURE ValidateSalesPerson@433();
+    BEGIN
+      IF "Salesperson Code" <> '' THEN
+        IF Salesperson.GET("Salesperson Code") THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN
+            ERROR(Salesperson.GetPrivacyBlockedGenericText(Salesperson,TRUE))
     END;
 
     LOCAL PROCEDURE ProcessNameChange@37();

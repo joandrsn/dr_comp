@@ -2,9 +2,9 @@ OBJECT Page 42 Sales Order
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974,NAVDK9.00.00.44974;
+    Version List=NAVW19.00.00.50868,NAVDK9.00.00.50868;
   }
   PROPERTIES
   {
@@ -62,6 +62,7 @@ OBJECT Page 42 Sales Order
                            CurrPage.IncomingDocAttachFactBox.PAGE.LoadDataFromRecord(Rec);
                            CRMIsCoupledToRecord := CRMIntegrationEnabled AND CRMCouplingManagement.IsRecordCoupledToCRM(RECORDID);
                            ShowWorkflowStatus := CurrPage.WorkflowStatus.PAGE.SetFilterOnWorkflowRecord(RECORDID);
+                           CurrPage.ApprovalFactBox.PAGE.RefreshPage(RECORDID);
                          END;
 
     ActionList=ACTIONS
@@ -131,6 +132,7 @@ OBJECT Page 42 Sales Order
                                   Customer No.=FIELD(Bill-to Customer No.);
                       Image=CreditCardLog }
       { 11      ;2   ;Action    ;
+                      Name=AssemblyOrders;
                       AccessByPermission=TableData 90=R;
                       CaptionML=[DAN=Montageordrer;
                                  ENU=Assembly Orders];
@@ -212,6 +214,7 @@ OBJECT Page 42 Sales Order
                       RunPageLink=Prepayment Order No.=FIELD(No.);
                       Image=PrepaymentInvoice }
       { 235     ;2   ;Action    ;
+                      Name=PagePostedSalesPrepaymentCrMemos;
                       CaptionML=[DAN=Forudbetalingskred&itnotaer;
                                  ENU=Prepayment Credi&t Memos];
                       RunObject=Page 144;
@@ -271,14 +274,16 @@ OBJECT Page 42 Sales Order
                       Name=Comment;
                       CaptionML=[DAN=Bemærkninger;
                                  ENU=Comments];
-                      RunObject=Page 660;
-                      RunPageLink=Table ID=CONST(36),
-                                  Document Type=FIELD(Document Type),
-                                  Document No.=FIELD(No.);
                       Promoted=Yes;
                       Visible=OpenApprovalEntriesExistForCurrUser;
                       Image=ViewComments;
-                      PromotedCategory=Category4 }
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1000 : Codeunit 1535;
+                               BEGIN
+                                 ApprovalsMgmt.GetApprovalComment(Rec);
+                               END;
+                                }
       { 21      ;1   ;ActionGroup;
                       CaptionML=[DAN=Frigiv;
                                  ENU=Release];
@@ -837,6 +842,10 @@ OBJECT Page 42 Sales Order
 
     { 12  ;2   ;Field     ;
                 SourceExpr="Posting Date";
+                OnValidate=BEGIN
+                             SaveInvoiceDiscountAmount;
+                           END;
+
                 QuickEntry=FALSE }
 
     { 14  ;2   ;Field     ;
@@ -1105,7 +1114,7 @@ OBJECT Page 42 Sales Order
                                  ChangeExchangeRate.SetParameter("Currency Code","Currency Factor",WORKDATE);
                                IF ChangeExchangeRate.RUNMODAL = ACTION::OK THEN BEGIN
                                  VALIDATE("Currency Factor",ChangeExchangeRate.GetParameter);
-                                 CurrPage.UPDATE;
+                                 SaveInvoiceDiscountAmount;
                                END;
                                CLEAR(ChangeExchangeRate);
                              END;
@@ -1191,9 +1200,7 @@ OBJECT Page 42 Sales Order
                 PartType=Page }
 
     { 1906354007;1;Part   ;
-                SubPageLink=Table ID=CONST(36),
-                            Document Type=FIELD(Document Type),
-                            Document No.=FIELD(No.);
+                Name=ApprovalFactBox;
                 PagePartID=Page9092;
                 Visible=FALSE;
                 PartType=Page }
@@ -1283,6 +1290,15 @@ OBJECT Page 42 Sales Order
     LOCAL PROCEDURE ApproveCalcInvDisc@3();
     BEGIN
       CurrPage.SalesLines.PAGE.ApproveCalcInvDisc;
+    END;
+
+    LOCAL PROCEDURE SaveInvoiceDiscountAmount@14();
+    VAR
+      DocumentTotals@1000 : Codeunit 57;
+    BEGIN
+      CurrPage.SAVERECORD;
+      DocumentTotals.SalesRedistributeInvoiceDiscountAmountsOnDocument(Rec);
+      CurrPage.UPDATE(FALSE);
     END;
 
     LOCAL PROCEDURE SelltoCustomerNoOnAfterValidat@19034782();

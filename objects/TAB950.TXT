@@ -2,21 +2,51 @@ OBJECT Table 950 Time Sheet Header
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
+    OnInsert=BEGIN
+               IF "Resource No." <> '' THEN BEGIN
+                 Resource.GET("Resource No.");
+                 CheckResourcePrivacyBlocked(Resource);
+                 Resource.TESTFIELD(Blocked,FALSE);
+               END;
+             END;
+
+    OnModify=BEGIN
+               IF "Resource No." <> '' THEN BEGIN
+                 Resource.GET("Resource No.");
+                 CheckResourcePrivacyBlocked(Resource);
+                 Resource.TESTFIELD(Blocked,FALSE);
+               END;
+             END;
+
     OnDelete=VAR
                TimeSheetCommentLine@1000 : Record 953;
              BEGIN
+               IF "Resource No." <> '' THEN BEGIN
+                 Resource.GET("Resource No.");
+                 CheckResourcePrivacyBlocked(Resource);
+                 Resource.TESTFIELD(Blocked,FALSE);
+               END;
+
                TimeSheetLine.SETRANGE("Time Sheet No.","No.");
                TimeSheetLine.DELETEALL(TRUE);
 
                TimeSheetCommentLine.SETRANGE("No.","No.");
                TimeSheetCommentLine.SETRANGE("Time Sheet Line No.",0);
                TimeSheetCommentLine.DELETEALL;
+             END;
+
+    OnRename=BEGIN
+               IF "Resource No." <> '' THEN BEGIN
+                 Resource.GET("Resource No.");
+                 CheckResourcePrivacyBlocked(Resource);
+                 Resource.TESTFIELD(Blocked,FALSE);
+               END;
              END;
 
     CaptionML=[DAN=Timeseddelhoved;
@@ -35,6 +65,8 @@ OBJECT Table 950 Time Sheet Header
                                                                 ResourcesSetup.GET;
                                                                 IF "Resource No." <> '' THEN BEGIN
                                                                   Resource.GET("Resource No.");
+                                                                  CheckResourcePrivacyBlocked(Resource);
+                                                                  Resource.TESTFIELD(Blocked,FALSE);
                                                                   Resource.TESTFIELD("Time Sheet Owner User ID");
                                                                   Resource.TESTFIELD("Time Sheet Approver User ID");
                                                                   "Owner User ID" := Resource."Time Sheet Owner User ID";
@@ -45,9 +77,11 @@ OBJECT Table 950 Time Sheet Header
                                                    CaptionML=[DAN=Ressourcenr.;
                                                               ENU=Resource No.] }
     { 7   ;   ;Owner User ID       ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id på ejer;
                                                               ENU=Owner User ID] }
     { 8   ;   ;Approver User ID    ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id på godkender;
                                                               ENU=Approver User ID] }
     { 12  ;   ;Open Exists         ;Boolean       ;FieldClass=FlowField;
@@ -142,6 +176,7 @@ OBJECT Table 950 Time Sheet Header
       Text001@1004 : TextConst 'DAN=%1 indeholder ikke linjer.;ENU=%1 does not contain lines.';
       TimeSheetMgt@1005 : Codeunit 950;
       Text002@1006 : TextConst 'DAN=Der er ingen tilgængelige timesedler. Timeseddeladministratoren skal oprette timesedler, før du kan få adgang til dem i dette vindue.;ENU=No time sheets are available. The time sheet administrator must create time sheets before you can access them in this window.';
+      PrivacyBlockedErr@1002 : TextConst '@@@="%1=resource no.";DAN=Du kan ikke anvende ressourcen %1, fordi de er markeret som blokeret pga. beskyttelse af personlige oplysninger.;ENU=You cannot use resource %1 because they are marked as blocked due to privacy.';
 
     PROCEDURE CalcQtyWithStatus@1(Status@1000 : 'Open,Submitted,Rejected,Approved') : Decimal;
     BEGIN
@@ -168,6 +203,12 @@ OBJECT Table 950 Time Sheet Header
       TimeSheetLine.SETRANGE("Time Sheet No.","No.");
       IF TimeSheetLine.FINDLAST THEN;
       EXIT(TimeSheetLine."Line No.");
+    END;
+
+    LOCAL PROCEDURE CheckResourcePrivacyBlocked@4(Resource@1000 : Record 156);
+    BEGIN
+      IF Resource."Privacy Blocked" THEN
+        ERROR(PrivacyBlockedErr,Resource."No.");
     END;
 
     PROCEDURE FindLastTimeSheetNo@25(FilterFieldNo@1002 : Integer) : Code[20];

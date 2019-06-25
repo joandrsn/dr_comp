@@ -2,9 +2,9 @@ OBJECT Table 904 Assemble-to-Order Link
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -68,18 +68,32 @@ OBJECT Table 904 Assemble-to-Order Link
       Text007@1008 : TextConst 'DAN=Der findes en %1 for %2. \\Hvis du vil registrere og bogføre en anden %3, skal du gøre det i feltet %4 i den relaterede %1.;ENU=A %1 exists for the %2. \\If you want to record and post a different %3, then you must do this in the %4 field on the related %1.';
       Text008@1009 : TextConst '@@@="Key Value, say: %1=Line No. %2=10000";DAN=%1 %2;ENU=%1 %2';
 
-    PROCEDURE UpdateAsmFromSalesLine@1(VAR NewSalesLine@1001 : Record 37);
+    PROCEDURE UpdateAsmFromSalesLine@1(VAR NewSalesLine@1000 : Record 37);
+    BEGIN
+      UpdateAsm(NewSalesLine,AsmExistsForSalesLine(NewSalesLine));
+    END;
+
+    PROCEDURE UpdateAsmFromSalesLineATOExist@79(VAR NewSalesLine@1000 : Record 37);
+    BEGIN
+      UpdateAsm(NewSalesLine,TRUE);
+    END;
+
+    LOCAL PROCEDURE UpdateAsm@73(VAR NewSalesLine@1001 : Record 37;AsmExists@1002 : Boolean);
     VAR
       SalesLine2@1000 : Record 37;
+      InvtAdjmtEntryOrder@1003 : Record 5896;
     BEGIN
-      IF AsmExistsForSalesLine(NewSalesLine) THEN BEGIN
+      IF AsmExists THEN BEGIN
         IF NOT NewSalesLine.IsAsmToOrderAllowed THEN BEGIN
           DeleteAsmFromSalesLine(NewSalesLine);
           EXIT;
         END;
         IF NewSalesLine."Qty. to Assemble to Order" = 0 THEN BEGIN
           DeleteAsmFromSalesLine(NewSalesLine);
-          INSERT;
+          InvtAdjmtEntryOrder.SETRANGE("Order Type",InvtAdjmtEntryOrder."Order Type"::Assembly);
+          InvtAdjmtEntryOrder.SETRANGE("Order No.","Assembly Document No.");
+          IF ("Assembly Document Type" <> "Assembly Document Type"::Order) OR NOT InvtAdjmtEntryOrder.ISEMPTY THEN
+            INSERT;
           EXIT;
         END;
         IF NOT GetAsmHeader THEN BEGIN
@@ -289,7 +303,8 @@ OBJECT Table 904 Assemble-to-Order Link
       ChangeDim(NewSalesLine."Dimension Set ID");
       ChangePlanningFlexibility;
       ChangeQty(NewSalesLine."Qty. to Assemble to Order");
-      ChangeQtyToAsm(MaxQtyToAsm(NewSalesLine,AsmHeader));
+      IF NewSalesLine."Document Type" <> NewSalesLine."Document Type"::Quote THEN
+        ChangeQtyToAsm(MaxQtyToAsm(NewSalesLine,AsmHeader));
 
       AsmHeader.MODIFY(TRUE);
 
@@ -692,7 +707,7 @@ OBJECT Table 904 Assemble-to-Order Link
           END;
         UNTIL AsmLine.NEXT = 0;
 
-      UnitPrice := ROUND(UnitPrice / SalesLine.Quantity,Currency."Unit-Amount Rounding Precision");
+      UnitPrice := ROUND(UnitPrice / AsmHeader.Quantity,Currency."Unit-Amount Rounding Precision");
       SalesLine.VALIDATE("Unit Price",UnitPrice);
       SalesLine.MODIFY(TRUE);
     END;
@@ -718,7 +733,7 @@ OBJECT Table 904 Assemble-to-Order Link
           UnitCost += AsmLine."Cost Amount";
         UNTIL AsmLine.NEXT = 0;
 
-      SalesLine.VALIDATE("Unit Cost (LCY)",ROUND(UnitCost / SalesLine.Quantity,0.00001));
+      SalesLine.VALIDATE("Unit Cost (LCY)",ROUND(UnitCost / AsmHeader.Quantity,0.00001));
       SalesLine.MODIFY(TRUE);
     END;
 

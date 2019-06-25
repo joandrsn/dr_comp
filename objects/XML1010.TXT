@@ -2,9 +2,9 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=24-05-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50357;
   }
   PROPERTIES
   {
@@ -60,19 +60,39 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
 
     { [{190EA500-44E1-4087-B9C1-92FF22B6C606}];5 ;StrtNm              ;Element ;Field   ;
                                                   DataType=Text;
-                                                  SourceField=CompanyInformation::Address }
+                                                  SourceField=CompanyInformation::Address;
+                                                  Export::OnBeforePassField=BEGIN
+                                                                              IF CompanyInformation.Address = '' THEN
+                                                                                currXMLport.SKIP;
+                                                                            END;
+                                                                             }
 
     { [{D1D3FFEE-6CEB-4D87-B587-A083BBE8B023}];5 ;PstCd               ;Element ;Field   ;
                                                   DataType=Code;
-                                                  SourceField=CompanyInformation::Post Code }
+                                                  SourceField=CompanyInformation::Post Code;
+                                                  Export::OnBeforePassField=BEGIN
+                                                                              IF CompanyInformation."Post Code" = '' THEN
+                                                                                currXMLport.SKIP;
+                                                                            END;
+                                                                             }
 
     { [{343F2DED-3188-42C4-8031-FFE838D82180}];5 ;TwnNm               ;Element ;Field   ;
                                                   DataType=Text;
-                                                  SourceField=CompanyInformation::City }
+                                                  SourceField=CompanyInformation::City;
+                                                  Export::OnBeforePassField=BEGIN
+                                                                              IF CompanyInformation.City = '' THEN
+                                                                                currXMLport.SKIP;
+                                                                            END;
+                                                                             }
 
     { [{EFF6FA4A-0155-43FE-A99F-B10AF9C097CC}];5 ;Ctry                ;Element ;Field   ;
                                                   DataType=Code;
-                                                  SourceField=CompanyInformation::Country/Region Code }
+                                                  SourceField=CompanyInformation::Country/Region Code;
+                                                  Export::OnBeforePassField=BEGIN
+                                                                              IF CompanyInformation."Country/Region Code" = '' THEN
+                                                                                currXMLport.SKIP;
+                                                                            END;
+                                                                             }
 
     { [{33320197-FB5D-4204-9D74-43DFD5FD8AFE}];4 ;Id                  ;Element ;Text     }
 
@@ -111,10 +131,6 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
 
     { [{9CA51BA0-46E2-46B3-A14C-0B28D61E299D}];3 ;PmtTpInf            ;Element ;Text     }
 
-    { [{5E01D811-0DCD-4BC3-A4C9-7277DED06DCD}];4 ;InstrPrty           ;Element ;Field   ;
-                                                  DataType=Code;
-                                                  SourceField=PaymentExportDataGroup::SEPA Instruction Priority Text }
-
     { [{1D5A56C5-3B10-42BC-A930-65DAE73CDB35}];4 ;SvcLvl              ;Element ;Text     }
 
     { [{5126454D-9F23-4FEB-A798-3D6EE6C3E628}];5 ;Cd                  ;Element ;Text    ;
@@ -140,7 +156,12 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
                                                   VariableName=CompanyInformationName }
 
     { [{F172EC0F-A290-4E91-B133-668C58AC1864}];4 ;Id                  ;Element ;Text    ;
-                                                  VariableName=CdrId }
+                                                  VariableName=CdrId;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 IF PaymentExportDataGroup."Sender Bank BIC" = '' THEN
+                                                                                   currXMLport.SKIP;
+                                                                               END;
+                                                                                }
 
     { [{27A2721B-0987-4B0C-AAA1-225CE63B5117}];5 ;OrgId               ;Element ;Text    ;
                                                   VariableName=CdrOrgId }
@@ -158,7 +179,12 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
                                                   DataType=Text;
                                                   SourceField=PaymentExportDataGroup::Sender Bank Account No. }
 
-    { [{7B0760B1-B72B-4517-9D5F-9D31D0D2AFAC}];3 ;CdtrAgt             ;Element ;Text     }
+    { [{7B0760B1-B72B-4517-9D5F-9D31D0D2AFAC}];3 ;CdtrAgt             ;Element ;Text    ;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 IF PaymentExportDataGroup."Sender Bank BIC" = '' THEN
+                                                                                   currXMLport.SKIP;
+                                                                               END;
+                                                                                }
 
     { [{1F4B6580-5D4B-41E8-8462-05CC622192E6}];4 ;FinInstnId          ;Element ;Text     }
 
@@ -214,13 +240,6 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
                                                   DataType=Text;
                                                   SourceField=PaymentExportData::End-to-End ID }
 
-    { [{6DC0F9C3-E082-405A-91C7-E171AE430745}];4 ;PmtTpInf            ;Element ;Text    ;
-                                                  VariableName=DrctDbtTxInfPmtTpInf }
-
-    { [{951D6B08-09A6-4878-877B-0E5E2FD1C523}];5 ;InstrPrty           ;Element ;Field   ;
-                                                  DataType=Code;
-                                                  SourceField=PaymentExportData::SEPA Instruction Priority Text }
-
     { [{351B1C68-E833-44B1-85CB-6C1DFD29A96A}];4 ;InstdAmt            ;Element ;Field   ;
                                                   DataType=Decimal;
                                                   SourceField=PaymentExportData::Amount }
@@ -241,7 +260,12 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
                                                   DataType=Date;
                                                   SourceField=PaymentExportData::SEPA DD Mandate Signed Date }
 
-    { [{D211EEAA-B9BF-4DCC-8452-3A6E83A0635A}];4 ;DbtrAgt             ;Element ;Text     }
+    { [{D211EEAA-B9BF-4DCC-8452-3A6E83A0635A}];4 ;DbtrAgt             ;Element ;Text    ;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 IF PaymentExportData."Recipient Bank BIC" = '' THEN
+                                                                                   currXMLport.SKIP;
+                                                                               END;
+                                                                                }
 
     { [{9E2A7E02-455A-436C-93C5-14E4B81FCC21}];5 ;FinInstnId          ;Element ;Text    ;
                                                   VariableName=DbtrAgtFinInstnId }
@@ -296,7 +320,12 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
                                                                              }
 
     { [{3099F921-808C-40CF-B33B-6000DD52F81A}];5 ;Id                  ;Element ;Text    ;
-                                                  VariableName=DbtrId }
+                                                  VariableName=DbtrId;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 IF PaymentExportData."Recipient Bank BIC" = '' THEN
+                                                                                   currXMLport.SKIP;
+                                                                               END;
+                                                                                }
 
     { [{DCE7DDB0-B1E6-41EB-A149-7F6426576A5B}];6 ;OrgId               ;Element ;Text    ;
                                                   VariableName=DbtrOrgId }
@@ -314,7 +343,12 @@ OBJECT XMLport 1010 SEPA DD pain.008.001.02
                                                   DataType=Text;
                                                   SourceField=PaymentExportData::Recipient Bank Acc. No. }
 
-    { [{54F717C7-6E9E-4217-A054-8310317D0B9F}];4 ;RmtInf              ;Element ;Text     }
+    { [{54F717C7-6E9E-4217-A054-8310317D0B9F}];4 ;RmtInf              ;Element ;Text    ;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 IF PaymentExportData."Message to Recipient 1" = '' THEN
+                                                                                   currXMLport.SKIP;
+                                                                               END;
+                                                                                }
 
     { [{6F3D66BA-368F-4018-AC01-5F66B2E7E93B}];5 ;Ustrd               ;Element ;Field   ;
                                                   DataType=Text;

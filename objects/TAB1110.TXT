@@ -2,12 +2,16 @@ OBJECT Table 1110 Cost Budget Name
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
+    OnInsert=BEGIN
+               TESTFIELD(Name);
+             END;
+
     OnDelete=VAR
                CostBudgetEntry@1000 : Record 1109;
                CostBudgetRegister@1001 : Record 1111;

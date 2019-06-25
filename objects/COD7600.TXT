@@ -2,9 +2,9 @@ OBJECT Codeunit 7600 Calendar Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -425,8 +425,10 @@ OBJECT Codeunit 7600 Calendar Management
     LOCAL PROCEDURE ReverseSign@10(DateFormulaExpr@1000 : Text[30]) : Text[30];
     VAR
       NewDateFormulaExpr@1001 : Text[30];
+      Formula@1002 : DateFormula;
     BEGIN
-      NewDateFormulaExpr := CONVERTSTR(DateFormulaExpr,'+-','-+');
+      EVALUATE(Formula,DateFormulaExpr);
+      NewDateFormulaExpr := CONVERTSTR(FORMAT(Formula),'+-','-+');
       IF NOT (DateFormulaExpr[1] IN ['+','-']) THEN
         NewDateFormulaExpr := '-' + NewDateFormulaExpr;
       EXIT(NewDateFormulaExpr);

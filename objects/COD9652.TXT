@@ -2,9 +2,9 @@ OBJECT Codeunit 9652 Edit RDLC Report Layout
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -59,16 +59,36 @@ OBJECT Codeunit 9652 Edit RDLC Report Layout
     LOCAL PROCEDURE GetReportBuilderExe@1() : Text;
     VAR
       Registry@1000 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.Microsoft.Win32.Registry" RUNONCLIENT;
+      FileVersion@1004 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Diagnostics.FileVersionInfo";
       FileName@1002 : Text;
-      i@1001 : Integer;
+      length@1001 : Integer;
+      offset@1003 : Integer;
     BEGIN
       FileName := Registry.GetValue('HKEY_CLASSES_ROOT\MSReportBuilder_ReportFile_32\shell\Open\command','','');
-      i := STRPOS(UPPERCASE(FileName),'.EXE');
-      IF i > 0 THEN
-        FileName := DELCHR(PADSTR(FileName,i + 3),'>')
-      ELSE
+      length := STRPOS(UPPERCASE(FileName),'.EXE');
+      // Strip leading quotes if any
+
+      IF length > 0 THEN BEGIN
+        length += 3;
+        IF FileName[1] = '"' THEN BEGIN
+          offset := 1;
+          length -= 1;
+        END;
+        FileName := COPYSTR(FileName,offset + 1,length);
+      END ELSE
         FileName := '';
 
+      FileVersion := FileVersion.GetVersionInfo(FileName);
+      IF FileVersion.ProductMajorPart >= 13 THEN BEGIN
+        FileName :=
+          Registry.GetValue('HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\Report Builder 3.0','location','');
+        IF FileName <> '' THEN BEGIN
+          FileName := FileName + '\MSReportBuilder.exe';
+          FileVersion := FileVersion.GetVersionInfo(FileName);
+          IF FileVersion.ProductMajorPart >= 13 THEN
+            FileName := '';
+        END;
+      END;
       EXIT(FileName);
     END;
 

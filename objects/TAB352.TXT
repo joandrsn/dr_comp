@@ -2,9 +2,9 @@ OBJECT Table 352 Default Dimension
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -44,7 +44,7 @@ OBJECT Table 352 Default Dimension
   }
   FIELDS
   {
-    { 1   ;   ;Table ID            ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 1   ;   ;Table ID            ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    OnValidate=VAR
                                                                 TempAllObjWithCaption@1000 : TEMPORARY Record 2000000058;
                                                               BEGIN
@@ -90,13 +90,17 @@ OBJECT Table 352 Default Dimension
                                                                  ELSE IF (Table ID=CONST(5714)) "Responsibility Center"
                                                                  ELSE IF (Table ID=CONST(5800)) "Item Charge"
                                                                  ELSE IF (Table ID=CONST(99000754)) "Work Center"
-                                                                 ELSE IF (Table ID=CONST(5105)) "Customer Template";
+                                                                 ELSE IF (Table ID=CONST(5105)) "Customer Template"
+                                                                 ELSE IF (Table ID=CONST(849)) "Cash Flow Manual Revenue"
+                                                                 ELSE IF (Table ID=CONST(850)) "Cash Flow Manual Expense";
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 3   ;   ;Dimension Code      ;Code20        ;TableRelation=Dimension;
                                                    OnValidate=BEGIN
                                                                 IF NOT DimMgt.CheckDim("Dimension Code") THEN
                                                                   ERROR(DimMgt.GetDimErr);
+                                                                IF "Dimension Code" <> xRec."Dimension Code" THEN
+                                                                  VALIDATE("Dimension Value Code",'');
                                                               END;
 
                                                    CaptionML=[DAN=Dimensionskode;

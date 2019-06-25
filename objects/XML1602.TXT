@@ -2,9 +2,9 @@ OBJECT XMLport 1602 Sales Invoice - PEPPOL 2.0
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -1722,67 +1722,15 @@ OBJECT XMLport 1602 Sales Invoice - PEPPOL 2.0
     END;
 
     LOCAL PROCEDURE FindNextInvoiceRec@80(Position@1000 : Integer) : Boolean;
-    VAR
-      PEPPOLValidation@1002 : Codeunit 1620;
-      Found@1001 : Boolean;
     BEGIN
-      CASE ProcessedDocType OF
-        ProcessedDocType::Sale:
-          BEGIN
-            IF Position = 1 THEN
-              Found := SalesInvoiceHeader.FIND('-')
-            ELSE
-              Found := SalesInvoiceHeader.NEXT <> 0;
-            IF Found THEN BEGIN
-              SalesHeader.TRANSFERFIELDS(SalesInvoiceHeader);
-              PEPPOLValidation.CheckSalesInvoice(SalesInvoiceHeader);
-            END;
-          END;
-        ProcessedDocType::Service:
-          BEGIN
-            IF Position = 1 THEN
-              Found := ServiceInvoiceHeader.FIND('-')
-            ELSE
-              Found := ServiceInvoiceHeader.NEXT <> 0;
-            IF Found THEN BEGIN
-              PEPPOLMgt.TransferHeaderToSalesHeader(ServiceInvoiceHeader,SalesHeader);
-              PEPPOLValidation.CheckServiceInvoice(ServiceInvoiceHeader);
-            END;
-          END;
-      END;
-      SalesHeader."Document Type" := SalesHeader."Document Type"::Invoice;
-
-      EXIT(Found);
+      EXIT(
+        PEPPOLMgt.FindNextInvoiceRec(SalesInvoiceHeader,ServiceInvoiceHeader,SalesHeader,ProcessedDocType,Position));
     END;
 
     LOCAL PROCEDURE FindNextInvoiceLineRec@84(Position@1000 : Integer) : Boolean;
-    VAR
-      Found@1001 : Boolean;
     BEGIN
-      CASE ProcessedDocType OF
-        ProcessedDocType::Sale:
-          BEGIN
-            IF Position = 1 THEN
-              Found := SalesInvoiceLine.FIND('-')
-            ELSE
-              Found := SalesInvoiceLine.NEXT <> 0;
-            IF Found THEN
-              SalesLine.TRANSFERFIELDS(SalesInvoiceLine);
-          END;
-        ProcessedDocType::Service:
-          BEGIN
-            IF Position = 1 THEN
-              Found := ServiceInvoiceLine.FIND('-')
-            ELSE
-              Found := ServiceInvoiceLine.NEXT <> 0;
-            IF Found THEN BEGIN
-              PEPPOLMgt.TransferLineToSalesLine(ServiceInvoiceLine,SalesLine);
-              SalesLine.Type := PEPPOLMgt.MapServiceLineTypeToSalesLineType(ServiceInvoiceLine.Type);
-            END;
-          END;
-      END;
-
-      EXIT(Found);
+      EXIT(
+        PEPPOLMgt.FindNextInvoiceLineRec(SalesInvoiceLine,ServiceInvoiceLine,SalesLine,ProcessedDocType,Position));
     END;
 
     LOCAL PROCEDURE FindNextVATAmtRec@108(VAR VATAmtLine@1001 : Record 290;Position@1000 : Integer) : Boolean;

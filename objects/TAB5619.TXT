@@ -2,9 +2,9 @@ OBJECT Table 5619 FA Journal Template
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -30,10 +30,10 @@ OBJECT Table 5619 FA Journal Template
                                                    NotBlank=Yes }
     { 2   ;   ;Description         ;Text80        ;CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
-    { 5   ;   ;Test Report ID      ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Report));
+    { 5   ;   ;Test Report ID      ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Report));
                                                    CaptionML=[DAN=Kontrolrapport-id;
                                                               ENU=Test Report ID] }
-    { 6   ;   ;Page ID             ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Page));
+    { 6   ;   ;Page ID             ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Page));
                                                    OnValidate=BEGIN
                                                                 IF Recurring THEN
                                                                   "Page ID" := PAGE::"Recurring Fixed Asset Journal"
@@ -49,7 +49,7 @@ OBJECT Table 5619 FA Journal Template
 
                                                    CaptionML=[DAN=Side-id;
                                                               ENU=Page ID] }
-    { 7   ;   ;Posting Report ID   ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Report));
+    { 7   ;   ;Posting Report ID   ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Report));
                                                    CaptionML=[DAN=Journalrapport-id;
                                                               ENU=Posting Report ID] }
     { 8   ;   ;Force Posting Report;Boolean       ;CaptionML=[DAN=Obligatorisk journal;
@@ -94,7 +94,7 @@ OBJECT Table 5619 FA Journal Template
                                                    CaptionML=[DAN=Overskrift på bogføringsrapport;
                                                               ENU=Posting Report Caption];
                                                    Editable=No }
-    { 16  ;   ;Maint. Posting Report ID;Integer   ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Report));
+    { 16  ;   ;Maint. Posting Report ID;Integer   ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Report));
                                                    CaptionML=[DAN=Reparationsjournalrapport-id;
                                                               ENU=Maint. Posting Report ID] }
     { 17  ;   ;Maint. Posting Report Caption;Text250;

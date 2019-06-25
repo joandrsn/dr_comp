@@ -2,9 +2,9 @@ OBJECT Table 7302 Bin Content
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -443,6 +443,22 @@ OBJECT Table 7302 Bin Content
         EXIT(ROUND(CalcQtyAvailToTake(0) / UOMMgt.GetQtyPerUnitOfMeasure(Item,"Unit of Measure Code"),0.00001));
     END;
 
+    LOCAL PROCEDURE CalcTotalQtyAvailToTake@26(ExcludeQtyBase@1000 : Decimal) : Decimal;
+    VAR
+      TotalQtyBase@1001 : Decimal;
+      TotalNegativeAdjmtQtyBase@1002 : Decimal;
+      TotalATOComponentsPickQtyBase@1003 : Decimal;
+    BEGIN
+      TotalQtyBase := CalcTotalQtyBase;
+      TotalNegativeAdjmtQtyBase := CalcTotalNegativeAdjmtQtyBase;
+      TotalATOComponentsPickQtyBase := CalcTotalATOComponentsPickQtyBase;
+      SetFilterOnUnitOfMeasure;
+      CALCFIELDS("Pick Quantity (Base)");
+      EXIT(
+        TotalQtyBase -
+        ("Pick Quantity (Base)" + TotalATOComponentsPickQtyBase - ExcludeQtyBase + TotalNegativeAdjmtQtyBase));
+    END;
+
     PROCEDURE CalcQtyAvailToPick@2(ExcludeQtyBase@1000 : Decimal) : Decimal;
     BEGIN
       IF (NOT Dedicated) AND (NOT ("Block Movement" IN ["Block Movement"::Outbound,"Block Movement"::All])) THEN
@@ -620,7 +636,7 @@ OBJECT Table 7302 Bin Content
         DecreaseQtyBase := DecreaseQtyBase + WhseActivLine."Qty. (Base)";
       END;
 
-      QtyAvailToPickBase := CalcQtyAvailToTake(DecreaseQtyBase);
+      QtyAvailToPickBase := CalcTotalQtyAvailToTake(DecreaseQtyBase);
       IF QtyAvailToPickBase < QtyBase THEN BEGIN
         GetItem("Item No.");
         QtyAvailToPick := ROUND(QtyAvailToPickBase / UOMMgt.GetQtyPerUnitOfMeasure(Item,"Unit of Measure Code"),0.00001);
@@ -932,11 +948,59 @@ OBJECT Table 7302 Bin Content
 
     PROCEDURE SetFilterOnUnitOfMeasure@23();
     BEGIN
-      IF Location.GET("Location Code") THEN
-        IF Location."Directed Put-away and Pick" THEN
-          SETRANGE("Unit of Measure Filter","Unit of Measure Code")
-        ELSE
-          SETRANGE("Unit of Measure Filter");
+      GetLocation("Location Code");
+      IF Location."Directed Put-away and Pick" THEN
+        SETRANGE("Unit of Measure Filter","Unit of Measure Code")
+      ELSE
+        SETRANGE("Unit of Measure Filter");
+    END;
+
+    LOCAL PROCEDURE CalcTotalQtyBase@25() : Decimal;
+    VAR
+      WarehouseEntry@1001 : Record 7312;
+    BEGIN
+      WarehouseEntry.SETRANGE("Location Code","Location Code");
+      WarehouseEntry.SETRANGE("Bin Code","Bin Code");
+      WarehouseEntry.SETRANGE("Item No.","Item No.");
+      WarehouseEntry.SETRANGE("Variant Code","Variant Code");
+      WarehouseEntry.SETFILTER("Lot No.",GETFILTER("Lot No. Filter"));
+      WarehouseEntry.SETFILTER("Serial No.",GETFILTER("Serial No. Filter"));
+      WarehouseEntry.CALCSUMS("Qty. (Base)");
+      EXIT(WarehouseEntry."Qty. (Base)");
+    END;
+
+    LOCAL PROCEDURE CalcTotalNegativeAdjmtQtyBase@34() : Decimal;
+    VAR
+      WarehouseJournalLine@1001 : Record 7311;
+    BEGIN
+      WarehouseJournalLine.SETRANGE("Location Code","Location Code");
+      WarehouseJournalLine.SETRANGE("From Bin Code","Bin Code");
+      WarehouseJournalLine.SETRANGE("Item No.","Item No.");
+      WarehouseJournalLine.SETRANGE("Variant Code","Variant Code");
+      WarehouseJournalLine.SETFILTER("Lot No.",GETFILTER("Lot No. Filter"));
+      WarehouseJournalLine.SETFILTER("Serial No.",GETFILTER("Serial No. Filter"));
+      WarehouseJournalLine.CALCSUMS("Qty. (Absolute, Base)");
+      EXIT(WarehouseJournalLine."Qty. (Absolute, Base)");
+    END;
+
+    LOCAL PROCEDURE CalcTotalATOComponentsPickQtyBase@27() : Decimal;
+    VAR
+      WarehouseActivityLine@1001 : Record 5767;
+    BEGIN
+      GetLocation("Location Code");
+      WarehouseActivityLine.SETRANGE("Location Code","Location Code");
+      WarehouseActivityLine.SETRANGE("Bin Code","Bin Code");
+      WarehouseActivityLine.SETRANGE("Item No.","Item No.");
+      WarehouseActivityLine.SETRANGE("Variant Code","Variant Code");
+      IF Location."Allow Breakbulk" THEN
+        WarehouseActivityLine.SETRANGE("Unit of Measure Code","Unit of Measure Code");
+      WarehouseActivityLine.SETRANGE("Activity Type",WarehouseActivityLine."Activity Type"::Pick);
+      WarehouseActivityLine.SETRANGE("Assemble to Order",TRUE);
+      WarehouseActivityLine.SETRANGE("ATO Component",TRUE);
+      WarehouseActivityLine.SETFILTER("Lot No.",GETFILTER("Lot No. Filter"));
+      WarehouseActivityLine.SETFILTER("Serial No.",GETFILTER("Serial No. Filter"));
+      WarehouseActivityLine.CALCSUMS("Qty. (Base)");
+      EXIT(WarehouseActivityLine."Qty. (Base)");
     END;
 
     BEGIN

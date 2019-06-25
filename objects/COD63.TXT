@@ -2,9 +2,9 @@ OBJECT Codeunit 63 Sales-Explode BOM
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -13,8 +13,13 @@ OBJECT Codeunit 63 Sales-Explode BOM
             TESTFIELD(Type,Type::Item);
             TESTFIELD("Quantity Shipped",0);
             TESTFIELD("Return Qty. Received",0);
+
             CALCFIELDS("Reserved Qty. (Base)");
             TESTFIELD("Reserved Qty. (Base)",0);
+            ReservMgt.SetSalesLine(Rec);
+            ReservMgt.SetItemTrackingHandling(1);
+            ReservMgt.DeleteReservEntries(TRUE,0);
+
             IF "Purch. Order Line No." <> 0 THEN
               ERROR(
                 Text000,
@@ -90,6 +95,7 @@ OBJECT Codeunit 63 Sales-Explode BOM
       ItemCheckAvail@1009 : Codeunit 311;
       UOMMgt@1010 : Codeunit 5402;
       TransferExtendedText@1015 : Codeunit 378;
+      ReservMgt@1017 : Codeunit 99000845;
       BOMItemNo@1011 : Code[20];
       LineSpacing@1012 : Integer;
       NextLineNo@1013 : Integer;
@@ -99,23 +105,34 @@ OBJECT Codeunit 63 Sales-Explode BOM
     LOCAL PROCEDURE ExplodeBOMCompLines@1(SalesLine@1000 : Record 37);
     VAR
       PreviousSalesLine@1003 : Record 37;
+      InsertLinesBetween@1001 : Boolean;
     BEGIN
       WITH SalesLine DO BEGIN
         ToSalesLine.RESET;
         ToSalesLine.SETRANGE("Document Type","Document Type");
         ToSalesLine.SETRANGE("Document No.","Document No.");
         ToSalesLine := SalesLine;
-        IF ToSalesLine.FIND('>') THEN BEGIN
-          LineSpacing := (ToSalesLine."Line No." - "Line No.") DIV (1 + NoOfBOMComp);
-          IF LineSpacing = 0 THEN
-            ERROR(Text003);
-        END ELSE
+        NextLineNo := "Line No.";
+        InsertLinesBetween := FALSE;
+        IF ToSalesLine.FIND('>') THEN
+          IF ToSalesLine."Attached to Line No." = "Line No." THEN BEGIN
+            ToSalesLine.SETRANGE("Attached to Line No.","Line No.");
+            ToSalesLine.FINDLAST;
+            ToSalesLine.SETRANGE("Attached to Line No.");
+            NextLineNo := ToSalesLine."Line No.";
+            InsertLinesBetween := ToSalesLine.FIND('>');
+          END ELSE
+            InsertLinesBetween := TRUE;
+        IF InsertLinesBetween THEN
+          LineSpacing := (ToSalesLine."Line No." - NextLineNo) DIV (1 + NoOfBOMComp)
+        ELSE
           LineSpacing := 10000;
+        IF LineSpacing = 0 THEN
+          ERROR(Text003);
 
         FromBOMComp.RESET;
         FromBOMComp.SETRANGE("Parent Item No.","No.");
         FromBOMComp.FINDSET;
-        NextLineNo := "Line No.";
         REPEAT
           ToSalesLine.INIT;
           NextLineNo := NextLineNo + LineSpacing;

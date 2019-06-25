@@ -2,9 +2,9 @@ OBJECT Codeunit 6648 Purch.-Get Return Shipments
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -120,7 +120,7 @@ OBJECT Codeunit 6648 Purch.-Get Return Shipments
           REPEAT
             IF ItemChargeAssgntPurch."Qty. to Assign" <> 0 THEN BEGIN
               ItemChargeAssgntPurch2 := ItemChargeAssgntPurch;
-              ItemChargeAssgntPurch2."Qty. to Assign" := QtyFactor * ItemChargeAssgntPurch2."Qty. to Assign";
+              ItemChargeAssgntPurch2."Qty. to Assign" := ROUND(QtyFactor * ItemChargeAssgntPurch2."Qty. to Assign",0.00001);
               PurchLine2.SETRANGE("Return Shipment No.",ReturnShptLine."Document No.");
               PurchLine2.SETRANGE("Return Shipment Line No.",ReturnShptLine."Line No.");
               IF PurchLine2.FIND('-') THEN

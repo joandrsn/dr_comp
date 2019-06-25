@@ -2,9 +2,9 @@ OBJECT Table 7012 Purchase Price
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -61,6 +61,7 @@ OBJECT Table 7012 Purchase Price
                                                    AutoFormatExpr="Currency Code" }
     { 14  ;   ;Minimum Quantity    ;Decimal       ;CaptionML=[DAN=Min. antal;
                                                               ENU=Minimum Quantity];
+                                                   DecimalPlaces=0:5;
                                                    MinValue=0 }
     { 15  ;   ;Ending Date         ;Date          ;OnValidate=BEGIN
                                                                 VALIDATE("Starting Date");
@@ -89,6 +90,18 @@ OBJECT Table 7012 Purchase Price
     VAR
       Vend@1000 : Record 23;
       Text000@1004 : TextConst 'DAN=%1 må ikke være efter %2;ENU=%1 cannot be after %2';
+
+    PROCEDURE CopyPurchPriceToVendorsPurchPrice@3(VAR PurchPrice@1000 : Record 7012;VendNo@1002 : Code[20]);
+    VAR
+      NewPurchasePrice@1001 : Record 7012;
+    BEGIN
+      IF PurchPrice.FINDSET THEN
+        REPEAT
+          NewPurchasePrice := PurchPrice;
+          NewPurchasePrice."Vendor No." := VendNo;
+          IF NewPurchasePrice.INSERT THEN;
+        UNTIL PurchPrice.NEXT = 0;
+    END;
 
     BEGIN
     END.

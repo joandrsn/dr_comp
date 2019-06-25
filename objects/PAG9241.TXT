@@ -2,9 +2,9 @@ OBJECT Page 9241 G/L Entries Dim. Overv. Matrix
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -86,7 +86,8 @@ OBJECT Page 9241 G/L Entries Dim. Overv. Matrix
                        MATRIX_Steps@1401 : Integer;
                      BEGIN
                        MATRIX_CurrentColumnOrdinal := 0;
-                       MatrixRecord.SETPOSITION(MATRIX_PKFirstCaptionInSet);
+                       IF MATRIX_PKFirstCaptionInSet <> '' THEN
+                         MatrixRecord.SETPOSITION(MATRIX_PKFirstCaptionInSet);
                        IF MATRIX_OnFindRecord('=') THEN BEGIN
                          MATRIX_CurrentColumnOrdinal := 1;
                          REPEAT

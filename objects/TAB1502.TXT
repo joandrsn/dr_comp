@@ -2,9 +2,9 @@ OBJECT Table 1502 Workflow Step
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=26-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.47864;
   }
   PROPERTIES
   {
@@ -25,6 +25,7 @@ OBJECT Table 1502 Workflow Step
                ChildWorkflowStep@1000 : Record 1502;
              BEGIN
                CheckEditingIsAllowed;
+               CheckNextStepsInstancesReference;
 
                IF WorkflowStepArgument.GET(Argument) THEN
                  WorkflowStepArgument.DELETE;
@@ -178,6 +179,8 @@ OBJECT Table 1502 Workflow Step
       CannotReferToCurrentWorkflowErr@1000 : TextConst 'DAN=kan ikke referere til det aktuelle workflow;ENU=cannot refer to the current workflow';
       StepIdsCannotBeTheSameErr@1002 : TextConst '@@@=Example: Previous Workflow Step ID cannot be the same as ID.;DAN=kan ikke være det samme som id;ENU=cannot be the same as ID';
       ViewFilterDetailsTxt@1001 : TextConst 'DAN=(Vis filterdetaljer);ENU=(View filter details)';
+      CancelledErr@1004 : TextConst 'DAN=Annulleret.;ENU=Cancelled.';
+      ConfirmDeleteLinksQst@1003 : TextConst 'DAN=Hvis du sletter denne workflowrespons, vil én eller flere andre tilknyttede workflowreponser ophøre med at fungere.\\Vil du fortsætte?;ENU=If you delete this workflow response, one or more other, linked workflow responses may stop working.\\Do you want to continue?';
 
     PROCEDURE CreateInstance@27(WorkflowInstanceID@1002 : GUID;WorkflowCode@1004 : Code[20];PreviousWorkflowStepID@1006 : Integer;SubWorkflowStep@1005 : Record 1502);
     VAR
@@ -566,6 +569,23 @@ OBJECT Table 1502 Workflow Step
         UNTIL WorkflowStep.NEXT = 0;
 
       EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE CheckNextStepsInstancesReference@37();
+    VAR
+      ReferredWorkflowStep@1000 : Record 1502;
+    BEGIN
+      IF Type <> Type::Response THEN
+        EXIT;
+
+      ReferredWorkflowStep.SETRANGE("Workflow Code","Workflow Code");
+      ReferredWorkflowStep.SETRANGE("Next Workflow Step ID",ID);
+      ReferredWorkflowStep.SETRANGE(Type,ReferredWorkflowStep.Type::Response);
+      IF NOT ReferredWorkflowStep.ISEMPTY THEN BEGIN
+        IF NOT CONFIRM(ConfirmDeleteLinksQst,FALSE) THEN
+          ERROR(CancelledErr);
+        ReferredWorkflowStep.MODIFYALL("Next Workflow Step ID",0);
+      END;
     END;
 
     BEGIN

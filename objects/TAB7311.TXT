@@ -2,9 +2,9 @@ OBJECT Table 7311 Warehouse Journal Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -89,7 +89,8 @@ OBJECT Table 7311 Warehouse Journal Line
                                                                   GetBinType("Location Code","From Bin Code");
 
                                                                 Bin.CALCFIELDS("Adjustment Bin");
-                                                                Bin.TESTFIELD("Adjustment Bin",FALSE);
+                                                                IF Bin."Adjustment Bin" AND ("Entry Type" <> "Entry Type"::"Positive Adjmt.") THEN
+                                                                  Bin.FIELDERROR("Adjustment Bin");
 
                                                                 IF "From Bin Code" <> '' THEN
                                                                   "From Zone Code" := Bin."Zone Code";
@@ -299,7 +300,8 @@ OBJECT Table 7311 Warehouse Journal Line
                                                                 GetBin("Location Code","To Bin Code");
 
                                                                 Bin.CALCFIELDS("Adjustment Bin");
-                                                                Bin.TESTFIELD("Adjustment Bin",FALSE);
+                                                                IF Bin."Adjustment Bin" AND ("Entry Type" <> "Entry Type"::"Negative Adjmt.") THEN
+                                                                  Bin.FIELDERROR("Adjustment Bin");
 
                                                                 IF "To Bin Code" <> '' THEN
                                                                   "To Zone Code" := Bin."Zone Code";
@@ -385,6 +387,7 @@ OBJECT Table 7311 Warehouse Journal Line
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 68  ;   ;Qty. (Calculated) (Base);Decimal   ;CaptionML=[DAN=Antal (beregnet) (basis);

@@ -2,9 +2,9 @@ OBJECT Report 1095 Update Job Item Cost
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -58,6 +58,7 @@ OBJECT Report 1095 Update Job Item Cost
                OnAfterGetRecord=VAR
                                   ValueEntry@1004 : Record 5802;
                                   ValueEntry2@1003 : Record 5802;
+                                  Item@1000 : Record 27;
                                   JobLedgerEntryCostValue@1001 : Decimal;
                                   JobLedgerEntryCostValueACY@1002 : Decimal;
                                 BEGIN
@@ -69,24 +70,33 @@ OBJECT Report 1095 Update Job Item Cost
                                   ValueEntry.SETRANGE("Document Type",ValueEntry."Document Type"::"Purchase Invoice");
 
                                   IF ValueEntry.ISEMPTY THEN BEGIN
-                                    CALCFIELDS("Cost Amount (Expected)","Cost Amount (Expected) (ACY)",
-                                      "Cost Amount (Actual)","Cost Amount (Actual) (ACY)");
-                                    JobLedgerEntryCostValue := "Cost Amount (Expected)" + "Cost Amount (Actual)";
-                                    JobLedgerEntryCostValueACY := "Cost Amount (Expected) (ACY)" + "Cost Amount (Actual) (ACY)";
+                                    Item.GET("Item No.");
+                                    IF Item.Type = Item.Type::Inventory THEN BEGIN
+                                      CALCFIELDS("Cost Amount (Expected)","Cost Amount (Expected) (ACY)","Cost Amount (Actual)","Cost Amount (Actual) (ACY)");
+                                      JobLedgerEntryCostValue := "Cost Amount (Expected)" + "Cost Amount (Actual)";
+                                      JobLedgerEntryCostValueACY := "Cost Amount (Expected) (ACY)" + "Cost Amount (Actual) (ACY)";
+                                    END ELSE BEGIN
+                                      CALCFIELDS("Cost Amount (Non-Invtbl.)","Cost Amount (Non-Invtbl.)(ACY)");
+                                      JobLedgerEntryCostValue := "Cost Amount (Non-Invtbl.)";
+                                      JobLedgerEntryCostValueACY := "Cost Amount (Non-Invtbl.)(ACY)";
+                                    END;
                                   END ELSE BEGIN
                                     ValueEntry.SETRANGE(Adjustment,FALSE);
                                     IF ValueEntry.FINDFIRST THEN BEGIN
-                                      JobLedgerEntryCostValue := ValueEntry."Cost Amount (Actual)";
-                                      JobLedgerEntryCostValueACY := ValueEntry."Cost Amount (Actual) (ACY)";
+                                      AddJobCostValue(JobLedgerEntryCostValue,JobLedgerEntryCostValueACY,ValueEntry,ValueEntry.Inventoriable);
 
                                       ValueEntry2.SETRANGE("Item Ledger Entry No.","Entry No.");
                                       ValueEntry2.SETRANGE("Document No.",ValueEntry."Document No.");
                                       ValueEntry2.SETRANGE("Item Ledger Entry Type",ValueEntry."Item Ledger Entry Type"::"Negative Adjmt.");
                                       ValueEntry2.SETRANGE("Document Type",ValueEntry."Document Type"::"Purchase Invoice");
                                       ValueEntry2.SETRANGE(Adjustment,TRUE);
-                                      ValueEntry2.CALCSUMS("Cost Amount (Actual)","Cost Amount (Actual) (ACY)");
-                                      JobLedgerEntryCostValue += ValueEntry2."Cost Amount (Actual)";
-                                      JobLedgerEntryCostValueACY += ValueEntry2."Cost Amount (Actual) (ACY)";
+
+                                      IF ValueEntry.Inventoriable THEN
+                                        ValueEntry2.CALCSUMS("Cost Amount (Actual)","Cost Amount (Actual) (ACY)")
+                                      ELSE
+                                        ValueEntry2.CALCSUMS("Cost Amount (Non-Invtbl.)","Cost Amount (Non-Invtbl.)(ACY)");
+
+                                      AddJobCostValue(JobLedgerEntryCostValue,JobLedgerEntryCostValueACY,ValueEntry2,ValueEntry.Inventoriable);
 
                                       ValueEntry2.SETRANGE("Job Ledger Entry No.",0);
                                       ValueEntry2.MODIFYALL("Job No.",ValueEntry."Job No.");
@@ -201,6 +211,17 @@ OBJECT Report 1095 Update Job Item Cost
         UpdatePostedTotalCost(JobLedgEntry,AdjustJobCost,AdjustJobCostLCY);
 
         NoOfJobLedgEntry += 1;
+      END;
+    END;
+
+    LOCAL PROCEDURE AddJobCostValue@4(VAR JobLedgerEntryCostValue@1001 : Decimal;VAR JobLedgerEntryCostValueACY@1002 : Decimal;ValueEntry@1003 : Record 5802;IsInventoriable@1000 : Boolean);
+    BEGIN
+      IF IsInventoriable THEN BEGIN
+        JobLedgerEntryCostValue += ValueEntry."Cost Amount (Actual)";
+        JobLedgerEntryCostValueACY += ValueEntry."Cost Amount (Actual) (ACY)";
+      END ELSE BEGIN
+        JobLedgerEntryCostValue += ValueEntry."Cost Amount (Non-Invtbl.)";
+        JobLedgerEntryCostValueACY += ValueEntry."Cost Amount (Non-Invtbl.)(ACY)";
       END;
     END;
 

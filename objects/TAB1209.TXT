@@ -2,9 +2,9 @@ OBJECT Table 1209 Credit Trans Re-export History
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -27,7 +27,8 @@ OBJECT Table 1209 Credit Trans Re-export History
                                                               ENU=Credit Transfer Register No.] }
     { 3   ;   ;Re-export Date      ;DateTime      ;CaptionML=[DAN=Reeksportdato;
                                                               ENU=Re-export Date] }
-    { 4   ;   ;Re-exported By      ;Code50        ;CaptionML=[DAN=Reeksporteret af;
+    { 4   ;   ;Re-exported By      ;Code50        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Reeksporteret af;
                                                               ENU=Re-exported By] }
   }
   KEYS

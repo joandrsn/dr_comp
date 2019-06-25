@@ -2,9 +2,9 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -28,6 +28,8 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       ActionMsgEntry@1011 : Record 99000849;
       TempPlanningCompList@1013 : TEMPORARY Record 99000829;
       DummyInventoryProfileTrackBuffer@1048 : Record 99000854;
+      CustomizedCalendarChange@1047 : Record 7602;
+      CalendarManagement@1012 : Codeunit 7600;
       LeadTimeMgt@1014 : Codeunit 5404;
       PlngLnMgt@1031 : Codeunit 99000809;
       Transparency@1034 : Codeunit 99000856;
@@ -72,7 +74,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       PlanToDate := ToDate;
       InitVariables(InventoryProfile[1],ManufacturingSetup2,Item,TemplateName,WorksheetName,MRPPlanning);
       DemandtoInvProfile(InventoryProfile[1],Item,ToDate);
-      ForecastConsumption(InventoryProfile[1],Item,OrderDate,ToDate);
+      OrderDate := ForecastConsumption(InventoryProfile[1],Item,OrderDate,ToDate);
       BlanketOrderConsump(InventoryProfile[1],Item,ToDate);
       SupplytoInvProfile(InventoryProfile[1],Item,ToDate);
       UnfoldItemTracking(InventoryProfile[1],InventoryProfile[2]);
@@ -247,16 +249,12 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
     VAR
       ProdOrderComp@1004 : Record 5407;
     BEGIN
-      IF NOT PlanMRP THEN
-        EXIT;
       IF ProdOrderComp.FindLinesWithItemToPlan(Item,TRUE) THEN
         REPEAT
           IF ProdOrderComp."Due Date" <> 0D THEN BEGIN
-            ReqLine.SETCURRENTKEY("Ref. Order Type","Ref. Order Status","Ref. Order No.","Ref. Line No.");
-            ReqLine.SETRANGE("Ref. Order Type",ReqLine."Ref. Order Type"::"Prod. Order");
-            ReqLine.SETRANGE("Ref. Order Status",ProdOrderComp.Status);
-            ReqLine.SETRANGE("Ref. Order No.",ProdOrderComp."Prod. Order No.");
-            ReqLine.SETRANGE("Ref. Line No.",ProdOrderComp."Prod. Order Line No.");
+            ReqLine.SetRefFilter(
+              ReqLine."Ref. Order Type"::"Prod. Order",ProdOrderComp.Status,
+              ProdOrderComp."Prod. Order No.",ProdOrderComp."Prod. Order Line No.");
             ReqLine.SETRANGE("Operation No.",'');
             IF NOT ReqLine.FINDFIRST THEN BEGIN
               InventoryProfile.INIT;
@@ -303,11 +301,8 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       IF AsmLine.FindLinesWithItemToPlan(Item,AsmLine."Document Type"::Order) THEN
         REPEAT
           IF AsmLine."Due Date" <> 0D THEN BEGIN
-            ReqLine.SETCURRENTKEY("Ref. Order Type","Ref. Order Status","Ref. Order No.","Ref. Line No.");
-            ReqLine.SETRANGE("Ref. Order Type",ReqLine."Ref. Order Type"::Assembly);
-            ReqLine.SETRANGE("Ref. Order Status",AsmLine."Document Type");
-            ReqLine.SETRANGE("Ref. Order No.",AsmLine."Document No.");
-            ReqLine.SETRANGE("Ref. Line No.",0);
+            ReqLine.SetRefFilter(
+              ReqLine."Ref. Order Type"::Assembly,AsmLine."Document Type",AsmLine."Document No.",0);
             ReqLine.SETRANGE("Operation No.",'');
             IF NOT ReqLine.FINDFIRST THEN BEGIN
               InventoryProfile.INIT;
@@ -323,11 +318,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       IF AsmLine.FindLinesWithItemToPlan(Item,AsmLine."Document Type"::"Blanket Order") THEN
         REPEAT
           IF AsmLine."Due Date" <> 0D THEN BEGIN
-            ReqLine.SETCURRENTKEY("Ref. Order Type","Ref. Order Status","Ref. Order No.","Ref. Line No.");
-            ReqLine.SETRANGE("Ref. Order Type",ReqLine."Ref. Order Type"::Assembly);
-            ReqLine.SETRANGE("Ref. Order Status",AsmLine."Document Type");
-            ReqLine.SETRANGE("Ref. Order No.",AsmLine."Document No.");
-            ReqLine.SETRANGE("Ref. Line No.",0);
+            ReqLine.SetRefFilter(ReqLine."Ref. Order Type"::Assembly,AsmLine."Document Type",AsmLine."Document No.",0);
             ReqLine.SETRANGE("Operation No.",'');
             IF NOT ReqLine.FINDFIRST THEN BEGIN
               InventoryProfile.INIT;
@@ -566,25 +557,25 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       EXIT(TempTransLine.ISEMPTY);
     END;
 
-    LOCAL PROCEDURE ForecastConsumption@1(VAR Demand@1000 : Record 99000853;VAR Item@1001 : Record 27;OrderDate@1002 : Date;ToDate@1003 : Date);
+    LOCAL PROCEDURE ForecastConsumption@1(VAR Demand@1000 : Record 99000853;VAR Item@1001 : Record 27;OrderDate@1002 : Date;ToDate@1003 : Date) UpdatedOrderDate : Date;
     VAR
       ForecastEntry@1004 : Record 99000852;
       ForecastEntry2@1005 : Record 99000852;
       NextForecast@1006 : Record 99000852;
       TotalForecastQty@1009 : Decimal;
-      ModuleLoop@1012 : Integer;
       ReplenishmentLocation@1011 : Code[10];
       ForecastExist@1007 : Boolean;
-      Module@1008 : Boolean;
       NextForecastExist@1010 : Boolean;
+      ReplenishmentLocationFound@1014 : Boolean;
+      ComponentForecast@1016 : Boolean;
+      ComponentForecastFrom@1017 : Boolean;
     BEGIN
+      UpdatedOrderDate := OrderDate;
+      ComponentForecastFrom := FALSE;
       IF NOT ManufacturingSetup."Use Forecast on Locations" THEN BEGIN
-        IF NOT FindReplishmentLocation(ReplenishmentLocation,Item) THEN
-          ReplenishmentLocation := ManufacturingSetup."Components at Location";
-        IF InvtSetup."Location Mandatory" AND
-           (ReplenishmentLocation = '')
-        THEN
-          EXIT;
+        ReplenishmentLocationFound := FindReplishmentLocation(ReplenishmentLocation,Item);
+        IF InvtSetup."Location Mandatory" AND NOT ReplenishmentLocationFound THEN
+          ComponentForecastFrom := TRUE;
 
         ForecastEntry.SETCURRENTKEY(
           "Production Forecast Name","Item No.","Component Forecast","Forecast Date","Location Code");
@@ -609,10 +600,14 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       ForecastEntry2.COPY(ForecastEntry);
       Item.COPYFILTER("Location Filter",ForecastEntry2."Location Code");
 
-      FOR ModuleLoop := 1 TO 2 DO BEGIN
-        Module := ModuleLoop = 2;
-        ForecastEntry.SETRANGE("Component Forecast",Module);
-        ForecastEntry2.SETRANGE("Component Forecast",Module);
+      FOR ComponentForecast := ComponentForecastFrom TO TRUE DO BEGIN
+        IF ComponentForecast THEN BEGIN
+          ReplenishmentLocation := ManufacturingSetup."Components at Location";
+          IF InvtSetup."Location Mandatory" AND (ReplenishmentLocation = '') THEN
+            EXIT;
+        END;
+        ForecastEntry.SETRANGE("Component Forecast",ComponentForecast);
+        ForecastEntry2.SETRANGE("Component Forecast",ComponentForecast);
         IF ForecastEntry2.FIND('-') THEN
           REPEAT
             IF ManufacturingSetup."Use Forecast on Locations" THEN BEGIN
@@ -624,7 +619,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
               Item.COPYFILTER("Location Filter",ItemLedgEntry."Location Code");
               Item.COPYFILTER("Location Filter",Demand."Location Code");
             END;
-            ForecastEntry2.FIND('+');
+            ForecastEntry2.FINDLAST;
             ForecastEntry2.COPYFILTER("Location Code",ForecastEntry."Location Code");
             Item.COPYFILTER("Location Filter",ForecastEntry2."Location Code");
 
@@ -635,7 +630,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                 ForecastEntry.SETRANGE("Forecast Date",ForecastEntry."Forecast Date");
                 ForecastEntry.CALCSUMS("Forecast Quantity (Base)");
                 TotalForecastQty := ForecastEntry."Forecast Quantity (Base)";
-                ForecastEntry.FIND('+');
+                ForecastEntry.FINDLAST;
                 NextForecast.COPYFILTERS(ForecastEntry);
                 NextForecast.SETRANGE("Forecast Date",ForecastEntry."Forecast Date" + 1,ToDate);
                 IF NOT NextForecast.FINDFIRST THEN
@@ -659,36 +654,28 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                 ItemLedgEntry.SETRANGE(
                   "Posting Date",ForecastEntry."Forecast Date",NextForecast."Forecast Date" - 1);
                 Item.COPYFILTER("Variant Filter",ItemLedgEntry."Variant Code");
-                IF Module THEN BEGIN
+                IF ComponentForecast THEN BEGIN
                   ItemLedgEntry.SETRANGE("Entry Type",ItemLedgEntry."Entry Type"::Consumption);
-                  IF ItemLedgEntry.FIND('-') THEN
-                    REPEAT
-                      TotalForecastQty := TotalForecastQty + ItemLedgEntry.Quantity;
-                    UNTIL ItemLedgEntry.NEXT = 0;
+                  ItemLedgEntry.CALCSUMS(Quantity);
+                  TotalForecastQty += ItemLedgEntry.Quantity;
                 END ELSE BEGIN
                   ItemLedgEntry.SETRANGE("Entry Type",ItemLedgEntry."Entry Type"::Sale);
-                  IF ItemLedgEntry.FIND('-') THEN BEGIN
-                    REPEAT
-                      IF NOT ItemLedgEntry."Derived from Blanket Order" THEN
-                        TotalForecastQty := TotalForecastQty + ItemLedgEntry.Quantity;
-                    UNTIL ItemLedgEntry.NEXT = 0;
-
-                    // Undo shipment shall neutralize consumption from sales
-                    ItemLedgEntry.SETRANGE(Positive,TRUE);
-                    ItemLedgEntry.SETRANGE(Correction,TRUE);
-                    IF ItemLedgEntry.FINDSET THEN
-                      REPEAT
-                        IF NOT ItemLedgEntry."Derived from Blanket Order" THEN
-                          TotalForecastQty := TotalForecastQty + ItemLedgEntry.Quantity;
-                      UNTIL ItemLedgEntry.NEXT = 0;
-                    ItemLedgEntry.SETRANGE(Correction);
-                  END;
+                  ItemLedgEntry.SETRANGE("Derived from Blanket Order",FALSE);
+                  ItemLedgEntry.CALCSUMS(Quantity);
+                  TotalForecastQty += ItemLedgEntry.Quantity;
+                  ItemLedgEntry.SETRANGE("Derived from Blanket Order");
+                  // Undo shipment shall neutralize consumption from sales
+                  ItemLedgEntry.SETRANGE(Positive,TRUE);
+                  ItemLedgEntry.SETRANGE(Correction,TRUE);
+                  ItemLedgEntry.CALCSUMS(Quantity);
+                  TotalForecastQty += ItemLedgEntry.Quantity;
+                  ItemLedgEntry.SETRANGE(Correction);
                 END;
 
                 Demand.SETRANGE("Item No.",ForecastEntry."Item No.");
                 Demand.SETRANGE(
                   "Due Date",ForecastEntry."Forecast Date",NextForecast."Forecast Date" - 1);
-                IF Module THEN
+                IF ComponentForecast THEN
                   Demand.SETFILTER(
                     "Source Type",
                     '%1|%2|%3',
@@ -708,21 +695,14 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                       TotalForecastQty := TotalForecastQty - Demand."Remaining Quantity (Base)";
                   UNTIL (Demand.NEXT = 0) OR (TotalForecastQty < 0);
                 IF TotalForecastQty > 0 THEN BEGIN
-                  Demand.INIT;
-                  Demand."Line No." := NextLineNo;
-                  Demand."Item No." := Item."No.";
-                  IF ManufacturingSetup."Use Forecast on Locations" THEN
-                    Demand."Location Code" := ForecastEntry."Location Code"
-                  ELSE
-                    Demand."Location Code" := ReplenishmentLocation;
-                  Demand."Remaining Quantity (Base)" := TotalForecastQty;
-                  Demand."Untracked Quantity" := TotalForecastQty;
-                  Demand."Source Type" := DATABASE::"Production Forecast Entry";
-                  Demand."Source ID" := ForecastEntry."Production Forecast Name";
-                  Demand."Due Date" := ForecastEntry."Forecast Date";
-                  Demand."Planning Flexibility" := Demand."Planning Flexibility"::None;
-                  Demand."Qty. per Unit of Measure" := 1;
-                  Demand."MPS Order" := TRUE;
+                  ForecastInitDemand(Demand,ForecastEntry,Item."No.",ReplenishmentLocation,TotalForecastQty);
+                  Demand."Due Date" :=
+                    CalendarManagement.CalcDateBOC2(
+                      '<0D>',ForecastEntry."Forecast Date",
+                      CustomizedCalendarChange."Source Type"::Location,Demand."Location Code",'',
+                      CustomizedCalendarChange."Source Type"::Location,Demand."Location Code",'',FALSE);
+                  IF Demand."Due Date" < UpdatedOrderDate THEN
+                    UpdatedOrderDate := Demand."Due Date";
                   Demand.INSERT;
                 END;
                 ForecastEntry.SETRANGE("Forecast Date",ExcludeForecastBefore,ToDate);
@@ -824,6 +804,8 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       SKU@1008 : Record 5700;
       Location@1003 : Record 14;
       PlanningGetParameters@1010 : Codeunit 99000855;
+      WMSManagement@1009 : Codeunit 7302;
+      VersionManagement@1011 : Codeunit 99000756;
       State@1007 : 'DemandExist,SupplyExist,BothExist';
       DemandBool@1004 : Boolean;
       SupplyBool@1005 : Boolean;
@@ -856,7 +838,10 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
         UNTIL SKU.NEXT = 0;
       END ELSE
         IF (NOT InvtSetup."Location Mandatory") AND (ManufacturingSetup."Components at Location" = '') THEN
-          CreateTempSKUForLocation(Item."No.",'');
+          CreateTempSKUForLocation(
+            Item."No.",
+            WMSManagement.GetLastOperationLocationCode(
+              Item."Routing No.",VersionManagement.GetRtngVersion(Item."Routing No.",Supply."Due Date",TRUE)));
 
       CLEAR(Demand);
       CLEAR(Supply);
@@ -989,13 +974,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
           REPEAT
             Item.GET("Item No.");
             IF NOT IsTrkgForSpecialOrderOrDropShpt(ReservEntry) THEN BEGIN
-              IF (("Reservation Status" <> "Reservation Status"::Reservation) AND
-                  ("Expected Receipt Date" <= ToDate) AND
-                  ("Shipment Date" <= ToDate)) OR
-                 ((Binding = Binding::"Order-to-Order") AND ("Shipment Date" <= ToDate) AND
-                  (Item."Manufacturing Policy" = Item."Manufacturing Policy"::"Make-to-Stock") AND
-                  (NOT ReservedForProdComponent(ReservEntry)))
-              THEN BEGIN
+              IF ShouldDeleteReservEntry(ReservEntry,ToDate) THEN BEGIN
                 ResEntryWasDeleted := TRUE;
                 IF ("Source Type" = DATABASE::"Item Ledger Entry") AND
                    ("Reservation Status" = "Reservation Status"::Tracking)
@@ -1013,6 +992,47 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
             END;
           UNTIL NEXT = 0;
       END;
+    END;
+
+    LOCAL PROCEDURE ShouldDeleteReservEntry@135(ReservEntry@1000 : Record 337;ToDate@1001 : Date) : Boolean;
+    VAR
+      Item@1002 : Record 27;
+      IsReservedForProdComponent@1003 : Boolean;
+    BEGIN
+      IsReservedForProdComponent := ReservedForProdComponent(ReservEntry);
+      IF IsReservedForProdComponent AND IsProdOrderPlanned(ReservEntry) AND
+         (ReservEntry."Reservation Status" > ReservEntry."Reservation Status"::Tracking)
+      THEN
+        EXIT(FALSE);
+
+      Item.GET(ReservEntry."Item No.");
+      WITH ReservEntry DO
+        EXIT(
+          (("Reservation Status" <> "Reservation Status"::Reservation) AND
+           ("Expected Receipt Date" <= ToDate) AND
+           ("Shipment Date" <= ToDate)) OR
+          ((Binding = Binding::"Order-to-Order") AND ("Shipment Date" <= ToDate) AND
+           (Item."Manufacturing Policy" = Item."Manufacturing Policy"::"Make-to-Stock") AND
+           (NOT IsReservedForProdComponent)));
+    END;
+
+    LOCAL PROCEDURE IsProdOrderPlanned@133(ReservationEntry@1000 : Record 337) : Boolean;
+    VAR
+      ProdOrderComp@1001 : Record 5407;
+      RequisitionLine@1002 : Record 246;
+    BEGIN
+      IF NOT ProdOrderComp.GET(
+           ReservationEntry."Source Subtype",ReservationEntry."Source ID",
+           ReservationEntry."Source Prod. Order Line",ReservationEntry."Source Ref. No.")
+      THEN
+        EXIT;
+
+      RequisitionLine.SetRefFilter(
+        RequisitionLine."Ref. Order Type"::"Prod. Order",ProdOrderComp.Status,
+        ProdOrderComp."Prod. Order No.",ProdOrderComp."Prod. Order Line No.");
+      RequisitionLine.SETRANGE("Operation No.",'');
+
+      EXIT(NOT RequisitionLine.ISEMPTY);
     END;
 
     LOCAL PROCEDURE RemoveOrdinaryInventory@46(VAR Supply@1000 : Record 99000853);
@@ -1080,13 +1100,19 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       xSupply.COPYFILTERS(Supply);
       ItemInventoryExists := CheckItemInventoryExists(Supply);
       Demand.SETRANGE("Attribute Priority",1,7);
-
+      Demand.SETFILTER("Source Type",'<>%1',DATABASE::"Requisition Line");
       IF Demand.FINDSET(TRUE) THEN
         REPEAT
           Supply.SETRANGE(Binding,Demand.Binding);
           Supply.SETRANGE("Primary Order Status",Demand."Primary Order Status");
           Supply.SETRANGE("Primary Order No.",Demand."Primary Order No.");
           Supply.SETRANGE("Primary Order Line",Demand."Primary Order Line");
+          IF (Demand."Ref. Order Type" = Demand."Ref. Order Type"::Assembly) AND
+             (Demand.Binding = Demand.Binding::"Order-to-Order") AND
+             (Demand."Primary Order No." = '')
+          THEN
+            Supply.SETRANGE("Source Prod. Order Line",Demand."Source Prod. Order Line");
+
           IF Demand."Lot No." <> '' THEN
             Supply.SETRANGE("Lot No.",Demand."Lot No.")
           ELSE
@@ -1109,8 +1135,10 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                   CanBeRescheduled := CheckScheduleOut(Supply,Demand."Due Date",NewSupplyDate,FALSE);
               IF CanBeRescheduled AND
                  ((NewSupplyDate <> Supply."Due Date") OR (Supply."Planning Level Code" > 0))
-              THEN
+              THEN BEGIN
                 Reschedule(Supply,Demand."Due Date",Demand."Due Time");
+                Supply."Fixed Date" := Supply."Due Date";
+              END;
             END;
             IF NOT SupplyExists OR (Supply."Due Date" > Demand."Due Date") THEN BEGIN
               InitSupply(Supply,Demand."Untracked Quantity",Demand."Due Date");
@@ -1124,7 +1152,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
               IF (Demand."Untracked Quantity" > Supply."Untracked Quantity") AND
                  (Supply."Due Date" <= Demand."Due Date")
               THEN
-                IncreaseQtyToMeetDemand(Supply,Demand,FALSE,RespectPlanningParm);
+                IncreaseQtyToMeetDemand(Supply,Demand,FALSE,RespectPlanningParm,FALSE);
 
             IF Supply."Untracked Quantity" < Demand."Untracked Quantity" THEN
               SupplyExists := CloseSupply(Demand,Supply)
@@ -1165,7 +1193,6 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
               Supply.MODIFY;
             END;
           END;
-          Track(Supply,Demand,TRUE,FALSE,Supply.Binding::" ");
           IF Supply."Untracked Quantity" = 0 THEN
             Supply.DELETE;
         UNTIL Supply.NEXT = 0;
@@ -1364,12 +1391,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
 
               IF LastProjectedInventory + SupplyWithinLeadtime <= TempSKU."Reorder Point" THEN BEGIN
                 InitSupply(Supply,0,0D);
-                IF LastAvailableInventory < TempSKU."Safety Stock Quantity" THEN
-                  CreateSupplyForward(Supply,PlanningStartDate,
-                    TempSKU."Safety Stock Quantity" - LastAvailableInventory + LastProjectedInventory,
-                    NewSupplyHasTakenOver,Demand."Due Date")
-                ELSE
-                  CreateSupplyForward(Supply,PlanningStartDate,LastProjectedInventory,NewSupplyHasTakenOver,Demand."Due Date");
+                CreateSupplyForward(Supply,PlanningStartDate,LastProjectedInventory,NewSupplyHasTakenOver,Demand."Due Date");
 
                 NeedOfPublishSurplus := Supply."Due Date" > ToDate;
               END;
@@ -1475,7 +1497,10 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                       IF ShallSupplyBeClosed(Supply,Demand."Due Date",IsReorderPointPlanning) THEN
                         NextState := NextState::CloseSupply
                       ELSE
-                        IF IncreaseQtyToMeetDemand(Supply,Demand,TRUE,RespectPlanningParm) THEN BEGIN
+                        IF IncreaseQtyToMeetDemand(
+                             Supply,Demand,TRUE,RespectPlanningParm,
+                             NOT SKURequiresLotAccumulation(TempSKU))
+                        THEN BEGIN
                           NextState := NextState::CloseDemand;
                           // initial Safety Stock can be changed to normal, if we can increase qty for normal demand
                           IF (Supply."Order Relation" = Supply."Order Relation"::"Safety Stock") AND
@@ -1645,10 +1670,9 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                       END ELSE
                         Transparency.CleanLog(Supply."Line No.");
                     END;
-
-                    SupplyExists := Supply.NEXT <> 0;
                     IF TempSKU."Maximum Order Quantity" > 0 THEN
                       CheckSupplyRemQtyAndUntrackQty(Supply);
+                    SupplyExists := Supply.NEXT <> 0;
                     NextState := NextState::StartOver;
                   END;
                 NextState::CloseLoop:
@@ -1690,12 +1714,18 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
         Supply."Fixed Date" := Supply."Due Date";
     END;
 
-    LOCAL PROCEDURE IncreaseQtyToMeetDemand@8(VAR Supply@1000 : Record 99000853;DemandInvtProfile@1001 : Record 99000853;LimitedHorizon@1004 : Boolean;RespectPlanningParm@1003 : Boolean) : Boolean;
+    LOCAL PROCEDURE IncreaseQtyToMeetDemand@8(VAR Supply@1000 : Record 99000853;DemandInvtProfile@1001 : Record 99000853;LimitedHorizon@1004 : Boolean;RespectPlanningParm@1003 : Boolean;CheckSourceType@1005 : Boolean) : Boolean;
     VAR
       TotalDemandedQty@1002 : Decimal;
     BEGIN
       IF Supply."Planning Flexibility" <> Supply."Planning Flexibility"::Unlimited THEN
         EXIT(FALSE);
+
+      IF CheckSourceType THEN
+        IF (DemandInvtProfile."Source Type" = DATABASE::"Planning Component") AND
+           (Supply."Source Type" = DATABASE::"Prod. Order Line")
+        THEN
+          EXIT(FALSE);
 
       IF (Supply."Max. Quantity" > 0) OR (Supply."Action Message" = Supply."Action Message"::Cancel) THEN
         IF Supply."Max. Quantity" <= Supply."Remaining Quantity (Base)" THEN
@@ -1752,32 +1782,15 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
     LOCAL PROCEDURE DecreaseQty@63(VAR Supply@1000 : Record 99000853;ReduceQty@1001 : Decimal) : Boolean;
     VAR
       TempQty@1002 : Decimal;
-      TrackedQty@1003 : Decimal;
     BEGIN
-      // Planning Transparency
-      IF (ReduceQty <= DampenerQty) AND (Supply."Planning Level Code" = 0) THEN BEGIN
-        Transparency.LogSurplus(
-          Supply."Line No.",0,
-          DATABASE::"Manufacturing Setup",Supply."Source ID",
-          DampenerQty,SurplusType::DampenerQty);
+      IF NOT CanDecreaseSupply(Supply,ReduceQty) THEN BEGIN
+        IF (ReduceQty <= DampenerQty) AND (Supply."Planning Level Code" = 0) THEN
+          Transparency.LogSurplus(
+            Supply."Line No.",0,
+            DATABASE::"Manufacturing Setup",Supply."Source ID",
+            DampenerQty,SurplusType::DampenerQty);
         EXIT(FALSE);
       END;
-
-      IF (Supply."Planning Flexibility" = Supply."Planning Flexibility"::None) OR
-         ((ReduceQty <= DampenerQty) AND
-          (Supply."Planning Level Code" = 0))
-      THEN
-        EXIT(FALSE);
-
-      IF ReduceQty > Supply."Untracked Quantity" THEN
-        ReduceQty := Supply."Untracked Quantity";
-      IF Supply."Min. Quantity" > Supply."Remaining Quantity (Base)" - ReduceQty THEN
-        ReduceQty := Supply."Remaining Quantity (Base)" - Supply."Min. Quantity";
-
-      // Ensure leaving enough untracked qty. to cover the safety stock
-      TrackedQty := Supply."Remaining Quantity (Base)" - Supply."Untracked Quantity";
-      IF TrackedQty + Supply."Safety Stock Quantity" > Supply."Remaining Quantity (Base)" - ReduceQty THEN
-        ReduceQty := Supply."Remaining Quantity (Base)" - (TrackedQty + Supply."Safety Stock Quantity");
 
       IF ReduceQty > 0 THEN BEGIN
         TempQty := Supply."Remaining Quantity (Base)";
@@ -1817,6 +1830,35 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       END;
 
       EXIT(Supply."Untracked Quantity" = 0);
+    END;
+
+    LOCAL PROCEDURE CanDecreaseSupply@154(InventoryProfileSupply@1000 : Record 99000853;VAR ReduceQty@1001 : Decimal) : Boolean;
+    VAR
+      TrackedQty@1002 : Decimal;
+    BEGIN
+      WITH InventoryProfileSupply DO BEGIN
+        IF ReduceQty > "Untracked Quantity" THEN
+          ReduceQty := "Untracked Quantity";
+        IF "Min. Quantity" > "Remaining Quantity (Base)" - ReduceQty THEN
+          ReduceQty := "Remaining Quantity (Base)" - "Min. Quantity";
+
+        // Ensure leaving enough untracked qty. to cover the safety stock
+        TrackedQty := "Remaining Quantity (Base)" - "Untracked Quantity";
+        IF TrackedQty + "Safety Stock Quantity" > "Remaining Quantity (Base)" - ReduceQty THEN
+          ReduceQty := "Remaining Quantity (Base)" - (TrackedQty + "Safety Stock Quantity");
+
+        // Planning Transparency
+        IF (ReduceQty <= DampenerQty) AND ("Planning Level Code" = 0) THEN
+          EXIT(FALSE);
+
+        IF ("Planning Flexibility" = "Planning Flexibility"::None) OR
+           ((ReduceQty <= DampenerQty) AND
+            ("Planning Level Code" = 0))
+        THEN
+          EXIT(FALSE);
+
+        EXIT(TRUE);
+      END;
     END;
 
     LOCAL PROCEDURE CreateSupply@53(VAR Supply@1000 : Record 99000853;VAR Demand@1002 : Record 99000853;ProjectedInventory@1006 : Decimal;IsExceptionOrder@1001 : Boolean;RespectPlanningParm@1003 : Boolean);
@@ -2175,6 +2217,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       TransLine@1007 : Record 5741;
       CrntSupply@1005 : TEMPORARY Record 99000853;
       PlanLineNo@1006 : Integer;
+      RecalculationRequired@1009 : Boolean;
     BEGIN
       IF (NewPhase = NewPhase::"Line Created") OR
          (Supply."Planning Line Phase" < Supply."Planning Line Phase"::"Line Created")
@@ -2194,6 +2237,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
             "No." := Supply."Item No.";
             "Variant Code" := Supply."Variant Code";
             "Location Code" := Supply."Location Code";
+            "Bin Code" := Supply."Bin Code";
             "Planning Line Origin" := "Planning Line Origin"::Planning;
             IF Supply."Action Message" = Supply."Action Message"::New
             THEN BEGIN
@@ -2223,39 +2267,13 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
             END ELSE
               CASE Supply."Source Type" OF
                 DATABASE::"Purchase Line":
-                  BEGIN
-                    "Ref. Order Type" := "Ref. Order Type"::Purchase;
-                    "Ref. Order No." := Supply."Source ID";
-                    "Ref. Line No." := Supply."Source Ref. No.";
-                    PurchaseLine.GET(PurchaseLine."Document Type"::Order,"Ref. Order No.","Ref. Line No.");
-                    TransferFromPurchaseLine(PurchaseLine);
-                  END;
+                  SetPurchase(PurchaseLine,Supply);
                 DATABASE::"Prod. Order Line":
-                  BEGIN
-                    "Ref. Order Type" := "Ref. Order Type"::"Prod. Order";
-                    "Ref. Order Status" := Supply."Source Order Status";
-                    "Ref. Order No." := Supply."Source ID";
-                    "Ref. Line No." := Supply."Source Prod. Order Line";
-                    ProdOrderLine.GET("Ref. Order Status","Ref. Order No.","Ref. Line No.");
-                    TransferFromProdOrderLine(ProdOrderLine);
-                  END;
+                  SetProdOrder(ProdOrderLine,Supply);
                 DATABASE::"Assembly Header":
-                  BEGIN
-                    "Ref. Order Type" := "Ref. Order Type"::Assembly;
-                    "Ref. Order No." := Supply."Source ID";
-                    "Ref. Line No." := 0;
-                    AsmHeader.GET(AsmHeader."Document Type"::Order,"Ref. Order No.");
-                    TransferFromAsmHeader(AsmHeader);
-                  END;
+                  SetAssembly(AsmHeader,Supply);
                 DATABASE::"Transfer Line":
-                  BEGIN
-                    "Ref. Order Type" := "Ref. Order Type"::Transfer;
-                    "Ref. Order Status" := 0; // A Transfer Order has no status
-                    "Ref. Order No." := Supply."Source ID";
-                    "Ref. Line No." := Supply."Source Ref. No.";
-                    TransLine.GET("Ref. Order No.","Ref. Line No.");
-                    TransferFromTransLine(TransLine);
-                  END;
+                  SetTransfer(TransLine,Supply);
               END;
             AdjustPlanLine(Supply);
             "Accept Action Message" := TRUE;
@@ -2288,11 +2306,10 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
             ReqLine."Starting Date" := Supply."Starting Date"
           ELSE
             ReqLine."Starting Date" := Supply."Due Date";
-          GetRouting(ReqLine,Direction);
+          GetRouting(ReqLine);
+          RecalculationRequired := TRUE;
           IF NewPhase = NewPhase::"Routing Created" THEN
             Supply."Planning Line Phase" := Supply."Planning Line Phase"::"Routing Created";
-          Supply."Starting Date" := ReqLine."Starting Date";
-          Supply."Due Date" := ReqLine."Due Date";
         END;
         ReqLine.MODIFY;
       END;
@@ -2306,18 +2323,18 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
           IF ReqLine."Action Message" = ReqLine."Action Message"::New THEN BEGIN
             ReqLine.BlockDynamicTracking(TRUE);
             ReqLine.DELETE(TRUE);
+
+            RecalculationRequired := FALSE;
           END ELSE
             DisableRelations
         ELSE BEGIN
-          GetComponents(
-            ReqLine,
-            Direction,
-            Supply."Planning Line Phase" < Supply."Planning Line Phase"::"Routing Created");
-          ReqLine.UpdateDatetime;
-          ReqLine.MODIFY;
+          GetComponents(ReqLine);
+          RecalculationRequired := TRUE;
         END;
 
-        IF ReqLine."Ref. Order Type" = ReqLine."Ref. Order Type"::Transfer THEN BEGIN
+        IF (ReqLine."Ref. Order Type" = ReqLine."Ref. Order Type"::Transfer) AND
+           NOT ((ReqLine.Quantity = 0) AND (ReqLine."Action Message" = ReqLine."Action Message"::New))
+        THEN BEGIN
           AdjustTransferDates(ReqLine);
           IF ReqLine."Action Message" = ReqLine."Action Message"::New THEN BEGIN
             CrntSupply.COPY(Supply);
@@ -2335,6 +2352,15 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
           END ELSE
             SynchronizeTransferProfiles(Supply,ReqLine);
         END;
+      END;
+
+      IF RecalculationRequired THEN BEGIN
+        Recalculate(ReqLine,Direction);
+        ReqLine.UpdateDatetime;
+        ReqLine.MODIFY;
+
+        Supply."Starting Date" := ReqLine."Starting Date";
+        Supply."Due Date" := ReqLine."Due Date";
       END;
 
       IF NewPhase = NewPhase::Obsolete THEN BEGIN
@@ -2883,21 +2909,18 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       NextBucketStartDate := AtDate - (NumberOfDaysToNextReminder MOD BucketSizeInDays);
     END;
 
-    PROCEDURE SetIgnoreOverflow@49(VAR SupplyInvtProfile@1000 : Record 99000853);
-    VAR
-      xSupplyInvtProfile@1001 : Record 99000853;
+    LOCAL PROCEDURE SetIgnoreOverflow@49(VAR SupplyInvtProfile@1000 : Record 99000853);
     BEGIN
       // Apply a minimum quantity to the existing orders to protect the
       // remaining valid surplus from being reduced in the common balancing act
 
-      xSupplyInvtProfile.COPY(SupplyInvtProfile);
-      IF SupplyInvtProfile.FINDSET(TRUE) THEN
-        REPEAT
-          SupplyInvtProfile."Min. Quantity" := SupplyInvtProfile."Remaining Quantity (Base)";
-          SupplyInvtProfile.MODIFY;
-        UNTIL SupplyInvtProfile.NEXT = 0;
-      SupplyInvtProfile.COPY(xSupplyInvtProfile);
-      SupplyInvtProfile.FIND;
+      WITH SupplyInvtProfile DO BEGIN
+        IF FINDSET(TRUE) THEN
+          REPEAT
+            "Min. Quantity" := "Remaining Quantity (Base)";
+            MODIFY;
+          UNTIL NEXT = 0;
+      END;
     END;
 
     LOCAL PROCEDURE ChkInitialOverflow@50(VAR DemandInvtProfile@1002 : Record 99000853;VAR SupplyInvtProfile@1001 : Record 99000853;OverflowLevel@1004 : Decimal;InventoryLevel@1007 : Decimal;FromDate@1013 : Date;ToDate@1012 : Date);
@@ -2906,6 +2929,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       xSupplyInvtProfile@1006 : Record 99000853;
       OverflowQty@1008 : Decimal;
       OriginalSupplyQty@1009 : Decimal;
+      DecreasedSupplyQty@1015 : Decimal;
       PrevBucketStartDate@1010 : Date;
       PrevBucketEndDate@1011 : Date;
       CurrBucketStartDate@1003 : Date;
@@ -2966,6 +2990,15 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                   OriginalSupplyQty := SupplyInvtProfile."Quantity (Base)";
                   SupplyInvtProfile."Min. Quantity" := 0;
                   DecreaseQty(SupplyInvtProfile,OverflowQty);
+
+                  // If the supply has not been decreased as planned, try to cancel it.
+                  DecreasedSupplyQty := SupplyInvtProfile."Quantity (Base)";
+                  IF (DecreasedSupplyQty > 0) AND (OriginalSupplyQty - DecreasedSupplyQty < OverflowQty) AND
+                     (SupplyInvtProfile."Order Priority" < 1000)
+                  THEN
+                    IF CanDecreaseSupply(SupplyInvtProfile,OverflowQty) THEN
+                      DecreaseQty(SupplyInvtProfile,DecreasedSupplyQty);
+
                   IF OriginalSupplyQty <> SupplyInvtProfile."Quantity (Base)" THEN BEGIN
                     DummyInventoryProfileTrackBuffer."Warning Level" := DummyInventoryProfileTrackBuffer."Warning Level"::Attention;
                     Transparency.LogWarning(SupplyInvtProfile."Line No.",ReqLine,DummyInventoryProfileTrackBuffer."Warning Level",
@@ -3287,7 +3320,6 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
           Supply."Action Message" := Supply."Action Message"::"Resched.& Chg. Qty.";
       END;
       Supply."Due Date" := TargetDate;
-      Supply."Fixed Date" := Supply."Due Date";
       IF (Supply."Due Time" = 0T) OR
          (Supply."Due Time" > TargetTime)
       THEN
@@ -3353,6 +3385,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
           ToInvProfile.Binding := ToInvProfile.Binding::"Order-to-Order";
           ToInvProfile."Planning Level Code" := FromInvProfile."Planning Level Code";
           ToInvProfile."Due Time" := FromInvProfile."Due Time";
+          ToInvProfile."Bin Code" := FromInvProfile."Bin Code";
         END;
 
       IF FromInvProfile.Binding = FromInvProfile.Binding::"Order-to-Order" THEN BEGIN
@@ -3642,7 +3675,8 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
         IF Continue THEN
           IF Supply.NEXT <> 0 THEN BEGIN
             Continue := Supply."Due Date" <= NewDate;
-            TryRescheduleSupply := Supply."Planning Flexibility" = Supply."Planning Flexibility"::Unlimited;
+            TryRescheduleSupply :=
+              (Supply."Planning Flexibility" = Supply."Planning Flexibility"::Unlimited) AND (Supply."Fixed Date" = 0D);
           END ELSE
             Continue := FALSE;
       END;
@@ -3783,47 +3817,48 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       END;
     END;
 
-    PROCEDURE GetRouting@21(VAR ReqLine@1000 : Record 246;Direction@1001 : 'Forward,Backward');
+    PROCEDURE GetRouting@21(VAR ReqLine@1000 : Record 246);
     VAR
       PlanRoutingLine@1002 : Record 99000830;
       ProdOrderRoutingLine@1003 : Record 5409;
       ProdOrderLine@1006 : Record 5406;
       VersionMgt@1004 : Codeunit 99000756;
     BEGIN
-      WITH ReqLine DO
-        IF Quantity > 0 THEN
-          IF ("Action Message" = "Action Message"::New) OR
-             ("Ref. Order Type" = "Ref. Order Type"::Purchase)
-          THEN BEGIN
-            IF "Routing No." <> '' THEN
-              VALIDATE("Routing Version Code",
-                VersionMgt.GetRtngVersion("Routing No.","Ending Date",TRUE));
-            CLEAR(PlngLnMgt);
-            IF PlanningResilicency THEN
-              PlngLnMgt.SetResiliencyOn("Worksheet Template Name","Journal Batch Name","No.");
-            PlngLnMgt.Calculate(ReqLine,Direction,TRUE,FALSE,-1);
-          END ELSE
-            IF "Ref. Order Type" = "Ref. Order Type"::"Prod. Order" THEN BEGIN
-              ProdOrderLine.GET("Ref. Order Status","Ref. Order No.","Ref. Line No.");
-              ProdOrderRoutingLine.SETRANGE(Status,ProdOrderLine.Status);
-              ProdOrderRoutingLine.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-              ProdOrderRoutingLine.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
-              ProdOrderRoutingLine.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
-              DisableRelations;
-              IF ProdOrderRoutingLine.FIND('-') THEN
-                REPEAT
-                  PlanRoutingLine.INIT;
-                  PlanRoutingLine."Worksheet Template Name" := "Worksheet Template Name";
-                  PlanRoutingLine."Worksheet Batch Name" := "Journal Batch Name";
-                  PlanRoutingLine."Worksheet Line No." := "Line No.";
-                  PlanRoutingLine.TransferFromProdOrderRouting(ProdOrderRoutingLine);
-                  PlanRoutingLine.INSERT;
-                UNTIL ProdOrderRoutingLine.NEXT = 0;
-              PlngLnMgt.Recalculate(ReqLine,Direction);
-            END;
+      WITH ReqLine DO BEGIN
+        IF Quantity <= 0 THEN
+          EXIT;
+
+        IF ("Action Message" = "Action Message"::New) OR
+           ("Ref. Order Type" = "Ref. Order Type"::Purchase)
+        THEN BEGIN
+          IF "Routing No." <> '' THEN
+            VALIDATE("Routing Version Code",
+              VersionMgt.GetRtngVersion("Routing No.","Due Date",TRUE));
+          CLEAR(PlngLnMgt);
+          IF PlanningResilicency THEN
+            PlngLnMgt.SetResiliencyOn("Worksheet Template Name","Journal Batch Name","No.");
+        END ELSE
+          IF "Ref. Order Type" = "Ref. Order Type"::"Prod. Order" THEN BEGIN
+            ProdOrderLine.GET("Ref. Order Status","Ref. Order No.","Ref. Line No.");
+            ProdOrderRoutingLine.SETRANGE(Status,ProdOrderLine.Status);
+            ProdOrderRoutingLine.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
+            ProdOrderRoutingLine.SETRANGE("Routing Reference No.",ProdOrderLine."Routing Reference No.");
+            ProdOrderRoutingLine.SETRANGE("Routing No.",ProdOrderLine."Routing No.");
+            DisableRelations;
+            IF ProdOrderRoutingLine.FIND('-') THEN
+              REPEAT
+                PlanRoutingLine.INIT;
+                PlanRoutingLine."Worksheet Template Name" := "Worksheet Template Name";
+                PlanRoutingLine."Worksheet Batch Name" := "Journal Batch Name";
+                PlanRoutingLine."Worksheet Line No." := "Line No.";
+                PlanRoutingLine.TransferFromProdOrderRouting(ProdOrderRoutingLine);
+                PlanRoutingLine.INSERT;
+              UNTIL ProdOrderRoutingLine.NEXT = 0;
+          END;
+      END;
     END;
 
-    PROCEDURE GetComponents@32(VAR ReqLine@1000 : Record 246;Direction@1001 : 'Forward,Backward';RefreshRouting@1002 : Boolean);
+    PROCEDURE GetComponents@32(VAR ReqLine@1000 : Record 246);
     VAR
       PlanComponent@1003 : Record 99000829;
       ProdOrderComp@1004 : Record 5407;
@@ -3840,12 +3875,6 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
           IF "Production BOM No." <> '' THEN
             VALIDATE("Production BOM Version Code",
               VersionMgt.GetBOMVersion("Production BOM No.","Due Date",TRUE));
-
-          IF RefreshRouting THEN
-            PlngLnMgt.Calculate(ReqLine,Direction,TRUE,TRUE,-1)
-          ELSE
-            PlngLnMgt.Calculate(ReqLine,Direction,FALSE,TRUE,-1);
-          PlngLnMgt.GetPlanningCompList(TempPlanningCompList);
         END ELSE
           CASE "Ref. Order Type" OF
             "Ref. Order Type"::"Prod. Order":
@@ -3866,7 +3895,6 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                     IF NOT TempPlanningCompList.INSERT THEN
                       TempPlanningCompList.MODIFY;
                   UNTIL ProdOrderComp.NEXT = 0;
-                PlngLnMgt.Recalculate(ReqLine,Direction);
               END;
             "Ref. Order Type"::Assembly:
               BEGIN
@@ -3886,9 +3914,21 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
                     IF NOT TempPlanningCompList.INSERT THEN
                       TempPlanningCompList.MODIFY;
                   UNTIL AsmLine.NEXT = 0;
-                PlngLnMgt.Recalculate(ReqLine,Direction);
               END;
           END;
+      END;
+    END;
+
+    PROCEDURE Recalculate@117(VAR ReqLine@1000 : Record 246;Direction@1001 : 'Forward,Backward');
+    VAR
+      RefreshRouting@1003 : Boolean;
+    BEGIN
+      WITH ReqLine DO BEGIN
+        RefreshRouting := ("Action Message" = "Action Message"::New) OR ("Ref. Order Type" = "Ref. Order Type"::Purchase);
+
+        PlngLnMgt.Calculate(ReqLine,Direction,RefreshRouting,"Action Message" = "Action Message"::New,-1);
+        IF "Action Message" = "Action Message"::New THEN
+          PlngLnMgt.GetPlanningCompList(TempPlanningCompList);
       END;
     END;
 
@@ -4111,7 +4151,7 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
     LOCAL PROCEDURE CheckPlanSKU@103(SKU@1003 : Record 5700;DemandExists@1000 : Boolean;SupplyExists@1001 : Boolean;IsReorderPointPlanning@1002 : Boolean) : Boolean;
     BEGIN
       IF (CurrWorksheetType = CurrWorksheetType::Requisition) AND
-         (SKU."Replenishment System" = SKU."Replenishment System"::"Prod. Order")
+         (SKU."Replenishment System" IN [SKU."Replenishment System"::"Prod. Order",SKU."Replenishment System"::Assembly])
       THEN
         EXIT(FALSE);
 
@@ -4270,6 +4310,84 @@ OBJECT Codeunit 99000854 Inventory Profile Offsetting
       Item.COPYFILTER("Variant Filter",SKU."Variant Code");
       IF SKU.ISEMPTY THEN
         CreateTempSKUForLocation(Item."No.",ManufacturingSetup."Components at Location");
+    END;
+
+    LOCAL PROCEDURE ForecastInitDemand@125(VAR InventoryProfile@1000 : Record 99000853;ProductionForecastEntry@1003 : Record 99000852;ItemNo@1004 : Code[20];LocationCode@1001 : Code[10];TotalForecastQty@1002 : Decimal);
+    BEGIN
+      WITH InventoryProfile DO BEGIN
+        INIT;
+        "Line No." := NextLineNo;
+        "Source Type" := DATABASE::"Production Forecast Entry";
+        "Planning Flexibility" := "Planning Flexibility"::None;
+        "Qty. per Unit of Measure" := 1;
+        "MPS Order" := TRUE;
+        "Source ID" := ProductionForecastEntry."Production Forecast Name";
+        "Item No." := ItemNo;
+        IF ManufacturingSetup."Use Forecast on Locations" THEN
+          "Location Code" := ProductionForecastEntry."Location Code"
+        ELSE
+          "Location Code" := LocationCode;
+        "Remaining Quantity (Base)" := TotalForecastQty;
+        "Untracked Quantity" := TotalForecastQty;
+      END;
+    END;
+
+    LOCAL PROCEDURE SetPurchase@118(VAR PurchaseLine@1003 : Record 39;VAR InventoryProfile@1000 : Record 99000853);
+    BEGIN
+      WITH ReqLine DO BEGIN
+        "Ref. Order Type" := "Ref. Order Type"::Purchase;
+        "Ref. Order No." := InventoryProfile."Source ID";
+        "Ref. Line No." := InventoryProfile."Source Ref. No.";
+        PurchaseLine.GET(PurchaseLine."Document Type"::Order,"Ref. Order No.","Ref. Line No.");
+        TransferFromPurchaseLine(PurchaseLine);
+      END;
+    END;
+
+    LOCAL PROCEDURE SetProdOrder@119(VAR ProdOrderLine@1002 : Record 5406;VAR InventoryProfile@1000 : Record 99000853);
+    BEGIN
+      WITH ReqLine DO BEGIN
+        "Ref. Order Type" := "Ref. Order Type"::"Prod. Order";
+        "Ref. Order Status" := InventoryProfile."Source Order Status";
+        "Ref. Order No." := InventoryProfile."Source ID";
+        "Ref. Line No." := InventoryProfile."Source Prod. Order Line";
+        ProdOrderLine.GET("Ref. Order Status","Ref. Order No.","Ref. Line No.");
+        TransferFromProdOrderLine(ProdOrderLine);
+      END;
+    END;
+
+    LOCAL PROCEDURE SetAssembly@122(VAR AsmHeader@1001 : Record 900;VAR InventoryProfile@1000 : Record 99000853);
+    BEGIN
+      WITH ReqLine DO BEGIN
+        "Ref. Order Type" := "Ref. Order Type"::Assembly;
+        "Ref. Order No." := InventoryProfile."Source ID";
+        "Ref. Line No." := 0;
+        AsmHeader.GET(AsmHeader."Document Type"::Order,"Ref. Order No.");
+        TransferFromAsmHeader(AsmHeader);
+      END;
+    END;
+
+    LOCAL PROCEDURE SetTransfer@120(VAR TransLine@1000 : Record 5741;VAR InventoryProfile@1001 : Record 99000853);
+    BEGIN
+      WITH ReqLine DO BEGIN
+        "Ref. Order Type" := "Ref. Order Type"::Transfer;
+        "Ref. Order Status" := 0; // A Transfer Order has no status
+        "Ref. Order No." := InventoryProfile."Source ID";
+        "Ref. Line No." := InventoryProfile."Source Ref. No.";
+        TransLine.GET("Ref. Order No.","Ref. Line No.");
+        TransferFromTransLine(TransLine);
+      END;
+    END;
+
+    LOCAL PROCEDURE SKURequiresLotAccumulation@126(VAR StockkeepingUnit@1000 : Record 5700) : Boolean;
+    VAR
+      BlankPeriod@1001 : DateFormula;
+    BEGIN
+      WITH StockkeepingUnit DO
+        IF "Reordering Policy" = "Reordering Policy"::"Lot-for-Lot" THEN BEGIN
+          EVALUATE(BlankPeriod,'');
+          EXIT("Lot Accumulation Period" <> BlankPeriod);
+        END;
+      EXIT(FALSE);
     END;
 
     BEGIN

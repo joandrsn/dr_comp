@@ -2,9 +2,9 @@ OBJECT Codeunit 5836 Cost Calculation Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -442,27 +442,13 @@ OBJECT Codeunit 5836 Cost Calculation Management
     PROCEDURE CalcCompItemQtyBase@12(ProdBOMComponent@1000 : Record 99000772;CalculationDate@1008 : Date;MfgItemQtyBase@1001 : Decimal;RtngNo@1002 : Code[20];AdjdForRtngScrap@1003 : Boolean) : Decimal;
     VAR
       RtngLine@1004 : Record 99000764;
-      VersionMgt@1006 : Codeunit 99000756;
-      OK@1005 : Boolean;
     BEGIN
       WITH ProdBOMComponent DO BEGIN
-        IF (RtngNo <> '') AND AdjdForRtngScrap THEN BEGIN
-          RtngLine.SETRANGE("Routing No.",RtngNo);
-          RtngLine.SETRANGE("Version Code",VersionMgt.GetRtngVersion(RtngNo,CalculationDate,TRUE));
-          IF NOT RtngLine.ISEMPTY THEN BEGIN
-            IF "Routing Link Code" <> '' THEN
-              RtngLine.SETRANGE("Routing Link Code","Routing Link Code");
-            OK := RtngLine.FINDFIRST;
-            IF NOT OK THEN BEGIN
-              RtngLine.SETRANGE("Routing Link Code");
-              OK := RtngLine.FINDFIRST;
-            END;
-          END;
-          IF OK THEN
-            MfgItemQtyBase :=
-              CalcQtyAdjdForRoutingScrap(
-                MfgItemQtyBase,RtngLine."Scrap Factor % (Accumulated)",RtngLine."Fixed Scrap Qty. (Accum.)");
-        END;
+        IF AdjdForRtngScrap AND FindRountingLine(RtngLine,ProdBOMComponent,CalculationDate,RtngNo) THEN
+          MfgItemQtyBase :=
+            CalcQtyAdjdForRoutingScrap(
+              MfgItemQtyBase,RtngLine."Scrap Factor % (Accumulated)",RtngLine."Fixed Scrap Qty. (Accum.)");
+
         EXIT(
           CalcQtyAdjdForBOMScrap(MfgItemQtyBase * Quantity * GetQtyPerUnitOfMeasure,"Scrap %"));
       END;
@@ -483,14 +469,13 @@ OBJECT Codeunit 5836 Cost Calculation Management
               RtngLotSize := 1;
             RunTimePer := RunTime / RtngLotSize;
             CostTime :=
-              RunTimePer *
               CalcQtyAdjdForRoutingScrap(
                 ROUND(
-                  MfgItemQtyBase * CalendarMgt.QtyperTimeUnitofMeasure(WorkCenterNo,RunTimeUOMCode),
+                  RunTimePer * MfgItemQtyBase * CalendarMgt.QtyperTimeUnitofMeasure(WorkCenterNo,RunTimeUOMCode),
                   0.00001),
                 ScrapFactorPctAccum,
                 ROUND(
-                  FixedScrapQtyAccum * CalendarMgt.QtyperTimeUnitofMeasure(WorkCenterNo,RunTimeUOMCode),
+                  RunTimePer * FixedScrapQtyAccum * CalendarMgt.QtyperTimeUnitofMeasure(WorkCenterNo,RunTimeUOMCode),
                   0.00001));
             IF CostInclSetup THEN
               CostTime :=
@@ -533,6 +518,29 @@ OBJECT Codeunit 5836 Cost Calculation Management
     PROCEDURE CalcUnitCost@14(DirCost@1000 : Decimal;IndirCostPct@1001 : Decimal;OvhdRate@1002 : Decimal;RndgPrec@1003 : Decimal) : Decimal;
     BEGIN
       EXIT(ROUND(DirCost * (1 + IndirCostPct / 100) + OvhdRate,RndgPrec));
+    END;
+
+    PROCEDURE FindRountingLine@35(VAR RoutingLine@1001 : Record 99000764;ProdBOMLine@1000 : Record 99000772;CalculationDate@1002 : Date;RoutingNo@1003 : Code[20]) RecFound : Boolean;
+    VAR
+      VersionMgt@1004 : Codeunit 99000756;
+    BEGIN
+      IF RoutingNo = '' THEN
+        EXIT(FALSE);
+
+      RecFound := FALSE;
+      RoutingLine.SETRANGE("Routing No.",RoutingNo);
+      RoutingLine.SETRANGE("Version Code",VersionMgt.GetRtngVersion(RoutingNo,CalculationDate,TRUE));
+      IF NOT RoutingLine.ISEMPTY THEN BEGIN
+        IF ProdBOMLine."Routing Link Code" <> '' THEN
+          RoutingLine.SETRANGE("Routing Link Code",ProdBOMLine."Routing Link Code");
+        RecFound := RoutingLine.FINDFIRST;
+        IF NOT RecFound THEN BEGIN
+          RoutingLine.SETRANGE("Routing Link Code");
+          RecFound := RoutingLine.FINDFIRST;
+        END;
+      END;
+
+      EXIT(RecFound);
     END;
 
     PROCEDURE GetRndgSetup@2(VAR GLSetup@1000 : Record 98;VAR Currency@1001 : Record 4;VAR RndgSetupRead@1002 : Boolean);
@@ -924,9 +932,10 @@ OBJECT Codeunit 5836 Cost Calculation Management
       END;
     END;
 
-    PROCEDURE CalcCustActualCostLCY@127(VAR Customer@1000 : Record 18) : Decimal;
+    PROCEDURE CalcCustActualCostLCY@127(VAR Customer@1000 : Record 18) CostAmt : Decimal;
     VAR
       ValueEntry@1001 : Record 5802;
+      ResLedgerEntry@1002 : Record 203;
     BEGIN
       WITH ValueEntry DO BEGIN
         SETRANGE("Source Type","Source Type"::Customer);
@@ -936,7 +945,17 @@ OBJECT Codeunit 5836 Cost Calculation Management
         SETFILTER("Global Dimension 2 Code",Customer.GETFILTER("Global Dimension 2 Filter"));
         SETFILTER("Entry Type",'<> %1',"Entry Type"::Revaluation);
         CALCSUMS("Cost Amount (Actual)");
-        EXIT("Cost Amount (Actual)");
+        CostAmt := "Cost Amount (Actual)";
+      END;
+
+      WITH ResLedgerEntry DO BEGIN
+        SETRANGE("Source Type","Source Type"::Customer);
+        SETRANGE("Source No.",Customer."No.");
+        SETFILTER("Posting Date",Customer.GETFILTER("Date Filter"));
+        SETFILTER("Global Dimension 1 Code",Customer.GETFILTER("Global Dimension 1 Filter"));
+        SETFILTER("Global Dimension 2 Code",Customer.GETFILTER("Global Dimension 2 Filter"));
+        CALCSUMS("Total Cost");
+        CostAmt += "Total Cost";
       END;
     END;
 

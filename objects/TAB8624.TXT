@@ -2,9 +2,9 @@ OBJECT Table 8624 Config. Related Field
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -27,7 +27,7 @@ OBJECT Table 8624 Config. Related Field
                                                                                                    No.=FIELD(Field ID)));
                                                    CaptionML=[DAN=Felttitel;
                                                               ENU=Field Caption] }
-    { 8   ;   ;Relation Table ID   ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 8   ;   ;Relation Table ID   ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    CaptionML=[DAN=Relationstabel-id;
                                                               ENU=Relation Table ID];
                                                    Editable=No }

@@ -2,9 +2,9 @@ OBJECT Table 130 Incoming Document
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -31,7 +31,7 @@ OBJECT Table 130 Incoming Document
              BEGIN
                TESTFIELD(Posted,FALSE);
 
-               ApprovalsMgmt.DeleteApprovalEntry(DATABASE::"Incoming Document",0,FORMAT("Entry No."));
+               ApprovalsMgmt.DeleteApprovalEntries(RECORDID);
                ClearRelatedRecords;
 
                IncomingDocumentAttachment.SETRANGE("Incoming Document Entry No.","Entry No.");
@@ -61,6 +61,7 @@ OBJECT Table 130 Incoming Document
                                                               ENU=Created Date-Time];
                                                    Editable=No }
     { 4   ;   ;Created By User ID  ;GUID          ;TableRelation=User;
+                                                   DataClassification=EndUserPseudonymousIdentifiers;
                                                    CaptionML=[DAN=Oprettet af bruger-id;
                                                               ENU=Created By User ID];
                                                    Editable=No }
@@ -76,6 +77,7 @@ OBJECT Table 130 Incoming Document
                                                               ENU=Released Date-Time];
                                                    Editable=No }
     { 8   ;   ;Released By User ID ;GUID          ;TableRelation=User;
+                                                   DataClassification=EndUserPseudonymousIdentifiers;
                                                    CaptionML=[DAN=Bruger-id for frigivelse;
                                                               ENU=Released By User ID];
                                                    Editable=No }
@@ -88,6 +90,7 @@ OBJECT Table 130 Incoming Document
                                                               ENU=Last Date-Time Modified];
                                                    Editable=No }
     { 11  ;   ;Last Modified By User ID;GUID      ;TableRelation=User;
+                                                   DataClassification=EndUserPseudonymousIdentifiers;
                                                    CaptionML=[DAN=Bruger-id for seneste ændring;
                                                               ENU=Last Modified By User ID];
                                                    Editable=No }

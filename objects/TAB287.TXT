@@ -2,20 +2,26 @@ OBJECT Table 287 Customer Bank Account
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.45480,NAVDK9.00.00.45480;
   }
   PROPERTIES
   {
     DataCaptionFields=Customer No.,Code,Name;
     OnDelete=VAR
                CustLedgerEntry@1000 : Record 21;
+               Customer@1001 : Record 18;
              BEGIN
                CustLedgerEntry.SETRANGE("Customer No.","Customer No.");
                CustLedgerEntry.SETRANGE("Recipient Bank Account",Code);
+               CustLedgerEntry.SETRANGE(Open,TRUE);
                IF NOT CustLedgerEntry.ISEMPTY THEN
                  ERROR(BankAccDeleteErr);
+               IF Customer.GET("Customer No.") AND (Customer."Preferred Bank Account" = Code) THEN BEGIN
+                 Customer."Preferred Bank Account" := '';
+                 Customer.MODIFY;
+               END;
              END;
 
     CaptionML=[DAN=Debitorbankkonto;
@@ -133,7 +139,7 @@ OBJECT Table 287 Customer Bank Account
     VAR
       PostCode@1000 : Record 225;
       BankAccIdentifierIsEmptyErr@1001 : TextConst 'DAN=Du skal angive et bankkontonr. eller et IBAN.;ENU=You must specify either a Bank Account No. or an IBAN.';
-      BankAccDeleteErr@1002 : TextConst 'DAN=Du kan ikke slette denne bankkonto, fordi en eller flere finansposter er tilknyttet bankkontoen.;ENU=You cannot delete this bank account because there are one or more ledger entries associated with the bank account.';
+      BankAccDeleteErr@1002 : TextConst 'DAN=Du kan ikke slette denne bankkonto, fordi der er en eller flere åbne finansposter knyttet til bankkontoen.;ENU=You cannot delete this bank account because there are one or more open ledger entries associated with the bank account.';
 
     PROCEDURE GetBankAccountNoWithCheck@14() AccountNo : Text;
     BEGIN

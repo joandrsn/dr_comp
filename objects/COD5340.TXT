@@ -2,9 +2,9 @@ OBJECT Codeunit 5340 CRM Integration Table Synch.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -41,6 +41,7 @@ OBJECT Codeunit 5340 CRM Integration Table Synch.
       CannotDetermineSourceOriginErr@1009 : TextConst '@@@=%1 the value of the source id;DAN=Det er ikke muligt at fastlægge kildens oprindelse: %1.;ENU=Cannot determine the source origin: %1.';
       CannotResolveUserFromConnectionSetupErr@1000 : TextConst 'DAN=Dynamics CRM-brugeren, der er angivet i CRM-forbindelseskonfigurationen, findes ikke.;ENU=The Dynamics CRM user that is specified in the CRM connection setup does not exist.';
       SynchronizeEmptySetErr@1001 : TextConst 'DAN=Der blev gjort et forsøg på at synkronisere et tomt sæt records.;ENU=Attempted to synchronize an empty set of records.';
+      NoMappingErr@1003 : TextConst '@@@="%1=Table Caption";DAN=Ingen kobling er angivet for %1.;ENU=No mapping is set for %1.';
 
     PROCEDURE SynchRecord@1(IntegrationTableMapping@1002 : Record 5335;SourceID@1000 : Variant;IgnoreChanges@1003 : Boolean;IgnoreSynchOnlyCoupledRecords@1011 : Boolean) : GUID;
     VAR
@@ -84,7 +85,10 @@ OBJECT Codeunit 5340 CRM Integration Table Synch.
         IF NOT IntegrationTableMapping.GetRecordRef(CRMID,IntegrationRecordRef) THEN
           ERROR(RecordNotFoundErr,IntegrationTableMapping.GetExtendedIntegrationTableCaption,CRMID);
 
-      ConnectionName := RegisterTempConnectionIfNeeded(CRMConnectionSetup,TempCRMConnectionSetup);
+      IF CRMConnectionSetup."Is User Mapping Required" THEN
+        ConnectionName := CRMConnectionSetup.RegisterUserConnection
+      ELSE
+        ConnectionName := RegisterTempConnectionIfNeeded(CRMConnectionSetup,TempCRMConnectionSetup);
       IF ConnectionName <> '' THEN
         SETDEFAULTTABLECONNECTION(TABLECONNECTIONTYPE::CRM,ConnectionName,TRUE);
 
@@ -107,11 +111,15 @@ OBJECT Codeunit 5340 CRM Integration Table Synch.
       CRMConnectionSetup@1011 : Record 5330;
       TempCRMConnectionSetup@1005 : TEMPORARY Record 5330;
       IntegrationTableSynch@1010 : Codeunit 5335;
+      CRMSynchHelper@1006 : Codeunit 5342;
       IntegrationRecordRef@1008 : RecordRef;
       ConnectionName@1004 : Text;
     BEGIN
       IF RecordsToSynchRecordRef.COUNT = 0 THEN
         ERROR(SynchronizeEmptySetErr);
+
+      IF NOT CRMSynchHelper.GetMappingForTable(RecordsToSynchRecordRef.NUMBER,IntegrationTableMapping) THEN
+        ERROR(STRSUBSTNO(NoMappingErr,RecordsToSynchRecordRef.NAME));
 
       CRMConnectionSetup.GET;
       IF NOT CRMConnectionSetup."Is Enabled" THEN
@@ -214,7 +222,6 @@ OBJECT Codeunit 5340 CRM Integration Table Synch.
     VAR
       CRMSystemuser@1003 : Record 5340;
       TempCRMIntegrationRecord@1011 : TEMPORARY Record 5331;
-      CRMIntegrationRecord@1014 : Record 5331;
       Field@1010 : Record 2000000041;
       IntegrationTableSynch@1004 : Codeunit 5335;
       SourceRecordRef@1002 : RecordRef;
@@ -277,15 +284,6 @@ OBJECT Codeunit 5340 CRM Integration Table Synch.
               END;
           END;
         UNTIL (SourceRecordRef.NEXT = 0);
-
-      SourceRecordRef.RESET;
-      SourceFieldRef := SourceRecordRef.FIELD(IntegrationTableMapping."Integration Table UID Fld. No.");
-      IF TempCRMIntegrationRecord.FINDSET THEN
-        REPEAT
-          SourceFieldRef.SETRANGE(TempCRMIntegrationRecord."CRM ID");
-          IF NOT SourceRecordRef.FINDFIRST THEN
-            CRMIntegrationRecord.RemoveCouplingToCRMID(TempCRMIntegrationRecord."CRM ID",IntegrationTableMapping."Table ID");
-        UNTIL TempCRMIntegrationRecord.NEXT = 0;
 
       IntegrationTableSynch.EndIntegrationSynchJob;
 

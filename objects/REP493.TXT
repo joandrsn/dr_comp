@@ -2,9 +2,9 @@ OBJECT Report 493 Carry Out Action Msg. - Req.
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -45,6 +45,7 @@ OBJECT Report 493 Carry Out Action Msg. - Req.
                              ENU=Options] }
 
       { 6   ;2   ;Field     ;
+                  Name=PrintOrders;
                   CaptionML=[DAN=Udskriv ordrer;
                              ENU=Print Orders];
                   SourceExpr=PrintOrders }

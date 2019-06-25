@@ -2,9 +2,9 @@ OBJECT Table 5330 CRM Connection Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -16,17 +16,64 @@ OBJECT Table 5330 CRM Connection Setup
   {
     { 1   ;   ;Primary Key         ;Code20        ;CaptionML=[DAN=Primærnøgle;
                                                               ENU=Primary Key] }
-    { 2   ;   ;Server Address      ;Text250       ;CaptionML=[DAN=Dynamics CRM URL;
+    { 2   ;   ;Server Address      ;Text250       ;OnValidate=BEGIN
+                                                                IF STRPOS("Server Address",'.dynamics.com') > 0 THEN
+                                                                  "Authentication Type" := "Authentication Type"::Office365
+                                                                ELSE
+                                                                  "Authentication Type" := "Authentication Type"::AD;
+                                                                IF "User Name" <> '' THEN
+                                                                  UpdateConnectionString;
+                                                              END;
+
+                                                   CaptionML=[DAN=Dynamics CRM URL;
                                                               ENU=Dynamics CRM URL] }
-    { 3   ;   ;User Name           ;Text250       ;CaptionML=[DAN=Brugernavn;
+    { 3   ;   ;User Name           ;Text250       ;OnValidate=BEGIN
+                                                                "User Name" := DELCHR("User Name",'<>');
+                                                                CheckUserName;
+                                                                UpdateDomainName;
+                                                                UpdateConnectionString;
+                                                              END;
+
+                                                   DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Brugernavn;
                                                               ENU=User Name] }
-    { 4   ;   ;User Password Key   ;GUID          ;CaptionML=[DAN=Brugeradgangsnøgle;
+    { 4   ;   ;User Password Key   ;GUID          ;DataClassification=EndUserPseudonymousIdentifiers;
+                                                   CaptionML=[DAN=Brugeradgangsnøgle;
                                                               ENU=User Password Key] }
+    { 5   ;   ;Last Update Invoice Entry No.;Integer;
+                                                   CaptionML=[DAN=Sidste opdatering af fakturaløbenr.;
+                                                              ENU=Last Update Invoice Entry No.];
+                                                   Editable=No }
     { 60  ;   ;Is Enabled          ;Boolean       ;CaptionML=[DAN=Er aktiveret;
                                                               ENU=Is Enabled] }
     { 61  ;   ;Is User Mapping Required;Boolean   ;InitValue=Yes;
                                                    CaptionML=[DAN=Dynamics NAV-brugere skal knyttes til Dynamics CRM-brugere;
                                                               ENU=Dynamics NAV Users Must Map to Dynamics CRM Users] }
+    { 135 ;   ;Authentication Type ;Option        ;OnValidate=BEGIN
+                                                                IF xRec."Authentication Type" <> "Authentication Type" THEN
+                                                                  VALIDATE("Is User Mapping Required",FALSE);
+                                                                CASE "Authentication Type" OF
+                                                                  "Authentication Type"::Office365:
+                                                                    Domain := '';
+                                                                  "Authentication Type"::AD:
+                                                                    UpdateDomainName;
+                                                                END;
+                                                                UpdateConnectionString;
+                                                              END;
+
+                                                   CaptionML=[DAN=Godkendelsestype;
+                                                              ENU=Authentication Type];
+                                                   OptionCaptionML=[DAN=Office365,AD,IFD,OAuth;
+                                                                    ENU=Office365,AD,IFD,OAuth];
+                                                   OptionString=Office365,AD,IFD,OAuth }
+    { 136 ;   ;Connection String   ;Text250       ;CaptionML=[DAN=Forbindelsesstreng;
+                                                              ENU=Connection String] }
+    { 137 ;   ;Domain              ;Text250       ;DataClassification=OrganizationIdentifiableInformation;
+                                                   CaptionML=[DAN=Domæne;
+                                                              ENU=Domain];
+                                                   Editable=No }
+    { 138 ;   ;Server Connection String;BLOB      ;CaptionML=[DAN=Serverforbindelsesstreng;
+                                                              ENU=Server Connection String] }
   }
   KEYS
   {
@@ -38,12 +85,15 @@ OBJECT Table 5330 CRM Connection Setup
   CODE
   {
     VAR
-      ConnectionStringFormatTok@1000 : TextConst '@@@={Locked};DAN="Url=%1; UserName=%2; Password=%3";ENU="Url=%1; UserName=%2; Password=%3"';
+      ConnectionStringFormatTok@1007 : TextConst '@@@={Locked};DAN="Url=%1; UserName=%2; Password=%3; %4";ENU="Url=%1; UserName=%2; Password=%3; %4"';
       CantRegisterDisabledConnectionErr@1001 : TextConst 'DAN=En deaktiveret forbindelse kan ikke registreres.;ENU=A disabled connection cannot be registered.';
-      ConnectionWithCallerIdStringFormatTok@1002 : TextConst '@@@={Locked};DAN="Url=%1; UserName=%2; Password=%3; CallerID=%4";ENU="Url=%1; UserName=%2; Password=%3; CallerID=%4"';
       UnableToRetrieveCrmVersionErr@1004 : TextConst 'DAN=Dynamics CRM-version kunne ikke hentes.;ENU=Unable to retrieve Dynamics CRM version.';
       MissingUsernameTok@1003 : TextConst '@@@={Locked};DAN={USER};ENU={USER}';
       MissingPasswordTok@1005 : TextConst '@@@={Locked};DAN={PASSWORD};ENU={PASSWORD}';
+      UserNameMustIncludeDomainErr@1010 : TextConst 'DAN=Brugernavnet skal omfatte det domæne, hvor godkendelsestypen er angivet til Active Directory.;ENU=The user name must include the domain when the authentication type is set to Active Directory.';
+      UserNameMustBeEmailErr@1009 : TextConst 'DAN=Brugernavnet skal være en gyldig mailadresse, hvor godkendelsestypen er angivet til Office 365.;ENU=The user name must be a valid email address when the authentication type is set to Office 365.';
+      ConnectionStringPwdPlaceHolderMissingErr@1000 : TextConst 'DAN=Forbindelsesstrengen skal omfatte adgangskodens pladsholder {ADGANGSKODE}.;ENU=The connection string must include the password placeholder {PASSWORD}.';
+      CannotConnectCRMErr@1011 : TextConst '@@@=%1 - email of the user;DAN=Systemet kan ikke oprette forbindelse til Microsoft Dynamics CRM. Kontrollér legitimationsoplysningerne for forbindelsens brugernavn %1.;ENU=The system is unable to connect to Microsoft Dynamics CRM. Verify credentials of the connection for the user name %1.';
 
     PROCEDURE HasPassword@8() : Boolean;
     BEGIN
@@ -79,12 +129,13 @@ OBJECT Table 5330 CRM Connection Setup
 
     PROCEDURE RegisterConnection@17();
     BEGIN
-      RegisterConnectionWithName("Primary Key");
+      IF NOT HASTABLECONNECTION(TABLECONNECTIONTYPE::CRM,"Primary Key") THEN
+        RegisterConnectionWithName("Primary Key");
     END;
 
     PROCEDURE RegisterConnectionWithName@12(ConnectionName@1000 : Text);
     BEGIN
-      REGISTERTABLECONNECTION(TABLECONNECTIONTYPE::CRM,ConnectionName,ConstructConnectionString);
+      REGISTERTABLECONNECTION(TABLECONNECTIONTYPE::CRM,ConnectionName,GetConnectionStringWithPassword);
       IF ConnectionName = '' THEN
         SETDEFAULTTABLECONNECTION(TABLECONNECTIONTYPE::CRM,ConnectionName);
     END;
@@ -100,61 +151,76 @@ OBJECT Table 5330 CRM Connection Setup
       UNREGISTERTABLECONNECTION(TABLECONNECTIONTYPE::CRM,ConnectionName);
     END;
 
-    PROCEDURE ConstructConnectionString@3() : Text;
-    BEGIN
-      IF "User Name" = '' THEN
-        EXIT(STRSUBSTNO(ConnectionStringFormatTok,"Server Address",MissingUsernameTok,MissingPasswordTok));
-
-      EXIT(STRSUBSTNO(ConnectionStringFormatTok,"Server Address","User Name",GetPassword));
-    END;
-
     LOCAL PROCEDURE ConstructConnectionStringWithCalledID@16(CallerID@1000 : Text) : Text;
     BEGIN
-      EXIT(STRSUBSTNO(ConnectionWithCallerIdStringFormatTok,"Server Address","User Name",GetPassword,CallerID));
+      EXIT(GetConnectionStringWithPassword + 'CallerID=' + CallerID);
     END;
 
-    PROCEDURE RegisterUserConnection@6();
+    LOCAL PROCEDURE GetConnectionStringWithPassword@53() ConnectionString : Text;
     VAR
-      User@1002 : Record 2000000120;
+      PasswordPlaceHolderPos@1000 : Integer;
+    BEGIN
+      ConnectionString := GetConnectionString;
+      IF ConnectionString = '' THEN
+        ConnectionString := UpdateConnectionString;
+      IF "User Name" = '' THEN
+        EXIT(ConnectionString);
+      PasswordPlaceHolderPos := STRPOS(ConnectionString,MissingPasswordTok);
+      ConnectionString :=
+        COPYSTR(ConnectionString,1,PasswordPlaceHolderPos - 1) + GetPassword +
+        COPYSTR(ConnectionString,PasswordPlaceHolderPos + STRLEN(MissingPasswordTok));
+    END;
+
+    PROCEDURE RegisterUserConnection@6() ConnectionName : Text;
+    VAR
+      SyncUser@1002 : Record 2000000120;
       CallerID@1001 : GUID;
     BEGIN
       RegisterConnection;
-
-      IF NOT User.GET(DATABASE.USERSECURITYID) THEN
-        EXIT;
-
-      IF User."Authentication Email" <> '' THEN BEGIN
-        IF NOT TryGetSystemUserIdFromEmail(User."Authentication Email",CallerID) THEN
-          CLEARLASTERROR;
-      END;
-
-      IF NOT ISNULLGUID(CallerID) THEN BEGIN
+      SyncUser."User Name" := COPYSTR("User Name",1,MAXSTRLEN(SyncUser."User Name"));
+      SyncUser."Authentication Email" := "User Name";
+      IF NOT TryGetSystemUserId(SyncUser,CallerID) THEN BEGIN
         UnregisterConnection;
-        RegisterConnectionWithCallerID(CallerID);
-      END ELSE BEGIN
-        IF "Is User Mapping Required" THEN
+        ERROR(CannotConnectCRMErr,"User Name");
+      END;
+      ConnectionName := RegisterAuthUserConnection;
+    END;
+
+    LOCAL PROCEDURE RegisterAuthUserConnection@42() ConnectionName : Text;
+    VAR
+      User@1001 : Record 2000000120;
+      CallerID@1000 : GUID;
+    BEGIN
+      IF GetUser(User) THEN BEGIN
+        IF NOT TryGetSystemUserId(User,CallerID) THEN BEGIN
           UnregisterConnection;
+          ERROR(CannotConnectCRMErr,User."Authentication Email");
+        END;
+        IF NOT ISNULLGUID(CallerID) THEN BEGIN
+          UnregisterConnection;
+          ConnectionName := RegisterConnectionWithCallerID(CallerID);
+        END;
       END;
     END;
 
-    LOCAL PROCEDURE RegisterConnectionWithCallerID@11(CallerID@1000 : Text);
+    LOCAL PROCEDURE RegisterConnectionWithCallerID@11(CallerID@1000 : Text) ConnectionName : Text;
     BEGIN
       IF NOT "Is Enabled" THEN
         ERROR(CantRegisterDisabledConnectionErr);
 
       REGISTERTABLECONNECTION(TABLECONNECTIONTYPE::CRM,"Primary Key",ConstructConnectionStringWithCalledID(CallerID));
+      ConnectionName := "Primary Key";
       IF "Primary Key" = '' THEN
         SETDEFAULTTABLECONNECTION(TABLECONNECTIONTYPE::CRM,"Primary Key");
     END;
 
     PROCEDURE GetIntegrationUserID@7() : GUID;
     VAR
-      CRMConnectionSetup@1000 : Record 5330;
       CRMSystemuser@1001 : Record 5340;
     BEGIN
-      CRMConnectionSetup.SETRANGE("Is Enabled",TRUE);
-      CRMConnectionSetup.FINDFIRST;
-      CRMSystemuser.SETRANGE(InternalEMailAddress,CRMConnectionSetup."User Name");
+      GET;
+      TESTFIELD("Is Enabled");
+      FilterCRMSystemUser(CRMSystemuser);
       IF CRMSystemuser.FINDFIRST THEN
         EXIT(CRMSystemuser.SystemUserId);
     END;
@@ -166,6 +232,23 @@ OBJECT Table 5330 CRM Connection Setup
       IF NOT ISNULLGUID("User Password Key") THEN
         IF ServicePassword.GET("User Password Key") THEN
           EXIT(ServicePassword.GetPassword);
+    END;
+
+    LOCAL PROCEDURE GetUser@51(VAR User@1000 : Record 2000000120) : Boolean;
+    BEGIN
+      IF User.GET(DATABASE.USERSECURITYID) THEN
+        EXIT(TRUE);
+      User.RESET;
+      User.SETRANGE("Windows Security ID",SID);
+      EXIT(User.FINDFIRST);
+    END;
+
+    LOCAL PROCEDURE GetUserName@60() UserName : Text;
+    BEGIN
+      IF "User Name" = '' THEN
+        UserName := MissingUsernameTok
+      ELSE
+        UserName := COPYSTR("User Name",STRPOS("User Name",'\') + 1);
     END;
 
     PROCEDURE TestConnection@9() Success : Boolean;
@@ -189,19 +272,30 @@ OBJECT Table 5330 CRM Connection Setup
       IF CRMSystemuser.FINDFIRST THEN;
     END;
 
-    LOCAL PROCEDURE CreateOrganizationService@10(VAR service@1000 : DotNet "'Microsoft.Xrm.Client, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Client.Services.OrganizationService");
+    LOCAL PROCEDURE CreateOrganizationService@10(VAR service@1000 : DotNet "'Microsoft.Xrm.Sdk, Version=8.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Sdk.IOrganizationService");
     VAR
-      crmConnection@1001 : DotNet "'Microsoft.Xrm.Client, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Client.CrmConnection";
+      crmConnection@1002 : DotNet "'Microsoft.Xrm.Tooling.Connector, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Tooling.Connector.CrmServiceClient";
     BEGIN
-      service := service.OrganizationService(crmConnection.Parse(ConstructConnectionString));
+      crmConnection := crmConnection.CrmServiceClient(GetConnectionStringWithPassword);
+      IF crmConnection.IsReady THEN BEGIN
+        IF NOT ISNULL(crmConnection.OrganizationWebProxyClient) THEN
+          service := crmConnection.OrganizationWebProxyClient
+        ELSE
+          service := crmConnection.OrganizationServiceProxy;
+        EXIT;
+      END;
+
+      IF NOT ISNULL(crmConnection.LastCrmException) THEN
+        ERROR(crmConnection.LastCrmException.Message);
+      ERROR(crmConnection.LastCrmError);
     END;
 
     [TryFunction]
     PROCEDURE GetCrmVersion@15(VAR Version@1003 : Text);
     VAR
-      service@1000 : DotNet "'Microsoft.Xrm.Client, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Client.Services.OrganizationService";
-      request@1001 : DotNet "'Microsoft.Xrm.Sdk, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Sdk.OrganizationRequest";
-      response@1002 : DotNet "'Microsoft.Xrm.Sdk, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Sdk.OrganizationResponse";
+      service@1000 : DotNet "'Microsoft.Xrm.Sdk, Version=8.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Sdk.IOrganizationService";
+      request@1001 : DotNet "'Microsoft.Xrm.Sdk, Version=8.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Sdk.OrganizationRequest";
+      response@1002 : DotNet "'Microsoft.Xrm.Sdk, Version=8.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Xrm.Sdk.OrganizationResponse";
     BEGIN
       Version := '';
       IF STRPOS("Server Address",'@@') = 1 THEN
@@ -219,23 +313,125 @@ OBJECT Table 5330 CRM Connection Setup
       User@1000 : Record 2000000120;
       CRMSystemUserId@1002 : GUID;
     BEGIN
-      IF NOT User.GET(DATABASE.USERSECURITYID) THEN
-        EXIT(FALSE);
-
-      IF User."Authentication Email" = '' THEN
-        EXIT(FALSE);
-
-      EXIT(TryGetSystemUserIdFromEmail(User."Authentication Email",CRMSystemUserId));
+      IF GetUser(User) THEN
+        IF TryGetSystemUserId(User,CRMSystemUserId) THEN
+          EXIT(NOT ISNULLGUID(CRMSystemUserId));
     END;
 
     [TryFunction]
-    LOCAL PROCEDURE TryGetSystemUserIdFromEmail@18(EmailAddress@1000 : Text;VAR SystemUserId@1001 : GUID);
+    LOCAL PROCEDURE TryGetSystemUserId@18(User@1000 : Record 2000000120;VAR SystemUserId@1001 : GUID);
     VAR
       CRMSystemuser@1002 : Record 5340;
     BEGIN
-      CRMSystemuser.SETRANGE(InternalEMailAddress,EmailAddress);
-      CRMSystemuser.FINDFIRST;
-      SystemUserId := CRMSystemuser.SystemUserId;
+      // Returns FALSE if CRMSystemuser.FINDFIRST throws an exception, e.g. due to wrong credentials;
+      // Returns TRUE regardless of CRMSystemuser.FINDFIRST result,
+      // further check of ISNULLGUID(SystemUserId) is required to identify if the user exists
+      CLEAR(SystemUserId);
+      IF "Is Enabled" THEN
+        IF "Is User Mapping Required" THEN BEGIN
+          CRMSystemuser.SETRANGE(IsDisabled,FALSE);
+          CASE "Authentication Type" OF
+            "Authentication Type"::AD,"Authentication Type"::IFD:
+              CRMSystemuser.SETRANGE(DomainName,User."User Name");
+            "Authentication Type"::Office365,"Authentication Type"::OAuth:
+              CRMSystemuser.SETRANGE(InternalEMailAddress,User."Authentication Email");
+          END;
+          IF CRMSystemuser.FINDFIRST THEN
+            SystemUserId := CRMSystemuser.SystemUserId;
+        END;
+    END;
+
+    LOCAL PROCEDURE CrmAuthenticationType@19() : Text;
+    BEGIN
+      CASE "Authentication Type" OF
+        "Authentication Type"::Office365:
+          EXIT('AuthType=Office365;');
+        "Authentication Type"::AD:
+          EXIT('AuthType=AD;' + GetDomain);
+        "Authentication Type"::IFD:
+          EXIT('AuthType=IFD;' + GetDomain + 'HomeRealmUri= ;');
+        "Authentication Type"::OAuth:
+          EXIT('AuthType=OAuth;' + 'AppId= ;' + 'RedirectUri= ;' + 'TokenCacheStorePath= ;' + 'LoginPrompt=Auto;');
+      END;
+    END;
+
+    PROCEDURE UpdateConnectionString@50() ConnectionString : Text;
+    BEGIN
+      ConnectionString := STRSUBSTNO(
+          ConnectionStringFormatTok,"Server Address",GetUserName,MissingPasswordTok,CrmAuthenticationType);
+      SetConnectionString(ConnectionString);
+    END;
+
+    LOCAL PROCEDURE UpdateDomainName@54();
+    BEGIN
+      IF "User Name" <> '' THEN
+        IF STRPOS("User Name",'\') > 0 THEN
+          VALIDATE(Domain,COPYSTR("User Name",1,STRPOS("User Name",'\') - 1))
+        ELSE
+          Domain := '';
+    END;
+
+    LOCAL PROCEDURE CheckUserName@47();
+    BEGIN
+      IF "User Name" <> '' THEN
+        CASE "Authentication Type" OF
+          "Authentication Type"::AD:
+            IF STRPOS("User Name",'\') = 0 THEN
+              ERROR(UserNameMustIncludeDomainErr);
+          "Authentication Type"::Office365:
+            IF STRPOS("User Name",'@') = 0 THEN
+              ERROR(UserNameMustBeEmailErr);
+        END;
+    END;
+
+    LOCAL PROCEDURE GetDomain@68() : Text;
+    BEGIN
+      IF Domain <> '' THEN
+        EXIT(STRSUBSTNO('Domain=%1;',Domain));
+    END;
+
+    PROCEDURE FilterCRMSystemUser@57(VAR CRMSystemuser@1000 : Record 5340);
+    BEGIN
+      CASE "Authentication Type" OF
+        "Authentication Type"::Office365,"Authentication Type"::OAuth:
+          CRMSystemuser.SETRANGE(InternalEMailAddress,"User Name");
+        "Authentication Type"::AD,"Authentication Type"::IFD:
+          CRMSystemuser.SETRANGE(DomainName,"User Name");
+      END;
+    END;
+
+    PROCEDURE UpdateLastUpdateInvoiceEntryNo@35();
+    VAR
+      DtldCustLedgEntry@1000 : Record 379;
+    BEGIN
+      DtldCustLedgEntry.RESET;
+      DtldCustLedgEntry.FINDLAST;
+      GET;
+      "Last Update Invoice Entry No." := DtldCustLedgEntry."Entry No.";
+      MODIFY;
+    END;
+
+    PROCEDURE GetConnectionString@3() ConnectionString : Text;
+    VAR
+      CRMConnectionSetup@1001 : Record 5330;
+      InStream@1000 : InStream;
+    BEGIN
+      IF CRMConnectionSetup.GET("Primary Key") THEN
+        CALCFIELDS("Server Connection String");
+      "Server Connection String".CREATEINSTREAM(InStream);
+      InStream.READTEXT(ConnectionString);
+    END;
+
+    PROCEDURE SetConnectionString@56(ConnectionString@1000 : Text);
+    VAR
+      OutStream@1001 : OutStream;
+    BEGIN
+      IF STRPOS(ConnectionString,MissingPasswordTok) = 0 THEN
+        ERROR(ConnectionStringPwdPlaceHolderMissingErr);
+      CLEAR("Server Connection String");
+      "Server Connection String".CREATEOUTSTREAM(OutStream);
+      OutStream.WRITETEXT(ConnectionString);
+      IF NOT MODIFY THEN;
     END;
 
     BEGIN

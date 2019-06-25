@@ -2,9 +2,9 @@ OBJECT Table 740 VAT Report Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51418;
   }
   PROPERTIES
   {
@@ -20,14 +20,16 @@ OBJECT Table 740 VAT Report Header
              END;
 
     OnDelete=VAR
-               VATReportLine@1000 : Record 741;
+               VATStatementReportLine@1000 : Record 742;
                VATReportLineRelation@1001 : Record 744;
              BEGIN
                TESTFIELD(Status,Status::Open);
-               VATReportLine.SETRANGE("VAT Report No.","No.");
-               VATReportLine.DELETEALL;
+               VATStatementReportLine.SETRANGE("VAT Report No.","No.");
+               VATStatementReportLine.SETRANGE("VAT Report Config. Code","VAT Report Config. Code");
+               VATStatementReportLine.DELETEALL;
                VATReportLineRelation.SETRANGE("VAT Report No.","No.");
                VATReportLineRelation.DELETEALL;
+               RemoveVATReturnPeriodLink;
              END;
 
     OnRename=BEGIN
@@ -49,15 +51,16 @@ OBJECT Table 740 VAT Report Header
 
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
-    { 2   ;   ;VAT Report Config. Code;Option     ;OnValidate=BEGIN
+    { 2   ;   ;VAT Report Config. Code;Option     ;TableRelation="VAT Reports Configuration"."VAT Report Type";
+                                                   OnValidate=BEGIN
                                                                 CheckEditingAllowed;
                                                               END;
 
                                                    CaptionML=[DAN=Momsrapportkonfig.kode;
                                                               ENU=VAT Report Config. Code];
-                                                   OptionCaptionML=[DAN=" ,Indstilling1";
-                                                                    ENU=" ,Option1"];
-                                                   OptionString=[ ,Option1];
+                                                   OptionCaptionML=[DAN=Oversigt over EU-salg,Momsangivelse;
+                                                                    ENU=EC Sales List,VAT Return];
+                                                   OptionString=EC Sales List,VAT Return;
                                                    Editable=Yes }
     { 3   ;   ;VAT Report Type     ;Option        ;OnValidate=BEGIN
                                                                 CheckEditingAllowed;
@@ -82,6 +85,7 @@ OBJECT Table 740 VAT Report Header
     { 4   ;   ;Start Date          ;Date          ;OnValidate=BEGIN
                                                                 CheckEditingAllowed;
                                                                 TESTFIELD("Start Date");
+                                                                HandleDateInput;
                                                               END;
 
                                                    CaptionML=[DAN=Startdato;
@@ -90,15 +94,16 @@ OBJECT Table 740 VAT Report Header
                                                                 CheckEditingAllowed;
                                                                 TESTFIELD("End Date");
                                                                 CheckEndDate;
+                                                                HandleDateInput;
                                                               END;
 
                                                    CaptionML=[DAN=Slutdato;
                                                               ENU=End Date] }
     { 6   ;   ;Status              ;Option        ;CaptionML=[DAN=Status;
                                                               ENU=Status];
-                                                   OptionCaptionML=[DAN=Åben,Frigivet,Sendt;
-                                                                    ENU=Open,Released,Submitted];
-                                                   OptionString=Open,Released,Submitted;
+                                                   OptionCaptionML=[DAN=Åben,Frigivet,Sendt,Accepteret,Lukket,Afvist,Annulleret;
+                                                                    ENU=Open,Released,Submitted,Accepted,Closed,Rejected,Canceled];
+                                                   OptionString=Open,Released,Submitted,Accepted,Closed,Rejected,Canceled;
                                                    Editable=No }
     { 8   ;   ;No. Series          ;Code10        ;OnValidate=BEGIN
                                                                 CheckEditingAllowed;
@@ -122,7 +127,7 @@ OBJECT Table 740 VAT Report Header
                                                                       TESTFIELD("Original Report No.");
                                                                       IF "Original Report No." = "No." THEN
                                                                         ERROR(Text005);
-                                                                      VATReportHeader.GET("Original Report No.");
+                                                                      VATReportHeader.GET("VAT Report Config. Code","Original Report No.");
                                                                       "Start Date" := VATReportHeader."Start Date";
                                                                       "End Date" := VATReportHeader."End Date";
                                                                     END;
@@ -145,7 +150,7 @@ OBJECT Table 740 VAT Report Header
 
                                                               IF ShowLookup THEN BEGIN
                                                                 LookupVATReportHeader.SETFILTER("No.",'<>' + "No.");
-                                                                LookupVATReportHeader.SETRANGE(Status,Status::Submitted);
+                                                                LookupVATReportHeader.SETRANGE(Status,Status::Accepted);
                                                                 LookupVATReportHeader.SETFILTER("VAT Report Type",TypeFilterText);
                                                                 VATReportList.SETTABLEVIEW(LookupVATReportHeader);
                                                                 VATReportList.LOOKUPMODE(TRUE);
@@ -158,10 +163,59 @@ OBJECT Table 740 VAT Report Header
 
                                                    CaptionML=[DAN=Nummer på oprindelig rapport;
                                                               ENU=Original Report No.] }
+    { 10  ;   ;Period Type         ;Option        ;OnValidate=BEGIN
+                                                                IF "Period Type" = "Period Type"::Year THEN
+                                                                  "Period No." := 1;
+
+                                                                HandlePeriodInput;
+                                                              END;
+
+                                                   CaptionML=[DAN=Periodetype;
+                                                              ENU=Period Type];
+                                                   OptionCaptionML=[DAN=" ,,Måned,Kvartal,År";
+                                                                    ENU=" ,,Month,Quarter,Year"];
+                                                   OptionString=[ ,,Month,Quarter,Year] }
+    { 11  ;   ;Period No.          ;Integer       ;TableRelation="Date Lookup Buffer"."Period No." WHERE (Period Type=FIELD(Period Type));
+                                                   OnValidate=BEGIN
+                                                                HandlePeriodInput;
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   CaptionML=[DAN=Periodenr.;
+                                                              ENU=Period No.] }
+    { 12  ;   ;Period Year         ;Integer       ;OnValidate=BEGIN
+                                                                HandlePeriodInput;
+                                                              END;
+
+                                                   CaptionML=[DAN=Periodeår;
+                                                              ENU=Period Year] }
+    { 13  ;   ;Message Id          ;Text250       ;CaptionML=[DAN=Meddelelses-id;
+                                                              ENU=Message Id] }
+    { 14  ;   ;Statement Template Name;Code10     ;TableRelation="VAT Statement Template";
+                                                   CaptionML=[DAN=Angivelsestypenavn;
+                                                              ENU=Statement Template Name] }
+    { 15  ;   ;Statement Name      ;Code10        ;TableRelation="VAT Statement Name".Name WHERE (Statement Template Name=FIELD(Statement Template Name));
+                                                   CaptionML=[DAN=Angivelsesnavn;
+                                                              ENU=Statement Name] }
+    { 16  ;   ;VAT Report Version  ;Code10        ;TableRelation="VAT Reports Configuration"."VAT Report Version" WHERE (VAT Report Type=FIELD(VAT Report Config. Code));
+                                                   CaptionML=[DAN=Momsrapportversion;
+                                                              ENU=VAT Report Version] }
+    { 17  ;   ;Submitted By        ;GUID          ;TableRelation=User."User Security ID";
+                                                   DataClassification=EndUserPseudonymousIdentifiers;
+                                                   CaptionML=[DAN=Sendt af;
+                                                              ENU=Submitted By] }
+    { 18  ;   ;Submitted Date      ;Date          ;CaptionML=[DAN=Sendt dato;
+                                                              ENU=Submitted Date] }
+    { 19  ;   ;Return Period No.   ;Code20        ;CaptionML=[DAN=Angivelsesperiodenr.;
+                                                              ENU=Return Period No.] }
+    { 100 ;   ;Amounts in Add. Rep. Currency;Boolean;
+                                                   CaptionML=[DAN=Beløb i ekstra rapporteringsvaluta;
+                                                              ENU=Amounts in Add. Rep. Currency];
+                                                   Editable=No }
   }
   KEYS
   {
-    {    ;No.                                     ;Clustered=Yes }
+    {    ;VAT Report Config. Code,No.             ;Clustered=Yes }
   }
   FIELDGROUPS
   {
@@ -183,6 +237,11 @@ OBJECT Table 740 VAT Report Header
     PROCEDURE GetNoSeriesCode@1() : Code[10];
     BEGIN
       VATReportSetup.GET;
+      IF "VAT Report Config. Code" = "VAT Report Config. Code"::"VAT Return" THEN BEGIN
+        VATReportSetup.TESTFIELD("VAT Return No. Series");
+        EXIT(VATReportSetup."VAT Return No. Series");
+      END;
+
       VATReportSetup.TESTFIELD("No. Series");
       EXIT(VATReportSetup."No. Series");
     END;
@@ -196,15 +255,30 @@ OBJECT Table 740 VAT Report Header
     END;
 
     PROCEDURE InitRecord@3();
+    VAR
+      VATReportsConfiguration@1011 : Record 746;
+      date@1000 : Date;
     BEGIN
-      "VAT Report Config. Code" := "VAT Report Config. Code"::Option1;
-      "Start Date" := WORKDATE;
-      "End Date" := WORKDATE;
+      IF ("VAT Report Config. Code" = "VAT Report Config. Code"::"EC Sales List") OR
+         ("VAT Report Config. Code" = "VAT Report Config. Code"::"VAT Return")
+      THEN BEGIN
+        date := CALCDATE('<-1M>',WORKDATE);
+        VALIDATE("Period Year",DATE2DMY(date,3));
+        VALIDATE("Period Type","Period Type"::Month);
+        VALIDATE("Period No.",DATE2DMY(date,2));
+      END ELSE BEGIN
+        "Start Date" := WORKDATE;
+        "End Date" := WORKDATE;
+      END;
+
+      VATReportsConfiguration.SETRANGE("VAT Report Type","VAT Report Config. Code");
+      IF VATReportsConfiguration.FINDFIRST AND (VATReportsConfiguration.COUNT = 1) THEN
+        "VAT Report Version" := VATReportsConfiguration."VAT Report Version";
     END;
 
     PROCEDURE CheckEditingAllowed@4();
     BEGIN
-      IF Status IN [Status::Released,Status::Submitted] THEN
+      IF Status <> Status::Open THEN
         ERROR(Text002,FORMAT(Status));
     END;
 
@@ -228,14 +302,10 @@ OBJECT Table 740 VAT Report Header
 
     PROCEDURE CheckIfCanBeReopened@8(VATReportHeader@1000 : Record 740);
     BEGIN
-      CASE VATReportHeader.Status OF
-        VATReportHeader.Status::Submitted:
-          BEGIN
-            VATReportSetup.GET;
-            IF NOT VATReportSetup."Modify Submitted Reports" THEN
-              ERROR(Text007,VATReportSetup.TABLECAPTION);
-          END
-      END;
+      IF VATReportHeader.Status <> VATReportHeader.Status::Released THEN
+        IF VATReportSetup.GET THEN
+          IF NOT VATReportSetup."Modify Submitted Reports" THEN
+            ERROR(Text007,VATReportSetup.TABLECAPTION);
     END;
 
     PROCEDURE CheckIfCanBeReleased@9(VATReportHeader@1000 : Record 740);
@@ -245,6 +315,74 @@ OBJECT Table 740 VAT Report Header
       IF VATReportHeader."VAT Report Type" IN ["VAT Report Type"::Corrective,"VAT Report Type"::Supplementary] THEN
         IF VATReportHeader."Original Report No." = '' THEN
           ERROR(Text008,FORMAT(VATReportHeader."VAT Report Type"));
+    END;
+
+    PROCEDURE PeriodToDate@10();
+    BEGIN
+      IF NOT IsPeriodValid THEN
+        EXIT;
+
+      IF "Period Type" = "Period Type"::Month THEN BEGIN
+        "Start Date" := DMY2DATE(1,"Period No.","Period Year");
+        "End Date" := CALCDATE('<1M-1D>',"Start Date");
+      END;
+
+      IF "Period Type" = "Period Type"::Quarter THEN BEGIN
+        "Start Date" := DMY2DATE(1,1 + ("Period No." - 1) * 3,"Period Year");
+        "End Date" := CALCDATE('<+3M-1D>',"Start Date");
+      END;
+
+      IF "Period Type" = "Period Type"::Year THEN BEGIN
+        "Start Date" := DMY2DATE(1,1,"Period Year");
+        "End Date" := DMY2DATE(31,12,"Period Year");
+      END;
+    END;
+
+    LOCAL PROCEDURE HandleDateInput@11();
+    BEGIN
+      CLEAR("Period No.");
+      CLEAR("Period Type");
+      CLEAR("Period Year");
+    END;
+
+    LOCAL PROCEDURE HandlePeriodInput@12();
+    BEGIN
+      CLEAR("Start Date");
+      CLEAR("End Date");
+
+      IF NOT IsPeriodValid THEN
+        EXIT;
+
+      PeriodToDate;
+    END;
+
+    PROCEDURE IsPeriodValid@13() : Boolean;
+    BEGIN
+      IF ("Period Year" = 0) OR ("Period Type" = "Period Type"::" ") OR ("Period No." = 0) THEN
+        EXIT(FALSE);
+
+      IF ("Period Type" = "Period Type"::Quarter) AND
+         (("Period No." < 1) OR ("Period No." > 4))
+      THEN
+        EXIT(FALSE);
+
+      IF ("Period Type" = "Period Type"::Month) AND
+         (("Period No." < 1) OR ("Period No." > 12))
+      THEN
+        EXIT(FALSE);
+
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE RemoveVATReturnPeriodLink@14();
+    VAR
+      VATReturnPeriod@1000 : Record 737;
+    BEGIN
+      IF "Return Period No." <> '' THEN
+        IF VATReturnPeriod.GET("Return Period No.") THEN BEGIN
+          VATReturnPeriod.VALIDATE("VAT Return No.",'');
+          VATReturnPeriod.MODIFY(TRUE);
+        END;
     END;
 
     BEGIN

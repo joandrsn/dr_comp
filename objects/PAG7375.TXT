@@ -2,9 +2,9 @@ OBJECT Page 7375 Inventory Put-away
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -84,6 +84,7 @@ OBJECT Page 7375 Inventory Put-away
                                  ENU=F&unctions];
                       Image=Action }
       { 4       ;2   ;Action    ;
+                      Name=GetSourceDocument;
                       ShortCutKey=Ctrl+F7;
                       Ellipsis=Yes;
                       CaptionML=[DAN=&Hent kildedokument;

@@ -2,9 +2,9 @@ OBJECT Report 5753 Get Source Documents
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -422,6 +422,7 @@ OBJECT Report 5753 Get Source Documents
       WhseShptHeader."Location Code" := "Warehouse Request"."Location Code";
       IF Location.Code = WhseShptHeader."Location Code" THEN
         WhseShptHeader."Bin Code" := Location."Shipment Bin Code";
+      WhseShptHeader."External Document No." := "Warehouse Request"."External Document No.";
       WhseShptLine.LOCKTABLE;
       WhseShptHeader.INSERT(TRUE);
       ActivitiesCreated := ActivitiesCreated + 1;
@@ -436,6 +437,7 @@ OBJECT Report 5753 Get Source Documents
       WhseReceiptHeader."Location Code" := "Warehouse Request"."Location Code";
       IF Location.Code = WhseReceiptHeader."Location Code" THEN
         WhseReceiptHeader."Bin Code" := Location."Receipt Bin Code";
+      WhseReceiptHeader."Vendor Shipment No." := "Warehouse Request"."External Document No.";
       WhseReceiptLine.LOCKTABLE;
       WhseReceiptHeader.INSERT(TRUE);
       ActivitiesCreated := ActivitiesCreated + 1;

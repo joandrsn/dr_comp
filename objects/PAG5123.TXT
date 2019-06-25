@@ -2,9 +2,9 @@ OBJECT Page 5123 Opportunity List
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -243,10 +243,6 @@ OBJECT Page 5123 Opportunity List
   CODE
   {
     VAR
-      Cont@1000 : Record 5050;
-      SalesPurchPerson@1001 : Record 13;
-      Campaign@1002 : Record 5071;
-      SegHeader@1003 : Record 5076;
       Text001@1004 : TextConst 'DAN=ikke navngivet;ENU=untitled';
       OpportunityEnable@19004214 : Boolean INDATASET;
       FunctionsEnable@19066687 : Boolean INDATASET;
@@ -255,20 +251,68 @@ OBJECT Page 5123 Opportunity List
     VAR
       CaptionStr@1000 : Text[260];
     BEGIN
-      IF Cont.GET(GETFILTER("Contact Company No.")) THEN
-        CaptionStr := COPYSTR(Cont."No." + ' ' + Cont.Name,1,MAXSTRLEN(CaptionStr));
-      IF Cont.GET(GETFILTER("Contact No.")) THEN
-        CaptionStr := COPYSTR(CaptionStr + ' ' + Cont."No." + ' ' + Cont.Name,1,MAXSTRLEN(CaptionStr));
-      IF SalesPurchPerson.GET(GETFILTER("Salesperson Code")) THEN
-        CaptionStr := COPYSTR(CaptionStr + ' ' + SalesPurchPerson.Code + ' ' + SalesPurchPerson.Name,1,MAXSTRLEN(CaptionStr));
-      IF Campaign.GET(GETFILTER("Campaign No.")) THEN
-        CaptionStr := COPYSTR(CaptionStr + ' ' + Campaign."No." + ' ' + Campaign.Description,1,MAXSTRLEN(CaptionStr));
-      IF SegHeader.GET(GETFILTER("Segment No.")) THEN
-        CaptionStr := COPYSTR(CaptionStr + ' ' + SegHeader."No." + ' ' + SegHeader.Description,1,MAXSTRLEN(CaptionStr));
-      IF CaptionStr = '' THEN
-        CaptionStr := Text001;
+      CASE TRUE OF
+        BuildCaptionContact(CaptionStr,GETFILTER("Contact Company No.")),
+        BuildCaptionContact(CaptionStr,GETFILTER("Contact No.")),
+        BuildCaptionSalespersonPurchaser(CaptionStr,GETFILTER("Salesperson Code")),
+        BuildCaptionCampaign(CaptionStr,GETFILTER("Campaign No.")),
+        BuildCaptionSegmentHeader(CaptionStr,GETFILTER("Segment No.")):
+          EXIT(CaptionStr)
+      END;
 
-      EXIT(CaptionStr);
+      EXIT(Text001);
+    END;
+
+    LOCAL PROCEDURE BuildCaptionContact@9(VAR CaptionText@1007 : Text[260];Filter@1000 : Text) : Boolean;
+    VAR
+      Contact@1001 : Record 5050;
+    BEGIN
+      WITH Contact DO
+        EXIT(BuildCaption(CaptionText,Contact,Filter,FIELDNO("No."),FIELDNO(Name)));
+    END;
+
+    LOCAL PROCEDURE BuildCaptionSalespersonPurchaser@8(VAR CaptionText@1007 : Text[260];Filter@1000 : Text) : Boolean;
+    VAR
+      SalespersonPurchaser@1002 : Record 13;
+    BEGIN
+      WITH SalespersonPurchaser DO
+        EXIT(BuildCaption(CaptionText,SalespersonPurchaser,Filter,FIELDNO(Code),FIELDNO(Name)));
+    END;
+
+    LOCAL PROCEDURE BuildCaptionCampaign@7(VAR CaptionText@1001 : Text[260];Filter@1000 : Text) : Boolean;
+    VAR
+      Campaign@1002 : Record 5071;
+    BEGIN
+      WITH Campaign DO
+        EXIT(BuildCaption(CaptionText,Campaign,Filter,FIELDNO("No."),FIELDNO(Description)));
+    END;
+
+    LOCAL PROCEDURE BuildCaptionSegmentHeader@6(VAR CaptionText@1001 : Text[260];Filter@1000 : Text) : Boolean;
+    VAR
+      SegmentHeader@1002 : Record 5076;
+    BEGIN
+      WITH SegmentHeader DO
+        EXIT(BuildCaption(CaptionText,SegmentHeader,Filter,FIELDNO("No."),FIELDNO(Description)));
+    END;
+
+    LOCAL PROCEDURE BuildCaption@2(VAR CaptionText@1007 : Text[260];RecVar@1001 : Variant;Filter@1000 : Text;IndexFieldNo@1005 : Integer;TextFieldNo@1006 : Integer) : Boolean;
+    VAR
+      RecRef@1002 : RecordRef;
+      IndexFieldRef@1003 : FieldRef;
+      TextFieldRef@1004 : FieldRef;
+    BEGIN
+      Filter := DELCHR(Filter,'<>','''');
+      IF Filter <> '' THEN BEGIN
+        RecRef.GETTABLE(RecVar);
+        IndexFieldRef := RecRef.FIELD(IndexFieldNo);
+        IndexFieldRef.SETRANGE(Filter);
+        IF RecRef.FINDFIRST THEN BEGIN
+          TextFieldRef := RecRef.FIELD(TextFieldNo);
+          CaptionText := COPYSTR(FORMAT(IndexFieldRef.VALUE) + ' ' + FORMAT(TextFieldRef.VALUE),1,MAXSTRLEN(CaptionText));
+        END;
+      END;
+
+      EXIT(Filter <> '');
     END;
 
     BEGIN

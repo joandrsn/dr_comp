@@ -2,9 +2,9 @@ OBJECT Page 5510 Production Journal
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -298,7 +298,7 @@ OBJECT Page 5510 Production Journal
                 Editable=FALSE }
 
     { 80  ;2   ;Field     ;
-                OptionCaptionML=[DAN="Work Center,Machine Center, ";
+                OptionCaptionML=[DAN="Arbejdscenter,Produktionsressource, ";
                                  ENU="Work Center,Machine Center, "];
                 SourceExpr=Type;
                 Visible=TRUE }

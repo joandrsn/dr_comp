@@ -2,9 +2,9 @@ OBJECT Table 382 CV Ledger Entry Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,66 +13,86 @@ OBJECT Table 382 CV Ledger Entry Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+    { 1   ;   ;Entry No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
     { 3   ;   ;CV No.              ;Code20        ;TableRelation=Customer;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Debitor/kreditornr.;
                                                               ENU=CV No.] }
-    { 4   ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+    { 4   ;   ;Posting Date        ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogføringsdato;
                                                               ENU=Posting Date] }
-    { 5   ;   ;Document Type       ;Option        ;CaptionML=[DAN=Bilagstype;
+    { 5   ;   ;Document Type       ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bilagstype;
                                                               ENU=Document Type];
                                                    OptionCaptionML=[DAN=" ,Betaling,Faktura,Kreditnota,Rentenota,Rykker,Refusion";
                                                                     ENU=" ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund"];
                                                    OptionString=[ ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund] }
-    { 6   ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+    { 6   ;   ;Document No.        ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bilagsnr.;
                                                               ENU=Document No.] }
-    { 7   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+    { 7   ;   ;Description         ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
     { 11  ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Valutakode;
                                                               ENU=Currency Code] }
-    { 13  ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+    { 13  ;   ;Amount              ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb;
                                                               ENU=Amount];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
-    { 14  ;   ;Remaining Amount    ;Decimal       ;CaptionML=[DAN=Restbeløb;
+    { 14  ;   ;Remaining Amount    ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Restbeløb;
                                                               ENU=Remaining Amount];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
-    { 15  ;   ;Original Amt. (LCY) ;Decimal       ;CaptionML=[DAN=Opr. beløb (RV);
+    { 15  ;   ;Original Amt. (LCY) ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Opr. beløb (RV);
                                                               ENU=Original Amt. (LCY)];
                                                    AutoFormatType=1 }
-    { 16  ;   ;Remaining Amt. (LCY);Decimal       ;CaptionML=[DAN=Restbeløb (RV);
+    { 16  ;   ;Remaining Amt. (LCY);Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Restbeløb (RV);
                                                               ENU=Remaining Amt. (LCY)];
                                                    AutoFormatType=1 }
-    { 17  ;   ;Amount (LCY)        ;Decimal       ;CaptionML=[DAN=Beløb (RV);
+    { 17  ;   ;Amount (LCY)        ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb (RV);
                                                               ENU=Amount (LCY)];
                                                    AutoFormatType=1 }
-    { 18  ;   ;Sales/Purchase (LCY);Decimal       ;CaptionML=[DAN=Salg/køb (RV);
+    { 18  ;   ;Sales/Purchase (LCY);Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Salg/køb (RV);
                                                               ENU=Sales/Purchase (LCY)];
                                                    AutoFormatType=1 }
-    { 19  ;   ;Profit (LCY)        ;Decimal       ;CaptionML=[DAN=Avancebeløb (RV);
+    { 19  ;   ;Profit (LCY)        ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Avancebeløb (RV);
                                                               ENU=Profit (LCY)];
                                                    AutoFormatType=1 }
-    { 20  ;   ;Inv. Discount (LCY) ;Decimal       ;CaptionML=[DAN=Fakt.rabatbeløb (RV);
+    { 20  ;   ;Inv. Discount (LCY) ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Fakt.rabatbeløb (RV);
                                                               ENU=Inv. Discount (LCY)];
                                                    AutoFormatType=1 }
     { 21  ;   ;Bill-to/Pay-to CV No.;Code20       ;TableRelation=Customer;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Kunde/leverandørnr.;
                                                               ENU=Bill-to/Pay-to CV No.] }
     { 22  ;   ;CV Posting Group    ;Code10        ;TableRelation="Customer Posting Group";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Bogf.gruppe - kunde/leverandør;
                                                               ENU=CV Posting Group] }
     { 23  ;   ;Global Dimension 1 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Global dimension 1-kode;
                                                               ENU=Global Dimension 1 Code];
                                                    CaptionClass='1,1,1' }
     { 24  ;   ;Global Dimension 2 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Global dimension 2-kode;
                                                               ENU=Global Dimension 2 Code];
                                                    CaptionClass='1,1,2' }
-    { 25  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 25  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 27  ;   ;User ID             ;Code50        ;TableRelation=User."User Name";
@@ -83,53 +103,71 @@ OBJECT Table 382 CV Ledger Entry Buffer
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 28  ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Kildespor;
                                                               ENU=Source Code] }
-    { 33  ;   ;On Hold             ;Code3         ;CaptionML=[DAN=Afvent;
+    { 33  ;   ;On Hold             ;Code3         ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afvent;
                                                               ENU=On Hold] }
-    { 34  ;   ;Applies-to Doc. Type;Option        ;CaptionML=[DAN=Udligningsbilagstype;
+    { 34  ;   ;Applies-to Doc. Type;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Udligningsbilagstype;
                                                               ENU=Applies-to Doc. Type];
                                                    OptionCaptionML=[DAN=" ,Betaling,Faktura,Kreditnota,Rentenota,Rykker,Refusion";
                                                                     ENU=" ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund"];
                                                    OptionString=[ ,Payment,Invoice,Credit Memo,Finance Charge Memo,Reminder,Refund] }
-    { 35  ;   ;Applies-to Doc. No. ;Code20        ;CaptionML=[DAN=Udligningsbilagsnr.;
+    { 35  ;   ;Applies-to Doc. No. ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Udligningsbilagsnr.;
                                                               ENU=Applies-to Doc. No.] }
-    { 36  ;   ;Open                ;Boolean       ;CaptionML=[DAN=Åben;
+    { 36  ;   ;Open                ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Åben;
                                                               ENU=Open] }
-    { 37  ;   ;Due Date            ;Date          ;CaptionML=[DAN=Forfaldsdato;
+    { 37  ;   ;Due Date            ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Forfaldsdato;
                                                               ENU=Due Date] }
-    { 38  ;   ;Pmt. Discount Date  ;Date          ;CaptionML=[DAN=Kont.rabatdato;
+    { 38  ;   ;Pmt. Discount Date  ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kont.rabatdato;
                                                               ENU=Pmt. Discount Date] }
     { 39  ;   ;Original Pmt. Disc. Possible;Decimal;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Oprindelig mulig kont.rabat;
                                                               ENU=Original Pmt. Disc. Possible];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
-    { 40  ;   ;Pmt. Disc. Given (LCY);Decimal     ;CaptionML=[DAN=Ydet kont.rabat (RV);
+    { 40  ;   ;Pmt. Disc. Given (LCY);Decimal     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ydet kont.rabat (RV);
                                                               ENU=Pmt. Disc. Given (LCY)];
                                                    AutoFormatType=1 }
-    { 43  ;   ;Positive            ;Boolean       ;CaptionML=[DAN=Positiv;
+    { 43  ;   ;Positive            ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Positiv;
                                                               ENU=Positive] }
     { 44  ;   ;Closed by Entry No. ;Integer       ;TableRelation="Cust. Ledger Entry";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Lukket af løbenr.;
                                                               ENU=Closed by Entry No.] }
-    { 45  ;   ;Closed at Date      ;Date          ;CaptionML=[DAN=Lukket den;
+    { 45  ;   ;Closed at Date      ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lukket den;
                                                               ENU=Closed at Date] }
-    { 46  ;   ;Closed by Amount    ;Decimal       ;CaptionML=[DAN=Lukket med beløb;
+    { 46  ;   ;Closed by Amount    ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lukket med beløb;
                                                               ENU=Closed by Amount];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
-    { 47  ;   ;Applies-to ID       ;Code50        ;CaptionML=[DAN=Udlignings-id;
+    { 47  ;   ;Applies-to ID       ;Code50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Udlignings-id;
                                                               ENU=Applies-to ID] }
-    { 49  ;   ;Journal Batch Name  ;Code10        ;CaptionML=[DAN=Kladdenavn;
+    { 49  ;   ;Journal Batch Name  ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kladdenavn;
                                                               ENU=Journal Batch Name] }
     { 50  ;   ;Reason Code         ;Code10        ;TableRelation="Reason Code";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Årsagskode;
                                                               ENU=Reason Code] }
-    { 51  ;   ;Bal. Account Type   ;Option        ;CaptionML=[DAN=Modkontotype;
+    { 51  ;   ;Bal. Account Type   ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Modkontotype;
                                                               ENU=Bal. Account Type];
                                                    OptionCaptionML=[DAN=Finanskonto,Debitor,Kreditor,Bankkonto,Anlæg;
                                                                     ENU=G/L Account,Customer,Vendor,Bank Account,Fixed Asset];
@@ -139,89 +177,118 @@ OBJECT Table 382 CV Ledger Entry Buffer
                                                                  ELSE IF (Bal. Account Type=CONST(Vendor)) Vendor
                                                                  ELSE IF (Bal. Account Type=CONST(Bank Account)) "Bank Account"
                                                                  ELSE IF (Bal. Account Type=CONST(Fixed Asset)) "Fixed Asset";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Modkonto;
                                                               ENU=Bal. Account No.] }
-    { 53  ;   ;Transaction No.     ;Integer       ;CaptionML=[DAN=Transaktionsnr.;
+    { 53  ;   ;Transaction No.     ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Transaktionsnr.;
                                                               ENU=Transaction No.] }
-    { 54  ;   ;Closed by Amount (LCY);Decimal     ;CaptionML=[DAN=Lukket med beløb (RV);
+    { 54  ;   ;Closed by Amount (LCY);Decimal     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lukket med beløb (RV);
                                                               ENU=Closed by Amount (LCY)];
                                                    AutoFormatType=1 }
-    { 58  ;   ;Debit Amount        ;Decimal       ;CaptionML=[DAN=Debetbeløb;
+    { 58  ;   ;Debit Amount        ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Debetbeløb;
                                                               ENU=Debit Amount];
                                                    BlankZero=Yes;
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
-    { 59  ;   ;Credit Amount       ;Decimal       ;CaptionML=[DAN=Kreditbeløb;
+    { 59  ;   ;Credit Amount       ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kreditbeløb;
                                                               ENU=Credit Amount];
                                                    BlankZero=Yes;
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
-    { 60  ;   ;Debit Amount (LCY)  ;Decimal       ;CaptionML=[DAN=Debetbeløb (RV);
+    { 60  ;   ;Debit Amount (LCY)  ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Debetbeløb (RV);
                                                               ENU=Debit Amount (LCY)];
                                                    BlankZero=Yes;
                                                    AutoFormatType=1 }
-    { 61  ;   ;Credit Amount (LCY) ;Decimal       ;CaptionML=[DAN=Kreditbeløb (RV);
+    { 61  ;   ;Credit Amount (LCY) ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kreditbeløb (RV);
                                                               ENU=Credit Amount (LCY)];
                                                    BlankZero=Yes;
                                                    AutoFormatType=1 }
-    { 62  ;   ;Document Date       ;Date          ;CaptionML=[DAN=Bilagsdato;
+    { 62  ;   ;Document Date       ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bilagsdato;
                                                               ENU=Document Date] }
-    { 63  ;   ;External Document No.;Code35       ;CaptionML=[DAN=Eksternt bilagsnr.;
+    { 63  ;   ;External Document No.;Code35       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Eksternt bilagsnr.;
                                                               ENU=External Document No.] }
-    { 64  ;   ;Calculate Interest  ;Boolean       ;CaptionML=[DAN=Beregn rente;
+    { 64  ;   ;Calculate Interest  ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beregn rente;
                                                               ENU=Calculate Interest] }
-    { 65  ;   ;Closing Interest Calculated;Boolean;CaptionML=[DAN=Beregnet Lukkerente;
+    { 65  ;   ;Closing Interest Calculated;Boolean;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beregnet Lukkerente;
                                                               ENU=Closing Interest Calculated] }
     { 66  ;   ;No. Series          ;Code10        ;TableRelation="No. Series";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Nummerserie;
                                                               ENU=No. Series] }
     { 67  ;   ;Closed by Currency Code;Code10     ;TableRelation=Currency;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Lukket med valutakode;
                                                               ENU=Closed by Currency Code] }
-    { 68  ;   ;Closed by Currency Amount;Decimal  ;CaptionML=[DAN=Lukket med valutabeløb;
+    { 68  ;   ;Closed by Currency Amount;Decimal  ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lukket med valutabeløb;
                                                               ENU=Closed by Currency Amount];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Closed by Currency Code" }
-    { 70  ;   ;Rounding Currency   ;Code10        ;CaptionML=[DAN=Afrundingsvaluta;
+    { 70  ;   ;Rounding Currency   ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afrundingsvaluta;
                                                               ENU=Rounding Currency] }
-    { 71  ;   ;Rounding Amount     ;Decimal       ;CaptionML=[DAN=Afrundingsbeløb;
+    { 71  ;   ;Rounding Amount     ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afrundingsbeløb;
                                                               ENU=Rounding Amount];
                                                    AutoFormatType=1 }
-    { 72  ;   ;Rounding Amount (LCY);Decimal      ;CaptionML=[DAN=Afrundingsbeløb (RV);
+    { 72  ;   ;Rounding Amount (LCY);Decimal      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afrundingsbeløb (RV);
                                                               ENU=Rounding Amount (LCY)];
                                                    AutoFormatType=1 }
-    { 73  ;   ;Adjusted Currency Factor;Decimal   ;CaptionML=[DAN=Reguleret valutafaktor;
+    { 73  ;   ;Adjusted Currency Factor;Decimal   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Reguleret valutafaktor;
                                                               ENU=Adjusted Currency Factor];
                                                    AutoFormatType=1 }
-    { 74  ;   ;Original Currency Factor;Decimal   ;CaptionML=[DAN=Oprindelig valutafaktor;
+    { 74  ;   ;Original Currency Factor;Decimal   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Oprindelig valutafaktor;
                                                               ENU=Original Currency Factor];
                                                    AutoFormatType=1 }
-    { 75  ;   ;Original Amount     ;Decimal       ;CaptionML=[DAN=Oprindeligt beløb;
+    { 75  ;   ;Original Amount     ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Oprindeligt beløb;
                                                               ENU=Original Amount];
                                                    AutoFormatType=1 }
     { 77  ;   ;Remaining Pmt. Disc. Possible;Decimal;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Mulig restkontantrabat;
                                                               ENU=Remaining Pmt. Disc. Possible];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
-    { 78  ;   ;Pmt. Disc. Tolerance Date;Date     ;CaptionML=[DAN=Kontantrabattolerancedato;
+    { 78  ;   ;Pmt. Disc. Tolerance Date;Date     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontantrabattolerancedato;
                                                               ENU=Pmt. Disc. Tolerance Date] }
-    { 79  ;   ;Max. Payment Tolerance;Decimal     ;CaptionML=[DAN=Maks. betalingstolerance;
+    { 79  ;   ;Max. Payment Tolerance;Decimal     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Maks. betalingstolerance;
                                                               ENU=Max. Payment Tolerance] }
-    { 81  ;   ;Accepted Payment Tolerance;Decimal ;CaptionML=[DAN=Godkendt betalingstolerance;
+    { 81  ;   ;Accepted Payment Tolerance;Decimal ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Godkendt betalingstolerance;
                                                               ENU=Accepted Payment Tolerance] }
     { 82  ;   ;Accepted Pmt. Disc. Tolerance;Boolean;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Godkendt kont.rabattolerance;
                                                               ENU=Accepted Pmt. Disc. Tolerance] }
-    { 83  ;   ;Pmt. Tolerance (LCY);Decimal       ;CaptionML=[DAN=Betalingstolerance (RV);
+    { 83  ;   ;Pmt. Tolerance (LCY);Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Betalingstolerance (RV);
                                                               ENU=Pmt. Tolerance (LCY)] }
-    { 84  ;   ;Amount to Apply     ;Decimal       ;CaptionML=[DAN=Beløb, der skal udlignes;
+    { 84  ;   ;Amount to Apply     ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb, der skal udlignes;
                                                               ENU=Amount to Apply];
                                                    AutoFormatType=1;
                                                    AutoFormatExpr="Currency Code" }
-    { 90  ;   ;Prepayment          ;Boolean       ;CaptionML=[DAN=Forudbetaling;
+    { 90  ;   ;Prepayment          ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Forudbetaling;
                                                               ENU=Prepayment] }
     { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Dimensionsgruppe-id;
                                                               ENU=Dimension Set ID];
                                                    Editable=No }

@@ -2,9 +2,9 @@ OBJECT Codeunit 5054 WordManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -23,7 +23,7 @@ OBJECT Codeunit 5054 WordManagement
       Text008@1008 : TextConst 'DAN=Overfører %1-data til Microsoft Word...;ENU=Transferring %1 data to Microsoft Word...';
       Text009@1049 : TextConst 'DAN=Sender individuelle mails...;ENU=Sending individual email messages...';
       Text010@1010 : TextConst '@@@=Attachment No. must have File Extension DOC or DOCX.;DAN=%1 %2 skal have %3 DOC eller DOCX.;ENU=%1 %2 must have %3 DOC or DOCX.';
-      Text011@1011 : TextConst 'DAN=Fejl i vedhæftet fil;ENU=Attachment file error';
+      Text011@1011 : TextConst 'DAN=Fejl i vedhæftet fil.;ENU=Attachment file error.';
       Text012@1012 : TextConst 'DAN=Opretter flettekilde...;ENU=Creating merge source...';
       Text013@1013 : TextConst 'DAN=Microsoft Word åbner flettekilde...;ENU=Microsoft Word is opening merge source...';
       Text014@1014 : TextConst 'DAN=Fletter %1 i Microsoft Word...;ENU=Merging %1 in Microsoft Word...';
@@ -99,12 +99,10 @@ OBJECT Codeunit 5054 WordManagement
 
       WordDocument := WordHelper.CallOpen(WordApplication,FileName,FALSE,Attachment."Read Only");
 
-      // Handle Word documents without mergefields
-      IF DocumentContainMergefields(Attachment) THEN
-        IF ISNULL(WordDocument.MailMerge.MainDocumentType) THEN BEGIN
-          WordDocument.MailMerge.MainDocumentType := 0; // 0 = wdFormLetters
-          WordHelper.CallMailMergeOpenDataSource(WordDocument,MergeFileName,ParamInt);
-        END;
+      IF ISNULL(WordDocument.MailMerge.MainDocumentType) THEN BEGIN
+        WordDocument.MailMerge.MainDocumentType := 0; // 0 = wdFormLetters
+        WordHelper.CallMailMergeOpenDataSource(WordDocument,MergeFileName,ParamInt);
+      END;
 
       IF WordDocument.MailMerge.Fields.Count > 0 THEN BEGIN
         ParamInt := 7; // 7 = HTML
@@ -218,6 +216,7 @@ OBJECT Codeunit 5054 WordManagement
       WordMergefile@1019 : DotNet "'Microsoft.Dynamics.Nav.Integration.Office, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Integration.Office.Word.MergeHandler" RUNONCLIENT;
       WordOLEFormat@1027 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.OLEFormat" RUNONCLIENT;
       WordLinkFormat@1023 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.LinkFormat" RUNONCLIENT;
+      WordShape@1003 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.Shape" RUNONCLIENT;
       MergeFile@1028 : File;
       MergeClientFileName@1025 : Text;
       MainFileName@1011 : Text;
@@ -240,7 +239,9 @@ OBJECT Codeunit 5054 WordManagement
       Attachment.CALCFIELDS(Attachment);
 
       // Handle Word documents without mergefields
-      IF NOT DocumentContainMergefields(Attachment) THEN BEGIN
+      IF NOT DocumentContainMergefields(Attachment) AND
+         TempDeliverySorter."Send Word Docs. as Attmt."
+      THEN BEGIN
         SendAttachmentWithoutMergeFields(WordApplication,TempDeliverySorter,Attachment);
         EXIT;
       END;
@@ -306,13 +307,18 @@ OBJECT Codeunit 5054 WordManagement
 
       FOR ShapesIndex := 1 TO WordDocument.InlineShapes.Count DO BEGIN
         WordInlineShape := WordHelper.GetInlineShapeItem(WordDocument,ShapesIndex);
+        WordInlineShape.Select;
         IF NOT ISNULL(WordInlineShape) THEN BEGIN
-          WordLinkFormat := WordInlineShape.LinkFormat;
-          WordOLEFormat := WordInlineShape.OLEFormat;
+          WordShape := WordInlineShape.ConvertToShape;
+          WordLinkFormat := WordShape.LinkFormat;
+          WordOLEFormat := WordShape.OLEFormat;
           IF NOT ISNULL(WordOLEFormat) THEN
             WordDocument.MailMerge.MailAsAttachment := WordDocument.MailMerge.MailAsAttachment OR WordOLEFormat.DisplayAsIcon;
-          IF NOT ISNULL(WordLinkFormat) THEN
+          IF NOT ISNULL(WordLinkFormat) THEN BEGIN
             WordLinkFormat.SavePictureWithDocument := TRUE;
+            WordLinkFormat.BreakLink;
+            WordLinkFormat.Update;
+          END;
         END;
       END;
 
@@ -370,68 +376,8 @@ OBJECT Codeunit 5054 WordManagement
     END;
 
     PROCEDURE ShowMergedDocument@11(VAR SegLine@1000 : Record 5077;VAR Attachment@1001 : Record 5062;WordCaption@1002 : Text[260];IsTemporary@1016 : Boolean);
-    VAR
-      TempInteractLogEntry@1026 : TEMPORARY Record 5065;
-      WordMergefile@1017 : DotNet "'Microsoft.Dynamics.Nav.Integration.Office, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Integration.Office.Word.MergeHandler" RUNONCLIENT;
-      WordApplication@1019 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.ApplicationClass" RUNONCLIENT;
-      WordDocument@1018 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.Document" RUNONCLIENT;
-      MergeClientFileName@1009 : Text;
-      MainFileName@1010 : Text;
-      ParamInt@1011 : Integer;
-      IsInherited@1021 : Boolean;
-      MergeFile@1022 : File;
-      HeaderIsReady@1023 : Boolean;
     BEGIN
-      IF NOT IsWordDocumentExtension(Attachment."File Extension") THEN
-        ERROR(STRSUBSTNO(Text010,Attachment.TABLECAPTION,Attachment."No.",
-            Attachment.FIELDCAPTION("File Extension")));
-
-      IF SegLine.AttachmentInherited THEN
-        IsInherited := TRUE;
-
-      MainFileName := FileMgt.ClientTempFileName('DOC');
-
-      // Handle Word documents without mergefields
-      IF NOT DocumentContainMergefields(Attachment) THEN BEGIN
-        Attachment.ExportAttachmentToClientFile(MainFileName);
-        WordApplication := WordApplication.ApplicationClass;
-        WordDocument := WordHelper.CallOpen(WordApplication,MainFileName,FALSE,Attachment."Read Only");
-      END ELSE BEGIN
-        // Merge possible
-        IF NOT Attachment.ExportAttachmentToClientFile(MainFileName) THEN
-          ERROR(Text011);
-
-        Attachment.CALCFIELDS("Merge Source");
-        IF Attachment."Merge Source".HASVALUE THEN BEGIN
-          CreateMergeSource(MergeFile);
-          PopulateInterLogEntryToMergeSource(MergeFile,Attachment,SegLine."Line No.",HeaderIsReady,0);
-          MergeClientFileName := CloseAndDownloadMergeSource(MergeFile);
-        END ELSE BEGIN
-          MergeClientFileName := FileMgt.ClientTempFileName('HTM');
-          WordMergefile := WordMergefile.MergeHandler;
-          CreateHeader(WordMergefile,FALSE,MergeClientFileName,SegLine."Language Code");
-
-          AddFieldsToMergeSource(WordMergefile,TempInteractLogEntry,SegLine,'');
-          WordMergefile.CloseMergeFile;
-        END;
-
-        WordApplication := WordApplication.ApplicationClass;
-        WordDocument := WordHelper.CallOpen(WordApplication,MainFileName,FALSE,FALSE);
-        WordDocument.MailMerge.MainDocumentType := 0;
-        ParamInt := 7; // 7 = HTML
-        WordHelper.CallMailMergeOpenDataSource(WordDocument,MergeClientFileName,ParamInt);
-        ParamInt := 9999998; // 9999998 = wdToggle
-        WordDocument.MailMerge.ViewMailMergeFieldCodes(ParamInt);
-      END;
-
-      WordHandler(WordDocument,Attachment,WordCaption,IsTemporary,MainFileName,IsInherited);
-
-      CLEAR(WordMergefile);
-      CLEAR(WordDocument);
-      WordHelper.CallQuit(WordApplication,FALSE);
-      CLEAR(WordApplication);
-
-      DeleteFile(MergeClientFileName);
+      RunMergedDocument(SegLine,Attachment,WordCaption,IsTemporary,TRUE,TRUE);
     END;
 
     PROCEDURE CreateHeader@4(VAR WordMergefile@1011 : DotNet "'Microsoft.Dynamics.Nav.Integration.Office, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Integration.Office.Word.MergeHandler" RUNONCLIENT;MergeFieldsOnly@1000 : Boolean;MergeFileName@1001 : Text;LanguageCode@1100 : Code[10]);
@@ -640,21 +586,17 @@ OBJECT Codeunit 5054 WordManagement
       InStreamBLOB@1005 : InStream;
       CurrentLine@1003 : Text[250];
       NewLine@1002 : Text[250];
-      SearchValue@1007 : Text[30];
       LineIsFound@1010 : Boolean;
     BEGIN
       Attachment.CALCFIELDS("Merge Source");
       Attachment."Merge Source".CREATEINSTREAM(InStreamBLOB);
-      SearchValue := '<td>' + FORMAT(EntryNo) + '</td>';
       REPEAT
         InStreamBLOB.READTEXT(CurrentLine);
         IF (STRPOS(CurrentLine,'<tr>') > 0) AND HeaderIsReady THEN BEGIN
           InStreamBLOB.READTEXT(NewLine);
-          IF STRPOS(NewLine,SearchValue) > 0 THEN BEGIN
-            MergeFile.WRITE(CurrentLine);
-            MergeFile.WRITE(NewLine);
-            LineIsFound := TRUE
-          END
+          MergeFile.WRITE(CurrentLine);
+          MergeFile.WRITE(NewLine);
+          LineIsFound := TRUE
         END;
 
         IF NOT HeaderIsReady THEN BEGIN
@@ -696,7 +638,7 @@ OBJECT Codeunit 5054 WordManagement
       ContAddr@1011 : ARRAY [8] OF Text[50];
       ContAddr2@1010 : ARRAY [8] OF Text[50];
       LineNo@1016 : Text;
-      SalesPersonCode@1014 : Code[10];
+      SalesPersonCode@1014 : Code[20];
       ContactNo@1015 : Code[20];
       ContactAltAddressCode@1017 : Code[10];
       LanguageCode@1019 : Code[10];
@@ -949,6 +891,107 @@ OBJECT Codeunit 5054 WordManagement
         EXIT(FALSE);
 
       EXIT(TRUE);
+    END;
+
+    PROCEDURE RunMergedDocument@20(VAR SegLine@1000 : Record 5077;VAR Attachment@1001 : Record 5062;WordCaption@1002 : Text[260];IsTemporary@1016 : Boolean;IsVisible@1003 : Boolean;Handler@1005 : Boolean);
+    VAR
+      TempInteractLogEntry@1026 : TEMPORARY Record 5065;
+      WordMergefile@1017 : DotNet "'Microsoft.Dynamics.Nav.Integration.Office, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Integration.Office.Word.MergeHandler" RUNONCLIENT;
+      WordApplication@1019 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.ApplicationClass" RUNONCLIENT;
+      WordDocument@1018 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.Document" RUNONCLIENT;
+      MergeFile@1004 : File;
+      MergeClientFileName@1009 : Text;
+      MainFileName@1010 : Text;
+      ParamInt@1011 : Integer;
+      IsInherited@1021 : Boolean;
+      HeaderIsReady@1023 : Boolean;
+    BEGIN
+      IF NOT IsWordDocumentExtension(Attachment."File Extension") THEN
+        ERROR(STRSUBSTNO(Text010,Attachment.TABLECAPTION,Attachment."No.",
+            Attachment.FIELDCAPTION("File Extension")));
+
+      IF SegLine.AttachmentInherited THEN
+        IsInherited := TRUE;
+
+      MainFileName := FileMgt.ClientTempFileName('DOC');
+
+      // Handle Word documents without mergefields
+      IF NOT DocumentContainMergefields(Attachment) THEN BEGIN
+        Attachment.ExportAttachmentToClientFile(MainFileName);
+        WordApplication := WordApplication.ApplicationClass;
+        WordDocument := WordHelper.CallOpen(WordApplication,MainFileName,FALSE,Attachment."Read Only");
+      END ELSE BEGIN
+        // Merge possible
+        IF NOT Attachment.ExportAttachmentToClientFile(MainFileName) THEN
+          ERROR(Text011);
+
+        Attachment.CALCFIELDS("Merge Source");
+        IF Attachment."Merge Source".HASVALUE THEN BEGIN
+          CreateMergeSource(MergeFile);
+          PopulateInterLogEntryToMergeSource(MergeFile,Attachment,SegLine."Line No.",HeaderIsReady,0);
+          MergeClientFileName := CloseAndDownloadMergeSource(MergeFile);
+        END ELSE BEGIN
+          MergeClientFileName := FileMgt.ClientTempFileName('HTM');
+          WordMergefile := WordMergefile.MergeHandler;
+          CreateHeader(WordMergefile,FALSE,MergeClientFileName,SegLine."Language Code");
+
+          AddFieldsToMergeSource(WordMergefile,TempInteractLogEntry,SegLine,'');
+          WordMergefile.CloseMergeFile;
+        END;
+
+        WordApplication := WordApplication.ApplicationClass;
+        WordDocument := WordHelper.CallOpen(WordApplication,MainFileName,FALSE,FALSE);
+        WordDocument.MailMerge.MainDocumentType := 0;
+        ParamInt := 7; // 7 = HTML
+        WordHelper.CallMailMergeOpenDataSource(WordDocument,MergeClientFileName,ParamInt);
+        ParamInt := 9999998; // 9999998 = wdToggle
+        WordDocument.MailMerge.ViewMailMergeFieldCodes(ParamInt);
+      END;
+
+      IF Handler THEN
+        WordHandler(WordDocument,Attachment,WordCaption,IsTemporary,MainFileName,IsInherited)
+      ELSE
+        WordMerge(WordDocument,Attachment,WordCaption,IsTemporary,MainFileName,IsInherited,IsVisible);
+
+      CLEAR(WordMergefile);
+      CLEAR(WordDocument);
+      WordHelper.CallQuit(WordApplication,FALSE);
+      CLEAR(WordApplication);
+
+      DeleteFile(MergeClientFileName);
+    END;
+
+    LOCAL PROCEDURE WordMerge@9(VAR WordDocument@1009 : DotNet "'Microsoft.Office.Interop.Word, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c'.Microsoft.Office.Interop.Word.Document";VAR Attachment@1001 : Record 5062;Caption@1002 : Text[260];IsTemporary@1003 : Boolean;FileName@1004 : Text;IsInherited@1008 : Boolean;IsVisible@1012 : Boolean) DocImported@1000 : Boolean;
+    VAR
+      FileManagement@1007 : Codeunit 419;
+      WordHandler@1006 : DotNet "'Microsoft.Dynamics.Nav.Integration.Office, Version=9.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Integration.Office.Word.WordHandler" RUNONCLIENT;
+      TempFileName@1010 : Text;
+      NewFileName@1005 : Text;
+    BEGIN
+      WordHandler := WordHandler.WordHandler;
+
+      IF IsVisible THEN BEGIN
+        WordDocument.ActiveWindow.Caption := Caption;
+        WordDocument.Application.Visible := TRUE; // Visible before WindowState KB176866 - http://support.microsoft.com/kb/176866
+        WordDocument.ActiveWindow.WindowState := 1; // 1 = wdWindowStateMaximize
+        WordDocument.Application.Activate;
+        NewFileName := WordHandler.WaitForDocument(WordDocument);
+      END ELSE BEGIN
+        WordHelper.CallClose(WordDocument,TRUE);
+        NewFileName := FileName;
+      END;
+
+      IF IsTemporary THEN BEGIN
+        TempFileName := FileManagement.ClientTempFileName(FileManagement.GetExtension(NewFileName));
+        FileManagement.CopyClientFile(NewFileName,TempFileName,TRUE);
+        Attachment.ImportAttachmentFromClientFile(TempFileName,IsTemporary,IsInherited);
+        FileManagement.DeleteClientFile(TempFileName);
+        DeleteFile(NewFileName);
+        DocImported := TRUE;
+      END;
+
+      CLEAR(WordHandler);
+      DeleteFile(FileName);
     END;
 
     BEGIN

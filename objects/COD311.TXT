@@ -2,9 +2,9 @@ OBJECT Codeunit 311 Item-Check Avail.
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -124,6 +124,8 @@ OBJECT Codeunit 311 Item-Check Avail.
       IF NOT ShowWarningForThisItem(SalesLine."No.") THEN
         EXIT(FALSE);
 
+      CLEAR(AvailableToPromise);
+
       OldItemNetChange := 0;
       OldSalesLine := SalesLine;
       IF OldSalesLine.FIND THEN BEGIN // Find previous quantity within Check-Avail. Period
@@ -139,11 +141,14 @@ OBJECT Codeunit 311 Item-Check Avail.
            (OldSalesLine."Bin Code" = SalesLine."Bin Code") AND
            NOT OldSalesLine."Drop Shipment" AND
            (OldSalesLine."Shipment Date" <= LookAheadDate)
-        THEN BEGIN
-          OldItemNetChange := -OldSalesLine."Outstanding Qty. (Base)";
-          OldSalesLine.CALCFIELDS("Reserved Qty. (Base)");
-          OldItemNetResChange := -OldSalesLine."Reserved Qty. (Base)";
-        END;
+        THEN
+          IF OldSalesLine."Shipment Date" > SalesLine."Shipment Date" THEN
+            AvailableToPromise.SetChangedSalesLine(OldSalesLine)
+          ELSE BEGIN
+            OldItemNetChange := -OldSalesLine."Outstanding Qty. (Base)";
+            OldSalesLine.CALCFIELDS("Reserved Qty. (Base)");
+            OldItemNetResChange := -OldSalesLine."Reserved Qty. (Base)";
+          END;
       END;
 
       NewItemNetResChange := -(SalesLine."Qty. to Asm. to Order (Base)" - OldSalesLine.QtyBaseOnATO);
@@ -213,7 +218,8 @@ OBJECT Codeunit 311 Item-Check Avail.
       ItemNetChange := 0;
       IF Item."No." = ItemNo THEN BEGIN
         ItemNetChange := NewItemNetChange;
-        GrossReq := GrossReq + OldItemNetChange;
+        IF GrossReq + OldItemNetChange >= 0 THEN
+          GrossReq := GrossReq + OldItemNetChange;
       END;
 
       InitialQtyAvailable :=
@@ -373,6 +379,8 @@ OBJECT Codeunit 311 Item-Check Avail.
     VAR
       OldAssemblyLine@1001 : Record 901;
     BEGIN
+      CLEAR(AvailableToPromise);
+
       OldItemNetChange := 0;
 
       OldAssemblyLine := AssemblyLine;
@@ -384,11 +392,14 @@ OBJECT Codeunit 311 Item-Check Avail.
            (OldAssemblyLine."Variant Code" = AssemblyLine."Variant Code") AND
            (OldAssemblyLine."Location Code" = AssemblyLine."Location Code") AND
            (OldAssemblyLine."Bin Code" = AssemblyLine."Bin Code")
-        THEN BEGIN
-          OldItemNetChange := -OldAssemblyLine."Remaining Quantity (Base)";
-          OldAssemblyLine.CALCFIELDS("Reserved Qty. (Base)");
-          OldItemNetResChange := -OldAssemblyLine."Reserved Qty. (Base)";
-        END;
+        THEN
+          IF OldAssemblyLine."Due Date" > AssemblyLine."Due Date" THEN
+            AvailableToPromise.SetChangedAsmLine(OldAssemblyLine)
+          ELSE BEGIN
+            OldItemNetChange := -OldAssemblyLine."Remaining Quantity (Base)";
+            OldAssemblyLine.CALCFIELDS("Reserved Qty. (Base)");
+            OldItemNetResChange := -OldAssemblyLine."Reserved Qty. (Base)";
+          END;
 
       UseOrderPromise := TRUE;
       EXIT(

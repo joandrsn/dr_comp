@@ -1,0 +1,32 @@
+OBJECT Page 1755 Data Class. Legal Disclaimer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06-04-18;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.50221;
+  }
+  PROPERTIES
+  {
+    CaptionML=[DAN=Ansvarsfraskrivelse;
+               ENU=Legal Disclaimer];
+    PageType=CardPart;
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Field     ;
+                CaptionML=[DAN=Microsoft tilbyder kun denne funktion til dataklassificering for at gøre tingene nemmere for dig. Du har selv ansvaret for at klassificere dataene korrekt og overholde de love og regler, der gælder for dig. Microsoft fraskriver sig ethvert ansvar i forbindelse med krav vedrørende din klassificering af dataene.;
+                           ENU=Microsoft is providing this Data Classification feature as a matter of convenience only. It's your responsibility to classify the data appropriately and comply with any laws and regulations that are applicable to you. Microsoft disclaims all responsibility towards any claims related to your classification of the data.] }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

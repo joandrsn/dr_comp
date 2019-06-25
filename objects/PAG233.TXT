@@ -2,9 +2,9 @@ OBJECT Page 233 Apply Vendor Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -256,8 +256,15 @@ OBJECT Page 233 Apply Vendor Entries
                 GroupType=Repeater }
 
     { 22  ;2   ;Field     ;
+                Name=AppliesToID;
+                CaptionML=[DAN=Udlignings-id;
+                           ENU=Applies-to ID];
                 SourceExpr="Applies-to ID";
-                Visible="Applies-to IDVisible" }
+                Visible="Applies-to IDVisible";
+                OnValidate=BEGIN
+                             CurrPage.UPDATE(TRUE);
+                           END;
+                            }
 
     { 2   ;2   ;Field     ;
                 SourceExpr="Posting Date";
@@ -314,7 +321,7 @@ OBJECT Page 233 Apply Vendor Entries
                              CODEUNIT.RUN(CODEUNIT::"Vend. Entry-Edit",Rec);
 
                              IF (xRec."Amount to Apply" = 0) OR ("Amount to Apply" = 0) AND
-                                (ApplnType = ApplnType::"Applies-to ID")
+                                ((ApplnType = ApplnType::"Applies-to ID") OR (CalcType = CalcType::Direct))
                              THEN
                                SetVendApplId;
                              GET("Entry No.");
@@ -413,6 +420,7 @@ OBJECT Page 233 Apply Vendor Entries
                            ENU=Pmt. Disc. Amount] }
 
     { 94  ;4   ;Field     ;
+                Name=PmtDiscAmount;
                 CaptionML=[DAN=Kontantrabatbeløb;
                            ENU=Pmt. Disc. Amount];
                 SourceExpr=-PmtDiscAmount;
@@ -915,6 +923,7 @@ OBJECT Page 233 Apply Vendor Entries
       PossiblePmtdisc@1007 : Decimal;
       OldPmtdisc@1008 : Decimal;
       CorrectionAmount@1009 : Decimal;
+      RemainingAmountExclDiscounts@1012 : Decimal;
       CanUseDisc@1005 : Boolean;
       FromZeroGenJnl@1010 : Boolean;
     BEGIN
@@ -968,12 +977,15 @@ OBJECT Page 233 Apply Vendor Entries
                     AppliedVendLedgEntryTemp."Remaining Amount" - AppliedVendLedgEntryTemp."Remaining Pmt. Disc. Possible";
                 END ELSE BEGIN
                   PossiblePmtdisc := AppliedVendLedgEntryTemp."Remaining Pmt. Disc. Possible";
-                  IF (CurrentAmount + AppliedVendLedgEntryTemp."Remaining Amount" <= 0) <> (CurrentAmount <= 0) THEN BEGIN
+                  RemainingAmountExclDiscounts := AppliedVendLedgEntryTemp."Remaining Amount" - PossiblePmtdisc -
+                    AppliedVendLedgEntryTemp."Max. Payment Tolerance";
+                  IF ABS(CurrentAmount) + ABS(CalcOppositeEntriesAmount(AppliedVendLedgEntryTemp)) >= ABS(RemainingAmountExclDiscounts)
+                  THEN BEGIN
                     PmtDiscAmount := PmtDiscAmount + PossiblePmtdisc;
                     AppliedAmount := AppliedAmount + CorrectionAmount;
                   END;
-              CurrentAmount := CurrentAmount + AppliedVendLedgEntryTemp."Remaining Amount" -
-                AppliedVendLedgEntryTemp."Remaining Pmt. Disc. Possible";
+                  CurrentAmount := CurrentAmount + AppliedVendLedgEntryTemp."Remaining Amount" -
+                    AppliedVendLedgEntryTemp."Remaining Pmt. Disc. Possible";
                 END;
           END ELSE BEGIN
             IF ((CurrentAmount + AppliedVendLedgEntryTemp."Amount to Apply") * CurrentAmount) >= 0 THEN
@@ -1030,6 +1042,7 @@ OBJECT Page 233 Apply Vendor Entries
     VAR
       VendEntryApplyPostedEntries@1000 : Codeunit 227;
       PostApplication@1002 : Page 579;
+      Applied@1006 : Boolean;
       ApplicationDate@1001 : Date;
       NewApplicationDate@1003 : Date;
       NewDocumentNo@1004 : Code[20];
@@ -1050,9 +1063,9 @@ OBJECT Page 233 Apply Vendor Entries
           IF PreviewMode THEN
             VendEntryApplyPostedEntries.PreviewApply(Rec,NewDocumentNo,NewApplicationDate)
           ELSE
-            VendEntryApplyPostedEntries.Apply(Rec,NewDocumentNo,NewApplicationDate);
+            Applied := VendEntryApplyPostedEntries.Apply(Rec,NewDocumentNo,NewApplicationDate);
 
-          IF NOT PreviewMode THEN BEGIN
+          IF (NOT PreviewMode) AND Applied THEN BEGIN
             MESSAGE(Text012);
             PostingDone := TRUE;
             CurrPage.CLOSE;
@@ -1071,7 +1084,7 @@ OBJECT Page 233 Apply Vendor Entries
          (ApplnType = ApplnType::"Applies-to Doc. No.")
       THEN
         EXIT(FALSE);
-      EXIT(CalcType = CalcType::Direct);
+      EXIT((CalcType = CalcType::Direct) AND NOT OK AND NOT PostingDone);
     END;
 
     PROCEDURE SetAppliesToID@1031(AppliesToID2@1043 : Code[50]);
@@ -1106,6 +1119,27 @@ OBJECT Page 233 Apply Vendor Entries
             CalcVendLedgEntry."Amount to Apply",
             CalcVendLedgEntry."Currency Code",
             CurrencyCode,PostingDate);
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcOppositeEntriesAmount@17(VAR TempAppliedVendorLedgerEntry@1000 : TEMPORARY Record 25) Result : Decimal;
+    VAR
+      SavedAppliedVendorLedgerEntry@1002 : Record 25;
+      CurrPosFilter@1001 : Text;
+    BEGIN
+      WITH TempAppliedVendorLedgerEntry DO BEGIN
+        CurrPosFilter := GETFILTER(Positive);
+        IF CurrPosFilter <> '' THEN BEGIN
+          SavedAppliedVendorLedgerEntry := TempAppliedVendorLedgerEntry;
+          SETRANGE(Positive,NOT Positive);
+          IF FINDSET THEN
+            REPEAT
+              CALCFIELDS("Remaining Amount");
+              Result += "Remaining Amount";
+            UNTIL NEXT = 0;
+          SETFILTER(Positive,CurrPosFilter);
+          TempAppliedVendorLedgerEntry := SavedAppliedVendorLedgerEntry;
+        END;
       END;
     END;
 

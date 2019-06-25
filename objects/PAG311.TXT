@@ -2,9 +2,9 @@ OBJECT Page 311 Intrastat Journal
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.48316,NAVDK9.00.00.48316;
   }
   PROPERTIES
   {
@@ -88,10 +88,10 @@ OBJECT Page 311 Intrastat Journal
                                END;
                                 }
       { 52      ;2   ;Action    ;
-                      Name=MakeDiskette;
+                      Name=CreateFile;
                       Ellipsis=Yes;
-                      CaptionML=[DAN=Dan diskette TS;
-                                 ENU=Make Diskette];
+                      CaptionML=[DAN=Opret fil;
+                                 ENU=Create File];
                       Promoted=Yes;
                       PromotedIsBig=Yes;
                       Image=MakeDiskette;

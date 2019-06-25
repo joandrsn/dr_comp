@@ -2,9 +2,9 @@ OBJECT Codeunit 5950 Service-Calc. Discount
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -69,8 +69,6 @@ OBJECT Codeunit 5950 Service-Calc. Discount
         ServiceLine2.SETRANGE("Document Type","Document Type");
         ServiceLine2.SETRANGE("Document No.","Document No.");
         ServiceLine2.SETFILTER(Type,'<>0');
-        IF ServHeader."Document Type" = ServHeader."Document Type"::Order THEN
-          ServiceLine2.SETFILTER("Service Item No.",'<>%1','');
         IF ServiceLine2.FIND('-') THEN;
         ServiceLine2.CalcVATAmountLines(0,ServHeader,ServiceLine2,TempVATAmountLine,FALSE);
         InvDiscBase :=

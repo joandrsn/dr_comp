@@ -2,9 +2,9 @@ OBJECT Codeunit 5431 Calc. Item Plan - Plan Wksh.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -122,11 +122,27 @@ OBJECT Codeunit 5431 Calc. Item Plan - Plan Wksh.
 
     PROCEDURE Finalize@3();
     VAR
+      PlanningComponent@1002 : Record 99000829;
+      RequisitionLine@1001 : Record 246;
       ReservMgt@1000 : Codeunit 99000845;
     BEGIN
       // Items already planned for removed from temporary list:
       IF TempPlanningCompList.FIND('-') THEN
         REPEAT
+          IF TempPlanningCompList."Planning Level Code" > 0 THEN BEGIN
+            RequisitionLine.SETRANGE("Worksheet Template Name",CurrTemplateName);
+            RequisitionLine.SETRANGE("Journal Batch Name",CurrWorksheetName);
+            RequisitionLine.SETRANGE("Ref. Order Type",TempPlanningCompList."Ref. Order Type");
+            RequisitionLine.SETRANGE("Ref. Order No.",TempPlanningCompList."Ref. Order No.");
+            RequisitionLine.SETRANGE(Type,RequisitionLine.Type::Item);
+            RequisitionLine.SETRANGE("No.",TempPlanningCompList."Item No.");
+            IF RequisitionLine.ISEMPTY THEN BEGIN
+              PlanningComponent := TempPlanningCompList;
+              PlanningComponent.FIND;
+              PlanningComponent.VALIDATE("Planning Level Code",0);
+              PlanningComponent.MODIFY(TRUE);
+            END;
+          END;
           IF TempItemList.GET(TempPlanningCompList."Item No.") THEN
             TempPlanningCompList.DELETE;
         UNTIL TempPlanningCompList.NEXT = 0;
@@ -265,6 +281,11 @@ OBJECT Codeunit 5431 Calc. Item Plan - Plan Wksh.
     PROCEDURE GetResiliencyError@62(VAR PlanningErrorLogEntry@1000 : Record 5430) : Boolean;
     BEGIN
       EXIT(InvtProfileOffsetting.GetResiliencyError(PlanningErrorLogEntry));
+    END;
+
+    PROCEDURE ClearInvtProfileOffsetting@10();
+    BEGIN
+      CLEAR(InvtProfileOffsetting);
     END;
 
     BEGIN

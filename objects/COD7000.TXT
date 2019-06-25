@@ -2,9 +2,9 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -265,6 +265,7 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
     LOCAL PROCEDURE CalcBestUnitPrice@1(VAR SalesPrice@1000 : Record 7002);
     VAR
       BestSalesPrice@1002 : Record 7002;
+      BestSalesPriceFound@1001 : Boolean;
     BEGIN
       WITH SalesPrice DO BEGIN
         FoundSalesPrice := FINDSET;
@@ -280,20 +281,25 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
               CASE TRUE OF
                 ((BestSalesPrice."Currency Code" = '') AND ("Currency Code" <> '')) OR
                 ((BestSalesPrice."Variant Code" = '') AND ("Variant Code" <> '')):
-                  BestSalesPrice := SalesPrice;
+                  BEGIN
+                    BestSalesPrice := SalesPrice;
+                    BestSalesPriceFound := TRUE;
+                  END;
                 ((BestSalesPrice."Currency Code" = '') OR ("Currency Code" <> '')) AND
                 ((BestSalesPrice."Variant Code" = '') OR ("Variant Code" <> '')):
                   IF (BestSalesPrice."Unit Price" = 0) OR
                      (CalcLineAmount(BestSalesPrice) > CalcLineAmount(SalesPrice))
-                  THEN
+                  THEN BEGIN
                     BestSalesPrice := SalesPrice;
+                    BestSalesPriceFound := TRUE;
+                  END;
               END;
             END;
           UNTIL NEXT = 0;
       END;
 
       // No price found in agreement
-      IF BestSalesPrice."Unit Price" = 0 THEN BEGIN
+      IF NOT BestSalesPriceFound THEN BEGIN
         ConvertPriceToVAT(
           Item."Price Includes VAT",Item."VAT Prod. Posting Group",
           Item."VAT Bus. Posting Gr. (Price)",Item."Unit Price");
@@ -451,10 +457,8 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
       WITH ToSalesPrice DO BEGIN
         IF FromSalesPrice.FINDSET THEN
           REPEAT
-            IF FromSalesPrice."Unit Price" <> 0 THEN BEGIN
-              ToSalesPrice := FromSalesPrice;
-              INSERT;
-            END;
+            ToSalesPrice := FromSalesPrice;
+            INSERT;
           UNTIL FromSalesPrice.NEXT = 0;
       END;
     END;
@@ -464,10 +468,8 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
       WITH ToSalesLineDisc DO BEGIN
         IF FromSalesLineDisc.FINDSET THEN
           REPEAT
-            IF FromSalesLineDisc."Line Discount %" <> 0 THEN BEGIN
-              ToSalesLineDisc := FromSalesLineDisc;
-              INSERT;
-            END;
+            ToSalesLineDisc := FromSalesLineDisc;
+            INSERT;
           UNTIL FromSalesLineDisc.NEXT = 0;
       END;
     END;
@@ -936,6 +938,7 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
         SetCurrency("Currency Code","Currency Factor","Planning Date");
         SetVAT(FALSE,0,0,'');
         SetUoM(ABS(Quantity),"Qty. per Unit of Measure");
+        SetLineDisc(0,TRUE,TRUE);
 
         CASE Type OF
           Type::Item:
@@ -950,9 +953,12 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
               CalcBestUnitPrice(TempSalesPrice);
               IF FoundSalesPrice OR
                  NOT ((CalledByFieldNo = FIELDNO(Quantity)) OR
+                      (CalledByFieldNo = FIELDNO("Location Code")) OR
                       (CalledByFieldNo = FIELDNO("Variant Code")))
-              THEN
+              THEN BEGIN
                 "Unit Price" := TempSalesPrice."Unit Price";
+                AllowLineDisc := TempSalesPrice."Allow Line Disc.";
+              END;
             END;
           Type::Resource:
             BEGIN
@@ -1276,8 +1282,10 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
         IF Type = Type::Item THEN BEGIN
           JobPlanningLineLineDiscExists(JobPlanningLine,FALSE);
           CalcBestLineDisc(TempSalesLineDisc);
-          IF TempSalesLineDisc."Line Discount %" <> 0 THEN
-            "Line Discount %" := TempSalesLineDisc."Line Discount %";
+          IF AllowLineDisc THEN
+            "Line Discount %" := TempSalesLineDisc."Line Discount %"
+          ELSE
+            "Line Discount %" := 0;
         END;
       END;
     END;
@@ -1313,8 +1321,7 @@ OBJECT Codeunit 7000 Sales Price Calc. Mgt.
         IF Type = Type::Item THEN BEGIN
           JobJnlLineLineDiscExists(JobJnlLine,FALSE);
           CalcBestLineDisc(TempSalesLineDisc);
-          IF TempSalesLineDisc."Line Discount %" <> 0 THEN
-            "Line Discount %" := TempSalesLineDisc."Line Discount %";
+          "Line Discount %" := TempSalesLineDisc."Line Discount %";
         END;
       END;
     END;

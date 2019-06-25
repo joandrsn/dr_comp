@@ -2,9 +2,9 @@ OBJECT Page 9050 Whse Ship & Receive Activities
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -48,7 +48,9 @@ OBJECT Page 9050 Whse Ship & Receive Activities
 
     { 5   ;2   ;Field     ;
                 DrillDown=Yes;
-                SourceExpr="Released Sales Orders - Today";
+                CaptionML=[DAN=Frigivne salgsordrer indtil i dag;
+                           ENU=Released Sales Orders Until Today];
+                SourceExpr="Rlsd. Sales Orders Until Today";
                 DrillDownPageID=Sales Order List }
 
     { 3   ;2   ;Field     ;
@@ -70,7 +72,9 @@ OBJECT Page 9050 Whse Ship & Receive Activities
                  }
 
     { 12  ;2   ;Field     ;
-                SourceExpr="Expected Purch. Orders - Today";
+                CaptionML=[DAN=Forventede købsordrer indtil i dag;
+                           ENU=Expected Purch. Orders Until Today];
+                SourceExpr="Exp. Purch. Orders Until Today";
                 DrillDownPageID=Purchase Order List }
 
     { 10  ;2   ;Field     ;
@@ -102,11 +106,15 @@ OBJECT Page 9050 Whse Ship & Receive Activities
                  }
 
     { 19  ;2   ;Field     ;
-                SourceExpr="Inventory Picks - Today";
+                CaptionML=[DAN=Pluk (lager) indtil i dag;
+                           ENU=Inventory Picks Until Today];
+                SourceExpr="Invt. Picks Until Today";
                 DrillDownPageID=Inventory Picks }
 
     { 17  ;2   ;Field     ;
-                SourceExpr="Inventory Put-aways - Today";
+                CaptionML=[DAN=Læg-på-lager indtil i dag;
+                           ENU=Inventory Put-aways Until Today];
+                SourceExpr="Invt. Put-aways Until Today";
                 DrillDownPageID=Inventory Put-aways }
 
   }

@@ -2,9 +2,9 @@ OBJECT Codeunit 333 Req. Wksh.-Make Order
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -273,6 +273,7 @@ OBJECT Codeunit 333 Req. Wksh.-Make Order
         IF Purchasing.GET("Purchasing Code") THEN
           IF Purchasing."Drop Shipment" OR Purchasing."Special Order" THEN BEGIN
             SalesLine.GET(SalesLine."Document Type"::Order,"Sales Order No.","Sales Order Line No.");
+            CheckLocation(ReqLine2);
             IF (Purchasing."Drop Shipment" <> SalesLine."Drop Shipment") OR
                (Purchasing."Special Order" <> SalesLine."Special Order")
             THEN
@@ -340,12 +341,8 @@ OBJECT Codeunit 333 Req. Wksh.-Make Order
                 END;
               "Action Message"::New,"Action Message"::" ":
                 BEGIN
-                  IF ((PurchOrderHeader."Buy-from Vendor No." <> '') AND
-                      ((PurchOrderHeader."Buy-from Vendor No." <> "Vendor No.") OR
-                       (PurchOrderHeader."Currency Code" <> "Currency Code"))) OR
-                     (PurchOrderHeader."Sell-to Customer No." <> "Sell-to Customer No.") OR
-                     (PurchOrderHeader."Ship-to Code" <> "Ship-to Code") OR
-                     (PurchOrderHeader."Order Address Code" <> "Order Address Code")
+                  IF (PurchOrderHeader."Buy-from Vendor No." <> '') AND
+                     CheckInsertFinalizePurchaseOrderHeader(ReqLine,PurchOrderHeader)
                   THEN BEGIN
                     FinalizeOrderHeader(PurchOrderHeader,ReqLine);
                     PurchOrderLine.RESET;
@@ -402,19 +399,13 @@ OBJECT Codeunit 333 Req. Wksh.-Make Order
       PurchOrderLine2@1003 : Record 39;
       AddOnIntegrMgt@1002 : Codeunit 5403;
       DimensionSetIDArr@1004 : ARRAY [10] OF Integer;
-      DropShptSplOrderDiffAddress@1006 : Boolean;
     BEGIN
       WITH ReqLine2 DO BEGIN
         IF ("No." = '') OR ("Vendor No." = '') OR (Quantity = 0) THEN
           EXIT;
-        DropShptSplOrderDiffAddress := CheckAddressDetails(PurchOrderHeader,"Sales Order No.");
-        IF (PurchOrderHeader."Buy-from Vendor No." <> "Vendor No.") OR
-           (PurchOrderHeader."Sell-to Customer No." <> "Sell-to Customer No.") OR
-           (PrevShipToCode <> "Ship-to Code") OR
-           (PurchOrderHeader."Order Address Code" <> "Order Address Code") OR
-           (PurchOrderHeader."Currency Code" <> "Currency Code") OR
-           (PrevPurchCode <> "Purchasing Code") OR
-           DropShptSplOrderDiffAddress
+
+        IF CheckInsertFinalizePurchaseOrderHeader(ReqLine2,PurchOrderHeader) OR
+           CheckAddressDetails(PurchOrderHeader,"Sales Order No.")
         THEN BEGIN
           InsertHeader(ReqLine2);
           LineCount := 0;
@@ -468,8 +459,6 @@ OBJECT Codeunit 333 Req. Wksh.-Make Order
           PurchOrderLine.VALIDATE("Expected Receipt Date","Due Date");
           PurchOrderLine."Requested Receipt Date" := PurchOrderLine."Planned Receipt Date";
         END;
-
-        MODIFY;
 
         AddOnIntegrMgt.TransferFromReqLineToPurchLine(PurchOrderLine,ReqLine2);
 
@@ -609,8 +598,6 @@ OBJECT Codeunit 333 Req. Wksh.-Make Order
           IF Vendor.GET(PurchOrderHeader."Buy-from Vendor No.") THEN
             PurchOrderHeader."Shipment Method Code" := Vendor."Shipment Method Code";
         PurchOrderHeader.MODIFY;
-        COMMIT;
-        LOCKTABLE;
         PurchOrderHeader.MARK(TRUE);
       END;
     END;
@@ -658,6 +645,8 @@ OBJECT Codeunit 333 Req. Wksh.-Make Order
         ReqLine2.SETRANGE("Ship-to Code",PurchOrderHeader."Ship-to Code");
         ReqLine2.SETRANGE("Order Address Code",PurchOrderHeader."Order Address Code");
         ReqLine2.SETRANGE("Currency Code",PurchOrderHeader."Currency Code");
+        ReqLine2.SETRANGE("Location Code",PurchOrderHeader."Location Code");
+        ReqLine2.SETRANGE("Purchasing Code",PrevPurchCode);
         IF ReqLine2.FIND('-') THEN BEGIN
           ReqLine2.BlockDynamicTracking(TRUE);
           ReservEntry.SETCURRENTKEY(
@@ -946,6 +935,28 @@ OBJECT Codeunit 333 Req. Wksh.-Make Order
           Result :=
             NOT PurchaseHeader.CheckSpecOrderAddressDetails(SalesHeader);
       END;
+    END;
+
+    LOCAL PROCEDURE CheckLocation@20(RequisitionLine@1000 : Record 246);
+    VAR
+      InventorySetup@1001 : Record 313;
+    BEGIN
+      InventorySetup.GET;
+      IF InventorySetup."Location Mandatory" THEN
+        RequisitionLine.TESTFIELD("Location Code");
+    END;
+
+    LOCAL PROCEDURE CheckInsertFinalizePurchaseOrderHeader@21(RequisitionLine@1000 : Record 246;VAR PurchOrderHeader@1002 : Record 38) Result : Boolean;
+    BEGIN
+      WITH RequisitionLine DO
+        Result :=
+          (PurchOrderHeader."Buy-from Vendor No." <> "Vendor No.") OR
+          (PurchOrderHeader."Sell-to Customer No." <> "Sell-to Customer No.") OR
+          (PrevShipToCode <> "Ship-to Code") OR
+          (PurchOrderHeader."Order Address Code" <> "Order Address Code") OR
+          (PurchOrderHeader."Currency Code" <> "Currency Code") OR
+          (PrevPurchCode <> "Purchasing Code") OR
+          (PurchOrderHeader."Location Code" <> "Location Code");
     END;
 
     BEGIN

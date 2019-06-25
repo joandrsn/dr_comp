@@ -2,9 +2,9 @@ OBJECT Report 1497 Trans. Bank Rec. to Gen. Jnl.
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -65,7 +65,10 @@ OBJECT Report 1497 Trans. Bank Rec. to Gen. Jnl.
                                           GenJnlBatch."No. Series","Transaction Date",FALSE);
                                   GenJnlLine."Posting No. Series" := GenJnlBatch."Posting No. Series";
 
-                                  IF GenJnlBatch."Bal. Account No." <> '' THEN BEGIN
+                                  IF (GenJnlBatch."Bal. Account No." <> '') AND
+                                     ((GenJnlBatch."Bal. Account Type" <> GenJnlBatch."Bal. Account Type"::"Bank Account") OR
+                                      (GenJnlBatch."Bal. Account No." <> "Bank Acc. Reconciliation"."Bank Account No."))
+                                  THEN BEGIN
                                     GenJnlLine.VALIDATE("Bal. Account Type",GenJnlBatch."Bal. Account Type");
                                     GenJnlLine.VALIDATE("Bal. Account No.",GenJnlBatch."Bal. Account No.");
                                     GenJnlLine.VALIDATE(Amount,Difference);

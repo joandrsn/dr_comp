@@ -2,9 +2,9 @@ OBJECT Report 101 Customer - List
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -3213,6 +3213,7 @@ OBJECT Report 101 Customer - List
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -3230,7 +3231,7 @@ OBJECT Report 101 Customer - List
                 </Paragraph>
               </Paragraphs>
               <Top>0.846cm</Top>
-              <Left>14.76772cm</Left>
+              <Left>12.76772cm</Left>
               <ZIndex>4</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>

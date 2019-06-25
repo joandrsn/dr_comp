@@ -2,9 +2,9 @@ OBJECT Page 5540 Item Availability by Timeline
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -223,8 +223,6 @@ OBJECT Page 5540 Item Availability by Timeline
                              ForecastName2@1001 : Code[10];
                            BEGIN
                              ForecastName2 := ForecastName;
-                             IF ForecastName <> '' THEN
-                               IncludeBlanketOrders := TRUE;
                              InitAndCreateTimelineEvents;
                              ForecastName := ForecastName2;
                            END;

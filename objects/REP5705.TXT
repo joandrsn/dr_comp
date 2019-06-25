@@ -2,9 +2,9 @@ OBJECT Report 5705 Transfer Receipt
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -1253,7 +1253,7 @@ OBJECT Report 5705 Transfer Receipt
                                 </TablixColumns>
                                 <TablixRows>
                                   <TablixRow>
-                                    <Height>0.05914in</Height>
+                                    <Height>0.52916cm</Height>
                                     <TablixCells>
                                       <TablixCell>
                                         <CellContents>
@@ -1422,7 +1422,7 @@ Fields!RcptDate_TransRcptHdr.Value)</Hidden>
                                   <TablixMember />
                                 </TablixMembers>
                               </TablixRowHierarchy>
-                              <Height>0.15022cm</Height>
+                              <Height>0.52916cm</Height>
                               <Width>1.03251cm</Width>
                               <ZIndex>1</ZIndex>
                               <Style>

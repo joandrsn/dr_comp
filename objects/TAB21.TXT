@@ -2,9 +2,9 @@ OBJECT Table 21 Cust. Ledger Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365,NAVDK9.00.00.44365;
+    Version List=NAVW19.00.00.50087,NAVDK9.00.00.50087;
   }
   PROPERTIES
   {
@@ -109,7 +109,7 @@ OBJECT Table 21 Cust. Ledger Entry
                                                    CaptionML=[DAN=Global dimension 2-kode;
                                                               ENU=Global Dimension 2 Code];
                                                    CaptionClass='1,1,2' }
-    { 25  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 25  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 27  ;   ;User ID             ;Code50        ;TableRelation=User."User Name";
@@ -121,6 +121,7 @@ OBJECT Table 21 Cust. Ledger Entry
 
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 28  ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
@@ -377,7 +378,8 @@ OBJECT Table 21 Cust. Ledger Entry
                                                                   IF PaymentMethod.GET("Payment Method Code") THEN BEGIN
                                                                     IF PaymentMethod."Payment Type Validation" = PaymentMethod."Payment Type Validation"::" " THEN
                                                                       EXIT;
-                                                                    PmtExportMgt.CheckCustRefundPaymentTypeValidation(PaymentMethod);
+                                                                    IF "Applies-to ID" = '' THEN
+                                                                      PmtExportMgt.CheckCustRefundPaymentTypeValidation(PaymentMethod);
                                                                     BankAccount.GET("Bal. Account No.");
                                                                     IF CustBankAcc.GET("Customer No.","Recipient Bank Account") THEN
                                                                       PmtExportMgt.CheckBankTransferCountryRegion(BankAccount."Country/Region Code",CustBankAcc."Country/Region Code",PaymentMethod);

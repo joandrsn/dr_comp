@@ -2,9 +2,9 @@ OBJECT Codeunit 13611 OIOUBL Exp. Issued Fin. Chrg.
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVDK8.00;
+    Version List=NAVDK9.00.00.47042;
   }
   PROPERTIES
   {
@@ -13,6 +13,7 @@ OBJECT Codeunit 13611 OIOUBL Exp. Issued Fin. Chrg.
     OnRun=VAR
             IssuedFinChargeMemoLine2@1101100006 : Record 305;
             RBMgt@1060002 : Codeunit 419;
+            XMLDOMManagement@1060013 : Codeunit 6224;
             XMLdocOut@1060000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
             XMLCurrNode@1101100001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
             XMLNewChild@1101100000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
@@ -42,8 +43,6 @@ OBJECT Codeunit 13611 OIOUBL Exp. Issued Fin. Chrg.
             IF NOT ContainsValidLine(IssuedFinChargeMemoLine,"No.") THEN
               EXIT;
 
-            XMLdocOut := XMLdocOut.XmlDocument;
-
             FromFile := RBMgt.ServerTempFileName('');
 
             // FinCharge
@@ -58,7 +57,7 @@ OBJECT Codeunit 13611 OIOUBL Exp. Issued Fin. Chrg.
               'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
               'xsi:schemaLocation="urn:oasis:names:specification:ubl:schema:xsd:Reminder-2 UBL-Reminder-2.0.xsd"/> ';
 
-            XMLdocOut.LoadXml := Header;
+            XMLDOMManagement.LoadXMLDocumentFromText(Header,XMLdocOut);
             XMLCurrNode := XMLdocOut.DocumentElement;
 
             WITH OIOUBLDOMManagement DO BEGIN
@@ -684,7 +683,7 @@ OBJECT Codeunit 13611 OIOUBL Exp. Issued Fin. Chrg.
 
     PROCEDURE GetPaymentChannelCode@1060014() : Text[7];
     BEGIN
-      EXIT(CompanyInfo."Country/Region Code" + ':' + 'BANK');
+      EXIT(CompanyInfo.GetPaymentChannelCode);
     END;
 
     PROCEDURE GetTaxCategoryID@1060038(Type@1060000 : 'Normal VAT,Reverse Charge VAT,Full VAT,Sales Tax';VATPercent@1060001 : Decimal) : Text[15];

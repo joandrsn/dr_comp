@@ -2,14 +2,15 @@ OBJECT Table 5093 Opportunity Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
     OnInsert=VAR
                Opp@1000 : Record 5092;
+               SalesCycleStage@1001 : Record 5091;
              BEGIN
                Opp.GET("Opportunity No.");
                CASE "Action Taken" OF
@@ -18,9 +19,13 @@ OBJECT Table 5093 Opportunity Entry
                  "Action Taken"::Previous,
                  "Action Taken"::Updated,
                  "Action Taken"::Jumped:
-                   IF Opp.Status <> Opp.Status::"In Progress" THEN BEGIN
-                     Opp.Status := Opp.Status::"In Progress";
-                     Opp.MODIFY;
+                   BEGIN
+                     IF SalesCycleStage.GET("Sales Cycle Code","Sales Cycle Stage") THEN
+                       "Sales Cycle Stage Description" := SalesCycleStage.Description;
+                     IF Opp.Status <> Opp.Status::"In Progress" THEN BEGIN
+                       Opp.Status := Opp.Status::"In Progress";
+                       Opp.MODIFY;
+                     END;
                    END;
                  "Action Taken"::Won:
                    BEGIN
@@ -83,6 +88,11 @@ OBJECT Table 5093 Opportunity Entry
                                                    CaptionML=[DAN=Salgsproceskode;
                                                               ENU=Sales Cycle Code] }
     { 4   ;   ;Sales Cycle Stage   ;Integer       ;TableRelation="Sales Cycle Stage".Stage WHERE (Sales Cycle Code=FIELD(Sales Cycle Code));
+                                                   OnValidate=BEGIN
+                                                                IF SalesCycleStage.GET("Sales Cycle Code","Sales Cycle Stage") THEN
+                                                                  "Sales Cycle Stage Description" := SalesCycleStage.Description;
+                                                              END;
+
                                                    CaptionML=[DAN=Salgsprocesfase;
                                                               ENU=Sales Cycle Stage];
                                                    MinValue=1 }
@@ -92,7 +102,7 @@ OBJECT Table 5093 Opportunity Entry
     { 6   ;   ;Contact Company No. ;Code20        ;TableRelation=Contact WHERE (Type=CONST(Company));
                                                    CaptionML=[DAN=Virksomhedsnummer;
                                                               ENU=Contact Company No.] }
-    { 7   ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 7   ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 8   ;   ;Campaign No.        ;Code20        ;TableRelation=Campaign;

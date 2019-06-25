@@ -2,9 +2,9 @@ OBJECT Codeunit 60 Sales-Calc. Discount
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -34,12 +34,14 @@ OBJECT Codeunit 60 Sales-Calc. Discount
       ChargeBase@1009 : Decimal;
       CurrencyDate@1011 : Date;
       UpdateHeader@1012 : Boolean;
+      DoNotCreateServiceCharge@1007 : Boolean;
 
     LOCAL PROCEDURE CalculateInvoiceDiscount@1(VAR SalesHeader@1000 : Record 36;VAR SalesLine2@1001 : Record 37);
     VAR
       TempVATAmountLine@1002 : TEMPORARY Record 290;
       SalesSetup@1003 : Record 311;
       TempServiceChargeLine@1005 : TEMPORARY Record 37;
+      SalesCalcDiscountByType@1004 : Codeunit 56;
     BEGIN
       SalesSetup.GET;
 
@@ -108,36 +110,9 @@ OBJECT Codeunit 60 Sales-Calc. Discount
             ELSE
               SalesLine2.VALIDATE("Unit Price",CustInvDisc."Service Charge");
             SalesLine2.MODIFY;
-          END ELSE BEGIN
-            SalesLine2.RESET;
-            SalesLine2.SETRANGE("Document Type","Document Type");
-            SalesLine2.SETRANGE("Document No.","Document No.");
-            SalesLine2.FINDLAST;
-            SalesLine2.INIT;
-            IF UpdateHeader THEN
-              SalesLine2.SetSalesHeader(SalesHeader);
-            SalesLine2."Line No." := SalesLine2."Line No." + 10000;
-            SalesLine2."System-Created Entry" := TRUE;
-            SalesLine2.Type := SalesLine2.Type::"G/L Account";
-            SalesLine2.VALIDATE("No.",CustPostingGr."Service Charge Acc.");
-            SalesLine2.Description := Text000;
-            SalesLine2.VALIDATE(Quantity,1);
-            IF SalesLine2."Document Type" IN
-               [SalesLine2."Document Type"::"Return Order",SalesLine2."Document Type"::"Credit Memo"]
-            THEN
-              SalesLine2.VALIDATE("Return Qty. to Receive",SalesLine2.Quantity)
-            ELSE
-              SalesLine2.VALIDATE("Qty. to Ship",SalesLine2.Quantity);
-            IF SalesHeader."Prices Including VAT" THEN
-              SalesLine2.VALIDATE(
-                "Unit Price",
-                ROUND(
-                  (1 + SalesLine2."VAT %" / 100) * CustInvDisc."Service Charge",
-                  Currency."Unit-Amount Rounding Precision"))
-            ELSE
-              SalesLine2.VALIDATE("Unit Price",CustInvDisc."Service Charge");
-            SalesLine2.INSERT;
-          END;
+          END ELSE
+            CreateServiceCharge(SalesHeader,SalesLine2);
+
           SalesLine2.CalcVATAmountLines(0,SalesHeader,SalesLine2,TempVATAmountLine);
         END ELSE
           IF TempServiceChargeLine.FINDSET(FALSE,FALSE) THEN
@@ -165,9 +140,11 @@ OBJECT Codeunit 60 Sales-Calc. Discount
 
           SalesLine2.SetSalesHeader(SalesHeader);
           SalesLine2.UpdateVATOnLines(0,SalesHeader,SalesLine2,TempVATAmountLine);
+          UpdatePrepmtLineAmount(SalesHeader);
         END;
       END;
 
+      SalesCalcDiscountByType.ResetRecalculateInvoiceDisc(SalesHeader);
       OnAfterCalcSalesDiscount(SalesHeader);
     END;
 
@@ -215,6 +192,67 @@ OBJECT Codeunit 60 Sales-Calc. Discount
         SalesLine."Document No." := "No.";
         CalculateInvoiceDiscount(TempSalesHeader,TempSalesLine);
       END;
+    END;
+
+    LOCAL PROCEDURE CreateServiceCharge@7(VAR SalesHeader@1000 : Record 36;VAR SalesLine@1001 : Record 37);
+    BEGIN
+      IF DoNotCreateServiceCharge THEN
+        EXIT;
+
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type",SalesHeader."Document Type");
+      SalesLine.SETRANGE("Document No.",SalesHeader."No.");
+      SalesLine.FINDLAST;
+      SalesLine.INIT;
+      IF UpdateHeader THEN
+        SalesLine.SetSalesHeader(SalesHeader);
+      SalesLine."Line No." := SalesLine."Line No." + 10000;
+      SalesLine."System-Created Entry" := TRUE;
+      SalesLine.Type := SalesLine.Type::"G/L Account";
+      SalesLine.VALIDATE("No.",CustPostingGr."Service Charge Acc.");
+      SalesLine.Description := Text000;
+      SalesLine.VALIDATE(Quantity,1);
+      IF SalesLine."Document Type" IN
+         [SalesLine."Document Type"::"Return Order",SalesLine."Document Type"::"Credit Memo"]
+      THEN
+        SalesLine.VALIDATE("Return Qty. to Receive",SalesLine.Quantity)
+      ELSE
+        SalesLine.VALIDATE("Qty. to Ship",SalesLine.Quantity);
+      IF SalesHeader."Prices Including VAT" THEN
+        SalesLine.VALIDATE(
+          "Unit Price",
+          ROUND(
+            (1 + SalesLine."VAT %" / 100) * CustInvDisc."Service Charge",
+            Currency."Unit-Amount Rounding Precision"))
+      ELSE
+        SalesLine.VALIDATE("Unit Price",CustInvDisc."Service Charge");
+      SalesLine.INSERT;
+    END;
+
+    PROCEDURE DoNotCreateServiceChargeLine@10(DontCreateServiceCharge@1000 : Boolean);
+    BEGIN
+      DoNotCreateServiceCharge := DontCreateServiceCharge;
+    END;
+
+    LOCAL PROCEDURE UpdatePrepmtLineAmount@8(SalesHeader@1000 : Record 36);
+    VAR
+      SalesLine@1001 : Record 37;
+    BEGIN
+      IF (SalesHeader."Invoice Discount Calculation" = SalesHeader."Invoice Discount Calculation"::"%") AND
+         (SalesHeader."Prepayment %" > 0) AND (SalesHeader."Invoice Discount Value" > 0) AND
+         (SalesHeader."Invoice Discount Value" + SalesHeader."Prepayment %" >= 100)
+      THEN
+        WITH SalesLine DO BEGIN
+          SETRANGE("Document Type",SalesHeader."Document Type");
+          SETRANGE("Document No.",SalesHeader."No.");
+          IF FINDSET(TRUE) THEN
+            REPEAT
+              IF NOT ZeroAmountLine(0) AND ("Prepayment %" = SalesHeader."Prepayment %") THEN BEGIN
+                "Prepmt. Line Amount" := Amount;
+                MODIFY;
+              END;
+            UNTIL NEXT = 0;
+        END;
     END;
 
     [Integration]

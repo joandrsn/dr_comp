@@ -2,9 +2,9 @@ OBJECT Codeunit 5063 ArchiveManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -26,6 +26,38 @@ OBJECT Codeunit 5063 ArchiveManagement
       ReleaseSalesDoc@1008 : Codeunit 414;
       Text009@1009 : TextConst 'DAN=Ikkebogførte %1 %2 findes ikke længere.\Det er ikke muligt at gendanne %1.;ENU=Unposted %1 %2 does not exist anymore.\It is not possible to restore the %1.';
       DeferralUtilities@1010 : Codeunit 1720;
+
+    PROCEDURE AutoArchiveSalesDocument@18(VAR SalesHeader@1004 : Record 36);
+    VAR
+      SalesReceivablesSetup@1000 : Record 311;
+    BEGIN
+      SalesReceivablesSetup.GET;
+
+      IF NOT SalesReceivablesSetup."Archive Quotes and Orders" THEN
+        EXIT;
+      IF NOT (SalesHeader."Document Type" IN [SalesHeader."Document Type"::Order,SalesHeader."Document Type"::Quote]) THEN
+        EXIT;
+
+      PrepareDeferralsForSalesOrder(SalesHeader);
+
+      StoreSalesDocument(SalesHeader,FALSE);
+    END;
+
+    PROCEDURE AutoArchivePurchDocument@17(VAR PurchaseHeader@1000 : Record 38);
+    VAR
+      PurchasesPayablesSetup@1001 : Record 312;
+    BEGIN
+      PurchasesPayablesSetup.GET;
+
+      IF NOT PurchasesPayablesSetup."Archive Quotes and Orders" THEN
+        EXIT;
+      IF NOT (PurchaseHeader."Document Type" IN [PurchaseHeader."Document Type"::Order,PurchaseHeader."Document Type"::Quote]) THEN
+        EXIT;
+
+      PrepareDeferralsPurchaseOrder(PurchaseHeader);
+
+      StorePurchDocument(PurchaseHeader,FALSE);
+    END;
 
     PROCEDURE ArchiveSalesDocument@2(VAR SalesHeader@1004 : Record 36);
     BEGIN
@@ -250,6 +282,7 @@ OBJECT Codeunit 5063 ArchiveManagement
                 IF Quantity <> 0 THEN
                   VALIDATE(Quantity,SalesLineArchive.Quantity);
                 VALIDATE("Unit Price",SalesLineArchive."Unit Price");
+                VALIDATE("Unit Cost (LCY)",SalesLineArchive."Unit Cost (LCY)");
                 VALIDATE("Line Discount %",SalesLineArchive."Line Discount %");
                 IF SalesLineArchive."Inv. Discount Amount" <> 0 THEN
                   VALIDATE("Inv. Discount Amount",SalesLineArchive."Inv. Discount Amount");
@@ -498,6 +531,75 @@ OBJECT Codeunit 5063 ArchiveManagement
       SalesCommentLine.Date := WORKDATE;
       SalesCommentLine.Comment := STRSUBSTNO(Text004,FORMAT(SalesHeaderArchive."Version No."));
       SalesCommentLine.INSERT;
+    END;
+
+    PROCEDURE RoundSalesDeferralsForArchive@25(SalesHeader@1001 : Record 36;VAR SalesLine@1000 : Record 37);
+    VAR
+      DeferralHeader@1002 : Record 1701;
+      AmtToDefer@1004 : Decimal;
+      AmtToDeferACY@1003 : Decimal;
+    BEGIN
+      SalesLine.SETFILTER("Deferral Code",'<>%1','');
+      IF SalesLine.FINDSET THEN
+        REPEAT
+          IF DeferralHeader.GET(DeferralUtilities.GetSalesDeferralDocType,'','',
+               SalesLine."Document Type",SalesLine."Document No.",SalesLine."Line No.")
+          THEN
+            DeferralUtilities.RoundDeferralAmount(
+              DeferralHeader,SalesHeader."Currency Code",
+              SalesHeader."Currency Factor",SalesHeader."Posting Date",
+              AmtToDeferACY,AmtToDefer);
+
+        UNTIL SalesLine.NEXT = 0;
+    END;
+
+    PROCEDURE RoundPurchaseDeferralsForArchive@26(PurchaseHeader@1000 : Record 38;VAR PurchaseLine@1001 : Record 39);
+    VAR
+      DeferralHeader@1004 : Record 1701;
+      AmtToDefer@1003 : Decimal;
+      AmtToDeferACY@1002 : Decimal;
+    BEGIN
+      PurchaseLine.SETFILTER("Deferral Code",'<>%1','');
+      IF PurchaseLine.FINDSET THEN
+        REPEAT
+          IF DeferralHeader.GET(DeferralUtilities.GetPurchDeferralDocType,'','',
+               PurchaseLine."Document Type",PurchaseLine."Document No.",PurchaseLine."Line No.")
+          THEN
+            DeferralUtilities.RoundDeferralAmount(
+              DeferralHeader,PurchaseHeader."Currency Code",
+              PurchaseHeader."Currency Factor",PurchaseHeader."Posting Date",
+              AmtToDeferACY,AmtToDefer);
+        UNTIL PurchaseLine.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE PrepareDeferralsForSalesOrder@19(SalesHeader@1000 : Record 36);
+    VAR
+      SalesLine@1001 : Record 37;
+    BEGIN
+      IF SalesHeader."Document Type" = SalesHeader."Document Type"::Order THEN BEGIN
+        SalesLine.RESET;
+        SalesLine.SETRANGE("Document Type",SalesHeader."Document Type");
+        SalesLine.SETRANGE("Document No.",SalesHeader."No.");
+        SalesLine.SETFILTER("Qty. Invoiced (Base)",'<>%1',0);
+        IF SalesLine.ISEMPTY THEN
+          EXIT;
+        RoundSalesDeferralsForArchive(SalesHeader,SalesLine);
+      END;
+    END;
+
+    LOCAL PROCEDURE PrepareDeferralsPurchaseOrder@20(PurchaseHeader@1000 : Record 38);
+    VAR
+      PurchaseLine@1001 : Record 39;
+    BEGIN
+      IF PurchaseHeader."Document Type" = PurchaseHeader."Document Type"::Order THEN BEGIN
+        PurchaseLine.RESET;
+        PurchaseLine.SETRANGE("Document Type",PurchaseHeader."Document Type");
+        PurchaseLine.SETRANGE("Document No.",PurchaseHeader."No.");
+        PurchaseLine.SETFILTER("Qty. Invoiced (Base)",'<>%1',0);
+        IF PurchaseLine.ISEMPTY THEN
+          EXIT;
+        RoundPurchaseDeferralsForArchive(PurchaseHeader,PurchaseLine);
+      END;
     END;
 
     BEGIN

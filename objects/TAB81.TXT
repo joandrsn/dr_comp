@@ -2,9 +2,9 @@ OBJECT Table 81 Gen. Journal Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402,NAVDK9.00.00.43402;
+    Version List=NAVW19.00.00.50583,NAVDK9.00.00.50583;
   }
   PROPERTIES
   {
@@ -116,9 +116,7 @@ OBJECT Table 81 Gen. Journal Line
                                                                 IF "Account Type" <> "Account Type"::Customer THEN
                                                                   VALIDATE("Credit Card No.",'');
 
-                                                                IF "Deferral Code" <> '' THEN
-                                                                  IF "Account Type" IN ["Account Type"::"Fixed Asset","Account Type"::"IC Partner"] THEN
-                                                                    ERROR(AccTypeNotSupportedErr);
+                                                                VALIDATE("Deferral Code",'');
                                                               END;
 
                                                    CaptionML=[DAN=Kontotype;
@@ -735,7 +733,8 @@ OBJECT Table 81 Gen. Journal Line
                                                                 IF Amount <> xRec.Amount THEN BEGIN
                                                                   IF ("Applies-to Doc. No." <> '') OR ("Applies-to ID" <> '') THEN
                                                                     SetApplyToAmount;
-                                                                  PaymentToleranceMgt.PmtTolGenJnl(Rec);
+                                                                  IF (xRec.Amount <> 0) OR (xRec."Applies-to Doc. No." <> '') OR (xRec."Applies-to ID" <> '') THEN
+                                                                    PaymentToleranceMgt.PmtTolGenJnl(Rec);
                                                                 END;
 
                                                                 IF JobTaskIsSet THEN BEGIN
@@ -846,7 +845,8 @@ OBJECT Table 81 Gen. Journal Line
                                                    CaptionML=[DAN=Bogføringsgruppe;
                                                               ENU=Posting Group];
                                                    Editable=No }
-    { 24  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+    { 24  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(1,"Shortcut Dimension 1 Code");
                                                               END;
@@ -854,7 +854,8 @@ OBJECT Table 81 Gen. Journal Line
                                                    CaptionML=[DAN=Genvejsdimension 1-kode;
                                                               ENU=Shortcut Dimension 1 Code];
                                                    CaptionClass='1,2,1' }
-    { 25  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+    { 25  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(2,"Shortcut Dimension 2 Code");
                                                               END;
@@ -862,8 +863,10 @@ OBJECT Table 81 Gen. Journal Line
                                                    CaptionML=[DAN=Genvejsdimension 2-kode;
                                                               ENU=Shortcut Dimension 2 Code];
                                                    CaptionClass='1,2,2' }
-    { 26  ;   ;Salespers./Purch. Code;Code10      ;TableRelation=Salesperson/Purchaser;
+    { 26  ;   ;Salespers./Purch. Code;Code20      ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=BEGIN
+                                                                ValidateSalesPersonPurchaserCode(Rec);
+
                                                                 CreateDim(
                                                                   DATABASE::"Salesperson/Purchaser","Salespers./Purch. Code",
                                                                   DimMgt.TypeToTableID1("Account Type"),"Account No.",
@@ -1153,7 +1156,7 @@ OBJECT Table 81 Gen. Journal Line
 
                                                    CaptionML=[DAN=Udlignings-id;
                                                               ENU=Applies-to ID] }
-    { 50  ;   ;Business Unit Code  ;Code10        ;TableRelation="Business Unit";
+    { 50  ;   ;Business Unit Code  ;Code20        ;TableRelation="Business Unit";
                                                    CaptionML=[DAN=Konc.virksomhedskode;
                                                               ENU=Business Unit Code] }
     { 51  ;   ;Journal Batch Name  ;Code10        ;TableRelation="Gen. Journal Batch".Name WHERE (Journal Template Name=FIELD(Journal Template Name));
@@ -1167,6 +1170,7 @@ OBJECT Table 81 Gen. Journal Line
                                                                    ["Recurring Method"::"B  Balance","Recurring Method"::"RB Reversing Balance"]
                                                                 THEN
                                                                   TESTFIELD("Currency Code",'');
+                                                                UpdateSalesPurchLCY;
                                                               END;
 
                                                    CaptionML=[DAN=Gentagelsesprincip;
@@ -1932,8 +1936,7 @@ OBJECT Table 81 Gen. Journal Line
                                                               END;
 
                                                    CaptionML=[DAN=Fordringshavernr.;
-                                                              ENU=Creditor No.];
-                                                   Numeric=Yes }
+                                                              ENU=Creditor No.] }
     { 171 ;   ;Payment Reference   ;Code16        ;OnValidate=VAR
                                                                 PaymentMethod@1060001 : Record 289;
                                                                 FIKManagement@1060000 : Codeunit 13650;
@@ -2003,13 +2006,21 @@ OBJECT Table 81 Gen. Journal Line
                                                                  ELSE IF (Bal. Account Type=CONST(Customer)) "Customer Bank Account".Code WHERE (Customer No.=FIELD(Bal. Account No.))
                                                                  ELSE IF (Bal. Account Type=CONST(Vendor)) "Vendor Bank Account".Code WHERE (Vendor No.=FIELD(Bal. Account No.));
                                                    OnValidate=BEGIN
-                                                                IF NOT IsForExportToPaymentFile THEN
+                                                                IF IsForExportToPaymentFile THEN BEGIN
+                                                                  UpdateVendorPaymentDetails;
+                                                                  IF ("Recipient Bank Account" <> '') AND ("Creditor No." <> '') THEN
+                                                                    FIELDERROR("Creditor No.",
+                                                                      STRSUBSTNO(FieldIsNotEmptyErr,FIELDCAPTION("Recipient Bank Account"),FIELDCAPTION("Creditor No.")));
                                                                   EXIT;
+                                                                END;
 
-                                                                UpdateVendorPaymentDetails;
-                                                                IF ("Recipient Bank Account" <> '') AND ("Creditor No." <> '') THEN
-                                                                  FIELDERROR("Creditor No.",
-                                                                    STRSUBSTNO(FieldIsNotEmptyErr,FIELDCAPTION("Recipient Bank Account"),FIELDCAPTION("Creditor No.")));
+                                                                IF "Recipient Bank Account" = '' THEN
+                                                                  EXIT;
+                                                                IF ("Document Type" = "Document Type"::Invoice) AND
+                                                                   (("Account Type" IN ["Account Type"::Customer,"Account Type"::Vendor]) OR
+                                                                    ("Bal. Account Type" IN ["Bal. Account Type"::Customer,"Bal. Account Type"::Vendor]))
+                                                                THEN
+                                                                  "Recipient Bank Account" := '';
                                                               END;
 
                                                    CaptionML=[DAN=Modtagers bankkonto;
@@ -2325,8 +2336,7 @@ OBJECT Table 81 Gen. Journal Line
                                                                 DeferralUtilities@1002 : Codeunit 1720;
                                                               BEGIN
                                                                 IF "Deferral Code" <> '' THEN
-                                                                  IF "Account Type" IN ["Account Type"::"Fixed Asset","Account Type"::"IC Partner"] THEN
-                                                                    ERROR(AccTypeNotSupportedErr);
+                                                                  TESTFIELD("Account Type","Account Type"::"G/L Account");
 
                                                                 DeferralUtilities.DeferralCodeOnValidate("Deferral Code",DeferralDocType::"G/L","Journal Template Name","Journal Batch Name",
                                                                   0,'',"Line No.",GetDeferralAmount,"Posting Date",Description,"Currency Code");
@@ -2551,6 +2561,7 @@ OBJECT Table 81 Gen. Journal Line
       GenProdPostingGrp@1036 : Record 251;
       GLSetup@1037 : Record 98;
       Job@1060 : Record 167;
+      SalespersonPurchaser@1932 : Record 13;
       JobJnlLine@1059 : TEMPORARY Record 210;
       NoSeriesMgt@1040 : Codeunit 396;
       CustCheckCreditLimit@1041 : Codeunit 312;
@@ -2586,7 +2597,8 @@ OBJECT Table 81 Gen. Journal Line
       DocNoFilterErr@1047 : TextConst 'DAN=Dokumentnumrene kan ikke renummereres, men der er et aktivt filter i feltet Bilagsnr.;ENU=The document numbers cannot be renumbered while there is an active filter on the Document No. field.';
       DueDateMsg@1150 : TextConst 'DAN=Denne bogføringsdato vil medføre for sen betaling.;ENU=This posting date will cause an overdue payment.';
       CalcPostDateMsg@1169 : TextConst 'DAN=Behandler betalingskladdelinjer #1##########;ENU=Processing payment journal lines #1##########';
-      AccTypeNotSupportedErr@1055 : TextConst 'DAN=Du kan ikke angive en periodiseringskode for denne kontotype.;ENU=You cannot specify a deferral code for this type of account.';
+      SalespersonPurchPrivacyBlockErr@1933 : TextConst '@@@="%1 = salesperson / purchaser code.";DAN=Beskyttelse af personlige oplysninger spærret må ikke være gældende for sælgeren/indkøberen %1.;ENU=Privacy Blocked must not be true for Salesperson / Purchaser %1.';
+      BlockedErr@1070 : TextConst '@@@="%1=Blocked field value,%2=Account Type,%3=Account No.";DAN=Feltet Blokeret må ikke være %1 for %2 %3.;ENU=The Blocked field must not be %1 for %2 %3.';
 
     PROCEDURE EmptyLine@5() : Boolean;
     BEGIN
@@ -2640,7 +2652,7 @@ OBJECT Table 81 Gen. Journal Line
            (Balance - LastGenJnlLine."Balance (LCY)" = 0) AND
            NOT LastGenJnlLine.EmptyLine
         THEN
-          "Document No." := INCSTR("Document No.");
+          IncrementDocumentNo;
       END ELSE BEGIN
         "Posting Date" := WORKDATE;
         "Document Date" := WORKDATE;
@@ -2703,6 +2715,8 @@ OBJECT Table 81 Gen. Journal Line
       FirstTempDocNo@1009 : Code[20];
       LastTempDocNo@1010 : Code[20];
     BEGIN
+      TESTFIELD("Check Printed",FALSE);
+
       GenJnlBatch.GET("Journal Template Name","Journal Batch Name");
       IF GenJnlBatch."No. Series" = '' THEN
         EXIT;
@@ -2752,12 +2766,14 @@ OBJECT Table 81 Gen. Journal Line
           REPEAT
             IF "Document No." = FirstDocNo THEN
               EXIT;
-            IF NOT First AND ("Document No." <> PrevDocNo) AND NOT LastGenJnlLine.EmptyLine THEN
+            IF NOT First AND (("Document No." <> PrevDocNo) OR ("Bal. Account No." <> '')) AND NOT LastGenJnlLine.EmptyLine THEN
               DocNo := INCSTR(DocNo);
             PrevDocNo := "Document No.";
-            IF ("Applies-to ID" <> '') AND ("Applies-to ID" = "Document No.") THEN
-              RenumberAppliesToID(GenJnlLine2,"Document No.",DocNo);
-            RenumberAppliesToDocNo(GenJnlLine2,"Document No.",DocNo);
+            IF "Document No." <> '' THEN BEGIN
+              IF "Applies-to ID" = "Document No." THEN
+                RenumberAppliesToID(GenJnlLine2,"Document No.",DocNo);
+              RenumberAppliesToDocNo(GenJnlLine2,"Document No.",DocNo);
+            END;
             GenJnlLine3.GET("Journal Template Name","Journal Batch Name","Line No.");
             GenJnlLine3."Document No." := DocNo;
             GenJnlLine3.MODIFY;
@@ -3155,7 +3171,9 @@ OBJECT Table 81 Gen. Journal Line
     BEGIN
       "Sales/Purch. (LCY)" := 0;
       IF (NOT "System-Created Entry") AND ("Document Type" IN ["Document Type"::Invoice,"Document Type"::"Credit Memo"]) THEN BEGIN
-        IF ("Account Type" IN ["Account Type"::Customer,"Account Type"::Vendor]) AND ("Bal. Account No." <> '') THEN
+        IF ("Account Type" IN ["Account Type"::Customer,"Account Type"::Vendor]) AND
+           (("Bal. Account No." <> '') OR ("Recurring Method" <> "Recurring Method"::" "))
+        THEN
           "Sales/Purch. (LCY)" := "Amount (LCY)" + "Bal. VAT Amount (LCY)";
         IF ("Bal. Account Type" IN ["Bal. Account Type"::Customer,"Bal. Account Type"::Vendor]) AND ("Account No." <> '') THEN
           "Sales/Purch. (LCY)" := -("Amount (LCY)" - "VAT Amount (LCY)");
@@ -3625,7 +3643,7 @@ OBJECT Table 81 Gen. Journal Line
         VendLedgEntry.CALCFIELDS("Remaining Amount");
 
         IF "Posting Date" <= VendLedgEntry."Pmt. Discount Date" THEN
-          Amount := -(CustLedgEntry."Remaining Amount" - VendLedgEntry."Remaining Pmt. Disc. Possible")
+          Amount := -(VendLedgEntry."Remaining Amount" - VendLedgEntry."Remaining Pmt. Disc. Possible")
         ELSE
           Amount := -VendLedgEntry."Remaining Amount";
 
@@ -4091,6 +4109,40 @@ OBJECT Table 81 Gen. Journal Line
       EXIT(GenJnlBatch."Bal. Account No." <> '');
     END;
 
+    LOCAL PROCEDURE AddCustVendIC@228(AccountType@1000 : Option;AccountNo@1001 : Code[20]) : Boolean;
+    BEGIN
+      SETRANGE("Account Type",AccountType);
+      SETRANGE("Account No.",AccountNo);
+      IF NOT ISEMPTY THEN
+        EXIT(FALSE);
+
+      RESET;
+      IF FINDLAST THEN;
+      "Line No." += 10000;
+
+      "Account Type" := AccountType;
+      "Account No." := AccountNo;
+      INSERT;
+      EXIT(TRUE);
+    END;
+
+    PROCEDURE IsCustVendICAdded@209(GenJournalLine@1000 : Record 81) : Boolean;
+    BEGIN
+      IF (GenJournalLine."Account No." <> '') AND
+         (GenJournalLine."Account Type" IN ["Account Type"::Customer,"Account Type"::Vendor,"Account Type"::"IC Partner"])
+      THEN
+        EXIT(AddCustVendIC(GenJournalLine."Account Type",GenJournalLine."Account No."));
+
+      IF (GenJournalLine."Bal. Account No." <> '') AND
+         (GenJournalLine."Bal. Account Type" IN ["Bal. Account Type"::Customer,
+                                                 "Bal. Account Type"::Vendor,
+                                                 "Bal. Account Type"::"IC Partner"])
+      THEN
+        EXIT(AddCustVendIC(GenJournalLine."Bal. Account Type",GenJournalLine."Bal. Account No."));
+
+      EXIT(FALSE);
+    END;
+
     PROCEDURE IsExportedToPaymentFile@1020() : Boolean;
     BEGIN
       EXIT(IsPaymentJournallLineExported OR IsAppliedToVendorLedgerEntryExported);
@@ -4384,6 +4436,77 @@ OBJECT Table 81 Gen. Journal Line
     [Integration(TRUE)]
     PROCEDURE OnMoveGenJournalLine@93(ToRecordID@1000 : RecordID);
     BEGIN
+    END;
+
+    LOCAL PROCEDURE IncrementDocumentNo@94();
+    VAR
+      NoSeriesLine@1001 : Record 309;
+    BEGIN
+      IF GenJnlBatch."No. Series" <> '' THEN BEGIN
+        NoSeriesMgt.SetNoSeriesLineFilter(NoSeriesLine,GenJnlBatch."No. Series","Posting Date");
+        IF NoSeriesLine."Increment-by No." > 1 THEN
+          NoSeriesMgt.IncrementNoText("Document No.",NoSeriesLine."Increment-by No.")
+        ELSE
+          "Document No." := INCSTR("Document No.");
+      END ELSE
+        "Document No." := INCSTR("Document No.");
+    END;
+
+    PROCEDURE NeedCheckZeroAmount@96() : Boolean;
+    BEGIN
+      EXIT(
+        ("Account No." <> '') AND
+        NOT "System-Created Entry" AND
+        NOT "Allow Zero-Amount Posting" AND
+        ("Account Type" <> "Account Type"::"Fixed Asset"));
+    END;
+
+    PROCEDURE ValidateSalesPersonPurchaserCode@298(GenJournalLine2@1000 : Record 81);
+    BEGIN
+      IF GenJournalLine2."Salespers./Purch. Code" <> '' THEN
+        IF SalespersonPurchaser.GET(GenJournalLine2."Salespers./Purch. Code") THEN
+          IF SalespersonPurchaser.VerifySalesPersonPurchaserPrivacyBlocked(SalespersonPurchaser) THEN
+            ERROR(SalespersonPurchPrivacyBlockErr,GenJournalLine2."Salespers./Purch. Code");
+    END;
+
+    PROCEDURE CheckIfPrivacyBlocked@208();
+    VAR
+      Customer@1002 : Record 18;
+      Vendor@1001 : Record 23;
+    BEGIN
+      IF FIND('-') THEN BEGIN
+        REPEAT
+          CASE "Account Type" OF
+            "Account Type"::Customer:
+              BEGIN
+                Customer.GET("Account No.");
+                IF Customer."Privacy Blocked" THEN
+                  ERROR(Customer.GetPrivacyBlockedGenericErrorText(Customer));
+                IF Customer.Blocked = Customer.Blocked::All THEN
+                  ERROR(BlockedErr,Customer.Blocked,Customer.TABLECAPTION,Customer."No.");
+              END;
+            "Account Type"::Vendor:
+              BEGIN
+                Vendor.GET("Account No.");
+                IF Vendor."Privacy Blocked" THEN
+                  ERROR(Vendor.GetPrivacyBlockedGenericErrorText(Vendor));
+                IF Vendor.Blocked IN [Vendor.Blocked::All,Vendor.Blocked::Payment] THEN
+                  ERROR(BlockedErr,Vendor.Blocked,Vendor.TABLECAPTION,Vendor."No.");
+              END;
+          END;
+        UNTIL NEXT <= 0;
+      END;
+    END;
+
+    PROCEDURE IsRecurring@99() : Boolean;
+    VAR
+      GenJournalTemplate@1000 : Record 80;
+    BEGIN
+      IF "Journal Template Name" <> '' THEN
+        IF GenJournalTemplate.GET("Journal Template Name") THEN
+          EXIT(GenJournalTemplate.Recurring);
+
+      EXIT(FALSE);
     END;
 
     BEGIN

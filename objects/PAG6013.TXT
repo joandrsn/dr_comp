@@ -2,9 +2,9 @@ OBJECT Page 6013 Resource Capacity Settings
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
@@ -30,12 +30,14 @@ OBJECT Page 6013 Resource Capacity Settings
                       ActionContainerType=ActionItems }
       { 50      ;1   ;Action    ;
                       Name=UpdateCapacity;
-                      CaptionML=[DAN=Update &Capacity;
+                      CaptionML=[DAN=Opdater &kapacitet;
                                  ENU=Update &Capacity];
                       Promoted=Yes;
                       Image=Approve;
                       PromotedCategory=Process;
-                      OnAction=BEGIN
+                      OnAction=VAR
+                                 NewCapacity@1000 : Decimal;
+                               BEGIN
                                  IF StartDate = 0D THEN
                                    ERROR(Text002);
 
@@ -63,26 +65,36 @@ OBJECT Page 6013 Resource Capacity Settings
                                    ELSE
                                      Holiday := CalendarMgmt.CheckDateStatus(CompanyInformation."Base Calendar Code",TempDate,NewDescription);
 
-                                   IF NOT Holiday THEN BEGIN
-                                     ResCapacityEntry.SETRANGE(Date,TempDate);
-                                     TempCapacity := 0;
-                                     IF ResCapacityEntry.FIND('-') THEN
-                                       REPEAT
-                                         TempCapacity := TempCapacity + ResCapacityEntry.Capacity;
-                                       UNTIL ResCapacityEntry.NEXT = 0;
+                                   ResCapacityEntry.SETRANGE(Date,TempDate);
+                                   ResCapacityEntry.CALCSUMS(Capacity);
+                                   TempCapacity := ResCapacityEntry.Capacity;
 
+                                   IF Holiday THEN
+                                     IF TempCapacity = 0 THEN
+                                       NewCapacity := 0
+                                     ELSE BEGIN
+                                       // post reverse capacity entry to have zero balance
+                                       NewCapacity := SelectCapacity;
+                                       IF NewCapacity > TempCapacity THEN
+                                         NewCapacity := TempCapacity;
+                                     END
+                                   ELSE
+                                     NewCapacity := TempCapacity - SelectCapacity;
+
+                                   IF NewCapacity <> 0 THEN BEGIN
                                      ResCapacityEntry2.RESET;
                                      IF ResCapacityEntry2.FINDLAST THEN;
                                      LastEntry := ResCapacityEntry2."Entry No." + 1;
                                      ResCapacityEntry2.RESET;
                                      ResCapacityEntry2."Entry No." := LastEntry;
-                                     ResCapacityEntry2.Capacity := -1 * (TempCapacity - SelectCapacity);
+                                     ResCapacityEntry2.Capacity := -NewCapacity;
                                      ResCapacityEntry2."Resource No." := "No.";
                                      ResCapacityEntry2."Resource Group No." := "Resource Group No.";
                                      ResCapacityEntry2.Date := TempDate;
                                      IF ResCapacityEntry2.INSERT(TRUE) THEN;
                                      ChangedDays := ChangedDays + 1;
                                    END;
+
                                    TempDate := TempDate + 1;
                                  UNTIL TempDate > EndDate;
                                  COMMIT;

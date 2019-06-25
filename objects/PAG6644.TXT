@@ -2,15 +2,16 @@ OBJECT Page 6644 Purchase Return Order Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
     Editable=No;
     CaptionML=[DAN=Købsreturvareordrearkiv;
                ENU=Purchase Return Order Archive];
+    DeleteAllowed=No;
     SourceTable=Table5109;
     SourceTableView=WHERE(Document Type=CONST(Return Order));
     PageType=Document;

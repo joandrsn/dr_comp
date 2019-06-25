@@ -2,9 +2,9 @@ OBJECT Codeunit 5059 ProfileManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -90,6 +90,7 @@ OBJECT Codeunit 5059 ProfileManagement
       ProfileQuestnLine@1003 : Record 5088;
       ContProfileAnswers@1001 : Page 5114;
     BEGIN
+      Cont.CheckIfMinorForProfiles;
       ContProfileAnswers.SetParameters(Cont,ProfileQuestionnaireAllowed(Cont,''),ProfileQuestnLineCode,ProfileQuestnLineLineNo);
       IF ProfileQuestnHeaderTemp.GET(ProfileQuestnLineCode) THEN BEGIN
         ProfileQuestnLine.GET(ProfileQuestnLineCode,ProfileQuestnLineLineNo);

@@ -2,9 +2,9 @@ OBJECT Table 450 Bar Chart Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,15 +13,20 @@ OBJECT Table 450 Bar Chart Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Series No.          ;Integer       ;CaptionML=[DAN=Serienr.;
+    { 1   ;   ;Series No.          ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Serienr.;
                                                               ENU=Series No.] }
-    { 2   ;   ;Column No.          ;Integer       ;CaptionML=[DAN=Kolonnenr.;
+    { 2   ;   ;Column No.          ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kolonnenr.;
                                                               ENU=Column No.] }
-    { 3   ;   ;Y Value             ;Decimal       ;CaptionML=[DAN=Y-værdi;
+    { 3   ;   ;Y Value             ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Y-værdi;
                                                               ENU=Y Value] }
-    { 4   ;   ;X Value             ;Text100       ;CaptionML=[DAN=X-værdi;
+    { 4   ;   ;X Value             ;Text100       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=X-værdi;
                                                               ENU=X Value] }
-    { 5   ;   ;Tag                 ;Text250       ;CaptionML=[DAN=Kode;
+    { 5   ;   ;Tag                 ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kode;
                                                               ENU=Tag] }
   }
   KEYS

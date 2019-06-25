@@ -2,9 +2,9 @@ OBJECT Codeunit 92 Purch.-Post + Print
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -29,6 +29,8 @@ OBJECT Codeunit 92 Purch.-Post + Print
       PurchShptHeader@1007 : Record 6650;
       ReportSelection@1008 : Record 77;
       Selection@1010 : Integer;
+      DownloadInvoiceAlsoQst@1011 : TextConst 'DAN=Du kan downloade bilaget Køb - faktura nu. Du kan også åbne det fra vinduet Bogførte købsfakturaer på et senere tidspunkt.\\Vil du downloade bilaget Køb - faktura nu?;ENU=You can also download the Purchase - Invoice document now. Alternatively, you can access it from the Posted Purchase Invoices window later.\\Do you want to download the Purchase - Invoice document now?';
+      DownloadCrMemoAlsoQst@1009 : TextConst 'DAN=Du kan downloade bilaget Køb - kreditnota nu. Du kan også åbne det fra vinduet Bogførte købskreditnotaer på et senere tidspunkt.\\Vil du downloade bilaget Køb - kreditnota nu?;ENU=You can also download the Purchase - Credit Memo document now. Alternatively, you can access it from the Posted Purchase Credit Memos window later.\\Do you want to download the Purchase - Credit Memo document now?';
 
     LOCAL PROCEDURE Code@2();
     VAR
@@ -84,6 +86,9 @@ OBJECT Codeunit 92 Purch.-Post + Print
                 PurchRcptHeader.SETRECFILTER;
                 PrintReport(ReportSelection.Usage::"P.Receipt");
               END;
+              IF IsPrintingBothDocumentsForNonWindowsClient(Receive AND Invoice) THEN
+                IF NOT CONFIRM(DownloadInvoiceAlsoQst,TRUE) THEN
+                  EXIT;
               IF Invoice THEN BEGIN
                 PurchInvHeader."No." := "Last Posting No.";
                 PurchInvHeader.SETRECFILTER;
@@ -106,6 +111,9 @@ OBJECT Codeunit 92 Purch.-Post + Print
                 PurchShptHeader.SETRECFILTER;
                 PrintReport(ReportSelection.Usage::"P.Ret.Shpt.");
               END;
+              IF IsPrintingBothDocumentsForNonWindowsClient(Ship AND Invoice) THEN
+                IF NOT CONFIRM(DownloadCrMemoAlsoQst,TRUE) THEN
+                  EXIT;
               IF Invoice THEN BEGIN
                 PurchCrMemoHeader."No." := "Last Posting No.";
                 PurchCrMemoHeader.SETRECFILTER;
@@ -142,6 +150,11 @@ OBJECT Codeunit 92 Purch.-Post + Print
             REPORT.RUN(ReportSelection."Report ID",FALSE,FALSE,PurchShptHeader);
         END;
       UNTIL ReportSelection.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE IsPrintingBothDocumentsForNonWindowsClient@5(PrintBothDocuments@1000 : Boolean) : Boolean;
+    BEGIN
+      EXIT(PrintBothDocuments AND (CURRENTCLIENTTYPE <> CLIENTTYPE::Windows));
     END;
 
     BEGIN

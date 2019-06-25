@@ -2,9 +2,9 @@ OBJECT Codeunit 5815 Undo Sales Shipment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -18,6 +18,7 @@ OBJECT Codeunit 5815 Undo Sales Shipment Line
             UpdateItemAnalysisView@1000 : Codeunit 7150;
           BEGIN
             SETRANGE(Type,Type::Item);
+            SETFILTER(Quantity,'<>0');
             IF NOT FIND('-') THEN
               ERROR(Text006);
 
@@ -48,7 +49,6 @@ OBJECT Codeunit 5815 Undo Sales Shipment Line
       WhseUndoQty@1015 : Codeunit 7320;
       InvtAdjmt@1008 : Codeunit 5895;
       ResJnlPostLine@1004 : Codeunit 212;
-      WhseJnlRegisterLine@1013 : Codeunit 7301;
       AsmPost@1022 : Codeunit 900;
       ATOWindow@1023 : Dialog;
       HideDialog@1005 : Boolean;
@@ -72,6 +72,7 @@ OBJECT Codeunit 5815 Undo Sales Shipment Line
       PostedWhseShptLine@1006 : Record 7323;
       SalesLine@1007 : Record 37;
       ServItem@1003 : Record 5940;
+      WhseJnlRegisterLine@1008 : Codeunit 7301;
       Window@1001 : Dialog;
       ItemShptEntryNo@1002 : Integer;
       DocLineNo@1004 : Integer;
@@ -128,9 +129,9 @@ OBJECT Codeunit 5815 Undo Sales Shipment Line
             WhseUndoQty.UndoPostedWhseShptLine(PostedWhseShptLine);
 
           TempWhseJnlLine.SETRANGE("Source Line No.","Line No.");
-          WhseUndoQty.PostTempWhseJnlLine(TempWhseJnlLine);
+          WhseUndoQty.PostTempWhseJnlLineCache(TempWhseJnlLine,WhseJnlRegisterLine);
 
-          UndoPostATO(SalesShptLine);
+          UndoPostATO(SalesShptLine,WhseJnlRegisterLine);
 
           UpdateOrderLine(SalesShptLine);
           IF PostedWhseShptLineFound THEN
@@ -358,7 +359,7 @@ OBJECT Codeunit 5815 Undo Sales Shipment Line
       END;
     END;
 
-    LOCAL PROCEDURE UndoPostATO@59(VAR SalesShptLine@1004 : Record 111);
+    LOCAL PROCEDURE UndoPostATO@59(VAR SalesShptLine@1004 : Record 111;VAR WhseJnlRegisterLine@1001 : Codeunit 7301);
     VAR
       PostedAsmHeader@1000 : Record 910;
     BEGIN

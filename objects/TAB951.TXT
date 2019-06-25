@@ -2,26 +2,44 @@ OBJECT Table 951 Time Sheet Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
     Permissions=TableData 5200=r;
-    OnInsert=BEGIN
+    OnInsert=VAR
+               Resource@1000 : Record 156;
+             BEGIN
+               GetTimeSheetResource(Resource);
+               CheckResourcePrivacyBlocked(Resource);
+               Resource.TESTFIELD(Blocked,FALSE);
+
                UpdateApproverID;
                "Time Sheet Starting Date" := TimeSheetHeader."Starting Date";
              END;
 
-    OnModify=BEGIN
+    OnModify=VAR
+               Resource@1000 : Record 156;
+             BEGIN
+               GetTimeSheetResource(Resource);
+               CheckResourcePrivacyBlocked(Resource);
+               Resource.TESTFIELD(Blocked,FALSE);
+
                UpdateDetails;
              END;
 
     OnDelete=VAR
                TimeSheetCommentLine@1000 : Record 953;
+               Resource@1001 : Record 156;
              BEGIN
                TestStatus;
+
+               GetTimeSheetResource(Resource);
+               CheckResourcePrivacyBlocked(Resource);
+               Resource.TESTFIELD(Blocked,FALSE);
+
                TimeSheetDetail.SETRANGE("Time Sheet No.","Time Sheet No.");
                TimeSheetDetail.SETRANGE("Time Sheet Line No.","Line No.");
                TimeSheetDetail.DELETEALL;
@@ -72,8 +90,12 @@ OBJECT Table 951 Time Sheet Line
                                                    OptionString=[ ,Resource,Job,Service,Absence,Assembly Order] }
     { 6   ;   ;Job No.             ;Code20        ;TableRelation=Job;
                                                    OnValidate=BEGIN
-                                                                IF "Job No." <> '' THEN
+                                                                IF "Job No." <> '' THEN BEGIN
                                                                   TESTFIELD(Type,Type::Job);
+                                                                  Job.GET("Job No.");
+                                                                  IF Job.Blocked = Job.Blocked::All THEN
+                                                                    Job.TestBlocked;
+                                                                END;
 
                                                                 UpdateApproverID;
                                                               END;
@@ -130,6 +152,7 @@ OBJECT Table 951 Time Sheet Line
                                                    CaptionML=[DAN=Arbejdstypekode;
                                                               ENU=Work Type Code] }
     { 12  ;   ;Approver ID         ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Godkender-id;
                                                               ENU=Approver ID];
                                                    Editable=No }
@@ -175,6 +198,7 @@ OBJECT Table 951 Time Sheet Line
                                                    OptionString=Open,Submitted,Rejected,Approved;
                                                    Editable=No }
     { 21  ;   ;Approved By         ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Godkendt af;
                                                               ENU=Approved By];
                                                    Editable=No }
@@ -212,6 +236,7 @@ OBJECT Table 951 Time Sheet Line
       Text002@1006 : TextConst 'DAN="Status skal være Åben eller Afvist i overensstemmelse med timeseddelnr. ''%1'', linjenr.=''%2''.";ENU="Status must be Open or Rejected in line with Time Sheet No.=''%1'', Line No.=''%2''."';
       Text003@1007 : TextConst 'DAN=Serviceordre %1 til debitor %2;ENU=Service order %1 for customer %2';
       Text005@1009 : TextConst 'DAN=Vælg en type, før du indtaster en aktivitet.;ENU=Select a type before you enter an activity.';
+      PrivacyBlockedErr@1008 : TextConst '@@@="%1=resource no.";DAN=Du kan ikke anvende ressourcen %1, fordi de er markeret som blokeret pga. beskyttelse af personlige oplysninger.;ENU=You cannot use resource %1 because they are marked as blocked due to privacy.';
 
     PROCEDURE TestStatus@3();
     BEGIN
@@ -326,6 +351,12 @@ OBJECT Table 951 Time Sheet Line
           ERROR(Text005);
       END;
       MODIFY;
+    END;
+
+    LOCAL PROCEDURE CheckResourcePrivacyBlocked@7(Resource@1000 : Record 156);
+    BEGIN
+      IF Resource."Privacy Blocked" THEN
+        ERROR(PrivacyBlockedErr,Resource."No.");
     END;
 
     PROCEDURE GetAllowEdit@8(FldNo@1001 : Integer;ManagerRole@1000 : Boolean) : Boolean;

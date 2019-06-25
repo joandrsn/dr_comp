@@ -2,16 +2,16 @@ OBJECT Table 5345 CRM Transactioncurrency
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=transactioncurrency;
-    CaptionML=[DAN=Currency;
-               ENU=Currency];
+    CaptionML=[DAN=CRM Transactioncurrency;
+               ENU=CRM Transactioncurrency];
     Description=Currency in which a financial transaction is carried out.;
   }
   FIELDS

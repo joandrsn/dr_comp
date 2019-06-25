@@ -2,9 +2,9 @@ OBJECT Table 1018 Job WIP Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,43 +13,55 @@ OBJECT Table 1018 Job WIP Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Posting Group       ;Code10        ;CaptionML=[DAN=Bogføringsgruppe;
+    { 1   ;   ;Posting Group       ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogføringsgruppe;
                                                               ENU=Posting Group] }
-    { 2   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+    { 2   ;   ;Type                ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Type;
                                                               ENU=Type];
                                                    OptionCaptionML=[DAN=Udlignede omkostninger,Udlignet salg,Realiserede omkostninger,Realiseret salg,Periodiserede omkostninger,Periodiseret salg;
                                                                     ENU=Applied Costs,Applied Sales,Recognized Costs,Recognized Sales,Accrued Costs,Accrued Sales];
                                                    OptionString=Applied Costs,Applied Sales,Recognized Costs,Recognized Sales,Accrued Costs,Accrued Sales }
-    { 3   ;   ;WIP Entry Amount    ;Decimal       ;CaptionML=[DAN=Bogført VIA-beløb;
+    { 3   ;   ;WIP Entry Amount    ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogført VIA-beløb;
                                                               ENU=WIP Entry Amount] }
     { 4   ;   ;G/L Account No.     ;Code20        ;TableRelation="G/L Account";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Finanskontonr.;
                                                               ENU=G/L Account No.] }
     { 5   ;   ;Bal. G/L Account No.;Code20        ;TableRelation="G/L Account";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Saldokontonr.;
                                                               ENU=Bal. G/L Account No.] }
-    { 6   ;   ;WIP Method          ;Code20        ;CaptionML=[DAN=VIA-metode;
+    { 6   ;   ;WIP Method          ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=VIA-metode;
                                                               ENU=WIP Method];
                                                    Editable=No }
     { 7   ;   ;Job No.             ;Code20        ;TableRelation=Job;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Sagsnr.;
                                                               ENU=Job No.];
                                                    NotBlank=Yes;
                                                    Editable=No }
-    { 8   ;   ;Job Complete        ;Boolean       ;CaptionML=[DAN=Sagen er afsluttet;
+    { 8   ;   ;Job Complete        ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Sagen er afsluttet;
                                                               ENU=Job Complete] }
     { 9   ;   ;Job WIP Total Entry No.;Integer    ;TableRelation="Job WIP Total";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Løbenr. for sags-VIA-total;
                                                               ENU=Job WIP Total Entry No.] }
     { 22  ;   ;Reverse             ;Boolean       ;InitValue=Yes;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Tilbagefør;
                                                               ENU=Reverse] }
-    { 23  ;   ;WIP Posting Method Used;Option     ;CaptionML=[DAN=Anvendt VIA-bogføringsmetode;
+    { 23  ;   ;WIP Posting Method Used;Option     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Anvendt VIA-bogføringsmetode;
                                                               ENU=WIP Posting Method Used];
                                                    OptionCaptionML=[DAN=Pr. sag,Pr. sagspost;
                                                                     ENU=Per Job,Per Job Ledger Entry];
                                                    OptionString=Per Job,Per Job Ledger Entry }
-    { 71  ;   ;Dim Combination ID  ;Integer       ;CaptionML=[DAN=Dim kombination ID;
+    { 71  ;   ;Dim Combination ID  ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dim kombination ID;
                                                               ENU=Dim Combination ID] }
   }
   KEYS

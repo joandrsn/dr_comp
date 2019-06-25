@@ -2,9 +2,9 @@ OBJECT Table 5071 Campaign
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -91,7 +91,7 @@ OBJECT Table 5071 Campaign
 
                                                    CaptionML=[DAN=Slutdato;
                                                               ENU=Ending Date] }
-    { 5   ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 5   ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 6   ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
@@ -252,7 +252,7 @@ OBJECT Table 5071 Campaign
                                                    TableRelation=Team;
                                                    CaptionML=[DAN=Teamfilter;
                                                               ENU=Team Filter] }
-    { 37  ;   ;Salesperson Filter  ;Code10        ;FieldClass=FlowFilter;
+    { 37  ;   ;Salesperson Filter  ;Code20        ;FieldClass=FlowFilter;
                                                    TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerfilter;
                                                               ENU=Salesperson Filter] }

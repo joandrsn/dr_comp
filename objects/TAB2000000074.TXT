@@ -2,7 +2,7 @@ OBJECT Table 2000000074 Profile Metadata
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=30-05-19;
     Time=12:00:00;
     Version List=;
   }
@@ -17,7 +17,7 @@ OBJECT Table 2000000074 Profile Metadata
     { 3   ;   ;Profile ID          ;Code30        ;TableRelation=Profile."Profile ID";
                                                    CaptionML=[DAN=Profil-id;
                                                               ENU=Profile ID] }
-    { 6   ;   ;Page ID             ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Page));
+    { 6   ;   ;Page ID             ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Page));
                                                    CaptionML=[DAN=Side-id;
                                                               ENU=Page ID] }
     { 9   ;   ;Description         ;Text250       ;FieldClass=FlowField;

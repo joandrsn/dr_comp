@@ -2,9 +2,9 @@ OBJECT Codeunit 1550 Record Restriction Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -139,15 +139,30 @@ OBJECT Codeunit 1550 Record Restriction Mgt.
     BEGIN
       Customer.GET(Sender."Sell-to Customer No.");
       CheckRecordHasUsageRestrictions(Customer.RECORDID);
-
+      IF Sender."Sell-to Customer No." = Sender."Bill-to Customer No." THEN
+        EXIT;
       Customer.GET(Sender."Bill-to Customer No.");
       CheckRecordHasUsageRestrictions(Customer.RECORDID);
     END;
 
+    [EventSubscriber(Table,38,OnCheckPurchasePostRestrictions)]
+    PROCEDURE VendorCheckPurchasePostRestrictions@33(VAR Sender@1000 : Record 38);
+    VAR
+      Vendor@1001 : Record 23;
+    BEGIN
+      Vendor.GET(Sender."Buy-from Vendor No.");
+      CheckRecordHasUsageRestrictions(Vendor.RECORDID);
+      IF Sender."Buy-from Vendor No." = Sender."Pay-to Vendor No." THEN
+        EXIT;
+      Vendor.GET(Sender."Pay-to Vendor No.");
+      CheckRecordHasUsageRestrictions(Vendor.RECORDID);
+    END;
+
     [EventSubscriber(Table,81,OnCheckGenJournalLinePostRestrictions)]
-    PROCEDURE CustomerCheckGenJournalLinePostRestrictions@5(VAR Sender@1000 : Record 81);
+    PROCEDURE ContractorCheckGenJournalLinePostRestrictions@5(VAR Sender@1000 : Record 81);
     VAR
       Customer@1001 : Record 18;
+      Vendor@1002 : Record 23;
     BEGIN
       IF Sender."Account Type" = Sender."Account Type"::Customer THEN
         IF Customer.GET(Sender."Account No.") THEN
@@ -156,6 +171,14 @@ OBJECT Codeunit 1550 Record Restriction Mgt.
       IF Sender."Bal. Account Type" = Sender."Bal. Account Type"::Customer THEN
         IF Customer.GET(Sender."Bal. Account No.") THEN
           CheckRecordHasUsageRestrictions(Customer.RECORDID);
+
+      IF Sender."Account Type" = Sender."Account Type"::Vendor THEN
+        IF Vendor.GET(Sender."Account No.") THEN
+          CheckRecordHasUsageRestrictions(Vendor.RECORDID);
+
+      IF Sender."Bal. Account Type" = Sender."Bal. Account Type"::Vendor THEN
+        IF Vendor.GET(Sender."Bal. Account No.") THEN
+          CheckRecordHasUsageRestrictions(Vendor.RECORDID);
     END;
 
     [EventSubscriber(Table,81,OnCheckGenJournalLinePostRestrictions)]

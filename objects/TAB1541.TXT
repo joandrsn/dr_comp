@@ -2,9 +2,9 @@ OBJECT Table 1541 Workflow User Group Member
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -34,6 +34,7 @@ OBJECT Table 1541 Workflow User Group Member
                                                                 END;
                                                               END;
 
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Brugernavn;
                                                               ENU=User Name] }
     { 3   ;   ;Sequence No.        ;Integer       ;CaptionML=[DAN=Rækkefølgenr.;

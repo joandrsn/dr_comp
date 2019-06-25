@@ -2,9 +2,9 @@ OBJECT Table 1260 Bank Data Conv. Service Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -20,7 +20,8 @@ OBJECT Table 1260 Bank Data Conv. Service Setup
   {
     { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
                                                               ENU=Primary Key] }
-    { 2   ;   ;User Name           ;Text50        ;CaptionML=[DAN=Brugernavn;
+    { 2   ;   ;User Name           ;Text50        ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Brugernavn;
                                                               ENU=User Name];
                                                    Editable=Yes }
     { 3   ;   ;Password Key        ;GUID          ;TableRelation="Service Password".Key;

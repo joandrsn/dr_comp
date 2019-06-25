@@ -2,9 +2,9 @@ OBJECT Codeunit 454 Job Queue - Send Notification
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -59,16 +59,10 @@ OBJECT Codeunit 454 Job Queue - Send Notification
 
     LOCAL PROCEDURE SetText@4(VAR JobQueueEntry@1001 : Record 472;VAR RecordLink@1000 : Record 2000000068);
     VAR
-      SystemUTF8Encoder@1011 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.UTF8Encoding";
-      SystemByteArray@1010 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Array";
-      OStr@1008 : OutStream;
+      TypeHelper@1002 : Codeunit 10;
       s@1007 : Text;
       lf@1006 : Text;
       c1@1005 : Byte;
-      c2@1004 : Byte;
-      x@1003 : Integer;
-      y@1002 : Integer;
-      i@1009 : Integer;
     BEGIN
       WITH JobQueueEntry DO BEGIN
         c1 := 13;
@@ -79,25 +73,7 @@ OBJECT Codeunit 454 Job Queue - Send Notification
         ELSE
           s := STRSUBSTNO(Text001,Description);
 
-        SystemUTF8Encoder := SystemUTF8Encoder.UTF8Encoding;
-        SystemByteArray := SystemUTF8Encoder.GetBytes(s);
-
-        RecordLink.Note.CREATEOUTSTREAM(OStr);
-        x := SystemByteArray.Length DIV 128;
-        IF x > 1 THEN
-          y := SystemByteArray.Length - 128 * (x - 1)
-        ELSE
-          y := SystemByteArray.Length;
-        c1 := y;
-        OStr.WRITE(c1);
-        IF x > 0 THEN BEGIN
-          c2 := x;
-          OStr.WRITE(c2);
-        END;
-        FOR i := 0 TO SystemByteArray.Length - 1 DO BEGIN
-          c1 := SystemByteArray.GetValue(i);
-          OStr.WRITE(c1);
-        END;
+        TypeHelper.WriteRecordLinkNote(RecordLink,s);
       END;
     END;
 

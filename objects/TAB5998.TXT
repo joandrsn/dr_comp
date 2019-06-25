@@ -2,9 +2,9 @@ OBJECT Table 5998 Standard Service Item Gr. Code
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-07-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50528;
   }
   PROPERTIES
   {
@@ -12,7 +12,7 @@ OBJECT Table 5998 Standard Service Item Gr. Code
     OnDelete=BEGIN
                StdServiceLine.RESET;
                StdServiceLine.SETRANGE("Standard Service Code",Code);
-               IF FINDSET THEN
+               IF NOT StdServiceLine.ISEMPTY THEN
                  StdServiceLine.DELETEALL(TRUE);
              END;
 

@@ -2,17 +2,19 @@ OBJECT Table 122 Purch. Inv. Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50583,NAVDK9.00.00.50583;
   }
   PROPERTIES
   {
     DataCaptionFields=No.,Buy-from Vendor Name;
     OnDelete=VAR
                PostedDeferralHeader@1000 : Record 1704;
+               PostPurchLinesDelete@1002 : Codeunit 364;
                DeferralUtilities@1001 : Codeunit 1720;
              BEGIN
+               PostPurchLinesDelete.IsDocumentDeletionAllowed("Posting Date");
                LOCKTABLE;
                PostPurchLinesDelete.DeletePurchInvLines(Rec);
 
@@ -130,7 +132,7 @@ OBJECT Table 122 Purch. Inv. Header
     { 41  ;   ;Language Code       ;Code10        ;TableRelation=Language;
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code] }
-    { 43  ;   ;Purchaser Code      ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 43  ;   ;Purchaser Code      ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Indkøberkode;
                                                               ENU=Purchaser Code] }
     { 44  ;   ;Order No.           ;Code20        ;AccessByPermission=TableData 120=R;
@@ -293,6 +295,7 @@ OBJECT Table 122 Purch. Inv. Header
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 113 ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
@@ -322,8 +325,7 @@ OBJECT Table 122 Purch. Inv. Header
                                                               ENU=Quote No.];
                                                    Editable=No }
     { 170 ;   ;Creditor No.        ;Code20        ;CaptionML=[DAN=Kreditornr.;
-                                                              ENU=Creditor No.];
-                                                   Numeric=Yes }
+                                                              ENU=Creditor No.] }
     { 171 ;   ;Payment Reference   ;Code50        ;CaptionML=[DAN=Betalingsreference;
                                                               ENU=Payment Reference];
                                                    Numeric=Yes }
@@ -336,6 +338,7 @@ OBJECT Table 122 Purch. Inv. Header
                                                               ENU=Dimension Set ID];
                                                    Editable=No }
     { 1300;   ;Canceled By         ;Code20        ;TableRelation="Purch. Cr. Memo Hdr.";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Annulleret af;
                                                               ENU=Canceled By];
                                                    Editable=No }
@@ -406,7 +409,6 @@ OBJECT Table 122 Purch. Inv. Header
       PurchInvHeader@1000 : Record 122;
       PurchCommentLine@1001 : Record 43;
       VendLedgEntry@1002 : Record 25;
-      PostPurchLinesDelete@1003 : Codeunit 364;
       DimMgt@1004 : Codeunit 408;
       ApprovalsMgmt@1008 : Codeunit 1535;
       UserSetupMgt@1005 : Codeunit 5700;

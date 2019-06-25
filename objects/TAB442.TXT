@@ -2,9 +2,9 @@ OBJECT Table 442 IC Document Dimension
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -13,7 +13,7 @@ OBJECT Table 442 IC Document Dimension
   }
   FIELDS
   {
-    { 1   ;   ;Table ID            ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Table));
+    { 1   ;   ;Table ID            ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Table));
                                                    CaptionML=[DAN=Tabel-id;
                                                               ENU=Table ID];
                                                    NotBlank=Yes }

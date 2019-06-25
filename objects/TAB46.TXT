@@ -2,9 +2,9 @@ OBJECT Table 46 Item Register
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -35,6 +35,7 @@ OBJECT Table 46 Item Register
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 7   ;   ;Journal Batch Name  ;Code10        ;TableRelation="Item Journal Batch".Name;

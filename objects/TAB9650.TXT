@@ -2,9 +2,9 @@ OBJECT Table 9650 Custom Report Layout
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -52,13 +52,22 @@ OBJECT Table 9650 Custom Report Layout
     { 8   ;   ;Last Modified       ;DateTime      ;CaptionML=[DAN=Sidst ændret;
                                                               ENU=Last Modified];
                                                    Editable=No }
-    { 9   ;   ;Last Modified by User;Code50       ;CaptionML=[DAN=Sidst ændret af bruger;
+    { 9   ;   ;Last Modified by User;Code50       ;TableRelation=User."User Name";
+                                                   OnLookup=VAR
+                                                              UserMgt@1000 : Codeunit 418;
+                                                            BEGIN
+                                                              UserMgt.LookupUserID("Last Modified by User");
+                                                            END;
+
+                                                   TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Sidst ændret af bruger;
                                                               ENU=Last Modified by User];
                                                    Editable=No }
     { 10  ;   ;File Extension      ;Text30        ;CaptionML=[DAN=Filtype;
                                                               ENU=File Extension];
                                                    Editable=No }
-    { 11  ;   ;Description         ;Text80        ;CaptionML=[DAN=Beskrivelse;
+    { 11  ;   ;Description         ;Text250       ;CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
     { 12  ;   ;Custom XML Part     ;BLOB          ;CaptionML=[DAN=Brugerdefineret XML-del;
                                                               ENU=Custom XML Part] }

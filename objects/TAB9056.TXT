@@ -2,9 +2,9 @@ OBJECT Table 9056 Manufacturing Cue
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -65,12 +65,12 @@ OBJECT Table 9056 Manufacturing Cue
                                                                                                         Source Document=CONST(Prod. Output)));
                                                    CaptionML=[DAN=Pluk fra produktion (lager);
                                                               ENU=Invt. Put-aways from Prod.] }
-    { 12  ;   ;Released Prod. Orders - Today;Integer;
+    { 12  ;   ;Rlsd. Prod. Orders Until Today;Integer;
                                                    FieldClass=FlowField;
                                                    CalcFormula=Count("Production Order" WHERE (Status=CONST(Released),
                                                                                                Starting Date=FIELD(Date Filter)));
-                                                   CaptionML=[DAN=Frigivne prod.ordrer - i dag;
-                                                              ENU=Released Prod. Orders - Today] }
+                                                   CaptionML=[DAN=Frigivne produktionsordrer indtil i dag;
+                                                              ENU=Rlsd. Prod. Orders Until Today] }
     { 20  ;   ;Date Filter         ;Date          ;FieldClass=FlowFilter;
                                                    CaptionML=[DAN=Datofilter;
                                                               ENU=Date Filter];

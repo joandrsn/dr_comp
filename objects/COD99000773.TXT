@@ -2,9 +2,9 @@ OBJECT Codeunit 99000773 Calculate Prod. Order
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -525,7 +525,6 @@ OBJECT Codeunit 99000773 Calculate Prod. Order
 
     PROCEDURE CalculateProdOrderDates@12(VAR ProdOrderLine@1000 : Record 5406;LetDueDateDecrease@1003 : Boolean);
     VAR
-      ProdOrderLine2@1001 : Record 5406;
       ProdOrderRtngLine@1002 : Record 5409;
       NewDueDate@1004 : Date;
     BEGIN
@@ -573,39 +572,10 @@ OBJECT Codeunit 99000773 Calculate Prod. Order
 
       ProdOrderLine.MODIFY;
 
-      ProdOrder."Due Date" := 0D;
-      ProdOrder."Ending Date" := 0D;
-      ProdOrder."Ending Time" := 0T;
-      ProdOrder."Starting Date" := CalendarMgt.GetMaxDate;
-      ProdOrder."Starting Time" := 235959T;
-
-      ProdOrderLine2.SETRANGE(Status,ProdOrderLine.Status);
-      ProdOrderLine2.SETRANGE("Prod. Order No.",ProdOrderLine."Prod. Order No.");
-      IF ProdOrderLine2.FIND('-') THEN
-        REPEAT
-          IF (ProdOrderLine2."Ending Date" > ProdOrder."Ending Date") OR
-             ((ProdOrderLine2."Ending Date" = ProdOrder."Ending Date") AND
-              (ProdOrderLine2."Ending Time" > ProdOrder."Ending Time"))
-          THEN BEGIN
-            ProdOrder."Ending Date" := ProdOrderLine2."Ending Date";
-            ProdOrder."Ending Time" := ProdOrderLine2."Ending Time";
-          END;
-          IF (ProdOrderLine2."Starting Date" < ProdOrder."Starting Date") OR
-             ((ProdOrderLine2."Starting Date" = ProdOrder."Starting Date") AND
-              (ProdOrderLine2."Starting Time" < ProdOrder."Starting Time"))
-          THEN BEGIN
-            ProdOrder."Starting Date" := ProdOrderLine2."Starting Date";
-            ProdOrder."Starting Time" := ProdOrderLine2."Starting Time";
-          END;
-
-          IF ProdOrderLine2."Due Date" > ProdOrder."Due Date" THEN
-            ProdOrder."Due Date" := ProdOrderLine2."Due Date";
-        UNTIL ProdOrderLine2.NEXT = 0;
-
-      ProdOrder.UpdateDatetime;
-
-      IF NOT ProdOrderModify THEN
+      IF NOT ProdOrderModify THEN BEGIN
+        ProdOrder.AdjustStartEndingDate;
         ProdOrder.MODIFY;
+      END;
     END;
 
     PROCEDURE Calculate@1(ProdOrderLine2@1000 : Record 5406;Direction@1001 : 'Forward,Backward';CalcRouting@1002 : Boolean;CalcComponents@1003 : Boolean;DeleteRelations@1004 : Boolean;LetDueDateDecrease@1012 : Boolean) : Boolean;
@@ -778,6 +748,9 @@ OBJECT Codeunit 99000773 Calculate Prod. Order
     VAR
       PlanningLinesBinCode@1005 : Code[20];
     BEGIN
+      IF ProdOrderLine."Planning Level Code" > 0 THEN
+        EXIT;
+
       PlanningLinesBinCode :=
         WMSManagement.GetPlanningRtngLastOperationFromBinCode(
           ReqLine."Worksheet Template Name",

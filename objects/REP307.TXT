@@ -2,9 +2,9 @@ OBJECT Report 307 Vendor - Order Summary
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -27,6 +27,10 @@ OBJECT Report 307 Vendor - Order Summary
                OnPreDataItem=BEGIN
                                CurrReport.CREATETOTALS(PurchOrderAmountLCY,PurchAmtOnOrderLCY);
                              END;
+
+               OnAfterGetRecord=BEGIN
+                                  NewVendor := TRUE;
+                                END;
 
                ReqFilterFields=No.,Search Name,Vendor Posting Group,Currency Filter }
 
@@ -141,6 +145,12 @@ OBJECT Report 307 Vendor - Order Summary
                                         "Outstanding Amount" / (1 + "VAT %" / 100),
                                         Currency."Amount Rounding Precision");
                                   PurchOrderAmountLCY := PurchOrderAmount;
+
+                                  FOR i := 1 TO ARRAYLEN(PurchAmtOnOrder) DO BEGIN
+                                    PurchAmtOnOrder[i] := 0;
+                                    PurchAmtOnOrderLCY[i] := 0;
+                                  END;
+
                                   IF "Currency Code" <> '' THEN BEGIN
                                     PurchOrderHeader.GET(1,"Document No.");
                                     IF PurchOrderHeader."Currency Factor" <> 0 THEN
@@ -153,6 +163,14 @@ OBJECT Report 307 Vendor - Order Summary
 
                                   PurchAmtOnOrder[PeriodNo] := PurchOrderAmount;
                                   PurchAmtOnOrderLCY[PeriodNo] := PurchOrderAmountLCY;
+
+                                  IF NewVendor THEN
+                                    GroupNumber += 1
+                                  ELSE
+                                    IF NOT PrintAmountsInLCY AND ("Currency Code" <> LastCurrencyCode) THEN
+                                      GroupNumber += 1;
+                                  NewVendor := FALSE;
+                                  LastCurrencyCode := "Currency Code";
                                 END;
 
                DataItemLink=Pay-to Vendor No.=FIELD(No.),
@@ -199,6 +217,9 @@ OBJECT Report 307 Vendor - Order Summary
 
     { 54  ;2   ;Column  ;PurchaseLinePaytoNo_Vendor;
                SourceExpr="Pay-to Vendor No." }
+
+    { 6   ;2   ;Column  ;GroupNumber         ;
+               SourceExpr=GroupNumber }
 
   }
   REQUESTPAGE
@@ -265,6 +286,9 @@ OBJECT Report 307 Vendor - Order Summary
       AfterCaptionLbl@7202 : TextConst 'DAN=Efter...;ENU=After...';
       TotalCaptionLbl@1909 : TextConst 'DAN=I alt;ENU=Total';
       TotalLCYCaptionLbl@5808 : TextConst 'DAN=I alt (RV);ENU=Total (LCY)';
+      GroupNumber@1013 : Integer;
+      NewVendor@1014 : Boolean;
+      LastCurrencyCode@1015 : Code[10];
 
     PROCEDURE InitializeRequest@1(NewPeriodStartDate@1000 : Date;NewPrintAmountsInLCY@1001 : Boolean);
     BEGIN
@@ -437,6 +461,9 @@ OBJECT Report 307 Vendor - Order Summary
         </Field>
         <Field Name="PurchaseLinePaytoNo_Vendor">
           <DataField>PurchaseLinePaytoNo_Vendor</DataField>
+        </Field>
+        <Field Name="GroupNumber">
+          <DataField>GroupNumber</DataField>
         </Field>
       </Fields>
       <rd:DataSetInfo>
@@ -2421,7 +2448,7 @@ OBJECT Report 307 Vendor - Order Summary
                     <TablixMember>
                       <Group Name="Table1_Group2">
                         <GroupExpressions>
-                          <GroupExpression>=Fields!No_Vendor.Value</GroupExpression>
+                          <GroupExpression>=Fields!GroupNumber.Value</GroupExpression>
                         </GroupExpressions>
                       </Group>
                       <TablixMembers>
@@ -2730,6 +2757,7 @@ OBJECT Report 307 Vendor - Order Summary
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

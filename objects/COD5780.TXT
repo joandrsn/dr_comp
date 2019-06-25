@@ -2,9 +2,9 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-09-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49326;
   }
   PROPERTIES
   {
@@ -48,67 +48,92 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
         UseCrossDock := FALSE;
     END;
 
-    PROCEDURE CalculateCrossDockLines@12(VAR CrossDockOpp@1000 : Record 5768;NewTemplateName@1001 : Code[10];NewNameNo@1002 : Code[20];NewLocationCode@1003 : Code[10]);
+    PROCEDURE CalculateCrossDockLines@12(VAR WhseCrossDockOpp@1000 : Record 5768;NewTemplateName@1001 : Code[10];NewNameNo@1002 : Code[20];NewLocationCode@1003 : Code[10]);
+    VAR
+      TempWhseRcptLineNoSpecOrder@1005 : TEMPORARY Record 7317;
+      TempWhseRcptLineWthSpecOrder@1004 : TEMPORARY Record 7317;
+      TempItemVariant@1006 : TEMPORARY Record 5401;
+    BEGIN
+      SetTemplate(NewTemplateName,NewNameNo,NewLocationCode);
+      IF TemplateName <> '' THEN
+        EXIT;
+
+      SeparateWhseRcptLinesWthSpecOrder(TempWhseRcptLineNoSpecOrder,TempWhseRcptLineWthSpecOrder,TempItemVariant);
+      FilterCrossDockOpp(WhseCrossDockOpp);
+      CalcCrossDockWithoutSpecOrder(WhseCrossDockOpp,TempWhseRcptLineNoSpecOrder,TempItemVariant);
+      CalcCrossDockForSpecialOrder(WhseCrossDockOpp,TempWhseRcptLineWthSpecOrder);
+    END;
+
+    LOCAL PROCEDURE CalcCrossDockForSpecialOrder@13(VAR WhseCrossDockOpp@1000 : Record 5768;VAR TempWhseRcptLine@1006 : TEMPORARY Record 7317);
     VAR
       WhseRcptLine@1004 : Record 7317;
-      TempWhseRcptLine@1006 : TEMPORARY Record 7317;
       QtyToCrossDockBase@1005 : Decimal;
       QtyOnCrossDockBase@1007 : Decimal;
       RemainingNeededQtyBase@1008 : Decimal;
       QtyOnPickBase@1011 : Decimal;
       QtyPickedBase@1010 : Decimal;
     BEGIN
-      SetTemplate(NewTemplateName,NewNameNo,NewLocationCode);
+      WITH TempWhseRcptLine DO
+        IF FIND('-') THEN
+          REPEAT
+            WhseRcptLine.GET("No.","Line No.");
+            WhseCrossDockOpp.SETRANGE("Source Line No.","Line No.");
+            WhseCrossDockOpp.DELETEALL;
+            GetSourceLine("Source Type","Source Subtype","Source No.","Source Line No.");
+            CalculateCrossDock(
+              WhseCrossDockOpp,"Item No.","Variant Code",LocationCode,
+              RemainingNeededQtyBase,QtyOnPickBase,QtyPickedBase,"Line No.");
 
-      WITH WhseRcptLine DO
-        IF TemplateName = '' THEN BEGIN
-          SETRANGE("No.",NameNo);
-          SETRANGE("Location Code",LocationCode);
-          SETFILTER("Qty. to Receive",'>0');
-
-          IF FIND('-') THEN
-            REPEAT
-              CrossDockOpp.SETRANGE("Source Template Name",TemplateName);
-              CrossDockOpp.SETRANGE("Source Name/No.",NameNo);
-              CrossDockOpp.SETRANGE("Location Code",LocationCode);
-              CrossDockOpp.SETRANGE("Source Line No.","Line No.");
-              CrossDockOpp.DELETEALL;
-
-              IF (TempWhseRcptLine."Item No." = "Item No.") AND
-                 (TempWhseRcptLine."Variant Code" = "Variant Code") AND
-                 (TempWhseRcptLine."Location Code" = "Location Code")
-              THEN BEGIN
-                IF RemainingNeededQtyBase = 0 THEN
-                  EXIT;
-              END ELSE BEGIN
-                GetSourceLine("Source Type","Source Subtype","Source No.","Source Line No.");
-                CalculateCrossDock(
-                  CrossDockOpp,"Item No.","Variant Code",LocationCode,RemainingNeededQtyBase,QtyOnPickBase,QtyPickedBase,"Line No.");
-              END;
-
-              TempWhseRcptLine := WhseRcptLine;
-
-              GetUseCrossDock(UseCrossDocking,"Location Code","Item No.");
-              IF UseCrossDocking THEN BEGIN
-                GetSourceLine("Source Type","Source Subtype","Source No.","Source Line No.");
-                RemainingNeededQtyBase := CalculateCrossDockLine2(
-                    "Item No.",
-                    "Variant Code",
-                    RemainingNeededQtyBase,QtyToCrossDockBase,QtyOnCrossDockBase,
-                    "Qty. to Receive (Base)");
-                VALIDATE("Qty. to Cross-Dock",ROUND(QtyToCrossDockBase / "Qty. per Unit of Measure",0.00001));
-                "Qty. to Cross-Dock (Base)" := QtyToCrossDockBase;
-                MODIFY;
-              END;
-            UNTIL (NEXT = 0);
-        END;
+            UpdateQtyToCrossDock(
+              WhseRcptLine,RemainingNeededQtyBase,QtyToCrossDockBase,QtyOnCrossDockBase);
+          UNTIL NEXT = 0;
     END;
 
-    LOCAL PROCEDURE CalculateCrossDockLine2@2(ItemNo@1004 : Code[20];VariantCode@1003 : Code[10];QtyNeededBase@1006 : Decimal;VAR QtyToCrossDockBase@1005 : Decimal;VAR QtyOnCrossDockBase@1001 : Decimal;QtyToHandleBase@1011 : Decimal) RemainingNeededQtyBase : Decimal;
+    LOCAL PROCEDURE CalcCrossDockWithoutSpecOrder@14(VAR WhseCrossDockOpp@1000 : Record 5768;VAR TempWhseRcptLine@1006 : TEMPORARY Record 7317;VAR TempItemVariant@1003 : TEMPORARY Record 5401);
+    VAR
+      WhseRcptLine@1004 : Record 7317;
+      QtyToCrossDockBase@1005 : Decimal;
+      QtyOnCrossDockBase@1007 : Decimal;
+      RemainingNeededQtyBase@1008 : Decimal;
+      QtyOnPickBase@1011 : Decimal;
+      QtyPickedBase@1010 : Decimal;
+      NewItemVariant@1001 : Boolean;
+    BEGIN
+      IF TempItemVariant.FINDSET THEN BEGIN
+        FilterWhseRcptLine(TempWhseRcptLine);
+        REPEAT
+          NewItemVariant := TRUE;
+          WITH TempWhseRcptLine DO BEGIN
+            SETRANGE("Item No.",TempItemVariant."Item No.");
+            SETRANGE("Variant Code",TempItemVariant.Code);
+            IF FIND('-') THEN
+              REPEAT
+                WhseRcptLine.GET("No.","Line No.");
+                WhseCrossDockOpp.SETRANGE("Source Line No.","Line No.");
+                WhseCrossDockOpp.DELETEALL;
+                IF NewItemVariant THEN BEGIN
+                  GetSourceLine("Source Type","Source Subtype","Source No.","Source Line No.");
+                  CalculateCrossDock(
+                    WhseCrossDockOpp,"Item No.","Variant Code",LocationCode,
+                    RemainingNeededQtyBase,QtyOnPickBase,QtyPickedBase,"Line No.");
+                END;
+                IF NewItemVariant OR (RemainingNeededQtyBase <> 0) THEN
+                  UpdateQtyToCrossDock(
+                    WhseRcptLine,RemainingNeededQtyBase,QtyToCrossDockBase,QtyOnCrossDockBase);
+
+                NewItemVariant := FALSE;
+              UNTIL (NEXT = 0) OR (RemainingNeededQtyBase = 0);
+          END;
+        UNTIL TempItemVariant.NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcRemainingNeededQtyBase@2(ItemNo@1004 : Code[20];VariantCode@1003 : Code[10];QtyNeededBase@1006 : Decimal;VAR QtyToCrossDockBase@1005 : Decimal;VAR QtyOnCrossDockBase@1001 : Decimal;QtyToHandleBase@1011 : Decimal) RemainingNeededQtyBase : Decimal;
     VAR
       Dummy@1012 : Decimal;
     BEGIN
       CalcCrossDockedItems(ItemNo,VariantCode,'',LocationCode,Dummy,QtyOnCrossDockBase);
+      QtyOnCrossDockBase += CalcCrossDockReceivedNotCrossDocked(LocationCode,ItemNo,VariantCode);
 
       QtyToCrossDockBase := QtyNeededBase - QtyOnCrossDockBase;
       IF QtyToHandleBase < QtyToCrossDockBase THEN BEGIN
@@ -126,9 +151,7 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
       QtyPickedBase@1013 : Decimal;
       Dummy@1012 : Decimal;
     BEGIN
-      CrossDockOpp.SETRANGE("Source Template Name",TemplateName);
-      CrossDockOpp.SETRANGE("Source Name/No.",NameNo);
-      CrossDockOpp.SETRANGE("Location Code",LocationCode);
+      FilterCrossDockOpp(CrossDockOpp);
       CrossDockOpp.SETRANGE("Source Line No.",LineNo);
       CrossDockOpp.DELETEALL;
 
@@ -136,6 +159,7 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
         CrossDockOpp,ItemNo,VariantCode,LocationCode,QtyNeededBase,QtyOnPickBase,QtyPickedBase,LineNo);
 
       CalcCrossDockedItems(ItemNo,VariantCode,'',LocationCode,Dummy,QtyOnCrossDockBase);
+      QtyOnCrossDockBase += CalcCrossDockReceivedNotCrossDocked(LocationCode,ItemNo,VariantCode);
 
       QtyToCrossDockBase := QtyNeededBase - QtyOnCrossDockBase;
       IF QtyToHandleBase < QtyToCrossDockBase THEN
@@ -174,7 +198,7 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
       SalesLine.SETRANGE("Location Code",LocationCode);
       SalesLine.SETRANGE("Shipment Date",0D,CrossDockDate);
       SalesLine.SETFILTER("Outstanding Quantity",'>0');
-      IF (SourceType2 = 39) AND PurchaseLine."Special Order" THEN BEGIN
+      IF HasSpecialOrder THEN BEGIN
         SalesLine.SETRANGE("Document No.",PurchaseLine."Special Order Sales No.");
         SalesLine.SETRANGE("Line No.",PurchaseLine."Special Order Sales Line No.");
       END ELSE
@@ -294,7 +318,7 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
 
     LOCAL PROCEDURE InsertCrossDockLine@5(VAR CrossDockOpp@1000 : Record 5768;SourceType@1001 : Integer;SourceSubType@1002 : Integer;SourceNo@1003 : Code[20];SourceLineNo@1004 : Integer;SourceSubLineNo@1015 : Integer;QtyOutstanding@1011 : Decimal;QtyOutstandingBase@1005 : Decimal;QtyOnPick@1018 : Decimal;QtyOnPickBase@1016 : Decimal;QtyPicked@1019 : Decimal;QtyPickedBase@1017 : Decimal;UOMCode@1006 : Code[10];QtyPerUOM@1007 : Decimal;DueDate@1008 : Date;ItemNo@1009 : Code[20];VariantCode@1010 : Code[10];LineNo@1012 : Integer);
     BEGIN
-      IF (SourceType2 = 39) AND PurchaseLine."Special Order" AND (SourceType <> 37) THEN
+      IF HasSpecialOrder AND (SourceType <> DATABASE::"Sales Line") THEN
         EXIT;
       IF (QtyOutstandingBase - QtyOnPickBase - QtyPickedBase) <= 0 THEN
         EXIT;
@@ -312,25 +336,27 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
         "To Source Subline No." := SourceSubLineNo;
         "To Source Document" := WhseMgt.GetSourceDocument("To Source Type","To Source Subtype");
         "Due Date" := DueDate;
-
-        "Qty. Needed (Base)" := QtyOutstandingBase - QtyOnPickBase - QtyPickedBase;
-        "Qty. Needed" := QtyOutstanding - QtyOnPick - QtyPicked;
-
-        "Pick Qty. (Base)" := QtyOnPickBase;
-        "Pick Qty." := QtyOnPickBase;
-
-        "Picked Qty. (Base)" := QtyPickedBase;
-        "Picked Qty." := QtyPicked;
-
         "To-Src. Unit of Measure Code" := UOMCode;
         "To-Src. Qty. per Unit of Meas." := QtyPerUOM;
         "Item No." := ItemNo;
         "Variant Code" := VariantCode;
         "Location Code" := LocationCode;
+
+        SubtractExistingCrossDockOppQtysToSource(CrossDockOpp);
+
+        "Qty. Needed (Base)" := Maximum("Qty. Needed (Base)" + QtyOutstandingBase - QtyOnPickBase - QtyPickedBase,0);
+        "Qty. Needed" := Maximum("Qty. Needed" + QtyOutstanding - QtyOnPick - QtyPicked,0);
+
+        "Pick Qty. (Base)" := Maximum("Pick Qty. (Base)" + QtyOnPickBase,0);
+        "Pick Qty." := Maximum("Pick Qty." + QtyOnPick,0);
+
+        "Picked Qty. (Base)" := Maximum("Picked Qty. (Base)" + QtyPickedBase,0);
+        "Picked Qty." := Maximum("Picked Qty." + QtyPicked,0);
+
         INSERT;
-        QtyNeededBase2 := QtyNeededBase2 + "Qty. Needed (Base)";
-        QtyOnPickBase2 := QtyOnPickBase2 + QtyOnPickBase;
-        QtyPickedBase2 := QtyPickedBase2 + QtyPickedBase;
+        QtyNeededBase2 += "Qty. Needed (Base)";
+        QtyOnPickBase2 += "Pick Qty. (Base)";
+        QtyPickedBase2 += "Picked Qty. (Base)";
       END;
     END;
 
@@ -340,12 +366,13 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
       CrossDockForm@1005 : Page 5783;
       QtyToCrossDock@1008 : Decimal;
     BEGIN
-      CrossDockOpp.FILTERGROUP(2);
-      CrossDockOpp.SETRANGE("Source Template Name",SourceTemplateName);
-      CrossDockOpp.SETRANGE("Source Name/No.",SourceNameNo);
-      CrossDockOpp.SETRANGE("Location Code",LocationCode);
-      CrossDockOpp.SETRANGE("Source Line No.",SourceLineNo);
-      CrossDockOpp.FILTERGROUP(0);
+      WITH CrossDockOpp DO BEGIN
+        FILTERGROUP(2);
+        SETRANGE("Source Template Name",SourceTemplateName);
+        SETRANGE("Source Name/No.",SourceNameNo);
+        SETRANGE("Location Code",LocationCode);
+        FILTERGROUP(0);
+      END;
       ReceiptLine.GET(SourceNameNo,SourceLineNo);
       CrossDockForm.SetValues(ItemNo,VariantCode,LocationCode,SourceTemplateName,SourceNameNo,SourceLineNo,
         ReceiptLine."Unit of Measure Code",ReceiptLine."Qty. per Unit of Measure");
@@ -368,18 +395,45 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
     BEGIN
       QtyCrossDockedUOMBase := 0;
       QtyCrossDockedAllUOMBase := 0;
-      BinContent.RESET;
-      BinContent.SETRANGE("Location Code",LocationCode);
-      BinContent.SETRANGE("Item No.",ItemNo);
-      BinContent.SETRANGE("Variant Code",VariantCode);
-      BinContent.SETRANGE("Cross-Dock Bin",TRUE);
-      IF BinContent.FIND('-') THEN
-        REPEAT
-          QtyAvailToPickBase := BinContent.CalcQtyAvailToPick(0);
-          IF BinContent."Unit of Measure Code" = UOMCode THEN
-            QtyCrossDockedUOMBase := QtyCrossDockedUOMBase + QtyAvailToPickBase;
-          QtyCrossDockedAllUOMBase := QtyCrossDockedAllUOMBase + QtyAvailToPickBase;
-        UNTIL BinContent.NEXT = 0;
+      WITH BinContent DO BEGIN
+        RESET;
+        SETRANGE("Location Code",LocationCode);
+        SETRANGE("Item No.",ItemNo);
+        SETRANGE("Variant Code",VariantCode);
+        SETRANGE("Cross-Dock Bin",TRUE);
+        IF FIND('-') THEN
+          REPEAT
+            QtyAvailToPickBase := CalcQtyAvailToPick(0);
+            IF "Unit of Measure Code" = UOMCode THEN
+              QtyCrossDockedUOMBase := QtyCrossDockedUOMBase + QtyAvailToPickBase;
+            QtyCrossDockedAllUOMBase := QtyCrossDockedAllUOMBase + QtyAvailToPickBase;
+          UNTIL NEXT = 0;
+      END;
+    END;
+
+    PROCEDURE CalcCrossDockReceivedNotCrossDocked@22(LocationCode@1002 : Code[10];ItemNo@1000 : Code[20];VariantCode@1001 : Code[10]) ReceivedNotCrossDockedQty : Decimal;
+    VAR
+      PostedWhseReceiptLine@1004 : Record 7319;
+      ReceivedCrossDockedQty@1003 : Decimal;
+    BEGIN
+      ReceivedNotCrossDockedQty := 0;
+
+      WITH PostedWhseReceiptLine DO BEGIN
+        SETRANGE("Location Code",LocationCode);
+        SETRANGE("Item No.",ItemNo);
+        SETRANGE("Variant Code",VariantCode);
+        SETFILTER(Status,'%1|%2',Status::" ",Status::"Partially Put Away");
+        SETFILTER("Cross-Dock Bin Code",'<>%1','');
+        IF FINDSET THEN
+          REPEAT
+            // calculate received, yet not put-away quantity, that is assumed to be put-away in a cross-dock bin
+            ReceivedCrossDockedQty := CalcCrossDockedQtyInPostedReceipt(PostedWhseReceiptLine);
+            ReceivedNotCrossDockedQty +=
+              Minimum(
+                Maximum("Qty. Cross-Docked (Base)" - ReceivedCrossDockedQty,0),
+                "Qty. (Base)" - "Qty. Put Away (Base)");
+          UNTIL NEXT = 0;
+      END;
     END;
 
     PROCEDURE ShowBinContentsCrossDocked@8(ItemNo@1003 : Code[20];VariantCode@1004 : Code[10];UOMCode@1005 : Code[10];LocationCode@1002 : Code[10];FilterOnUOM@1006 : Boolean);
@@ -387,27 +441,26 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
       BinContent@1000 : Record 7302;
       BinContentLookup@1001 : Page 7305;
     BEGIN
-      BinContent.SETRANGE("Item No.",ItemNo);
-      BinContent.SETRANGE("Variant Code",VariantCode);
-      BinContent.SETRANGE("Cross-Dock Bin",TRUE);
-      IF FilterOnUOM THEN
-        BinContent.SETRANGE("Unit of Measure Code",UOMCode)
-      ELSE
-        BinContent.SETRANGE("Unit of Measure Code");
-      BinContentLookup.SETTABLEVIEW(BinContent);
-      BinContentLookup.Initialize(LocationCode);
-      BinContentLookup.RUNMODAL;
+      WITH BinContent DO BEGIN
+        SETRANGE("Item No.",ItemNo);
+        SETRANGE("Variant Code",VariantCode);
+        SETRANGE("Cross-Dock Bin",TRUE);
+        IF FilterOnUOM THEN
+          SETRANGE("Unit of Measure Code",UOMCode);
+      END;
+      WITH BinContentLookup DO BEGIN
+        SETTABLEVIEW(BinContent);
+        Initialize(LocationCode);
+        RUNMODAL;
+      END;
       CLEAR(BinContentLookup);
     END;
 
     LOCAL PROCEDURE GetSourceLine@11(SourceType@1000 : Option;SourceSubtype@1001 : Option;SourceNo@1002 : Code[20];SourceLineNo@1003 : Integer);
     BEGIN
-      CASE SourceType OF
-        39:
-          BEGIN
-            PurchaseLine.GET(SourceSubtype,SourceNo,SourceLineNo);
-            SourceType2 := SourceType;
-          END;
+      IF SourceType = DATABASE::"Purchase Line" THEN BEGIN
+        PurchaseLine.GET(SourceSubtype,SourceNo,SourceLineNo);
+        SourceType2 := SourceType;
       END;
     END;
 
@@ -444,6 +497,130 @@ OBJECT Codeunit 5780 Whse. Cross-Dock Management
       TemplateName := NewTemplateName;
       NameNo := NewNameNo;
       LocationCode := NewLocationCode;
+    END;
+
+    LOCAL PROCEDURE SeparateWhseRcptLinesWthSpecOrder@23(VAR TempWhseRcptLineNoSpecOrder@1002 : TEMPORARY Record 7317;VAR TempWhseRcptLineWthSpecOrder@1000 : TEMPORARY Record 7317;VAR TempItemVariant@1003 : TEMPORARY Record 5401);
+    VAR
+      WhseRcptLine@1001 : Record 7317;
+    BEGIN
+      FilterWhseRcptLine(WhseRcptLine);
+      WITH WhseRcptLine DO
+        IF FINDSET THEN
+          REPEAT
+            GetSourceLine("Source Type","Source Subtype","Source No.","Source Line No.");
+            IF HasSpecialOrder THEN BEGIN
+              TempWhseRcptLineWthSpecOrder := WhseRcptLine;
+              TempWhseRcptLineWthSpecOrder.INSERT;
+            END ELSE BEGIN
+              TempWhseRcptLineNoSpecOrder := WhseRcptLine;
+              TempWhseRcptLineNoSpecOrder.INSERT;
+              InsertToItemList(WhseRcptLine,TempItemVariant);
+            END;
+          UNTIL NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE InsertToItemList@15(WhseRcptLine@1002 : Record 7317;VAR TempItemVariant@1000 : TEMPORARY Record 5401);
+    BEGIN
+      WITH TempItemVariant DO BEGIN
+        INIT;
+        "Item No." := WhseRcptLine."Item No.";
+        Code := WhseRcptLine."Variant Code";
+        IF INSERT THEN;
+      END;
+    END;
+
+    LOCAL PROCEDURE FilterWhseRcptLine@20(VAR WhseRcptLine@1000 : Record 7317);
+    BEGIN
+      WITH WhseRcptLine DO BEGIN
+        SETRANGE("No.",NameNo);
+        SETRANGE("Location Code",LocationCode);
+        SETFILTER("Qty. to Receive",'>0');
+      END;
+    END;
+
+    LOCAL PROCEDURE FilterCrossDockOpp@16(VAR WhseCrossDockOpp@1000 : Record 5768);
+    BEGIN
+      WITH WhseCrossDockOpp DO BEGIN
+        SETRANGE("Source Template Name",TemplateName);
+        SETRANGE("Source Name/No.",NameNo);
+        SETRANGE("Location Code",LocationCode);
+      END;
+    END;
+
+    LOCAL PROCEDURE UpdateQtyToCrossDock@19(VAR WhseRcptLine@1000 : Record 7317;VAR RemainingNeededQtyBase@1001 : Decimal;VAR QtyToCrossDockBase@1002 : Decimal;VAR QtyOnCrossDockBase@1003 : Decimal);
+    BEGIN
+      WITH WhseRcptLine DO BEGIN
+        GetUseCrossDock(UseCrossDocking,"Location Code","Item No.");
+        IF NOT UseCrossDocking THEN
+          EXIT;
+
+        RemainingNeededQtyBase :=
+          CalcRemainingNeededQtyBase(
+            "Item No.","Variant Code",RemainingNeededQtyBase,
+            QtyToCrossDockBase,QtyOnCrossDockBase,"Qty. to Receive (Base)");
+        VALIDATE("Qty. to Cross-Dock",ROUND(QtyToCrossDockBase / "Qty. per Unit of Measure",0.00001));
+        "Qty. to Cross-Dock (Base)" := QtyToCrossDockBase;
+        MODIFY;
+      END;
+    END;
+
+    LOCAL PROCEDURE HasSpecialOrder@18() : Boolean;
+    BEGIN
+      EXIT((SourceType2 = DATABASE::"Purchase Line") AND PurchaseLine."Special Order");
+    END;
+
+    LOCAL PROCEDURE SubtractExistingCrossDockOppQtysToSource@21(VAR WhseCrossDockOpp@1000 : Record 5768);
+    VAR
+      ExistingWhseCrossDockOpp@1001 : Record 5768;
+    BEGIN
+      WITH ExistingWhseCrossDockOpp DO BEGIN
+        SETRANGE("To Source Type",WhseCrossDockOpp."To Source Type");
+        SETRANGE("To Source Subtype",WhseCrossDockOpp."To Source Subtype");
+        SETRANGE("To Source No.",WhseCrossDockOpp."To Source No.");
+        SETRANGE("To Source Line No.",WhseCrossDockOpp."To Source Line No.");
+        SETRANGE("To Source Subline No.",WhseCrossDockOpp."To Source Subline No.");
+        SETRANGE("Item No.",WhseCrossDockOpp."Item No.");
+        SETRANGE("Variant Code",WhseCrossDockOpp."Variant Code");
+        CALCSUMS("Qty. to Cross-Dock (Base)","Pick Qty. (Base)","Picked Qty. (Base)");
+
+        WhseCrossDockOpp."Qty. Needed" :=
+          -ROUND("Qty. to Cross-Dock (Base)" / WhseCrossDockOpp."To-Src. Qty. per Unit of Meas.",0.00001);
+        WhseCrossDockOpp."Qty. Needed (Base)" := -"Qty. to Cross-Dock (Base)";
+        WhseCrossDockOpp."Pick Qty." :=
+          -ROUND("Pick Qty. (Base)" / WhseCrossDockOpp."To-Src. Qty. per Unit of Meas.",0.00001);
+        WhseCrossDockOpp."Pick Qty. (Base)" := -"Pick Qty. (Base)";
+        WhseCrossDockOpp."Picked Qty." :=
+          -ROUND("Picked Qty. (Base)" / WhseCrossDockOpp."To-Src. Qty. per Unit of Meas.",0.00001);
+        WhseCrossDockOpp."Picked Qty. (Base)" := -"Picked Qty. (Base)";
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcCrossDockedQtyInPostedReceipt@25(PostedWhseReceiptLine@1000 : Record 7319) : Decimal;
+    VAR
+      WarehouseEntry@1001 : Record 7312;
+    BEGIN
+      WITH WarehouseEntry DO BEGIN
+        SETRANGE("Whse. Document Type","Whse. Document Type"::Receipt);
+        SETRANGE("Whse. Document No.",PostedWhseReceiptLine."No.");
+        SETRANGE("Whse. Document Line No.",PostedWhseReceiptLine."Line No.");
+        SETFILTER("Bin Code",PostedWhseReceiptLine."Cross-Dock Bin Code");
+        CALCSUMS("Qty. (Base)");
+        EXIT("Qty. (Base)");
+      END;
+    END;
+
+    LOCAL PROCEDURE Maximum@17(Value1@1000 : Decimal;Value2@1001 : Decimal) : Decimal;
+    BEGIN
+      IF Value1 >= Value2 THEN
+        EXIT(Value1);
+      EXIT(Value2);
+    END;
+
+    LOCAL PROCEDURE Minimum@24(Value1@1000 : Decimal;Value2@1001 : Decimal) : Decimal;
+    BEGIN
+      IF Value1 <= Value2 THEN
+        EXIT(Value1);
+      EXIT(Value2);
     END;
 
     BEGIN

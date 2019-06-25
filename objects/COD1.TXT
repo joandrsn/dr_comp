@@ -2,9 +2,9 @@ OBJECT Codeunit 1 ApplicationManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.51418;
   }
   PROPERTIES
   {
@@ -78,7 +78,7 @@ OBJECT Codeunit 1 ApplicationManagement
 
     PROCEDURE ApplicationBuild@3() : Text[80];
     BEGIN
-      EXIT(CustomApplicationBuild('44974'));
+      EXIT(CustomApplicationBuild('51418'));
     END;
 
     LOCAL PROCEDURE CustomApplicationBuild@1050(BaseBuildNumber@1000 : Text[80]) : Text[80];

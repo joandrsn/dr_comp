@@ -2,9 +2,9 @@ OBJECT Page 5901 Service List
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -98,19 +98,11 @@ OBJECT Page 5901 Service List
 
     { 121 ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 1 Code";
-                Visible=FALSE;
-                OnLookup=BEGIN
-                           DimMgt.LookupDimValueCodeNoUpdate(1);
-                         END;
-                          }
+                Visible=FALSE }
 
     { 119 ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 2 Code";
-                Visible=FALSE;
-                OnLookup=BEGIN
-                           DimMgt.LookupDimValueCodeNoUpdate(2);
-                         END;
-                          }
+                Visible=FALSE }
 
     { 31  ;2   ;Field     ;
                 SourceExpr="Assigned User ID" }
@@ -132,7 +124,6 @@ OBJECT Page 5901 Service List
   CODE
   {
     VAR
-      DimMgt@1001 : Codeunit 408;
       "Response DateVisible"@19066074 : Boolean INDATASET;
       "Response TimeVisible"@19074545 : Boolean INDATASET;
 

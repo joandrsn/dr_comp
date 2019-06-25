@@ -2,9 +2,9 @@ OBJECT Codeunit 5920 ServItemManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -529,25 +529,15 @@ OBJECT Codeunit 5920 ServItemManagement
 
     PROCEDURE CopyReservationEntry@1(SalesHeader@1003 : Record 36);
     VAR
-      ReservEntry@1000 : Record 337;
+      SalesLine@1001 : Record 37;
     BEGIN
-      ReservEntry.RESET;
-      CLEAR(TempReservEntry);
-
-      ReservEntry.SETRANGE("Source Subtype",SalesHeader."Document Type");
-      ReservEntry.SETRANGE("Source ID",SalesHeader."No.");
-      ReservEntry.SETRANGE(Positive,FALSE);
-      ReservEntry.SETRANGE("Source Type",DATABASE::"Sales Line");
-      ReservEntry.SETRANGE("Source Batch Name",'');
-      ReservEntry.SETRANGE("Source Prod. Order Line",0);
-      ReservEntry.SETFILTER("Serial No.",'<>%1','');
-      ReservEntry.SETFILTER("Qty. to Handle (Base)",'<>%1',0);
-
-      IF ReservEntry.FINDSET THEN
+      SalesLine.SETRANGE("Document Type",SalesHeader."Document Type");
+      SalesLine.SETRANGE("Document No.",SalesHeader."No.");
+      SalesLine.SETFILTER("Qty. to Ship",'<>0');
+      IF SalesLine.FINDSET THEN
         REPEAT
-          TempReservEntry := ReservEntry;
-          TempReservEntry.INSERT;
-        UNTIL ReservEntry.NEXT = 0;
+          CopyReservationEntryLine(SalesLine);
+        UNTIL SalesLine.NEXT = 0;
     END;
 
     PROCEDURE CopyReservationEntryService@8(ServHeader@1003 : Record 5900);
@@ -650,6 +640,44 @@ OBJECT Codeunit 5920 ServItemManagement
         UNTIL SalesLine.NEXT = 0;
       IF ServItemDeleted THEN
         MESSAGE(Text005);
+    END;
+
+    LOCAL PROCEDURE CopyReservationEntryLine@10(SalesLine@1003 : Record 37);
+    VAR
+      ReservEntry@1000 : Record 337;
+    BEGIN
+      ReservEntry.RESET;
+      ReservEntry.SETRANGE("Source Subtype",SalesLine."Document Type");
+      ReservEntry.SETRANGE("Source ID",SalesLine."Document No.");
+      ReservEntry.SETRANGE(Positive,FALSE);
+      ReservEntry.SETRANGE("Source Type",DATABASE::"Sales Line");
+      ReservEntry.SETRANGE("Source Ref. No.",SalesLine."Line No.");
+      ReservEntry.SETRANGE("Source Batch Name",'');
+      ReservEntry.SETRANGE("Source Prod. Order Line",0);
+      ReservEntry.SETFILTER("Serial No.",'<>%1','');
+      ReservEntry.SETFILTER("Qty. to Handle (Base)",'<>%1',0);
+
+      IF ReservEntry.FINDSET THEN
+        REPEAT
+          TempReservEntry := ReservEntry;
+          TempReservEntry.INSERT;
+        UNTIL ReservEntry.NEXT = 0;
+    END;
+
+    PROCEDURE CopyReservation@286(PurchaseHeader@1000 : Record 38);
+    VAR
+      PurchaseLine@1001 : Record 39;
+      SalesLine@1002 : Record 37;
+    BEGIN
+      PurchaseLine.SETRANGE("Document Type",PurchaseHeader."Document Type");
+      PurchaseLine.SETRANGE("Document No.",PurchaseHeader."No.");
+      PurchaseLine.SETRANGE("Drop Shipment",TRUE);
+      PurchaseLine.SETFILTER(Quantity,'<>0');
+      IF PurchaseLine.FINDSET THEN
+        REPEAT
+          IF SalesLine.GET(SalesLine."Document Type"::Order,PurchaseLine."Sales Order No.",PurchaseLine."Sales Order Line No.") THEN
+            CopyReservationEntryLine(SalesLine);
+        UNTIL PurchaseLine.NEXT = 0;
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Codeunit 1255 Match Bank Payments
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -367,6 +367,8 @@ OBJECT Codeunit 1255 Match Bank Payments
     END;
 
     LOCAL PROCEDURE CreateAppliedEntries@28(BankAccReconciliation@1000 : Record 273);
+    VAR
+      BankAccReconciliationLine@1001 : Record 274;
     BEGIN
       TempBankStatementMatchingBuffer.RESET;
       TempBankStatementMatchingBuffer.SETCURRENTKEY(Quality,"No. of Entries");
@@ -376,23 +378,22 @@ OBJECT Codeunit 1255 Match Bank Payments
 
       IF TempBankStatementMatchingBuffer.FINDSET THEN
         REPEAT
-          ApplyRecords(BankAccReconciliation,TempBankStatementMatchingBuffer);
+          BankAccReconciliationLine.GET(
+            BankAccReconciliation."Statement Type",BankAccReconciliation."Bank Account No.",BankAccReconciliation."Statement No.",
+            TempBankStatementMatchingBuffer."Line No.");
+
+          IF NOT StatementLineAlreadyApplied(TempBankStatementMatchingBuffer,BankAccReconciliationLine) THEN BEGIN
+            PrepareLedgerEntryForApplication(BankAccReconciliationLine);
+            ApplyRecords(BankAccReconciliationLine,TempBankStatementMatchingBuffer);
+          END;
         UNTIL TempBankStatementMatchingBuffer.NEXT = 0;
     END;
 
-    LOCAL PROCEDURE ApplyRecords@30(BankAccReconciliation@1000 : Record 273;TempBankStatementMatchingBuffer@1002 : TEMPORARY Record 1250) : Boolean;
+    LOCAL PROCEDURE ApplyRecords@30(BankAccReconciliationLine@1000 : Record 274;TempBankStatementMatchingBuffer@1002 : TEMPORARY Record 1250) : Boolean;
     VAR
-      BankAccReconciliationLine@1001 : Record 274;
       AppliedPaymentEntry@1003 : Record 1294;
     BEGIN
-      BankAccReconciliationLine.GET(
-        BankAccReconciliation."Statement Type",BankAccReconciliation."Bank Account No.",BankAccReconciliation."Statement No.",
-        TempBankStatementMatchingBuffer."Line No.");
-
       IF TempBankStatementMatchingBuffer.Quality = 0 THEN
-        EXIT(FALSE);
-
-      IF StatementLineAlreadyApplied(TempBankStatementMatchingBuffer,BankAccReconciliationLine) THEN
         EXIT(FALSE);
 
       IF TempBankStatementMatchingBuffer."One to Many Match" THEN
@@ -1003,6 +1004,53 @@ OBJECT Codeunit 1255 Match Bank Payments
     PROCEDURE SetApplyEntries@45(NewApplyEntries@1000 : Boolean);
     BEGIN
       ApplyEntries := NewApplyEntries;
+    END;
+
+    LOCAL PROCEDURE PrepareLedgerEntryForApplication@12(BankAccReconciliationLine@1000 : Record 274);
+    BEGIN
+      IF TempBankStatementMatchingBuffer."Entry No." <= 0 THEN // text mapping has "Entry No." = -10000
+        EXIT;
+
+      SetApplicationDataInCVLedgEntry(
+        TempBankStatementMatchingBuffer."Account Type",TempBankStatementMatchingBuffer."Entry No.",
+        BankAccReconciliationLine.GetAppliesToID);
+    END;
+
+    PROCEDURE SetApplicationDataInCVLedgEntry@35(AccountType@1000 : Option;EntryNo@1001 : Integer;AppliesToID@1004 : Code[50]);
+    VAR
+      BankAccReconLine@1006 : Record 274;
+    BEGIN
+      IF EntryNo = 0 THEN
+        EXIT;
+
+      CASE AccountType OF
+        BankAccReconLine."Account Type"::Customer:
+          SetCustAppicationData(EntryNo,AppliesToID);
+        BankAccReconLine."Account Type"::Vendor:
+          SetVendAppicationData(EntryNo,AppliesToID);
+      END;
+    END;
+
+    LOCAL PROCEDURE SetCustAppicationData@39(EntryNo@1000 : Integer;AppliesToID@1001 : Code[50]);
+    VAR
+      CustLedgEntry@1002 : Record 21;
+    BEGIN
+      CustLedgEntry.GET(EntryNo);
+      CustLedgEntry.CALCFIELDS("Remaining Amount");
+      CustLedgEntry."Applies-to ID" := AppliesToID;
+      CustLedgEntry."Amount to Apply" := CustLedgEntry."Remaining Amount";
+      CODEUNIT.RUN(CODEUNIT::"Cust. Entry-Edit",CustLedgEntry);
+    END;
+
+    LOCAL PROCEDURE SetVendAppicationData@47(EntryNo@1002 : Integer;AppliesToID@1001 : Code[50]);
+    VAR
+      VendLedgEntry@1000 : Record 25;
+    BEGIN
+      VendLedgEntry.GET(EntryNo);
+      VendLedgEntry.CALCFIELDS("Remaining Amount");
+      VendLedgEntry."Applies-to ID" := AppliesToID;
+      VendLedgEntry."Amount to Apply" := VendLedgEntry."Remaining Amount";
+      CODEUNIT.RUN(CODEUNIT::"Vend. Entry-Edit",VendLedgEntry);
     END;
 
     BEGIN

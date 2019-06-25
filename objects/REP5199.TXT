@@ -2,9 +2,9 @@ OBJECT Report 5199 Update Contact Classification
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -564,7 +564,6 @@ OBJECT Report 5199 Update Contact Classification
 
     LOCAL PROCEDURE MarkByPercentageOfValue@6(ProfileQuestnLineQuestion@1002 : Record 5088;ProfileQuestnLineAnswer@1003 : Record 5088);
     VAR
-      AccAmount@1000 : Decimal;
       Prc@1001 : Decimal;
     BEGIN
       ContactValue.RESET;
@@ -584,12 +583,10 @@ OBJECT Report 5199 Update Contact Classification
           ContactValue.ASCENDING(TRUE);
       END;
 
-      IF ContactValue.FIND('-') THEN BEGIN
-        AccAmount := 0;
+      IF ContactValue.FINDSET THEN
         REPEAT
-          AccAmount := AccAmount + ContactValue.Value;
           IF TotalValue <> 0 THEN
-            Prc := ROUND(100 * AccAmount / TotalValue,1 / POWER(10,ProfileQuestnLineQuestion."No. of Decimals"))
+            Prc := ROUND(100 * ContactValue.Value / TotalValue,1 / POWER(10,ProfileQuestnLineQuestion."No. of Decimals"))
           ELSE
             Prc := 0;
           IF InRange(Prc,ProfileQuestnLineAnswer."From Value",ProfileQuestnLineAnswer."To Value") THEN
@@ -597,7 +594,6 @@ OBJECT Report 5199 Update Contact Classification
               ProfileQuestnLineQuestion,ProfileQuestnLineAnswer,ContactValue."Contact No.",
               ContactValue."Last Date Updated",ContactValue."Questions Answered (%)");
         UNTIL ContactValue.NEXT = 0
-      END;
     END;
 
     LOCAL PROCEDURE MarkByPercentageOfContacts@7(ProfileQuestnLineQuestion@1004 : Record 5088;ProfileQuestnLineAnswer@1003 : Record 5088);

@@ -2,9 +2,9 @@ OBJECT Report 6 Trial Balance
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=24-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49146;
   }
   PROPERTIES
   {
@@ -130,6 +130,7 @@ OBJECT Report 6 Trial Balance
 
     { 7   ;2   ;DataItem;BlankLineRepeater   ;
                DataItemTable=Table2000000026;
+               DataItemTableView=SORTING(Number);
                OnAfterGetRecord=BEGIN
                                   IF BlankLineNo = 0 THEN
                                     CurrReport.BREAK;
@@ -2878,6 +2879,7 @@ OBJECT Report 6 Trial Balance
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

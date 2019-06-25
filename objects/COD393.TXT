@@ -2,9 +2,9 @@ OBJECT Codeunit 393 Reminder-Issue
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -13,7 +13,6 @@ OBJECT Codeunit 393 Reminder-Issue
                 TableData 298=rimd,
                 TableData 300=rimd;
     OnRun=VAR
-            Cust@1000 : Record 18;
             CustLedgEntry@1001 : Record 21;
           BEGIN
             WITH ReminderHeader DO BEGIN
@@ -21,9 +20,7 @@ OBJECT Codeunit 393 Reminder-Issue
               IF (PostingDate <> 0D) AND (ReplacePostingDate OR ("Posting Date" = 0D)) THEN
                 VALIDATE("Posting Date",PostingDate);
               TESTFIELD("Customer No.");
-              Cust.GET("Customer No.");
-              IF Cust.Blocked = Cust.Blocked::All THEN
-                ERROR(Text004,Cust.FIELDCAPTION(Blocked),Cust.Blocked,Cust.TABLECAPTION,"Customer No.");
+              CheckIfBlocked("Customer No.");
 
               TESTFIELD("Posting Date");
               TESTFIELD("Document Date");
@@ -187,7 +184,7 @@ OBJECT Codeunit 393 Reminder-Issue
                     ReminderEntry."Remaining Amount" := ReminderLine."Remaining Amount";
                     ReminderEntry."Interest Amount" := ReminderLine.Amount;
                     ReminderEntry."Interest Posted" :=
-                      (ReminderInterestAmount <> 0) AND "Post Interest";
+                      (ReminderEntry."Interest Amount" <> 0) AND "Post Interest";
                     ReminderEntry."User ID" := USERID;
                     ReminderEntry.INSERT;
                     NextEntryNo := NextEntryNo + 1;
@@ -239,7 +236,7 @@ OBJECT Codeunit 393 Reminder-Issue
       TotalAmountLCY@1033 : Decimal;
       TableID@1034 : ARRAY [10] OF Integer;
       No@1035 : ARRAY [10] OF Code[20];
-      Text004@1036 : TextConst 'DAN=%1 må ikke være %2 i %3 %4;ENU=%1 must not be %2 in %3 %4';
+      Text004@1036 : TextConst '@@@="%1 = Field name, %2 = field value, %3 = table caption, %4 customer number";DAN=%1 må ikke være %2 i %3 %4.;ENU=%1 must not be %2 in %3 %4.';
       LineFeeAmountErr@1019 : TextConst '@@@="%1 = Document Type, %2 = Document No.. E.g. Line Fee amount must be positive and non-zero for Line Fee applied to Invoice 102421";DAN=Linjegebyrbeløbet skal være positivt og må ikke være nul i linjegebyret, der anvendes på %1 %2.;ENU=Line Fee amount must be positive and non-zero for Line Fee applied to %1 %2.';
       AppliesToDocErr@1020 : TextConst 'DAN=Linjegebyr skal anvendes på et åbent, forfaldent dokument.;ENU=Line Fee has to be applied to an open overdue document.';
       EntryNotOverdueErr@1037 : TextConst '@@@="%1 = Document Type, %2 = Document No., %3 = Table name. E.g. Invoice 12313 in Cust. Ledger Entry is not overdue.";DAN=%1 %2 i %3 er ikke forfalden.;ENU=%1 %2 in %3 is not overdue.';
@@ -289,6 +286,8 @@ OBJECT Codeunit 393 Reminder-Issue
         GenJnlLine."System-Created Entry" := SystemCreatedEntry;
         GenJnlLine."Posting No. Series" := "Issuing No. Series";
         GenJnlLine."Salespers./Purch. Code" := '';
+        GenJnlLine."Country/Region Code" := "Country/Region Code";
+        GenJnlLine."VAT Registration No." := "VAT Registration No.";
       END;
     END;
 
@@ -426,6 +425,19 @@ OBJECT Codeunit 393 Reminder-Issue
         IF COUNT > 1 THEN
           ERROR(MultipleLineFeesSameDocErr,ReminderLine."Applies-to Document Type",ReminderLine."Applies-to Document No.");
       END;
+    END;
+
+    LOCAL PROCEDURE CheckIfBlocked@50(CustomerNo@1000 : Code[20]);
+    VAR
+      Customer@1001 : Record 18;
+    BEGIN
+      Customer.GET(CustomerNo);
+
+      IF Customer."Privacy Blocked" THEN
+        ERROR(Text004,Customer.FIELDCAPTION("Privacy Blocked"),Customer."Privacy Blocked",Customer.TABLECAPTION,CustomerNo);
+
+      IF Customer.Blocked = Customer.Blocked::All THEN
+        ERROR(Text004,Customer.FIELDCAPTION(Blocked),Customer.Blocked,Customer.TABLECAPTION,CustomerNo);
     END;
 
     PROCEDURE UpdateCustLedgEntryLastIssuedReminderLevel@7(ReminderFinChargeEntry@1000 : Record 300);

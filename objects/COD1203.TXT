@@ -2,9 +2,9 @@ OBJECT Codeunit 1203 Import XML File to Data Exch.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -49,9 +49,8 @@ OBJECT Codeunit 1203 Import XML File to Data Exch.
       IF NOT DataExchLineDef.FINDSET THEN
         EXIT;
 
-      XmlDocument := XmlDocument.XmlDocument;
       DataExch."File Content".CREATEINSTREAM(XmlStream);
-      XmlDocument.Load(XmlStream);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(XmlStream,XmlDocument);
       DataExchLineDef.ValidateNamespace(XmlDocument.DocumentElement);
       XMLDOMManagement.AddNamespaces(XmlNamespaceManager,XmlDocument);
 
@@ -167,10 +166,10 @@ OBJECT Codeunit 1203 Import XML File to Data Exch.
     END;
 
     LOCAL PROCEDURE GetRelativePath@6(ChildPath@1000 : Text[250];ParentPath@1001 : Text[250]) : Text;
+    VAR
+      XMLDOMManagement@1002 : Codeunit 6224;
     BEGIN
-      IF STRPOS(ChildPath,ParentPath) = 1 THEN
-        EXIT(EscapeMissingNamespacePrefix('.' + DELSTR(ChildPath,1,STRLEN(ParentPath))));
-      EXIT(ChildPath)
+      EXIT(EscapeMissingNamespacePrefix(XMLDOMManagement.GetRelativePath(ChildPath,ParentPath)));
     END;
 
     LOCAL PROCEDURE IncreaseNodeID@7(NodeID@1001 : Text[250];Seed@1000 : Integer) : Text[250];

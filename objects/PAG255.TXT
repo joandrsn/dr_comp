@@ -2,9 +2,9 @@ OBJECT Page 255 Cash Receipt Journal
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -42,7 +42,6 @@ OBJECT Page 255 Cash Receipt Journal
 
     OnAfterGetRecord=BEGIN
                        ShowShortcutDimCode(ShortcutDimCode);
-                       SetControlAppearance;
                      END;
 
     OnNewRecord=BEGIN
@@ -54,6 +53,7 @@ OBJECT Page 255 Cash Receipt Journal
     OnAfterGetCurrRecord=VAR
                            GenJournalBatch@1000 : Record 232;
                          BEGIN
+                           SetControlAppearance;
                            GenJnlManagement.GetAccounts(Rec,AccName,BalAccName);
                            UpdateBalance;
                            CurrPage.IncomingDocAttachFactBox.PAGE.LoadDataFromRecord(Rec);
@@ -350,14 +350,16 @@ OBJECT Page 255 Cash Receipt Journal
                       Name=Comment;
                       CaptionML=[DAN=Bemærkninger;
                                  ENU=Comments];
-                      RunObject=Page 660;
-                      RunPageLink=Table ID=CONST(81),
-                                  Document Type=FIELD(Document Type),
-                                  Document No.=FIELD(Document No.);
                       Promoted=Yes;
                       Visible=OpenApprovalEntriesExistForCurrUser;
                       Image=ViewComments;
-                      PromotedCategory=Category4 }
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1000 : Codeunit 1535;
+                               BEGIN
+                                 ApprovalsMgmt.GetApprovalComment(Rec);
+                               END;
+                                }
     }
   }
   CONTROLS

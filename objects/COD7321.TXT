@@ -2,9 +2,9 @@ OBJECT Codeunit 7321 Create Inventory Put-away
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -30,7 +30,6 @@ OBJECT Codeunit 7321 Create Inventory Put-away
       ProdOrder@1018 : Record 5405;
       PostingDate@1019 : Date;
       VendorDocNo@1020 : Code[35];
-      QtyToPutAway@1003 : Decimal;
       RemQtyToPutAway@1002 : Decimal;
       NextLineNo@1008 : Integer;
       LineCreated@1007 : Boolean;
@@ -188,10 +187,6 @@ OBJECT Codeunit 7321 Create Inventory Put-away
               RemQtyToPutAway := -"Return Qty. to Ship";
 
             ItemTrackingMgt.CheckWhseItemTrkgSetup("No.",SNRequired,LNRequired,FALSE);
-            IF SNRequired THEN
-              QtyToPutAway := 1
-            ELSE
-              QtyToPutAway := RemQtyToPutAway;
             IF SNRequired OR LNRequired THEN
               ReservationFound :=
                 FindReservationEntry(DATABASE::"Purchase Line","Document Type","Document No.","Line No.",SNRequired,LNRequired);
@@ -278,10 +273,6 @@ OBJECT Codeunit 7321 Create Inventory Put-away
               RemQtyToPutAway := "Return Qty. to Receive";
 
             ItemTrackingMgt.CheckWhseItemTrkgSetup("No.",SNRequired,LNRequired,FALSE);
-            IF SNRequired THEN
-              QtyToPutAway := 1
-            ELSE
-              QtyToPutAway := RemQtyToPutAway;
             IF SNRequired OR LNRequired THEN
               ReservationFound :=
                 FindReservationEntry(DATABASE::"Sales Line","Document Type","Document No.","Line No.",SNRequired,LNRequired);
@@ -365,10 +356,6 @@ OBJECT Codeunit 7321 Create Inventory Put-away
             RemQtyToPutAway := "Qty. to Receive";
 
             ItemTrackingMgt.CheckWhseItemTrkgSetup("Item No.",SNRequired,LNRequired,FALSE);
-            IF SNRequired THEN
-              QtyToPutAway := 1
-            ELSE
-              QtyToPutAway := RemQtyToPutAway;
             IF SNRequired OR LNRequired THEN
               ReservationFound :=
                 FindReservationEntry(DATABASE::"Transfer Line",1,"Document No.","Line No.",SNRequired,LNRequired);
@@ -442,10 +429,6 @@ OBJECT Codeunit 7321 Create Inventory Put-away
             RemQtyToPutAway := "Remaining Quantity";
 
             ItemTrackingMgt.CheckWhseItemTrkgSetup("Item No.",SNRequired,LNRequired,FALSE);
-            IF SNRequired THEN
-              QtyToPutAway := 1
-            ELSE
-              QtyToPutAway := RemQtyToPutAway;
             IF SNRequired OR LNRequired THEN
               ReservationFound :=
                 FindReservationEntry(DATABASE::"Prod. Order Line",Status,"Prod. Order No.","Line No.",SNRequired,LNRequired);
@@ -521,10 +504,6 @@ OBJECT Codeunit 7321 Create Inventory Put-away
             RemQtyToPutAway := -"Remaining Quantity";
 
             ItemTrackingMgt.CheckWhseItemTrkgSetup("Item No.",SNRequired,LNRequired,FALSE);
-            IF SNRequired THEN
-              QtyToPutAway := 1
-            ELSE
-              QtyToPutAway := RemQtyToPutAway;
             IF SNRequired OR LNRequired THEN
               ReservationFound :=
                 FindReservationEntry(DATABASE::"Prod. Order Component",Status,"Prod. Order No.","Line No.",SNRequired,LNRequired);
@@ -638,28 +617,28 @@ OBJECT Codeunit 7321 Create Inventory Put-away
 
     LOCAL PROCEDURE InsertWhseActivLine@4(VAR NewWhseActivLine@1000 : Record 5767;PutAwayQty@1001 : Decimal);
     BEGIN
-      IF Location."Bin Mandatory" THEN
-        NewWhseActivLine."Action Type" := NewWhseActivLine."Action Type"::Place;
+      WITH NewWhseActivLine DO BEGIN
+        IF Location."Bin Mandatory" THEN
+          "Action Type" := "Action Type"::Place;
 
-      NewWhseActivLine."Serial No." := '';
-      NewWhseActivLine."Expiration Date" := 0D;
-      IF ReservationFound THEN BEGIN
-        NewWhseActivLine."Serial No." := TempTrackingSpecification."Serial No.";
-        NewWhseActivLine."Lot No." := TempTrackingSpecification."Lot No.";
-        NewWhseActivLine."Expiration Date" := TempTrackingSpecification."Expiration Date";
-        QtyToPutAway := TempTrackingSpecification."Qty. to Handle (Base)";
-        ReservationFound := FALSE;
-      END ELSE
-        IF (SNRequired OR LNRequired) AND (TempTrackingSpecification.NEXT <> 0) THEN BEGIN
-          NewWhseActivLine."Serial No." := TempTrackingSpecification."Serial No.";
-          NewWhseActivLine."Lot No." := TempTrackingSpecification."Lot No.";
-          NewWhseActivLine."Expiration Date" := TempTrackingSpecification."Expiration Date";
-          QtyToPutAway := TempTrackingSpecification."Qty. to Handle (Base)";
+        "Serial No." := '';
+        "Expiration Date" := 0D;
+        IF ReservationFound THEN BEGIN
+          "Serial No." := TempTrackingSpecification."Serial No.";
+          "Lot No." := TempTrackingSpecification."Lot No.";
+          "Expiration Date" := TempTrackingSpecification."Expiration Date";
+          VALIDATE(Quantity,CalcQty(TempTrackingSpecification."Qty. to Handle (Base)"));
+          ReservationFound := FALSE;
         END ELSE
-          QtyToPutAway := PutAwayQty;
-
-      NewWhseActivLine.VALIDATE(Quantity,QtyToPutAway);
-      NewWhseActivLine.VALIDATE("Qty. to Handle",0);
+          IF (SNRequired OR LNRequired) AND (TempTrackingSpecification.NEXT <> 0) THEN BEGIN
+            "Serial No." := TempTrackingSpecification."Serial No.";
+            "Lot No." := TempTrackingSpecification."Lot No.";
+            "Expiration Date" := TempTrackingSpecification."Expiration Date";
+            VALIDATE(Quantity,CalcQty(TempTrackingSpecification."Qty. to Handle (Base)"));
+          END ELSE
+            VALIDATE(Quantity,PutAwayQty);
+        VALIDATE("Qty. to Handle",0);
+      END;
 
       IF AutoCreation AND NOT LineCreated THEN BEGIN
         WhseActivHeader."No." := '';
@@ -674,7 +653,7 @@ OBJECT Codeunit 7321 Create Inventory Put-away
 
       LineCreated := TRUE;
       NextLineNo := NextLineNo + 10000;
-      RemQtyToPutAway := RemQtyToPutAway - QtyToPutAway;
+      RemQtyToPutAway -= NewWhseActivLine.Quantity;
     END;
 
     LOCAL PROCEDURE GetDefaultBinCode@6(ItemNo@1004 : Code[20];VariantCode@1003 : Code[10];LocationCode@1001 : Code[10]) : Code[20];
@@ -725,7 +704,9 @@ OBJECT Codeunit 7321 Create Inventory Put-away
       ProdOrderComp@1005 : Record 5407;
     BEGIN
       WhseRequest := NewWhseRequest;
-      IF Location.RequireReceive(WhseRequest."Location Code") THEN
+      IF Location.RequireReceive(WhseRequest."Location Code") AND
+         (WhseRequest."Source Document" <> WhseRequest."Source Document"::"Prod. Output")
+      THEN
         EXIT(FALSE);
 
       GetSourceDocHeader;

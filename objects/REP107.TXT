@@ -2,9 +2,9 @@ OBJECT Report 107 Customer - Order Summary
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -28,67 +28,13 @@ OBJECT Report 107 Customer - Order Summary
     { 6836;    ;DataItem;                    ;
                DataItemTable=Table18;
                DataItemTableView=SORTING(No.);
+               PrintOnlyIfDetail=Yes;
                OnPreDataItem=BEGIN
                                CurrReport.CREATETOTALS(SalesOrderAmountLCY,SalesAmtOnOrderLCY,SalesOrderAmount,SalesAmtOnOrder);
                              END;
 
                OnAfterGetRecord=BEGIN
-                                  SalesLine.SETCURRENTKEY("Document Type","Bill-to Customer No.","Currency Code");
-                                  SalesLine.SETRANGE("Document Type",SalesLine."Document Type"::Order);
-                                  SalesLine.SETFILTER("Outstanding Quantity",'<>%1',0);
-                                  SalesLine.SETRANGE("Bill-to Customer No.","No.");
-                                  SalesLine.SETFILTER("Shortcut Dimension 1 Code","Global Dimension 1 Filter");
-                                  SalesLine.SETFILTER("Shortcut Dimension 2 Code","Global Dimension 2 Filter");
-                                  SalesLine.SETFILTER("Currency Code",GETFILTER("Currency Filter"));
-
-                                  FOR PeriodNo := 1 TO 5 DO BEGIN
-                                    SalesAmtOnOrder[PeriodNo] := 0;
-                                    SalesAmtOnOrderLCY[PeriodNo] := 0;
-                                  END;
-                                  TotalSalesAmtOnOrder := 0;
-                                  TotalSalesAmtOnOrderLCY := 0;
-
-                                  IF SalesLine.FINDSET THEN
-                                    REPEAT
-                                      PeriodNo := 1;
-                                      WHILE SalesLine."Shipment Date" >= PeriodStartDate[PeriodNo] DO
-                                        PeriodNo := PeriodNo + 1;
-
-                                      Currency.InitRoundingPrecision;
-                                      IF SalesLine."VAT Calculation Type" IN
-                                         [SalesLine."VAT Calculation Type"::"Normal VAT",SalesLine."VAT Calculation Type"::"Reverse Charge VAT"]
-                                      THEN
-                                        SalesOrderAmount :=
-                                          ROUND(
-                                            (SalesLine.Amount + SalesLine."VAT Base Amount" * SalesLine."VAT %" / 100) * SalesLine."Outstanding Quantity" /
-                                            SalesLine.Quantity / (1 + SalesLine."VAT %" / 100),
-                                            Currency."Amount Rounding Precision")
-                                      ELSE
-                                        SalesOrderAmount :=
-                                          ROUND(
-                                            SalesLine."Outstanding Amount" / (1 + SalesLine."VAT %" / 100),
-                                            Currency."Amount Rounding Precision");
-                                      SalesOrderAmountLCY := SalesOrderAmount;
-                                      IF "Currency Code" <> '' THEN BEGIN
-                                        SalesHeader.GET(SalesLine."Document Type",SalesLine."Document No.");
-                                        IF SalesHeader."Currency Factor" <> 0 THEN
-                                          SalesOrderAmountLCY :=
-                                            ROUND(
-                                              CurrExchRate.ExchangeAmtFCYToLCY(
-                                                WORKDATE,SalesLine."Currency Code",SalesOrderAmount,
-                                                SalesHeader."Currency Factor"));
-                                      END;
-
-                                      SalesAmtOnOrder[PeriodNo] := SalesAmtOnOrder[PeriodNo] + SalesOrderAmount;
-                                      SalesAmtOnOrderLCY[PeriodNo] := SalesAmtOnOrderLCY[PeriodNo] + SalesOrderAmountLCY;
-                                    UNTIL SalesLine.NEXT = 0
-                                  ELSE
-                                    CurrReport.SKIP;
-
-                                  FOR PeriodNo := 1 TO 5 DO BEGIN
-                                    TotalSalesAmtOnOrder += SalesAmtOnOrder[PeriodNo];
-                                    TotalSalesAmtOnOrderLCY += SalesAmtOnOrderLCY[PeriodNo];
-                                  END;
+                                  NewCustomer := TRUE;
                                 END;
 
                ReqFilterFields=No.,Search Name,Customer Posting Group,Currency Filter }
@@ -153,49 +99,6 @@ OBJECT Report 107 Customer - Order Summary
     { 50  ;1   ;Column  ;No_Cust             ;
                SourceExpr="No." }
 
-    { 2   ;1   ;Column  ;SalesLineCurrencyFilter;
-               SourceExpr=SalesLine."Currency Code" }
-
-    { 39  ;1   ;Column  ;SalesOrderAmount    ;
-               SourceExpr=SalesOrderAmount;
-               AutoFormatType=1;
-               AutoFormatExpr="Currency Code" }
-
-    { 40  ;1   ;Column  ;SalesAmtOnOrder5    ;
-               SourceExpr=SalesAmtOnOrder[5];
-               AutoFormatType=1;
-               AutoFormatExpr="Currency Code" }
-
-    { 41  ;1   ;Column  ;SalesAmtOnOrder4    ;
-               SourceExpr=SalesAmtOnOrder[4];
-               AutoFormatType=1;
-               AutoFormatExpr="Currency Code" }
-
-    { 42  ;1   ;Column  ;SalesAmtOnOrder3    ;
-               SourceExpr=SalesAmtOnOrder[3];
-               AutoFormatType=1;
-               AutoFormatExpr="Currency Code" }
-
-    { 43  ;1   ;Column  ;SalesAmtOnOrder2    ;
-               SourceExpr=SalesAmtOnOrder[2];
-               AutoFormatType=1;
-               AutoFormatExpr="Currency Code" }
-
-    { 44  ;1   ;Column  ;SalesAmtOnOrder1    ;
-               SourceExpr=SalesAmtOnOrder[1];
-               AutoFormatType=1;
-               AutoFormatExpr="Currency Code" }
-
-    { 5   ;1   ;Column  ;TotalSalesAmtOnOrder;
-               SourceExpr=TotalSalesAmtOnOrder }
-
-    { 6   ;1   ;Column  ;TotalSalesAmtOnOrderLCY;
-               SourceExpr=TotalSalesAmtOnOrderLCY }
-
-    { 45  ;1   ;Column  ;Name_Cust           ;
-               IncludeCaption=Yes;
-               SourceExpr=Name }
-
     { 1   ;1   ;Column  ;CustomerOrderSummaryCaption;
                SourceExpr=CustomerOrderSummaryCaptionLbl }
 
@@ -225,6 +128,104 @@ OBJECT Report 107 Customer - Order Summary
 
     { 22  ;1   ;Column  ;TotalLCYCaption     ;
                SourceExpr=TotalLCYCaptionLbl }
+
+    { 6547;1   ;DataItem;                    ;
+               DataItemTable=Table37;
+               DataItemTableView=SORTING(Document Type,Bill-to Customer No.,Currency Code)
+                                 WHERE(Document Type=CONST(Order),
+                                       Outstanding Quantity=FILTER(<>0));
+               OnAfterGetRecord=BEGIN
+                                  PeriodNo := 1;
+                                  WHILE "Shipment Date" >= PeriodStartDate[PeriodNo] DO
+                                    PeriodNo := PeriodNo + 1;
+
+                                  Currency.InitRoundingPrecision;
+                                  IF "VAT Calculation Type" IN ["VAT Calculation Type"::"Normal VAT","VAT Calculation Type"::"Reverse Charge VAT"] THEN
+                                    SalesOrderAmount :=
+                                      ROUND(
+                                        (Amount + "VAT Base Amount" * "VAT %" / 100) * "Outstanding Quantity" / Quantity / (1 + "VAT %" / 100),
+                                        Currency."Amount Rounding Precision")
+                                  ELSE
+                                    SalesOrderAmount :=
+                                      ROUND(
+                                        "Outstanding Amount" / (1 + "VAT %" / 100),
+                                        Currency."Amount Rounding Precision");
+                                  SalesOrderAmountLCY := SalesOrderAmount;
+
+                                  FOR i := 1 TO ARRAYLEN(SalesAmtOnOrder) DO BEGIN
+                                    SalesAmtOnOrder[i] := 0;
+                                    SalesAmtOnOrderLCY[i] := 0;
+                                  END;
+
+                                  IF "Currency Code" <> '' THEN BEGIN
+                                    SalesHeader.GET(1,"Document No.");
+                                    IF SalesHeader."Currency Factor" <> 0 THEN
+                                      SalesOrderAmountLCY :=
+                                        ROUND(
+                                          CurrExchRate.ExchangeAmtFCYToLCY(
+                                            WORKDATE,SalesHeader."Currency Code",
+                                            SalesOrderAmount,SalesHeader."Currency Factor"));
+                                  END;
+
+                                  SalesAmtOnOrder[PeriodNo] := SalesOrderAmount;
+                                  SalesAmtOnOrderLCY[PeriodNo] := SalesOrderAmountLCY;
+
+                                  IF NewCustomer THEN
+                                    GroupNumber += 1
+                                  ELSE
+                                    IF NOT PrintAmountsInLCY AND ("Currency Code" <> LastCurrencyCode) THEN
+                                      GroupNumber += 1;
+                                  NewCustomer := FALSE;
+                                  LastCurrencyCode := "Currency Code";
+                                END;
+
+               DataItemLink=Bill-to Customer No.=FIELD(No.),
+                            Shortcut Dimension 1 Code=FIELD(Global Dimension 1 Code),
+                            Shortcut Dimension 2 Code=FIELD(Global Dimension 2 Filter),
+                            Currency Code=FIELD(Currency Filter) }
+
+    { 38  ;2   ;Column  ;SalesOrderAmount    ;
+               SourceExpr=SalesOrderAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 33  ;2   ;Column  ;SalesAmtOnOrder5    ;
+               SourceExpr=SalesAmtOnOrder[5];
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 32  ;2   ;Column  ;SalesAmtOnOrder4    ;
+               SourceExpr=SalesAmtOnOrder[4];
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 31  ;2   ;Column  ;SalesAmtOnOrder3    ;
+               SourceExpr=SalesAmtOnOrder[3];
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 30  ;2   ;Column  ;SalesAmtOnOrder2    ;
+               SourceExpr=SalesAmtOnOrder[2];
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 29  ;2   ;Column  ;SalesAmtOnOrder1    ;
+               SourceExpr=SalesAmtOnOrder[1];
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 15  ;2   ;Column  ;CurrencyCode_SalesLine;
+               SourceExpr="Currency Code" }
+
+    { 5   ;2   ;Column  ;Name_Cust           ;
+               IncludeCaption=Yes;
+               SourceExpr=Customer.Name }
+
+    { 54  ;2   ;Column  ;SalesLineBilltoNo_Customer;
+               SourceExpr="Bill-to Customer No." }
+
+    { 2   ;2   ;Column  ;GroupNumber         ;
+               SourceExpr=GroupNumber }
 
   }
   REQUESTPAGE
@@ -270,7 +271,6 @@ OBJECT Report 107 Customer - Order Summary
     VAR
       CurrExchRate@1000 : Record 330;
       SalesHeader@1001 : Record 36;
-      SalesLine@1011 : Record 37;
       Currency@1016 : Record 4;
       CustFilter@1002 : Text;
       SalesOrderAmount@1003 : Decimal;
@@ -291,8 +291,9 @@ OBJECT Report 107 Customer - Order Summary
       AfterCaptionLbl@7202 : TextConst 'DAN=efter...;ENU=after...';
       TotalCaptionLbl@1909 : TextConst 'DAN=I alt;ENU=Total';
       TotalLCYCaptionLbl@5808 : TextConst 'DAN=I alt (RV);ENU=Total (LCY)';
-      TotalSalesAmtOnOrder@1013 : Decimal;
-      TotalSalesAmtOnOrderLCY@1014 : Decimal;
+      GroupNumber@1012 : Integer;
+      NewCustomer@1013 : Boolean;
+      LastCurrencyCode@1014 : Code[10];
 
     PROCEDURE InitializeRequest@1(StartingDate@1000 : Date;ShowAmountInLCY@1002 : Boolean);
     BEGIN
@@ -397,8 +398,35 @@ OBJECT Report 107 Customer - Order Summary
         <Field Name="No_Cust">
           <DataField>No_Cust</DataField>
         </Field>
-        <Field Name="SalesLineCurrencyFilter">
-          <DataField>SalesLineCurrencyFilter</DataField>
+        <Field Name="CustomerOrderSummaryCaption">
+          <DataField>CustomerOrderSummaryCaption</DataField>
+        </Field>
+        <Field Name="PageNoCaption">
+          <DataField>PageNoCaption</DataField>
+        </Field>
+        <Field Name="AllamountsareinLCYCaption">
+          <DataField>AllamountsareinLCYCaption</DataField>
+        </Field>
+        <Field Name="OutstandingOrdersCaption">
+          <DataField>OutstandingOrdersCaption</DataField>
+        </Field>
+        <Field Name="CustomerNoCaption">
+          <DataField>CustomerNoCaption</DataField>
+        </Field>
+        <Field Name="CustomerNameCaption">
+          <DataField>CustomerNameCaption</DataField>
+        </Field>
+        <Field Name="BeforeCaption">
+          <DataField>BeforeCaption</DataField>
+        </Field>
+        <Field Name="AfterCaption">
+          <DataField>AfterCaption</DataField>
+        </Field>
+        <Field Name="TotalCaption">
+          <DataField>TotalCaption</DataField>
+        </Field>
+        <Field Name="TotalLCYCaption">
+          <DataField>TotalLCYCaption</DataField>
         </Field>
         <Field Name="SalesOrderAmount">
           <DataField>SalesOrderAmount</DataField>
@@ -436,50 +464,17 @@ OBJECT Report 107 Customer - Order Summary
         <Field Name="SalesAmtOnOrder1Format">
           <DataField>SalesAmtOnOrder1Format</DataField>
         </Field>
-        <Field Name="TotalSalesAmtOnOrder">
-          <DataField>TotalSalesAmtOnOrder</DataField>
-        </Field>
-        <Field Name="TotalSalesAmtOnOrderFormat">
-          <DataField>TotalSalesAmtOnOrderFormat</DataField>
-        </Field>
-        <Field Name="TotalSalesAmtOnOrderLCY">
-          <DataField>TotalSalesAmtOnOrderLCY</DataField>
-        </Field>
-        <Field Name="TotalSalesAmtOnOrderLCYFormat">
-          <DataField>TotalSalesAmtOnOrderLCYFormat</DataField>
+        <Field Name="CurrencyCode_SalesLine">
+          <DataField>CurrencyCode_SalesLine</DataField>
         </Field>
         <Field Name="Name_Cust">
           <DataField>Name_Cust</DataField>
         </Field>
-        <Field Name="CustomerOrderSummaryCaption">
-          <DataField>CustomerOrderSummaryCaption</DataField>
+        <Field Name="SalesLineBilltoNo_Customer">
+          <DataField>SalesLineBilltoNo_Customer</DataField>
         </Field>
-        <Field Name="PageNoCaption">
-          <DataField>PageNoCaption</DataField>
-        </Field>
-        <Field Name="AllamountsareinLCYCaption">
-          <DataField>AllamountsareinLCYCaption</DataField>
-        </Field>
-        <Field Name="OutstandingOrdersCaption">
-          <DataField>OutstandingOrdersCaption</DataField>
-        </Field>
-        <Field Name="CustomerNoCaption">
-          <DataField>CustomerNoCaption</DataField>
-        </Field>
-        <Field Name="CustomerNameCaption">
-          <DataField>CustomerNameCaption</DataField>
-        </Field>
-        <Field Name="BeforeCaption">
-          <DataField>BeforeCaption</DataField>
-        </Field>
-        <Field Name="AfterCaption">
-          <DataField>AfterCaption</DataField>
-        </Field>
-        <Field Name="TotalCaption">
-          <DataField>TotalCaption</DataField>
-        </Field>
-        <Field Name="TotalLCYCaption">
-          <DataField>TotalLCYCaption</DataField>
+        <Field Name="GroupNumber">
+          <DataField>GroupNumber</DataField>
         </Field>
       </Fields>
       <rd:DataSetInfo>
@@ -1313,7 +1308,7 @@ OBJECT Report 107 Customer - Order Summary
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Sum(Fields!TotalSalesAmtOnOrderLCY.Value)</Value>
+                                  <Value>=Sum(Fields!SalesOrderAmountLCY.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <Format>=Fields!SalesOrderAmountLCYFormat.Value</Format>
@@ -1401,13 +1396,13 @@ OBJECT Report 107 Customer - Order Summary
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="SalesAmtOnOrderLCY3">
+                        <Textbox Name="SalesLineCurrencyFilter">
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!SalesLineCurrencyFilter.Value</Value>
+                                  <Value>=Fields!CurrencyCode_SalesLine.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1416,7 +1411,6 @@ OBJECT Report 107 Customer - Order Summary
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>SalesAmtOnOrderLCY3</rd:DefaultName>
                           <ZIndex>6</ZIndex>
                           <Style>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -1596,7 +1590,7 @@ OBJECT Report 107 Customer - Order Summary
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Sum(Fields!TotalSalesAmtOnOrder.Value)</Value>
+                                  <Value>=Sum(Fields!SalesOrderAmount.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <Format>=Fields!SalesOrderAmountFormat.Value</Format>
@@ -2157,7 +2151,7 @@ OBJECT Report 107 Customer - Order Summary
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Sum(Fields!TotalSalesAmtOnOrderLCY.Value)</Value>
+                                  <Value>=Sum(Fields!SalesOrderAmountLCY.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -2213,7 +2207,7 @@ OBJECT Report 107 Customer - Order Summary
                 <TablixMember>
                   <Group Name="Table1_Details_Group">
                     <GroupExpressions>
-                      <GroupExpression>=Fields!No_Cust.Value</GroupExpression>
+                      <GroupExpression>=Fields!GroupNumber.Value</GroupExpression>
                     </GroupExpressions>
                     <DataElementName>Detail</DataElementName>
                   </Group>
@@ -2394,6 +2388,7 @@ OBJECT Report 107 Customer - Order Summary
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

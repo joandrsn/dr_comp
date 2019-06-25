@@ -2,9 +2,9 @@ OBJECT Table 1250 Bank Statement Matching Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW18.00,NAVDK8.00;
+    Version List=NAVW19.00.00.50087,NAVDK9.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,26 +13,35 @@ OBJECT Table 1250 Bank Statement Matching Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+    { 1   ;   ;Line No.            ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Linjenr.;
                                                               ENU=Line No.] }
-    { 2   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+    { 2   ;   ;Entry No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
-    { 3   ;   ;Quality             ;Integer       ;CaptionML=[DAN=Kvalitet;
+    { 3   ;   ;Quality             ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kvalitet;
                                                               ENU=Quality] }
-    { 4   ;   ;Account Type        ;Option        ;CaptionML=[DAN=Kontotype;
+    { 4   ;   ;Account Type        ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontotype;
                                                               ENU=Account Type];
                                                    OptionCaptionML=[DAN=Finanskonto,Debitor,Kreditor;
                                                                     ENU=G/L Account,Customer,Vendor];
                                                    OptionString=G/L Account,Customer,Vendor }
-    { 5   ;   ;Account No.         ;Code20        ;CaptionML=[DAN=Kontonr.;
+    { 5   ;   ;Account No.         ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontonr.;
                                                               ENU=Account No.] }
-    { 10  ;   ;One to Many Match   ;Boolean       ;CaptionML=[DAN=En til mange-match;
+    { 10  ;   ;One to Many Match   ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=En til mange-match;
                                                               ENU=One to Many Match] }
-    { 11  ;   ;No. of Entries      ;Integer       ;CaptionML=[DAN=Antal poster;
+    { 11  ;   ;No. of Entries      ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Antal poster;
                                                               ENU=No. of Entries] }
-    { 12  ;   ;Total Remaining Amount;Decimal     ;CaptionML=[DAN=Restbeløb i alt;
+    { 12  ;   ;Total Remaining Amount;Decimal     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Restbeløb i alt;
                                                               ENU=Total Remaining Amount] }
-    { 13  ;   ;Related Party Matched;Option       ;CaptionML=[DAN=Relateret part er matchet;
+    { 13  ;   ;Related Party Matched;Option       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Relateret part er matchet;
                                                               ENU=Related Party Matched];
                                                    OptionCaptionML=[DAN=Ikke medregnet,Helt,Delvist,Nej;
                                                                     ENU=Not Considered,Fully,Partially,No];

@@ -2,9 +2,9 @@ OBJECT Codeunit 1004 Job Transfer Line
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -225,6 +225,7 @@ OBJECT Codeunit 1004 Job Transfer Line
       JobJournalTemplate@1007 : Record 209;
       JobJournalBatch@1008 : Record 237;
       NoSeriesMgt@1009 : Codeunit 396;
+      ItemTrackingMgt@1010 : Codeunit 6500;
     BEGIN
       JobPlanningLine.TESTFIELD("Qty. to Transfer to Journal");
 
@@ -290,6 +291,8 @@ OBJECT Codeunit 1004 Job Transfer Line
       JobJnlLine.VALIDATE("Unit Price",JobPlanningLine."Unit Price");
       JobJnlLine.VALIDATE("Line Discount %",JobPlanningLine."Line Discount %");
       JobJnlLine.UpdateDimensions;
+
+      ItemTrackingMgt.CopyItemTracking(JobPlanningLine.RowID1,JobJnlLine.RowID1,FALSE);
 
       JobJnlLine.INSERT(TRUE);
     END;
@@ -469,7 +472,7 @@ OBJECT Codeunit 1004 Job Transfer Line
 
         GetCurrencyRounding(JobJnlLine."Currency Code");
 
-        JobJnlLine."Unit Cost (LCY)" := "Unit Cost (LCY)";
+        JobJnlLine."Unit Cost (LCY)" := "Unit Cost (LCY)" / "Qty. per Unit of Measure";
 
         IF Type = Type::Item THEN BEGIN
           IF Item."Inventory Value Zero" THEN

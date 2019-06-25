@@ -2,9 +2,9 @@ OBJECT Codeunit 1289 Imp. Bank List Ext. Data Hndl
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -100,8 +100,7 @@ OBJECT Codeunit 1289 Imp. Bank List Ext. Data Hndl
       Found@1002 : Boolean;
     BEGIN
       ResponseBodyTempBlob.Blob.CREATEINSTREAM(InStream);
-      XMLDocOut := XMLDocOut.XmlDocument;
-      XMLDocOut.Load(InStream);
+      XMLDOMMgt.LoadXMLDocumentFromInStream(InStream,XMLDocOut);
 
       XPath := '/amc:bankListResponse/return/pack/bank';
 
@@ -129,10 +128,10 @@ OBJECT Codeunit 1289 Imp. Bank List Ext. Data Hndl
 
     LOCAL PROCEDURE CheckIfErrorsOccurred@8(VAR ResponseInStream@1001 : InStream);
     VAR
+      XMLDOMManagement@1002 : Codeunit 6224;
       ResponseXmlDoc@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
     BEGIN
-      ResponseXmlDoc := ResponseXmlDoc.XmlDocument;
-      ResponseXmlDoc.Load(ResponseInStream);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseInStream,ResponseXmlDoc);
 
       IF ResponseHasErrors(ResponseXmlDoc) THEN
         DisplayErrorFromResponse(ResponseXmlDoc);

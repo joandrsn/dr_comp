@@ -2,9 +2,9 @@ OBJECT Table 7326 Whse. Worksheet Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -174,6 +174,7 @@ OBJECT Table 7326 Whse. Worksheet Line
                                                    Editable=No }
     { 21  ;   ;Qty. to Handle      ;Decimal       ;OnValidate=VAR
                                                                 WhseWkshTemplate@1002 : Record 7328;
+                                                                TempWhseActivLine@1003 : TEMPORARY Record 5767;
                                                                 Confirmed@1000 : Boolean;
                                                                 AvailableQty@1001 : Decimal;
                                                               BEGIN
@@ -219,6 +220,12 @@ OBJECT Table 7326 Whse. Worksheet Line
                                                                       END
                                                                     END ELSE BEGIN
                                                                       AvailableQty := CheckAvailableQtyBase;
+                                                                      AvailableQty +=
+                                                                        WhseAvailMgt.CalcLineReservedQtyOnInvt(
+                                                                          "Source Type","Source Subtype",
+                                                                          "Source No.","Source Line No.",
+                                                                          "Source Subline No.",
+                                                                          TRUE,'','',TempWhseActivLine);
                                                                       IF "Qty. to Handle (Base)" > AvailableQty THEN BEGIN
                                                                         IF ("Shipping Advice" = "Shipping Advice"::Complete) OR
                                                                            (AvailableQty < 0)
@@ -249,7 +256,10 @@ OBJECT Table 7326 Whse. Worksheet Line
                                                                 END;
 
                                                                 TESTFIELD("Qty. per Unit of Measure");
-                                                                "Qty. to Handle" := ROUND("Qty. to Handle (Base)" / "Qty. per Unit of Measure",0.00001);
+                                                                IF "Qty. to Handle (Base)" = "Qty. Outstanding (Base)" THEN
+                                                                  "Qty. to Handle" := "Qty. Outstanding"
+                                                                ELSE
+                                                                  "Qty. to Handle" := ROUND("Qty. to Handle (Base)" / "Qty. per Unit of Measure",0.00001);
                                                               END;
 
                                                    CaptionML=[DAN=Håndteringsantal;
@@ -287,7 +297,9 @@ OBJECT Table 7326 Whse. Worksheet Line
                                                                 FromItemUnitOfMeasure@1000 : Record 5404;
                                                               BEGIN
                                                                 IF "Item No." <> '' THEN BEGIN
-                                                                  FromItemUnitOfMeasure.GET(Item."No.","From Unit of Measure Code");
+                                                                  GetItemUnitOfMeasure;
+                                                                  IF NOT FromItemUnitOfMeasure.GET(Item."No.","From Unit of Measure Code") THEN
+                                                                    FromItemUnitOfMeasure.GET(Item."No.",Item."Base Unit of Measure");
                                                                   "Qty. per From Unit of Measure" := FromItemUnitOfMeasure."Qty. per Unit of Measure";
                                                                 END ELSE
                                                                   "Qty. per From Unit of Measure" := 1;
@@ -514,19 +526,8 @@ OBJECT Table 7326 Whse. Worksheet Line
     END;
 
     LOCAL PROCEDURE CheckAvailableQtyBase@2() AvailableQtyToPickBase : Decimal;
-    VAR
-      WhseActivLine@1002 : Record 5767;
-      AvailableQtyBase@1000 : Decimal;
-      LineReservedQtyBase@1001 : Decimal;
     BEGIN
-      LineReservedQtyBase :=
-        WhseAvailMgt.CalcLineReservedQtyOnInvt(
-          "Source Type","Source Subtype","Source No.",
-          "Source Line No.","Source Subline No.",
-          TRUE,'','',WhseActivLine);
-
-      AvailableQtyBase := CalcAvailableQtyBase(FALSE);
-      AvailableQtyToPickBase := AvailableQtyBase + LineReservedQtyBase;
+      AvailableQtyToPickBase := CalcAvailableQtyBase(FALSE);
       IF FIELDNO("Qty. to Handle") IN [CurrFieldNo,CurrentFieldNo] THEN
         AvailableQtyToPickBase += xRec."Qty. to Handle (Base)";
     END;
@@ -534,7 +535,7 @@ OBJECT Table 7326 Whse. Worksheet Line
     LOCAL PROCEDURE AssignedQtyOnReservedLines@29() : Decimal;
     VAR
       WhseWkshLine@1000 : Record 7326;
-      WhseActivLine@1002 : Record 5767;
+      TempWhseActivLine@1002 : TEMPORARY Record 5767;
       LineReservedQtyBase@1001 : Decimal;
       TotalReservedAndAssignedBase@1003 : Decimal;
       ReservedAndAssignedBase@1004 : Decimal;
@@ -553,7 +554,7 @@ OBJECT Table 7326 Whse. Worksheet Line
                 WhseWkshLine."Source Type",WhseWkshLine."Source Subtype",
                 WhseWkshLine."Source No.",WhseWkshLine."Source Line No.",
                 WhseWkshLine."Source Subline No.",
-                TRUE,'','',WhseActivLine));
+                TRUE,'','',TempWhseActivLine));
           IF LineReservedQtyBase > 0 THEN BEGIN
             IF LineReservedQtyBase <= WhseWkshLine."Qty. to Handle (Base)" THEN
               ReservedAndAssignedBase := LineReservedQtyBase
@@ -568,7 +569,7 @@ OBJECT Table 7326 Whse. Worksheet Line
     PROCEDURE CalcAvailableQtyBase@1(ExcludeLine@1102601000 : Boolean) AvailableQty@1000 : Decimal;
     VAR
       Item2@1002 : Record 27;
-      WhseActivLine@1001 : Record 5767;
+      TempWhseActivLine@1001 : TEMPORARY Record 5767;
       AvailQtyBase@1003 : Decimal;
       QtyAssgndOnWkshBase@1006 : Decimal;
       QtyReservedOnPickShip@1007 : Decimal;
@@ -582,18 +583,20 @@ OBJECT Table 7326 Whse. Worksheet Line
         Item2.SETRANGE("Variant Filter","Variant Code");
         Item2.CALCFIELDS("Reserved Qty. on Inventory");
         QtyReservedOnPickShip :=
-          WhseAvailMgt.CalcReservQtyOnPicksShips("Location Code","Item No.","Variant Code",WhseActivLine);
+          WhseAvailMgt.CalcReservQtyOnPicksShips("Location Code","Item No.","Variant Code",TempWhseActivLine);
         QtyAssgndOnWkshBase := WhseAvailMgt.CalcQtyAssgndOnWksh(Rec,NOT Location."Allow Breakbulk",ExcludeLine);
         AvailQtyBase :=
-          CalcAvailWhseQtyBase("Location Code","Item No.","Variant Code","Unit of Measure Code") -
-          ABS(Item2."Reserved Qty. on Inventory") + QtyReservedOnPickShip;
+          CreatePick.CalcTotalAvailQtyToPick(
+            "Location Code","Item No.","Variant Code",'','',"Source Type","Source Subtype","Source No.","Source Line No.",
+            "Source Subline No.","Qty. to Handle (Base)",FALSE);
       END ELSE BEGIN
         IF Location."Require Pick" THEN
           QtyReservedOnPickShip :=
-            WhseAvailMgt.CalcReservQtyOnPicksShips("Location Code","Item No.","Variant Code",WhseActivLine) + QtyReservedOnPickShip;
+            WhseAvailMgt.CalcReservQtyOnPicksShips("Location Code","Item No.","Variant Code",TempWhseActivLine) +
+            QtyReservedOnPickShip;
 
         QtyAssgndOnWkshBase := WhseAvailMgt.CalcQtyAssgndOnWksh(Rec,TRUE,FALSE);
-        AvailQtyBase := WhseAvailMgt.CalcInvtAvailQty(Item2,Location,"Variant Code",WhseActivLine) + QtyReservedOnPickShip;
+        AvailQtyBase := WhseAvailMgt.CalcInvtAvailQty(Item2,Location,"Variant Code",TempWhseActivLine) + QtyReservedOnPickShip;
       END;
 
       AvailableQty := AvailQtyBase - QtyAssgndOnWkshBase + AssignedQtyOnReservedLines;
@@ -765,7 +768,7 @@ OBJECT Table 7326 Whse. Worksheet Line
     LOCAL PROCEDURE GetBin@19(LocationCode@1000 : Code[10];BinCode@1002 : Code[20]);
     BEGIN
       IF (LocationCode = '') OR (BinCode = '') THEN
-        Bin.INIT
+        CLEAR(Bin)
       ELSE
         IF (Bin."Location Code" <> LocationCode) OR
            (Bin.Code <> BinCode)
@@ -1115,7 +1118,7 @@ OBJECT Table 7326 Whse. Worksheet Line
 
     LOCAL PROCEDURE AvailableQtyToPickBase@27() : Decimal;
     VAR
-      WhseActivLine@1006 : Record 5767;
+      TempWhseActivLine@1006 : TEMPORARY Record 5767;
       LineReservedQtyBase@1001 : Decimal;
       TotalAvailQtyToPickBase@1000 : Decimal;
       QtyAssgndOnWkshBase@1004 : Decimal;
@@ -1128,7 +1131,7 @@ OBJECT Table 7326 Whse. Worksheet Line
         WhseAvailMgt.CalcLineReservedQtyOnInvt(
           "Source Type","Source Subtype","Source No.",
           "Source Line No.","Source Subline No.",
-          TRUE,'','',WhseActivLine);
+          TRUE,'','',TempWhseActivLine);
       IF NOT Location."Directed Put-away and Pick" THEN BEGIN
         GetItem("Item No.",ItemDescription);
         Item.CALCFIELDS("Reserved Qty. on Inventory");

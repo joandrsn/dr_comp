@@ -2,9 +2,9 @@ OBJECT Page 251 General Journal Batches
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -138,6 +138,18 @@ OBJECT Page 251 General Journal Batches
                       Promoted=Yes;
                       Image=GLRegisters;
                       PromotedCategory=Report }
+      { 26      ;1   ;Action    ;
+                      Name=MarkedOnOff;
+                      CaptionML=[DAN=Afmærkning til/fra;
+                                 ENU=Marked On/Off];
+                      ToolTipML=[DAN=Viser alle finanskladdenavne eller kun de afmærkede finanskladdenavne. Et finanskladdenavn afmærkes, hvis et forsøg på at bogføre finanskladden mislykkes.;
+                                 ENU=Shows all journal batches or only marked journal batches. A journal batch is marked if an attempt to post the general journal fails.];
+                      Image=Change;
+                      OnAction=BEGIN
+                                 MARKEDONLY(NOT MARKEDONLY);
+                                 CurrPage.UPDATE(FALSE);
+                               END;
+                                }
     }
   }
   CONTROLS

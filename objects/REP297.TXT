@@ -2,9 +2,9 @@ OBJECT Report 297 Batch Post Sales Invoices
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -36,6 +36,8 @@ OBJECT Report 297 Batch Post Sales Invoices
 
                                   IF CalcInvDisc THEN
                                     CalculateInvoiceDiscount;
+
+                                  BatchConfirmUpdateDeferralDate(BatchConfirm,ReplacePostingDate,PostingDateReq);
 
                                   Counter := Counter + 1;
                                   Window.UPDATE(1,"No.");
@@ -97,6 +99,7 @@ OBJECT Report 297 Batch Post Sales Invoices
                               }
 
       { 3   ;2   ;Field     ;
+                  Name=ReplaceDocumentDate;
                   CaptionML=[DAN=Erstat bilagsdato;
                              ENU=Replace Document Date];
                   SourceExpr=ReplaceDocumentDate }
@@ -135,6 +138,7 @@ OBJECT Report 297 Batch Post Sales Invoices
       ReplacePostingDate@1014 : Boolean;
       ReplaceDocumentDate@1015 : Boolean;
       CalcInvDisc@1016 : Boolean;
+      BatchConfirm@1017 : ' ,Skip,Update';
 
     LOCAL PROCEDURE CalculateInvoiceDiscount@1();
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Table 552 VAT Rate Change Log Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -21,12 +21,13 @@ OBJECT Table 552 VAT Rate Change Log Entry
     { 10  ;   ;Table ID            ;Integer       ;CaptionML=[DAN=Tabel-id;
                                                               ENU=Table ID] }
     { 11  ;   ;Table Caption       ;Text80        ;FieldClass=FlowField;
-                                                   CalcFormula=Lookup(AllObj."Object Name" WHERE (Object Type=CONST(Table),
-                                                                                                  Object ID=FIELD(Table ID)));
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Name" WHERE (Object Type=CONST(Table),
+                                                                                                             Object ID=FIELD(Table ID)));
                                                    CaptionML=[DAN=Tabeltitel;
                                                               ENU=Table Caption];
                                                    Editable=No }
-    { 20  ;   ;Record ID           ;RecordID      ;CaptionML=[DAN=Record-id;
+    { 20  ;   ;Record ID           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-id;
                                                               ENU=Record ID] }
     { 30  ;   ;Old Gen. Prod. Posting Group;Code10;CaptionML=[DAN=Gl. gen. prod.bogf.gruppe;
                                                               ENU=Old Gen. Prod. Posting Group] }

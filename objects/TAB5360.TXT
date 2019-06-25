@@ -2,16 +2,16 @@ OBJECT Table 5360 CRM Customeraddress
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=customeraddress;
-    CaptionML=[DAN=Address;
-               ENU=Address];
+    CaptionML=[DAN=CRM Customeraddress;
+               ENU=CRM Customeraddress];
     Description=Address and shipping information. Used to store additional addresses for an account or contact.;
   }
   FIELDS

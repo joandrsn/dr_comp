@@ -2,9 +2,9 @@ OBJECT Report 191 Create Finance Charge Memos
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -32,7 +32,7 @@ OBJECT Report 191 Create Finance Charge Memos
                                  Window.OPEN(Text001)
                                ELSE BEGIN
                                  Window.OPEN(Text002);
-                                 OldTime := TIME;
+                                 OldDateTime := CURRENTDATETIME;
                                END;
                              END;
 
@@ -44,14 +44,14 @@ OBJECT Report 191 Create Finance Charge Memos
                                     MakeFinChrgMemo.Code;
                                     MARK := FALSE;
                                   END ELSE BEGIN
-                                    NewTime := TIME;
-                                    IF (NewTime - OldTime > 100) OR (NewTime < OldTime) THEN BEGIN
+                                    NewDateTime := CURRENTDATETIME;
+                                    IF (NewDateTime - OldDateTime > 100) OR (NewDateTime < OldDateTime) THEN BEGIN
                                       NewProgress := ROUND(RecordNo / NoOfRecords * 100,1);
                                       IF NewProgress <> OldProgress THEN BEGIN
                                         Window.UPDATE(1,NewProgress * 100);
                                         OldProgress := NewProgress;
                                       END;
-                                      OldTime := TIME;
+                                      OldDateTime := CURRENTDATETIME;
                                     END;
                                     MARK := NOT MakeFinChrgMemo.Code;
                                   END;
@@ -131,8 +131,8 @@ OBJECT Report 191 Create Finance Charge Memos
       RecordNo@1010 : Integer;
       NewProgress@1011 : Integer;
       OldProgress@1012 : Integer;
-      NewTime@1013 : Time;
-      OldTime@1014 : Time;
+      NewDateTime@1013 : DateTime;
+      OldDateTime@1014 : DateTime;
 
     PROCEDURE InitializeRequest@1(PostingDate@1000 : Date;DocumentDate@1001 : Date);
     BEGIN

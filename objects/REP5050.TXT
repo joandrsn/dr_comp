@@ -2,9 +2,9 @@ OBJECT Report 5050 Contact - List
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -3423,6 +3423,7 @@ OBJECT Report 5050 Contact - List
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -3440,8 +3441,8 @@ OBJECT Report 5050 Contact - List
                 </Paragraph>
               </Paragraphs>
               <Top>0.846cm</Top>
-              <Left>14.45cm</Left>
-              <Width>3.25cm</Width>
+              <Left>12.45cm</Left>
+              <Width>5.25cm</Width>
               <ZIndex>4</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>

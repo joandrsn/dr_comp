@@ -2,9 +2,9 @@ OBJECT Codeunit 419 File Management
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -147,7 +147,7 @@ OBJECT Codeunit 419 File Management
       ServerFile.CLOSE;
       ClientDirectory := GetDirectoryName(DownloadTempFile(ServerFileName));
       IF ERASE(ServerFileName) THEN;
-      DeleteClientFile(CombinePath(ClientDirectory,ServerFileName));
+      DeleteClientFile(CombinePath(ClientDirectory,GetFileName(ServerFileName)));
       ClientDirectory := CombinePath(ClientDirectory,CREATEGUID);
       CreateClientDirectory(ClientDirectory);
     END;
@@ -164,6 +164,12 @@ OBJECT Codeunit 419 File Management
     END;
 
     PROCEDURE UploadFileSilent@10(ClientFilePath@1001 : Text) : Text;
+    BEGIN
+      EXIT(
+        UploadFileSilentToServerPath(ClientFilePath,''));
+    END;
+
+    PROCEDURE UploadFileSilentToServerPath@73(ClientFilePath@1001 : Text;ServerFilePath@1005 : Text) : Text;
     VAR
       ClientFileAttributes@1004 : DotNet "'mscorlib'.System.IO.FileAttributes";
       ServerFileName@1006 : Text;
@@ -179,7 +185,10 @@ OBJECT Codeunit 419 File Management
       TempClientFile := ClientTempFileName(FileExtension);
       ClientFileHelper.Copy(ClientFilePath,TempClientFile,TRUE);
 
-      ServerFileName := ServerTempFileName(FileExtension);
+      IF ServerFilePath <> '' THEN
+        ServerFileName := ServerFilePath
+      ELSE
+        ServerFileName := ServerTempFileName(FileExtension);
 
       IF NOT UPLOAD('',Magicpath,AllFilesDescriptionTxt,GetFileName(TempClientFile),ServerFileName) THEN
         ERROR(Text010,ClientFilePath);
@@ -358,7 +367,7 @@ OBJECT Codeunit 419 File Management
         RelativeServerPath := COPYSTR(ClientFilePath.Replace(DirectoryPath,''),2); // COPYSTR to remove leading \
         ServerFilePath := CombinePath(ServerDirectoryPath,RelativeServerPath);
         ServerCreateDirectory(GetDirectoryName(ServerFilePath));
-        CopyClientFile(ClientFilePath,ServerFilePath,TRUE);
+        UploadFileSilentToServerPath(ClientFilePath,ServerFilePath);
       END;
     END;
 
@@ -427,6 +436,18 @@ OBJECT Codeunit 419 File Management
     PROCEDURE GetFileName@16(FilePath@1001 : Text) : Text;
     BEGIN
       EXIT(PathHelper.GetFileName(FilePath));
+    END;
+
+    PROCEDURE GetSafeFileName@66(FileName@1000 : Text) : Text;
+    VAR
+      DotNetString@1001 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.String";
+      Result@1005 : Text;
+      Str@1006 : Text;
+    BEGIN
+      DotNetString := FileName;
+      FOREACH Str IN DotNetString.Split(PathHelper.GetInvalidFileNameChars) DO
+        Result += Str;
+      EXIT(Result);
     END;
 
     PROCEDURE GetFileNameWithoutExtension@35(FilePath@1000 : Text) : Text;

@@ -2,9 +2,9 @@ OBJECT Codeunit 1720 Deferral Utilities
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-07-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50528;
   }
   PROPERTIES
   {
@@ -343,6 +343,16 @@ OBJECT Codeunit 1720 Deferral Utilities
       END;
     END;
 
+    PROCEDURE FilterDeferralLines@124(VAR DeferralLine@1006 : Record 1702;DeferralDocType@1001 : Option;GenJnlTemplateName@1000 : Code[10];GenJnlBatchName@1005 : Code[10];DocumentType@1002 : Integer;DocumentNo@1003 : Code[20];LineNo@1004 : Integer);
+    BEGIN
+      DeferralLine.SETRANGE("Deferral Doc. Type",DeferralDocType);
+      DeferralLine.SETRANGE("Gen. Jnl. Template Name",GenJnlTemplateName);
+      DeferralLine.SETRANGE("Gen. Jnl. Batch Name",GenJnlBatchName);
+      DeferralLine.SETRANGE("Document Type",DocumentType);
+      DeferralLine.SETRANGE("Document No.",DocumentNo);
+      DeferralLine.SETRANGE("Line No.",LineNo);
+    END;
+
     LOCAL PROCEDURE SetStartDate@12(DeferralTemplate@1000 : Record 1700;StartDate@1001 : Date) AdjustedStartDate : Date;
     VAR
       DeferralStartOption@1002 : 'Posting Date,Beginning of Period,End of Period,Beginning of Next Period';
@@ -496,13 +506,10 @@ OBJECT Codeunit 1720 Deferral Utilities
         PostedDeferralHeader."Posting Date" := GenJournalLine."Posting Date";
         PostedDeferralHeader."Entry No." := FirstEntryNo;
         PostedDeferralHeader.INSERT;
-
-        DeferralLine.SETRANGE("Deferral Doc. Type",DeferralHeader."Deferral Doc. Type"::"G/L");
-        DeferralLine.SETRANGE("Gen. Jnl. Template Name",GenJournalLine."Journal Template Name");
-        DeferralLine.SETRANGE("Gen. Jnl. Batch Name",GenJournalLine."Journal Batch Name");
-        DeferralLine.SETRANGE("Document Type",0);
-        DeferralLine.SETRANGE("Document No.",'');
-        DeferralLine.SETRANGE("Line No.",GenJournalLine."Line No.");
+        FilterDeferralLines(
+          DeferralLine,DeferralHeader."Deferral Doc. Type"::"G/L",
+          GenJournalLine."Journal Template Name",GenJournalLine."Journal Batch Name",
+          0,'',GenJournalLine."Line No.");
         IF DeferralLine.FINDSET THEN BEGIN
           REPEAT
             PostedDeferralLine.INIT;
@@ -521,111 +528,6 @@ OBJECT Codeunit 1720 Deferral Utilities
       END;
 
       GenJnlPostLine.RemoveDeferralSchedule(GenJournalLine);
-    END;
-
-    PROCEDURE CreateScheduleFromSalesDoc@8(SalesLine@1008 : Record 37;NewDocumentType@1007 : Integer;NewDocumentNo@1003 : Code[20];NewLineNo@1002 : Integer;CurrencyCode@1001 : Code[10]);
-    VAR
-      SalesHeader@1000 : Record 36;
-      PostingDate@1004 : Date;
-    BEGIN
-      IF SalesHeader.GET(SalesLine."Document Type",SalesLine."Document No.") THEN
-        PostingDate := SalesHeader."Posting Date";
-      CreateScheduleFromDoc(
-        GetSalesDeferralDocType,
-        SalesLine."Document Type",
-        SalesLine."Document No.",
-        SalesLine."Line No.",
-        NewDocumentType,
-        NewDocumentNo,
-        NewLineNo,
-        CurrencyCode,
-        SalesLine."Sell-to Customer No.",
-        PostingDate);
-      RemoveOrSetDeferralSchedule(
-        '',GetSalesDeferralDocType,'','',
-        SalesLine."Document Type",
-        SalesLine."Document No.",
-        SalesLine."Line No.",0,0D,
-        SalesLine.Description,
-        CurrencyCode,
-        TRUE);
-    END;
-
-    PROCEDURE CreateScheduleFromPurchDoc@10(PurchaseLine@1005 : Record 39;NewDocumentType@1004 : Integer;NewDocumentNo@1003 : Code[20];NewLineNo@1002 : Integer;CurrencyCode@1001 : Code[10];PostingDate@1006 : Date);
-    VAR
-      PurchaseHeader@1000 : Record 38;
-    BEGIN
-      IF PurchaseHeader.GET(PurchaseLine."Document Type",PurchaseLine."Document No.") THEN
-        PostingDate := PurchaseHeader."Posting Date";
-      CreateScheduleFromDoc(
-        DeferralHeader."Deferral Doc. Type"::Purchase,
-        PurchaseLine."Document Type",
-        PurchaseLine."Document No.",
-        PurchaseLine."Line No.",
-        NewDocumentType,
-        NewDocumentNo,
-        NewLineNo,
-        CurrencyCode,
-        PurchaseLine."Buy-from Vendor No.",
-        PostingDate);
-      RemoveOrSetDeferralSchedule(
-        '',DeferralHeader."Deferral Doc. Type"::Purchase,'','',
-        PurchaseLine."Document Type",
-        PurchaseLine."Document No.",
-        PurchaseLine."Line No.",0,0D,
-        PurchaseLine.Description,
-        CurrencyCode,
-        TRUE);
-    END;
-
-    LOCAL PROCEDURE CreateScheduleFromDoc@11(DeferralDocType@1010 : Integer;RecordDocumentType@1009 : Integer;RecordDocumentNo@1008 : Code[20];RecordLineNo@1007 : Integer;NewDocumentType@1006 : Integer;NewDocumentNo@1005 : Code[20];NewLineNo@1004 : Integer;CurrencyCode@1012 : Code[10];CustVendorNo@1014 : Code[20];PostingDate@1015 : Date);
-    VAR
-      DeferralHeader@1003 : Record 1701;
-      PostedDeferralHeader@1002 : Record 1704;
-      DeferralLine@1001 : Record 1702;
-      PostedDeferralLine@1000 : Record 1705;
-      DeferralTemplate@1011 : Record 1700;
-      DeferralAccount@1013 : Code[20];
-    BEGIN
-      IF DeferralHeader.GET(DeferralDocType,'','',RecordDocumentType,RecordDocumentNo,RecordLineNo) THEN BEGIN
-        PostedDeferralHeader.INIT;
-        PostedDeferralHeader.TRANSFERFIELDS(DeferralHeader);
-        PostedDeferralHeader."Deferral Doc. Type" := DeferralDocType;
-        PostedDeferralHeader."Gen. Jnl. Document No." := '';
-        PostedDeferralHeader."Account No." := '';
-        PostedDeferralHeader."Document Type" := NewDocumentType;
-        PostedDeferralHeader."Document No." := NewDocumentNo;
-        PostedDeferralHeader."Line No." := NewLineNo;
-        PostedDeferralHeader."Currency Code" := CurrencyCode;
-        PostedDeferralHeader.CustVendorNo := CustVendorNo;
-        PostedDeferralHeader."Posting Date" := PostingDate;
-        PostedDeferralHeader.INSERT;
-
-        IF DeferralTemplate.GET(PostedDeferralHeader."Deferral Code") THEN
-          DeferralAccount := DeferralTemplate."Deferral Account";
-
-        DeferralLine.SETRANGE("Deferral Doc. Type",DeferralDocType);
-        DeferralLine.SETRANGE("Gen. Jnl. Template Name",'');
-        DeferralLine.SETRANGE("Gen. Jnl. Batch Name",'');
-        DeferralLine.SETRANGE("Document Type",RecordDocumentType);
-        DeferralLine.SETRANGE("Document No.",RecordDocumentNo);
-        DeferralLine.SETRANGE("Line No.",RecordLineNo);
-        IF DeferralLine.FINDSET THEN BEGIN
-          REPEAT
-            PostedDeferralLine.INIT;
-            PostedDeferralLine.TRANSFERFIELDS(DeferralLine);
-            PostedDeferralLine."Gen. Jnl. Document No." := '';
-            PostedDeferralLine."Account No." := '';
-            PostedDeferralLine."Document Type" := NewDocumentType;
-            PostedDeferralLine."Document No." := NewDocumentNo;
-            PostedDeferralLine."Deferral Doc. Type" := DeferralDocType;
-            PostedDeferralLine."Line No." := NewLineNo;
-            PostedDeferralLine."Currency Code" := CurrencyCode;
-            PostedDeferralLine."Deferral Account" := DeferralAccount;
-            PostedDeferralLine.INSERT;
-          UNTIL DeferralLine.NEXT = 0;
-        END;
-      END;
     END;
 
     PROCEDURE DeferralCodeOnValidate@13(DeferralCode@1007 : Code[10];DeferralDocType@1006 : Integer;GenJnlTemplateName@1014 : Code[10];GenJnlBatchName@1013 : Code[10];DocumentType@1011 : Integer;DocumentNo@1010 : Code[20];LineNo@1009 : Integer;Amount@1001 : Decimal;PostingDate@1008 : Date;Description@1002 : Text[50];CurrencyCode@1012 : Code[10]);
@@ -739,12 +641,7 @@ OBJECT Codeunit 1720 Deferral Utilities
           COMMIT;
         END;
 
-      DeferralLine.SETRANGE("Deferral Doc. Type",DeferralDocType);
-      DeferralLine.SETRANGE("Gen. Jnl. Template Name",GenJnlTemplateName);
-      DeferralLine.SETRANGE("Gen. Jnl. Batch Name",GenJnlBatchName);
-      DeferralLine.SETRANGE("Document Type",DocumentType);
-      DeferralLine.SETRANGE("Document No.",DocumentNo);
-      DeferralLine.SETRANGE("Line No.",LineNo);
+      FilterDeferralLines(DeferralLine,DeferralDocType,GenJnlTemplateName,GenJnlBatchName,DocumentType,DocumentNo,LineNo);
       DeferralLine.DELETEALL;
       IF ClearAmountToDefer THEN
         COMMIT;
@@ -779,12 +676,10 @@ OBJECT Codeunit 1720 Deferral Utilities
       DeferralHeader.MODIFY;
       AmtToDefer := DeferralHeader."Amount to Defer";
       AmtToDeferLCY := DeferralHeader."Amount to Defer (LCY)";
-      DeferralLine.SETRANGE("Deferral Doc. Type",DeferralHeader."Deferral Doc. Type");
-      DeferralLine.SETRANGE("Gen. Jnl. Template Name",DeferralHeader."Gen. Jnl. Template Name");
-      DeferralLine.SETRANGE("Gen. Jnl. Batch Name",DeferralHeader."Gen. Jnl. Batch Name");
-      DeferralLine.SETRANGE("Document Type",DeferralHeader."Document Type");
-      DeferralLine.SETRANGE("Document No.",DeferralHeader."Document No.");
-      DeferralLine.SETRANGE("Line No.",DeferralHeader."Line No.");
+      FilterDeferralLines(
+        DeferralLine,DeferralHeader."Deferral Doc. Type",
+        DeferralHeader."Gen. Jnl. Template Name",DeferralHeader."Gen. Jnl. Batch Name",
+        DeferralHeader."Document Type",DeferralHeader."Document No.",DeferralHeader."Line No.");
       IF DeferralLine.FINDSET THEN BEGIN
         TotalDeferralCount := DeferralLine.COUNT;
         REPEAT
@@ -849,6 +744,11 @@ OBJECT Codeunit 1720 Deferral Utilities
     PROCEDURE GetPurchDeferralDocType@24() : Integer;
     BEGIN
       EXIT(DeferralHeader."Deferral Doc. Type"::Purchase)
+    END;
+
+    PROCEDURE GetGLDeferralDocType@10() : Integer;
+    BEGIN
+      EXIT(DeferralHeader."Deferral Doc. Type"::"G/L")
     END;
 
     PROCEDURE GetDeferralStartDate@26(DeferralDocType@1004 : Integer;RecordDocumentType@1003 : Integer;RecordDocumentNo@1002 : Code[20];RecordLineNo@1001 : Integer;DeferralCode@1006 : Code[10];PostingDate@1007 : Date) : Date;

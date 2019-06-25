@@ -2,9 +2,9 @@ OBJECT Page 1029 Job Invoices
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=24-08-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.49146;
   }
   PROPERTIES
   {
@@ -109,7 +109,6 @@ OBJECT Page 1029 Job Invoices
     BEGIN
       DetailLevel := DetailLevel::"Per Job";
       JobNo := Job."No.";
-      ShowDetails := FALSE;
     END;
 
     PROCEDURE SetPrJobTask@2(JobTask@1000 : Record 1001);
@@ -117,7 +116,6 @@ OBJECT Page 1029 Job Invoices
       DetailLevel := DetailLevel::"Per Job Task";
       JobNo := JobTask."Job No.";
       JobTaskNo := JobTask."Job Task No.";
-      ShowDetails := FALSE;
     END;
 
     PROCEDURE SetPrJobPlanningLine@3(JobPlanningLine@1000 : Record 1003);
@@ -126,7 +124,11 @@ OBJECT Page 1029 Job Invoices
       JobNo := JobPlanningLine."Job No.";
       JobTaskNo := JobPlanningLine."Job Task No.";
       JobPlanningLineNo := JobPlanningLine."Line No.";
-      ShowDetails := FALSE;
+    END;
+
+    PROCEDURE SetShowDetails@4(NewShowDetails@1000 : Boolean);
+    BEGIN
+      ShowDetails := NewShowDetails;
     END;
 
     BEGIN

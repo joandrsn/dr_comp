@@ -2,9 +2,9 @@ OBJECT Page 364 Select Sending Options
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -20,10 +20,14 @@ OBJECT Page 364 Select Sending Options
 
     OnAfterGetCurrRecord=VAR
                            ElectronicDocumentFormat@1000 : Record 61;
+                           DocumentSendingProfile@1001 : Record 60;
                          BEGIN
                            SendElectronicallyVisible := NOT ElectronicDocumentFormat.ISEMPTY AND "One Related Party Selected";
                            IF DefaultCode = '' THEN
                              DefaultCode := Code;
+
+                           IF DocumentSendingProfile.GET(DefaultCode) THEN
+                             COPY(DocumentSendingProfile);
                          END;
 
   }

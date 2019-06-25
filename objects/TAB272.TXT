@@ -2,9 +2,9 @@ OBJECT Table 272 Check Ledger Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -99,6 +99,7 @@ OBJECT Table 272 Check Ledger Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 22  ;   ;External Document No.;Code35       ;CaptionML=[DAN=Eksternt bilagsnr.;
@@ -113,7 +114,8 @@ OBJECT Table 272 Check Ledger Entry
                                                    Editable=No }
     { 25  ;   ;Positive Pay Exported;Boolean      ;CaptionML=[DAN=Positive Pay-betalingsposter eksporteret;
                                                               ENU=Positive Pay Exported] }
-    { 26  ;   ;Record ID to Print  ;RecordID      ;CaptionML=[DAN=Record-id, der skal udskrives;
+    { 26  ;   ;Record ID to Print  ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-id, der skal udskrives;
                                                               ENU=Record ID to Print] }
   }
   KEYS

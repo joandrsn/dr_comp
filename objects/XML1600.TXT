@@ -2,9 +2,9 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -27,7 +27,10 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   SourceTableView=SORTING(Field1)
                                                                   WHERE(Field1=FILTER(1..));
                                                   MaxOccurs=Once;
-                                                  Export::OnAfterGetRecord=BEGIN
+                                                  Export::OnAfterGetRecord=VAR
+                                                                             TaxCurrencyCode@1001 : Text;
+                                                                             TaxCurrencyCodeListID@1000 : Text;
+                                                                           BEGIN
                                                                              IF NOT FindNextInvoiceRec(InvoiceHeaderLoop.Number) THEN
                                                                                currXMLport.BREAK;
 
@@ -77,36 +80,35 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{412EE434-539B-46FA-AFE1-ED2C5EBB2E35}];1 ;Note                ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF Note = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(Note);
                                                                                END;
                                                                                 }
 
     { [{F0CFB3A7-B67A-4AFA-867A-C24C964C2597}];1 ;TaxPointDate        ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF TaxPointDate = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(TaxPointDate);
                                                                                END;
                                                                                 }
 
     { [{7426035F-C685-4AB0-B931-6865B73F5853}];1 ;DocumentCurrencyCode;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(DocumentCurrencyCode);
+                                                                               END;
+                                                                                }
 
     { [{93CCF3B8-F15B-40B4-8D5D-7F241D1604A6}];2 ;listID              ;Attribute;Text   ;
-                                                  VariableName=DocumentCurrencyCodeListID }
-
-    { [{1B989853-BE95-40F7-9ABF-5390E3C84071}];1 ;TaxCurrencyCode     ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
-
-    { [{F5122FBD-9907-4511-82BE-D3179BF07F70}];2 ;listID              ;Attribute;Text   ;
-                                                  VariableName=TaxCurrencyCodeListID }
+                                                  VariableName=DocumentCurrencyCodeListID;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(DocumentCurrencyCodeListID);
+                                                                               END;
+                                                                                }
 
     { [{8ABC6136-1A86-4F83-87B6-63BB44468A3E}];1 ;AccountingCost      ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF AccountingCost = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(AccountingCost);
                                                                                END;
                                                                                 }
 
@@ -135,8 +137,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                    SalesHeader,
                                                                                    OrderReferenceID);
 
-                                                                                 IF OrderReferenceID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(OrderReferenceID);
                                                                                END;
                                                                                 }
 
@@ -146,7 +147,10 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{BB7BF69E-D2C0-4D5B-BCA3-B27415BD292D}];1 ;ContractDocumentReference;Element;Text;
                                                   NamespacePrefix=cac;
-                                                  Export::OnBeforePassVariable=BEGIN
+                                                  Export::OnBeforePassVariable=VAR
+                                                                                 DocumentTypeCode@1000 : Text;
+                                                                                 ContractRefDocTypeCodeListID@1001 : Text;
+                                                                               BEGIN
                                                                                  PEPPOLMgt.GetContractDocRefInfo(
                                                                                    SalesHeader,
                                                                                    ContractDocumentReferenceID,
@@ -154,23 +158,24 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                    ContractRefDocTypeCodeListID,
                                                                                    DocumentType);
 
-                                                                                 IF ContractDocumentReferenceID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(ContractDocumentReferenceID);
                                                                                END;
                                                                                 }
 
     { [{214821C6-27C5-4709-B5EE-157B508FFAC5}];2 ;ID                  ;Element ;Text    ;
                                                   VariableName=ContractDocumentReferenceID;
-                                                  NamespacePrefix=cbc }
-
-    { [{AF2D961B-9717-40E9-9E53-D3948B592877}];2 ;DocumentTypeCode    ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
-
-    { [{19C8B937-BD6E-4B3F-B352-1CC42DA433BE}];3 ;listID              ;Attribute;Text   ;
-                                                  VariableName=ContractRefDocTypeCodeListID }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(ContractDocumentReferenceID);
+                                                                               END;
+                                                                                }
 
     { [{746B2D5F-0F2F-4F3E-AD77-703E8C43644D}];2 ;DocumentType        ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(DocumentType);
+                                                                               END;
+                                                                                }
 
     { [{A399C996-122E-4FB1-BCE0-A39F6C7D3C05}];1 ;AdditionalDocumentReference;Element;Table;
                                                   VariableName=AdditionalDocRefLoop;
@@ -190,42 +195,59 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                mimeCode,
                                                                                EmbeddedDocumentBinaryObject);
 
-                                                                             IF AdditionalDocumentReferenceID = '' THEN
-                                                                               currXMLport.SKIP;
+                                                                             SkipIfBlank(AdditionalDocumentReferenceID);
                                                                            END;
                                                                             }
 
     { [{2B19AB3A-36FF-4758-8A4E-051E6E31F634}];2 ;ID                  ;Element ;Text    ;
                                                   VariableName=AdditionalDocumentReferenceID;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(AdditionalDocumentReferenceID);
+                                                                               END;
+                                                                                }
 
     { [{2A7285B8-4234-48C9-AEC1-617467C6352B}];2 ;DocumentType        ;Element ;Text    ;
                                                   VariableName=AdditionalDocRefDocumentType;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(AdditionalDocRefDocumentType);
+                                                                               END;
+                                                                                }
 
     { [{4CECAF0F-98F8-4531-868C-D554AC5CDD48}];2 ;Attachment          ;Element ;Text    ;
-                                                  NamespacePrefix=cac }
+                                                  NamespacePrefix=cac;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(Attachment);
+                                                                               END;
+                                                                                }
 
     { [{A1D9CBC3-5F22-43D3-98C9-B0DAE275B2B4}];3 ;EmbeddedDocumentBinaryObject;Element;Text;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF EmbeddedDocumentBinaryObject = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(EmbeddedDocumentBinaryObject);
                                                                                END;
                                                                                 }
 
     { [{4F771851-0388-4768-9115-21880DF9F1F3}];4 ;mimeCode            ;Attribute;Text   ;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF mimeCode = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(mimeCode);
                                                                                END;
                                                                                 }
 
     { [{300F5751-BDF4-4B02-A8DB-DD502949FB89}];3 ;ExternalReference   ;Element ;Text    ;
-                                                  NamespacePrefix=cac }
+                                                  NamespacePrefix=cac;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(ExternalReference);
+                                                                               END;
+                                                                                }
 
     { [{A42E44EF-9CA3-4ACE-9C4D-D435DAA66A71}];4 ;URI                 ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(URI);
+                                                                               END;
+                                                                                }
 
     { [{7AF943D3-36F7-4E93-9615-6769DA037FC4}];1 ;AccountingSupplierParty;Element;Text  ;
                                                   NamespacePrefix=cac;
@@ -276,8 +298,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=SupplierEndpointID;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF SupplierEndpointID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(SupplierEndpointID);
                                                                                END;
                                                                                 }
 
@@ -287,8 +308,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{9FF1B643-F06E-45FB-AF2F-7707DD04CDCC}];3 ;PartyIdentification ;Element ;Text    ;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PartyIdentificationID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PartyIdentificationID);
                                                                                END;
                                                                                 }
 
@@ -305,30 +325,49 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{8D6F4083-3D85-4727-A0BA-608357F17E8E}];4 ;Name                ;Element ;Text    ;
                                                   VariableName=SupplierName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(SupplierName);
+                                                                               END;
+                                                                                }
 
     { [{679D18F5-3F0A-4DB7-9CAD-DF303A6A905A}];3 ;PostalAddress       ;Element ;Text    ;
                                                   VariableName=SupplierPostalAddress;
                                                   NamespacePrefix=cac }
 
     { [{2FCE7960-9C8B-42D1-AFB9-2EFDF6F726AB}];4 ;StreetName          ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(StreetName);
+                                                                               END;
+                                                                                }
 
     { [{BD2E72DB-D13A-48C3-A960-6A2C258777AA}];4 ;AdditionalStreetName;Element ;Text    ;
                                                   VariableName=SupplierAdditionalStreetName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(SupplierAdditionalStreetName);
+                                                                               END;
+                                                                                }
 
     { [{17E12B42-5BC4-446D-930B-B553CEB36053}];4 ;CityName            ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CityName);
+                                                                               END;
+                                                                                }
 
     { [{5F08D7D9-DA7E-4566-99BF-649310D55E01}];4 ;PostalZone          ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(PostalZone);
+                                                                               END;
+                                                                                }
 
     { [{A5E455EA-E20D-42B8-BCC9-C6A6D2AAB1E2}];4 ;CountrySubentity    ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CountrySubentity = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CountrySubentity);
                                                                                END;
                                                                                 }
 
@@ -336,10 +375,18 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   NamespacePrefix=cac }
 
     { [{77524987-FA6D-46DA-9094-87A44D175B0B}];5 ;IdentificationCode  ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(IdentificationCode);
+                                                                               END;
+                                                                                }
 
     { [{EAD5EFE4-A23D-4AAB-8354-DB71048C47A9}];6 ;listID              ;Attribute;Text   ;
-                                                  VariableName=ListID }
+                                                  VariableName=ListID;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(ListID);
+                                                                               END;
+                                                                                }
 
     { [{CEECDC24-CE2F-4623-925D-6F5B47E65C3B}];3 ;PartyTaxScheme      ;Element ;Text    ;
                                                   NamespacePrefix=cac }
@@ -347,8 +394,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{EB258780-4FD3-478B-99ED-F3B3950195FD}];4 ;CompanyID           ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CompanyID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CompanyID);
                                                                                END;
                                                                                 }
 
@@ -358,8 +404,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{CF630E23-C015-4DB3-A6ED-CB3D0F5E7009}];4 ;ExemptionReason     ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF ExemptionReason = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(ExemptionReason);
                                                                                END;
                                                                                 }
 
@@ -369,7 +414,11 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{1371ACB1-7757-4B85-A0AB-0CC56FCC744D}];5 ;ID                  ;Element ;Text    ;
                                                   VariableName=TaxSchemeID;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(TaxSchemeID);
+                                                                               END;
+                                                                                }
 
     { [{E131830A-2366-4F79-A75C-58767EC4924D}];3 ;PartyLegalEntity    ;Element ;Text    ;
                                                   NamespacePrefix=cac }
@@ -378,8 +427,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=PartyLegalEntityRegName;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PartyLegalEntityRegName = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PartyLegalEntityRegName);
                                                                                END;
                                                                                 }
 
@@ -387,8 +435,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=PartyLegalEntityCompanyID;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PartyLegalEntityCompanyID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PartyLegalEntityCompanyID);
                                                                                END;
                                                                                 }
 
@@ -398,14 +445,17 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{42708492-F137-41A0-A071-9E37B54CB816}];4 ;RegistrationAddress ;Element ;Text    ;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF (SupplierRegAddrCityName = '') AND (SupplierRegAddrCountry = '') THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(SupplierRegAddrCityName);
                                                                                END;
                                                                                 }
 
     { [{25447041-FB6E-422D-8EE6-3E9261FFE370}];5 ;CityName            ;Element ;Text    ;
                                                   VariableName=SupplierRegAddrCityName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(SupplierRegAddrCityName);
+                                                                               END;
+                                                                                }
 
     { [{DF52CDC5-852E-4FAD-951C-AE883E114026}];5 ;Country             ;Element ;Text    ;
                                                   VariableName=SupplierRegAddrCountry;
@@ -413,27 +463,51 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{86A0021D-58DC-4C53-A132-46426359A2B4}];6 ;IdentificationCode  ;Element ;Text    ;
                                                   VariableName=SupplierRegAddrCountryIdCode;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(SupplierRegAddrCountryIdCode);
+                                                                               END;
+                                                                                }
 
     { [{5A04635E-5EAE-4763-9E0B-B0B60972A47A}];7 ;listID              ;Attribute;Text   ;
-                                                  VariableName=SupplRegAddrCountryIdListId }
+                                                  VariableName=SupplRegAddrCountryIdListId;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(SupplRegAddrCountryIdListId);
+                                                                               END;
+                                                                                }
 
     { [{7286E782-8E80-4641-8EF4-FD3D6F13A54D}];3 ;Contact             ;Element ;Text    ;
                                                   NamespacePrefix=cac }
 
     { [{B3A7E20A-08F8-40F8-A37C-BA6BCDE0F7F4}];4 ;ID                  ;Element ;Text    ;
                                                   VariableName=ContactID;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(ContactID);
+                                                                               END;
+                                                                                }
 
     { [{2E50DD5B-33BD-4DCE-9BC1-FAD7213E25B6}];4 ;Name                ;Element ;Text    ;
                                                   VariableName=ContactName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(ContactName);
+                                                                               END;
+                                                                                }
 
     { [{E0C6F36E-4DBD-477B-893C-2C18AB06ABA9}];4 ;Telephone           ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(Telephone);
+                                                                               END;
+                                                                                }
 
     { [{8CE91BE8-F330-475D-8F5A-D1FE5C86A530}];4 ;Telefax             ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(Telefax);
+                                                                               END;
+                                                                                }
 
     { [{B963B219-6F2D-4868-B3A5-6554596ADAFD}];4 ;ElectronicMail      ;Element ;Text    ;
                                                   NamespacePrefix=cbc }
@@ -489,8 +563,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=CustomerEndpointID;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CustomerEndpointID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CustomerEndpointID);
                                                                                END;
                                                                                 }
 
@@ -501,8 +574,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=CustomerPartyIdentification;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CustomerPartyIdentificationID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CustomerPartyIdentificationID);
                                                                                END;
                                                                                 }
 
@@ -523,30 +595,51 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{85DB5C29-6171-4D68-899C-A7E86FCA08EF}];3 ;PostalAddress       ;Element ;Text    ;
                                                   VariableName=CustomerPostalAddress;
-                                                  NamespacePrefix=cac }
+                                                  NamespacePrefix=cac;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(
+                                                                                   CustomerStreetName + CustomerAdditionalStreetName + CustomerCityName + CustomerPostalZone + CustomerCountrySubentity +
+                                                                                   CustomerIdentificationCode + CustomerListID);
+                                                                               END;
+                                                                                }
 
     { [{1607BDCF-AA24-433F-8AF0-39743B6DC8C2}];4 ;StreetName          ;Element ;Text    ;
                                                   VariableName=CustomerStreetName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustomerStreetName);
+                                                                               END;
+                                                                                }
 
     { [{C9EC312E-FBD4-4949-9DA7-8914CAB6E8C2}];4 ;AdditionalStreetName;Element ;Text    ;
                                                   VariableName=CustomerAdditionalStreetName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustomerAdditionalStreetName);
+                                                                               END;
+                                                                                }
 
     { [{0498651A-0990-476C-980D-B1DA0CA1A64D}];4 ;CityName            ;Element ;Text    ;
                                                   VariableName=CustomerCityName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustomerCityName);
+                                                                               END;
+                                                                                }
 
     { [{994BBFC2-139E-4F9D-B9F7-6D376CE67B47}];4 ;PostalZone          ;Element ;Text    ;
                                                   VariableName=CustomerPostalZone;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustomerPostalZone);
+                                                                               END;
+                                                                                }
 
     { [{D1AE50E6-C04F-4F16-8DED-63D66F272DC6}];4 ;CountrySubentity    ;Element ;Text    ;
                                                   VariableName=CustomerCountrySubentity;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CustomerCountrySubentity = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CustomerCountrySubentity);
                                                                                END;
                                                                                 }
 
@@ -565,8 +658,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=CustomerPartyTaxScheme;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CustTaxSchemeID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CustTaxSchemeID);
                                                                                END;
                                                                                 }
 
@@ -574,8 +666,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=CustPartyTaxSchemeCompanyID;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CustPartyTaxSchemeCompanyID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CustPartyTaxSchemeCompanyID);
                                                                                END;
                                                                                 }
 
@@ -598,8 +689,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=CustPartyLegalEntityRegName;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CustPartyLegalEntityRegName = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CustPartyLegalEntityRegName);
                                                                                END;
                                                                                 }
 
@@ -607,8 +697,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=CustPartyLegalEntityCompanyID;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CustPartyLegalEntityCompanyID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CustPartyLegalEntityCompanyID);
                                                                                END;
                                                                                 }
 
@@ -617,27 +706,51 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{B01C6B3D-7BD2-4DBA-8A12-837D42C87797}];3 ;Contact             ;Element ;Text    ;
                                                   VariableName=CustContact;
-                                                  NamespacePrefix=cac }
+                                                  NamespacePrefix=cac;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustContactID + CustContactName + CustContactTelephone + CustContactTelefax + CustContactElectronicMail);
+                                                                               END;
+                                                                                }
 
     { [{EE9327F5-7649-4612-B1B7-BD72D98ACFA6}];4 ;ID                  ;Element ;Text    ;
                                                   VariableName=CustContactID;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustContactID);
+                                                                               END;
+                                                                                }
 
     { [{71860AA3-8754-478B-8FAA-D7481CF0DE65}];4 ;Name                ;Element ;Text    ;
                                                   VariableName=CustContactName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustContactName);
+                                                                               END;
+                                                                                }
 
     { [{C2422717-6F6D-49DF-B4D1-7F2367FE2BFC}];4 ;Telephone           ;Element ;Text    ;
                                                   VariableName=CustContactTelephone;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustContactTelephone);
+                                                                               END;
+                                                                                }
 
     { [{E4897FCA-72A1-40BB-A870-0B7787530D1D}];4 ;Telefax             ;Element ;Text    ;
                                                   VariableName=CustContactTelefax;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustContactTelefax);
+                                                                               END;
+                                                                                }
 
     { [{174EBF6A-AE07-4E9D-B64D-A684F9023A96}];4 ;ElectronicMail      ;Element ;Text    ;
                                                   VariableName=CustContactElectronicMail;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(CustContactElectronicMail);
+                                                                               END;
+                                                                                }
 
     { [{FD8EDAEF-4839-418E-B22E-0526F4644FED}];1 ;PayeeParty          ;Element ;Text    ;
                                                   NamespacePrefix=cac;
@@ -655,8 +768,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=PayeePartyIdentification;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PayeePartyID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PayeePartyID);
                                                                                END;
                                                                                 }
 
@@ -671,8 +783,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=PayeePartyName;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PayeePartyNameName = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PayeePartyNameName);
                                                                                END;
                                                                                 }
 
@@ -684,8 +795,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=PayeePartyLegalEntity;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PayeePartyLegalEntityCompanyID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PayeePartyLegalEntityCompanyID);
                                                                                END;
                                                                                 }
 
@@ -705,8 +815,8 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                    PayeePartyTaxSchCompIDSchemeID,
                                                                                    PayeePartyTaxSchemeTaxSchemeID);
 
-                                                                                 IF TaxRepPartyPartyName = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(
+                                                                                   TaxRepPartyNameName + PayeePartyTaxSchemeCompanyID + PayeePartyTaxSchCompIDSchemeID + PayeePartyTaxSchemeTaxSchemeID);
                                                                                END;
                                                                                 }
 
@@ -722,8 +832,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=PayeePartyTaxScheme;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PayeePartyTaxScheme = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PayeePartyTaxScheme);
                                                                                END;
                                                                                 }
 
@@ -759,14 +868,17 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                    DeliveryCountrySubentity,
                                                                                    DeliveryCountryIdCode,
                                                                                    DeliveryCountryListID);
+
+                                                                                 SkipIfBlank(
+                                                                                   ActualDeliveryDate + DeliveryID + DeliveryIDSchemeID + DeliveryStreetName + DeliveryAdditionalStreetName +
+                                                                                   DeliveryCityName + DeliveryPostalZone + DeliveryCountrySubentity + DeliveryCountryIdCode + DeliveryCountryListID);
                                                                                END;
                                                                                 }
 
     { [{BD5A8268-9883-48D8-8E3D-FF653F26465C}];2 ;ActualDeliveryDate  ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF ActualDeliveryDate = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(ActualDeliveryDate);
                                                                                END;
                                                                                 }
 
@@ -777,8 +889,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=DeliveryID;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF DeliveryID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(DeliveryIDSchemeID);
                                                                                END;
                                                                                 }
 
@@ -791,23 +902,43 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{B2F73A73-13E0-4B32-BB8D-85C8683554C5}];4 ;StreetName          ;Element ;Text    ;
                                                   VariableName=DeliveryStreetName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(DeliveryStreetName);
+                                                                               END;
+                                                                                }
 
     { [{9857A2B1-E307-41EF-AC1F-CC4FEE3F2B57}];4 ;AdditionalStreetName;Element ;Text    ;
                                                   VariableName=DeliveryAdditionalStreetName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(DeliveryAdditionalStreetName);
+                                                                               END;
+                                                                                }
 
     { [{B3341B96-6568-4B1D-BC8E-85BAB90429A4}];4 ;CityName            ;Element ;Text    ;
                                                   VariableName=DeliveryCityName;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(DeliveryCityName);
+                                                                               END;
+                                                                                }
 
     { [{573CC63D-7C12-4344-BC84-5A0082FDFBB7}];4 ;PostalZone          ;Element ;Text    ;
                                                   VariableName=DeliveryPostalZone;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(DeliveryPostalZone);
+                                                                               END;
+                                                                                }
 
     { [{F6C08C58-50CB-4873-A577-5E9EB283D55C}];4 ;CountrySubentity    ;Element ;Text    ;
                                                   VariableName=DeliveryCountrySubentity;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(DeliveryCountrySubentity);
+                                                                               END;
+                                                                                }
 
     { [{B6A1CA89-27DA-4FFE-B1AA-F663E7495ED2}];4 ;Country             ;Element ;Text    ;
                                                   VariableName=DeliveryCountry;
@@ -862,16 +993,23 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   NamespacePrefix=cbc }
 
     { [{02A8E2F1-BBCE-455A-A5BE-CDE12C719D54}];2 ;PaymentChannelCode  ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(PaymentChannelCode);
+                                                                               END;
+                                                                                }
 
     { [{1A80C21F-C89C-474A-8486-9F231B08A333}];2 ;PaymentID           ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(PaymentID);
+                                                                               END;
+                                                                                }
 
     { [{F21767E9-BFF8-41E4-B7FA-30FF9B010380}];2 ;CardAccount         ;Element ;Text    ;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PrimaryAccountNumberID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PrimaryAccountNumberID);
                                                                                END;
                                                                                 }
 
@@ -915,8 +1053,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{5A32AAE6-8873-42CF-8557-B87145EE0344}];5 ;Address             ;Element ;Text    ;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF FinancialInstCountryIdCode = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(FinancialInstCountryIdCode);
                                                                                END;
                                                                                 }
 
@@ -995,8 +1132,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                Percent,
                                                                                AllowanceChargeTaxSchemeID);
 
-                                                                             IF ChargeIndicator = '' THEN
-                                                                               currXMLport.SKIP;
+                                                                             SkipIfBlank(ChargeIndicator);
                                                                            END;
                                                                             }
 
@@ -1136,8 +1272,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{6E9AA8CC-BFD3-4EC6-9502-875CBA544EDF}];3 ;TransactionCurrencyTaxAmount;Element;Text;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF TransactionCurrencyTaxAmount = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(TransCurrTaxAmtCurrencyID);
                                                                                END;
                                                                                 }
 
@@ -1159,7 +1294,11 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   NamespacePrefix=cbc }
 
     { [{1FD61CC9-1191-4ED0-9DD1-847D0734BC27}];4 ;TaxExemptionReason  ;Element ;Text    ;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(TaxExemptionReason);
+                                                                               END;
+                                                                                }
 
     { [{E35C87A6-AB29-40D1-8D52-D612ABEC0ECD}];4 ;TaxScheme           ;Element ;Text    ;
                                                   VariableName=TaxSubTotalTaxScheme;
@@ -1215,8 +1354,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{6C01B4C4-8840-4DFF-889A-B81C70E38B18}];2 ;AllowanceTotalAmount;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF AllowanceTotalAmount = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(AllowanceTotalAmount);
                                                                                END;
                                                                                 }
 
@@ -1226,8 +1364,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{FE4CC48E-6072-417C-937C-E652E2EF060A}];2 ;ChargeTotalAmount   ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF ChargeTotalAmount = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(ChargeTotalAmount);
                                                                                END;
                                                                                 }
 
@@ -1243,8 +1380,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{35E18111-EC51-4429-8267-408B271BBC6B}];2 ;PayableRoundingAmount;Element;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF PayableRoundingAmount = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(PayableRoundingAmount);
                                                                                END;
                                                                                 }
 
@@ -1277,7 +1413,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                LineExtensionAmountCurrencyID,
                                                                                InvoiceLineAccountingCost);
 
-                                                                             PEPPOLMgt.GetLineUnitCodeInfo(SalesLine,unitCode,unitCodeListID);
+                                                                             PEPPOLMgt.GetLineUnitCodeInfo(SalesLine,unitCode,UnitCodeList);
                                                                            END;
                                                                             }
 
@@ -1289,8 +1425,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   VariableName=InvoiceLineNote;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF InvoiceLineNote = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(InvoiceLineNote);
                                                                                END;
                                                                                 }
 
@@ -1301,7 +1436,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{D2E418ED-38F8-457A-80DD-78DB08B627CA}];3 ;unitCodeListID      ;Attribute;Text   ;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 currXMLport.SKIP;
+                                                                                 unitCodeListID := UnitCodeList;
                                                                                END;
                                                                                 }
 
@@ -1314,7 +1449,11 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{C94B92A2-8B3F-435A-8687-BDD3876661A0}];2 ;AccountingCost      ;Element ;Text    ;
                                                   VariableName=InvoiceLineAccountingCost;
-                                                  NamespacePrefix=cbc }
+                                                  NamespacePrefix=cbc;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(InvoiceLineAccountingCost);
+                                                                               END;
+                                                                                }
 
     { [{F04FA211-6719-4B9B-A39B-66EBCB237B03}];2 ;InvoicePeriod       ;Element ;Text    ;
                                                   VariableName=InvoiceLineInvoicePeriod;
@@ -1338,7 +1477,11 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                   NamespacePrefix=cbc }
 
     { [{C1E4B4EC-CA35-4BD5-B108-25D26797FC83}];2 ;OrderLineReference  ;Element ;Text    ;
-                                                  NamespacePrefix=cac }
+                                                  NamespacePrefix=cac;
+                                                  Export::OnBeforePassVariable=BEGIN
+                                                                                 SkipIfBlank(OrderLineReferenceLineID);
+                                                                               END;
+                                                                                }
 
     { [{488E88B6-C62D-4819-BD07-704B7D12C5A1}];3 ;LineID              ;Element ;Text    ;
                                                   VariableName=OrderLineReferenceLineID;
@@ -1439,8 +1582,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                InvLnAllowanceChargeAmount,
                                                                                InvLnAllowanceChargeAmtCurrID);
 
-                                                                             IF InvLnAllowanceChargeIndicator = '' THEN
-                                                                               currXMLport.SKIP;
+                                                                             SkipIfBlank(InvLnAllowanceChargeIndicator);
                                                                            END;
                                                                             }
 
@@ -1495,8 +1637,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{2E2F5668-50F8-4607-B140-BF5C20805EB2}];3 ;Description         ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF Description = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(Description);
                                                                                END;
                                                                                 }
 
@@ -1506,8 +1647,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{B1F2487F-AD60-45CE-8818-2D589D17F8EF}];3 ;SellersItemIdentification;Element;Text;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF SellersItemIdentificationID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(SellersItemIdentificationID);
                                                                                END;
                                                                                 }
 
@@ -1518,8 +1658,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{8F9A8C0A-A213-4B9D-84DA-64C0B6EDC94C}];3 ;StandardItemIdentification;Element;Text;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF StandardItemIdentificationID = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(StandardItemIdentificationID);
                                                                                END;
                                                                                 }
 
@@ -1533,8 +1672,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{0AE49AA6-E9D4-4C43-936D-CADE715B2CB6}];3 ;OriginCountry       ;Element ;Text    ;
                                                   NamespacePrefix=cac;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF OriginCountryIdCode = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(OriginCountryIdCode);
                                                                                END;
                                                                                 }
 
@@ -1570,8 +1708,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{46E02559-3D5D-4D43-AAEA-CD2CAF842816}];4 ;CommodityCode       ;Element ;Text    ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF CommodityCode = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(CommodityCode);
                                                                                END;
                                                                                 }
 
@@ -1581,8 +1718,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{C089B074-19C8-45B4-8D35-87257D37087D}];4 ;ItemClassificationCode;Element;Text   ;
                                                   NamespacePrefix=cbc;
                                                   Export::OnBeforePassVariable=BEGIN
-                                                                                 IF ItemClassificationCode = '' THEN
-                                                                                   currXMLport.SKIP;
+                                                                                 SkipIfBlank(ItemClassificationCode);
                                                                                END;
                                                                                 }
 
@@ -1636,8 +1772,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                AdditionalItemPropertyName,
                                                                                AdditionalItemPropertyValue);
 
-                                                                             IF AdditionalItemPropertyName = '' THEN
-                                                                               currXMLport.SKIP;
+                                                                             SkipIfBlank(AdditionalItemPropertyName);
                                                                            END;
                                                                             }
 
@@ -1652,14 +1787,16 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     { [{2433D6B5-8FC5-4FE3-BA31-BAE9C9045395}];2 ;Price               ;Element ;Text    ;
                                                   VariableName=InvoiceLinePrice;
                                                   NamespacePrefix=cac;
-                                                  Export::OnBeforePassVariable=BEGIN
+                                                  Export::OnBeforePassVariable=VAR
+                                                                                 UnitCodeBaseQtyText@1000 : Text;
+                                                                               BEGIN
                                                                                  PEPPOLMgt.GetLinePriceInfo(
                                                                                    SalesLine,
                                                                                    SalesHeader,
                                                                                    InvoiceLinePriceAmount,
                                                                                    InvLinePriceAmountCurrencyID,
                                                                                    BaseQuantity,
-                                                                                   UnitCodeBaseQty);
+                                                                                   UnitCodeBaseQtyText);
                                                                                END;
                                                                                 }
 
@@ -1672,9 +1809,6 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
 
     { [{6C453197-C3CD-428B-89D0-70F1684156DA}];3 ;BaseQuantity        ;Element ;Text    ;
                                                   NamespacePrefix=cbc }
-
-    { [{E7E570BF-E74C-46C5-B2BF-656E2D653BDF}];4 ;unitCode            ;Attribute;Text   ;
-                                                  VariableName=UnitCodeBaseQty }
 
     { [{6CE41BEB-8BE1-42D9-9D3D-A11DDB16FD29}];3 ;AllowanceCharge     ;Element ;Table   ;
                                                   VariableName=PriceAllowanceChargeLoop;
@@ -1694,8 +1828,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
                                                                                PriceAllowanceChargeBaseAmount,
                                                                                PriceAllowChargeBaseAmtCurrID);
 
-                                                                             IF PriceChargeIndicator = '' THEN
-                                                                               currXMLport.SKIP;
+                                                                             SkipIfBlank(PriceChargeIndicator);
                                                                            END;
                                                                             }
 
@@ -1757,6 +1890,7 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
       SpecifyAServInvoiceNoErr@1010 : TextConst 'DAN=Du skal angive et servicefakturanummer.;ENU=You must specify a service invoice number.';
       UnSupportedTableTypeErr@1009 : TextConst '@@@=%1 is the table.;DAN=Tabellen %1 understøttes ikke.;ENU=The %1 table is not supported.';
       ProcessedDocType@1008 : 'Sale,Service';
+      UnitCodeList@1011 : Text;
 
     PROCEDURE GetTotals@1170000009();
     BEGIN
@@ -1784,67 +1918,15 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     END;
 
     LOCAL PROCEDURE FindNextInvoiceRec@80(Position@1000 : Integer) : Boolean;
-    VAR
-      PEPPOLValidation@1002 : Codeunit 1620;
-      Found@1001 : Boolean;
     BEGIN
-      CASE ProcessedDocType OF
-        ProcessedDocType::Sale:
-          BEGIN
-            IF Position = 1 THEN
-              Found := SalesInvoiceHeader.FIND('-')
-            ELSE
-              Found := SalesInvoiceHeader.NEXT <> 0;
-            IF Found THEN BEGIN
-              SalesHeader.TRANSFERFIELDS(SalesInvoiceHeader);
-              PEPPOLValidation.CheckSalesInvoice(SalesInvoiceHeader);
-            END;
-          END;
-        ProcessedDocType::Service:
-          BEGIN
-            IF Position = 1 THEN
-              Found := ServiceInvoiceHeader.FIND('-')
-            ELSE
-              Found := ServiceInvoiceHeader.NEXT <> 0;
-            IF Found THEN BEGIN
-              PEPPOLMgt.TransferHeaderToSalesHeader(ServiceInvoiceHeader,SalesHeader);
-              PEPPOLValidation.CheckServiceInvoice(ServiceInvoiceHeader);
-            END;
-          END;
-      END;
-      SalesHeader."Document Type" := SalesHeader."Document Type"::Invoice;
-
-      EXIT(Found);
+      EXIT(
+        PEPPOLMgt.FindNextInvoiceRec(SalesInvoiceHeader,ServiceInvoiceHeader,SalesHeader,ProcessedDocType,Position));
     END;
 
     LOCAL PROCEDURE FindNextInvoiceLineRec@84(Position@1000 : Integer) : Boolean;
-    VAR
-      Found@1001 : Boolean;
     BEGIN
-      CASE ProcessedDocType OF
-        ProcessedDocType::Sale:
-          BEGIN
-            IF Position = 1 THEN
-              Found := SalesInvoiceLine.FIND('-')
-            ELSE
-              Found := SalesInvoiceLine.NEXT <> 0;
-            IF Found THEN
-              SalesLine.TRANSFERFIELDS(SalesInvoiceLine);
-          END;
-        ProcessedDocType::Service:
-          BEGIN
-            IF Position = 1 THEN
-              Found := ServiceInvoiceLine.FIND('-')
-            ELSE
-              Found := ServiceInvoiceLine.NEXT <> 0;
-            IF Found THEN BEGIN
-              PEPPOLMgt.TransferLineToSalesLine(ServiceInvoiceLine,SalesLine);
-              SalesLine.Type := PEPPOLMgt.MapServiceLineTypeToSalesLineType(ServiceInvoiceLine.Type);
-            END;
-          END;
-      END;
-
-      EXIT(Found);
+      EXIT(
+        PEPPOLMgt.FindNextInvoiceLineRec(SalesInvoiceLine,ServiceInvoiceLine,SalesLine,ProcessedDocType,Position));
     END;
 
     LOCAL PROCEDURE FindNextVATAmtRec@108(VAR VATAmtLine@1001 : Record 290;Position@1000 : Integer) : Boolean;
@@ -1898,6 +1980,12 @@ OBJECT XMLport 1600 Sales Invoice - PEPPOL 2.1
     LOCAL PROCEDURE GetProfileID@10() : Text;
     BEGIN
       EXIT('urn:www.cenbii.eu:profile:bii04:ver2.0');
+    END;
+
+    LOCAL PROCEDURE SkipIfBlank@8(Value@1000 : Text);
+    BEGIN
+      IF Value = '' THEN
+        currXMLport.SKIP;
     END;
 
     BEGIN

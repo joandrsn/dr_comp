@@ -2,9 +2,9 @@ OBJECT Table 1523 Workflow Step Argument
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -48,6 +48,7 @@ OBJECT Table 1523 Workflow Step Argument
                                                    CaptionML=[DAN=Finanskladdenavn;
                                                               ENU=General Journal Batch Name] }
     { 5   ;   ;Notification User ID;Code50        ;TableRelation="User Setup"."User ID";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Notifikationens bruger-id;
                                                               ENU=Notification User ID] }
     { 7   ;   ;Response Function Name;Code128     ;TableRelation="Workflow Response"."Function Name";

@@ -2,15 +2,21 @@ OBJECT Table 1222 Data Exch. Def
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.47444,NAVDK9.00.00.47444;
   }
   PROPERTIES
   {
     OnInsert=BEGIN
                IF Name = '' THEN
                  Name := Code;
+
+               CheckPositivePayExportFileType;
+             END;
+
+    OnModify=BEGIN
+               CheckPositivePayExportFileType;
              END;
 
     OnDelete=VAR
@@ -30,12 +36,7 @@ OBJECT Table 1222 Data Exch. Def
                                                    NotBlank=Yes }
     { 2   ;   ;Name                ;Text100       ;CaptionML=[DAN=Navn;
                                                               ENU=Name] }
-    { 3   ;   ;Type                ;Option        ;OnValidate=BEGIN
-                                                                IF Type = Type::"Positive Pay Export" THEN
-                                                                  "File Type" := "File Type"::"Fixed Text";
-                                                              END;
-
-                                                   CaptionML=[DAN=Type;
+    { 3   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
                                                               ENU=Type];
                                                    OptionCaptionML=[DAN=Import af bankkontoudtog,Eksport af betaling,Import af lønningsliste,FIK-import,Generisk import,Eksport af Positive Pay;
                                                                     ENU=Bank Statement Import,Payment Export,Payroll Import,FIK Import,Generic Import,Positive Pay Export];
@@ -97,6 +98,7 @@ OBJECT Table 1222 Data Exch. Def
       XmlNoTemplateColumnsMsg@1002 : TextConst '@@@="%1=file type";DAN=Der er ingen skabelonkolonner til filer af typen %1.;ENU=There are no template columns for files of type %1.';
       PaymentExportNoTemplateColumnsMsg@1005 : TextConst 'DAN=Der er ingen skabelonkolonner til definitioner for betalingseksport.;ENU=There are no template columns for Payment Export definitions.';
       OtherTypeNoTemplateColumnsMsg@1007 : TextConst 'DAN=Der er ingen skabelonkolonner til definitioner for %1.;ENU=There are no template columns for %1 definitions.';
+      PositivePayFileTypeErr@1000 : TextConst 'DAN=Den Positive Pay-fil, du er ved at eksportere, skal være af typen Fast tekst eller Variabel tekst.;ENU=The positive pay file that you are exporting must be of type Fixed Text or Variable Text.';
 
     PROCEDURE InsertRec@1(Code@1000 : Code[20];Name@1001 : Text[100];Type@1002 : Option;ProcessingXMLport@1003 : Integer;HeaderCount@1004 : Integer;HeaderTag@1005 : Text[250];FooterTag@1006 : Text[250]);
     BEGIN
@@ -183,6 +185,11 @@ OBJECT Table 1222 Data Exch. Def
       EXIT("File Type" = "File Type"::Json);
     END;
 
+    LOCAL PROCEDURE IsFixedOrVariableText@20() : Boolean;
+    BEGIN
+      EXIT("File Type" IN ["File Type"::"Fixed Text","File Type"::"Variable Text"]);
+    END;
+
     LOCAL PROCEDURE CheckCreateTemplateColumns@7(VAR ResultingMessage@1000 : Text) : Boolean;
     BEGIN
       IF IsXML OR IsJson THEN BEGIN
@@ -206,6 +213,15 @@ OBJECT Table 1222 Data Exch. Def
       END;
 
       EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE CheckPositivePayExportFileType@22();
+    BEGIN
+      IF Type <> Type::"Positive Pay Export" THEN
+        EXIT;
+
+      IF NOT IsFixedOrVariableText THEN
+        ERROR(PositivePayFileTypeErr);
     END;
 
     PROCEDURE PositivePayUpdateCodeunits@2() : Boolean;

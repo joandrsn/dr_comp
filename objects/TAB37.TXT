@@ -2,9 +2,9 @@ OBJECT Table 37 Sales Line
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365,NAVDK9.00.00.44365;
+    Version List=NAVW19.00.00.51418,NAVDK9.00.00.51418;
   }
   PROPERTIES
   {
@@ -65,7 +65,8 @@ OBJECT Table 37 Sales Line
                IF ("Document Type" = "Document Type"::Order) AND (Quantity <> "Quantity Invoiced") THEN
                  TESTFIELD("Prepmt. Amt. Inv.","Prepmt Amt Deducted");
 
-               CheckAssocPurchOrder('');
+               CleanDropShipmentFields;
+               CleanSpecialOrderFieldsAndCheckAssocPurchOrder;
                NonstockItemMgt.DelNonStockSales(Rec);
 
                IF "Document Type" = "Document Type"::"Blanket Order" THEN BEGIN
@@ -106,11 +107,8 @@ OBJECT Table 37 Sales Line
                  SalesCommentLine.DELETEALL;
 
                IF ("Line No." <> 0) AND ("Attached to Line No." = 0) THEN BEGIN
-                 SalesLine2.RESET;
-                 SalesLine2.SETRANGE("Document Type","Document Type");
-                 SalesLine2.SETRANGE("Document No.","Document No.");
-                 SalesLine2.SETFILTER("Line No.",'<>%1',"Line No.");
-                 IF SalesLine2.FINDFIRST THEN BEGIN
+                 SalesLine2.COPY(Rec);
+                 IF SalesLine2.FIND('<>') THEN BEGIN
                    SalesLine2.VALIDATE("Recalculate Invoice Disc.",TRUE);
                    SalesLine2.MODIFY;
                  END;
@@ -128,7 +126,6 @@ OBJECT Table 37 Sales Line
 
     CaptionML=[DAN=Salgslinje;
                ENU=Sales Line];
-    PasteIsValid=No;
     LookupPageID=Page516;
     DrillDownPageID=Page516;
   }
@@ -506,6 +503,7 @@ OBJECT Table 37 Sales Line
                                                                 CheckDateConflict@1000 : Codeunit 99000815;
                                                               BEGIN
                                                                 TestStatusOpen;
+                                                                WhseValidateSourceLine.SalesLineVerifyChange(Rec,xRec);
                                                                 IF CurrFieldNo <> 0 THEN
                                                                   AddOnIntegrMgt.CheckReceiptOrderStatus(Rec);
 
@@ -804,13 +802,7 @@ OBJECT Table 37 Sales Line
                                                                 TestStatusOpen;
                                                                 TESTFIELD(Quantity);
                                                                 IF xRec."Line Discount Amount" <> "Line Discount Amount" THEN
-                                                                  IF ROUND(Quantity * "Unit Price",Currency."Amount Rounding Precision") <> 0 THEN
-                                                                    "Line Discount %" :=
-                                                                      ROUND(
-                                                                        "Line Discount Amount" / ROUND(Quantity * "Unit Price",Currency."Amount Rounding Precision") * 100,
-                                                                        0.00001)
-                                                                  ELSE
-                                                                    "Line Discount %" := 0;
+                                                                  UpdateLineDiscPct;
                                                                 "Inv. Discount Amount" := 0;
                                                                 "Inv. Disc. Amount to Invoice" := 0;
                                                                 UpdateAmounts;
@@ -971,7 +963,8 @@ OBJECT Table 37 Sales Line
                                                    AccessByPermission=TableData 27=R;
                                                    CaptionML=[DAN=Udl.varepostløbenr.;
                                                               ENU=Appl.-to Item Entry] }
-    { 40  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+    { 40  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(1,"Shortcut Dimension 1 Code");
                                                                 ATOLink.UpdateAsmDimFromSalesLine(Rec);
@@ -980,7 +973,8 @@ OBJECT Table 37 Sales Line
                                                    CaptionML=[DAN=Genvejsdimension 1-kode;
                                                               ENU=Shortcut Dimension 1 Code];
                                                    CaptionClass='1,2,1' }
-    { 41  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+    { 41  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2),
+                                                                                               Blocked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(2,"Shortcut Dimension 2 Code");
                                                                 ATOLink.UpdateAsmDimFromSalesLine(Rec);
@@ -1137,28 +1131,20 @@ OBJECT Table 37 Sales Line
 
                                                                 CheckAssocPurchOrder(FIELDCAPTION("Drop Shipment"));
 
-                                                                IF "Drop Shipment" THEN BEGIN
-                                                                  Reserve := Reserve::Never;
-                                                                  VALIDATE(Quantity,Quantity);
+                                                                IF "Special Order" THEN
+                                                                  Reserve := Reserve::Never
+                                                                ELSE
                                                                   IF "Drop Shipment" THEN BEGIN
-                                                                    EVALUATE("Outbound Whse. Handling Time",'<0D>');
-                                                                    EVALUATE("Shipping Time",'<0D>');
-                                                                    UpdateDates;
-                                                                    "Bin Code" := '';
-                                                                  END;
-                                                                END ELSE BEGIN
-                                                                  GetItem;
-                                                                  IF Item.Reserve = Item.Reserve::Optional THEN BEGIN
-                                                                    GetSalesHeader;
-                                                                    Reserve := SalesHeader.Reserve;
-                                                                  END ELSE
-                                                                    Reserve := Item.Reserve;
-                                                                  IF "Special Order" THEN
                                                                     Reserve := Reserve::Never;
-                                                                END;
-
-                                                                IF "Drop Shipment" THEN
-                                                                  "Bin Code" := '';
+                                                                    VALIDATE(Quantity,Quantity);
+                                                                    IF "Drop Shipment" THEN BEGIN
+                                                                      EVALUATE("Outbound Whse. Handling Time",'<0D>');
+                                                                      EVALUATE("Shipping Time",'<0D>');
+                                                                      UpdateDates;
+                                                                      "Bin Code" := '';
+                                                                    END;
+                                                                  END ELSE
+                                                                    SetReserveWithoutPurchasingCode;
 
                                                                 CheckItemAvailable(FIELDNO("Drop Shipment"));
 
@@ -1364,6 +1350,7 @@ OBJECT Table 37 Sales Line
                                                                   SalesLine2.TESTFIELD("No.","No.");
                                                                   SalesLine2.TESTFIELD("Bill-to Customer No.","Bill-to Customer No.");
                                                                   SalesLine2.TESTFIELD("Sell-to Customer No.","Sell-to Customer No.");
+                                                                  VALIDATE("Variant Code",SalesLine2."Variant Code");
                                                                   VALIDATE("Location Code",SalesLine2."Location Code");
                                                                   VALIDATE("Unit of Measure Code",SalesLine2."Unit of Measure Code");
                                                                   VALIDATE("Unit Price",SalesLine2."Unit Price");
@@ -2073,7 +2060,7 @@ OBJECT Table 37 Sales Line
                                                                 "Sell-to Customer No." := SalesHeader."Sell-to Customer No.";
                                                                 ReturnedCrossRef.INIT;
                                                                 IF "Cross-Reference No." <> '' THEN BEGIN
-                                                                  DistIntegration.ICRLookupSalesItem(Rec,ReturnedCrossRef);
+                                                                  DistIntegration.ICRLookupSalesItem(Rec,ReturnedCrossRef,CurrFieldNo <> 0);
                                                                   IF "No." <> ReturnedCrossRef."Item No." THEN
                                                                     VALIDATE("No.",ReturnedCrossRef."Item No.");
                                                                   IF ReturnedCrossRef."Variant Code" <> '' THEN
@@ -2133,6 +2120,8 @@ OBJECT Table 37 Sales Line
                                                                     TESTFIELD("Qty. to Asm. to Order (Base)",0);
                                                                     CALCFIELDS("Reserved Qty. (Base)");
                                                                     TESTFIELD("Reserved Qty. (Base)",0);
+                                                                    ReserveSalesLine.VerifyChange(Rec,xRec);
+
                                                                     IF (Quantity <> 0) AND (Quantity = "Quantity Shipped") THEN
                                                                       ERROR(SalesLineCompletelyShippedErr);
                                                                     Reserve := Reserve::Never;
@@ -2143,17 +2132,12 @@ OBJECT Table 37 Sales Line
                                                                       UpdateDates;
                                                                       "Bin Code" := '';
                                                                     END;
-                                                                  END;
+                                                                  END ELSE
+                                                                    SetReserveWithoutPurchasingCode;
                                                                 END ELSE BEGIN
                                                                   "Drop Shipment" := FALSE;
                                                                   "Special Order" := FALSE;
-
-                                                                  GetItem;
-                                                                  IF Item.Reserve = Item.Reserve::Optional THEN BEGIN
-                                                                    GetSalesHeader;
-                                                                    Reserve := SalesHeader.Reserve;
-                                                                  END ELSE
-                                                                    Reserve := Item.Reserve;
+                                                                  SetReserveWithoutPurchasingCode;
                                                                 END;
 
                                                                 IF ("Purchasing Code" <> xRec."Purchasing Code") AND
@@ -2515,6 +2499,9 @@ OBJECT Table 37 Sales Line
 
                                                    CaptionML=[DAN=Returårsagskode;
                                                               ENU=Return Reason Code] }
+    { 6610;   ;Copied From Posted Doc.;Boolean    ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Copied From Posted Doc.;
+                                                              ENU=Copied From Posted Doc.] }
     { 7001;   ;Allow Line Disc.    ;Boolean       ;InitValue=Yes;
                                                    CaptionML=[DAN=Tillad linjerabat;
                                                               ENU=Allow Line Disc.] }
@@ -2610,6 +2597,7 @@ OBJECT Table 37 Sales Line
       ReturnReason@1089 : Record 6635;
       ATOLink@1016 : Record 904;
       SalesSetup@1065 : Record 311;
+      TempErrorMessage@1072 : TEMPORARY Record 700;
       Reservation@1066 : Page 498;
       PriceCalcMgt@1071 : Codeunit 7000;
       ResFindUnitCost@1073 : Codeunit 220;
@@ -2673,6 +2661,9 @@ OBJECT Table 37 Sales Line
       SalesLineCompletelyShippedErr@1053 : TextConst 'DAN=Du kan ikke ændre indkøbskoden for en salgslinje, der allerede er leveret helt.;ENU=You cannot change the purchasing code for a sales line that has been completely shipped.';
       SalesSetupRead@1067 : Boolean;
       DeferralPostDate@1069 : Date;
+      FreightLineDescriptionTxt@1068 : TextConst 'DAN=Fragtmængde;ENU=Freight Amount';
+      LineDiscountPctErr@1200 : TextConst 'DAN=Værdien i feltet Linjerabat % skal være mellem 0 og 100.;ENU=The value in the Line Discount % field must be between 0 and 100.';
+      UnitPriceChangedMsg@1091 : TextConst '@@@="%1 = Type caption %2 = No.";DAN=The unit price for %1 %2 that was copied from the posted document has been changed.;ENU=The unit price for %1 %2 that was copied from the posted document has been changed.';
 
     PROCEDURE InitOutstanding@16();
     BEGIN
@@ -2883,11 +2874,27 @@ OBJECT Table 37 Sales Line
       CASE Type OF
         Type::Item,Type::Resource:
           BEGIN
-            PriceCalcMgt.FindSalesLineLineDisc(SalesHeader,Rec);
+            IF NOT ("Copied From Posted Doc." AND IsCreditDocType) THEN
+              PriceCalcMgt.FindSalesLineLineDisc(SalesHeader,Rec);
             PriceCalcMgt.FindSalesLinePrice(SalesHeader,Rec,CalledByFieldNo);
           END;
       END;
+
+      IF "Copied From Posted Doc." AND IsCreditDocType AND ("Appl.-from Item Entry" <> 0) THEN
+        IF xRec."Unit Price" <> "Unit Price" THEN
+          IF GUIALLOWED THEN
+            ShowMessageOnce(STRSUBSTNO(UnitPriceChangedMsg,Type,"No."));
+
       VALIDATE("Unit Price");
+    END;
+
+    LOCAL PROCEDURE ShowMessageOnce@248(MessageText@1000 : Text);
+    BEGIN
+      TempErrorMessage.SetContext(Rec);
+      IF TempErrorMessage.FindRecord(RECORDID,0,TempErrorMessage."Message Type"::Warning,MessageText) = 0 THEN BEGIN
+        TempErrorMessage.LogMessage(Rec,0,TempErrorMessage."Message Type"::Warning,MessageText);
+        MESSAGE(MessageText);
+      END;
     END;
 
     LOCAL PROCEDURE FindResUnitCost@5();
@@ -2936,8 +2943,8 @@ OBJECT Table 37 Sales Line
       VATBaseAmount@1003 : Decimal;
       LineAmountChanged@1002 : Boolean;
     BEGIN
-      IF CurrFieldNo <> FIELDNO("Allow Invoice Disc.") THEN
-        TESTFIELD(Type);
+      IF Type = Type::" " THEN
+        EXIT;
       GetSalesHeader;
       VATBaseAmount := "VAT Base Amount";
       "Recalculate Invoice Disc." := TRUE;
@@ -2987,7 +2994,9 @@ OBJECT Table 37 Sales Line
               // a write transaction may have been started
               ("Qty. per Unit of Measure" <> xRec."Qty. per Unit of Measure")) AND // ...continued condition
          ("Document Type" <= "Document Type"::Invoice) AND
-         (("Outstanding Amount" + "Shipped Not Invoiced") > 0)
+         (("Outstanding Amount" + "Shipped Not Invoiced") > 0) AND
+         (CurrFieldNo <> FIELDNO("Blanket Order No.")) AND
+         (CurrFieldNo <> FIELDNO("Blanket Order Line No."))
       THEN
         CustCheckCreditLimit.SalesLineCheck(Rec);
 
@@ -3395,6 +3404,7 @@ OBJECT Table 37 Sales Line
     PROCEDURE ValidateShortcutDimCode@29(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
     BEGIN
       DimMgt.ValidateShortcutDimValues(FieldNumber,ShortcutDimCode,"Dimension Set ID");
+      VerifyItemLineDim;
     END;
 
     PROCEDURE LookupShortcutDimCode@28(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
@@ -3602,6 +3612,9 @@ OBJECT Table 37 Sales Line
       TotalQtyToAssign@1001 : Decimal;
       TotalAmtToAssign@1002 : Decimal;
     BEGIN
+      IF "Document Type" = "Document Type"::"Blanket Order" THEN
+        EXIT;
+
       CALCFIELDS("Qty. Assigned","Qty. to Assign");
       IF ABS("Quantity Invoiced") > ABS(("Qty. Assigned" + "Qty. to Assign")) THEN
         ERROR(Text055,FIELDCAPTION("Quantity Invoiced"),FIELDCAPTION("Qty. Assigned"),FIELDCAPTION("Qty. to Assign"));
@@ -3612,7 +3625,9 @@ OBJECT Table 37 Sales Line
       ItemChargeAssgntSales.SETRANGE("Document Line No.","Line No.");
       ItemChargeAssgntSales.CALCSUMS("Qty. to Assign");
       TotalQtyToAssign := ItemChargeAssgntSales."Qty. to Assign";
-      IF (CurrFieldNo <> 0) AND (Amount <> xRec.Amount) THEN BEGIN
+      IF (CurrFieldNo <> 0) AND (Amount <> xRec.Amount) AND
+         NOT ((Quantity <> xRec.Quantity) AND (TotalQtyToAssign = 0))
+      THEN BEGIN
         ItemChargeAssgntSales.SETFILTER("Qty. Assigned",'<>0');
         IF NOT ItemChargeAssgntSales.ISEMPTY THEN
           ERROR(Text026,
@@ -3622,12 +3637,7 @@ OBJECT Table 37 Sales Line
 
       IF ItemChargeAssgntSales.FINDSET THEN BEGIN
         GetSalesHeader;
-        IF SalesHeader."Prices Including VAT" THEN
-          TotalAmtToAssign :=
-            ROUND(("Line Amount" - "Inv. Discount Amount") / (1 + "VAT %" / 100),
-              Currency."Amount Rounding Precision")
-        ELSE
-          TotalAmtToAssign := "Line Amount" - "Inv. Discount Amount";
+        TotalAmtToAssign := CalcTotalAmtToAssign(TotalQtyToAssign);
         REPEAT
           ShareOfVAT := 1;
           IF SalesHeader."Prices Including VAT" THEN
@@ -3842,11 +3852,8 @@ OBJECT Table 37 Sales Line
                   ELSE
                     "VAT Difference" := ROUND(VATDifference,Currency."Amount Rounding Precision");
                 END;
-                IF QtyType = QtyType::General THEN BEGIN
-                  Amount := NewAmount;
-                  "Amount Including VAT" := ROUND(NewAmountIncludingVAT,Currency."Amount Rounding Precision");
-                  "VAT Base Amount" := NewVATBaseAmount;
-                END;
+                IF QtyType = QtyType::General THEN
+                  UpdateBaseAmounts(NewAmount,ROUND(NewAmountIncludingVAT,Currency."Amount Rounding Precision"),NewVATBaseAmount);
                 InitOutstanding;
                 IF Type = Type::"Charge (Item)" THEN
                   UpdateItemChargeAssgnt;
@@ -4604,8 +4611,19 @@ OBJECT Table 37 Sales Line
         EXIT(0);
 
       GetSalesHeader;
-      LineAmount := ROUND(QtyToHandle * "Unit Price",Currency."Amount Rounding Precision");
-      LineDiscAmount := ROUND("Line Discount Amount" * QtyToHandle / Quantity,Currency."Amount Rounding Precision");
+
+      IF "Prepmt Amt to Deduct" = 0 THEN
+        LineAmount := ROUND(QtyToHandle * "Unit Price",Currency."Amount Rounding Precision")
+      ELSE BEGIN
+        LineAmount := ROUND(Quantity * "Unit Price",Currency."Amount Rounding Precision");
+        LineAmount := ROUND(QtyToHandle * LineAmount / Quantity,Currency."Amount Rounding Precision");
+      END;
+
+      IF QtyToHandle <> Quantity THEN
+        LineDiscAmount := ROUND(LineAmount * "Line Discount %" / 100,Currency."Amount Rounding Precision")
+      ELSE
+        LineDiscAmount := "Line Discount Amount";
+
       EXIT(LineAmount - LineDiscAmount);
     END;
 
@@ -4676,6 +4694,16 @@ OBJECT Table 37 Sales Line
           "Qty. to Invoice (Base)" := 0;
         END;
       END;
+    END;
+
+    LOCAL PROCEDURE SetReserveWithoutPurchasingCode@118();
+    BEGIN
+      GetItem;
+      IF Item.Reserve = Item.Reserve::Optional THEN BEGIN
+        GetSalesHeader;
+        Reserve := SalesHeader.Reserve;
+      END ELSE
+        Reserve := Item.Reserve;
     END;
 
     PROCEDURE UpdatePrePaymentAmounts@64();
@@ -4969,18 +4997,19 @@ OBJECT Table 37 Sales Line
                 ICPartner."Outbound Sales Item No. Type"::"Internal No.",
                 ICPartner."Outbound Sales Item No. Type"::"Cross Reference":
                   BEGIN
+                    IF ICPartner."Outbound Sales Item No. Type" = ICPartner."Outbound Sales Item No. Type"::"Internal No." THEN
+                      VALIDATE("IC Partner Ref. Type","IC Partner Ref. Type"::Item)
+                    ELSE
+                      VALIDATE("IC Partner Ref. Type","IC Partner Ref. Type"::"Cross Reference");
                     ItemCrossReference.SETRANGE("Cross-Reference Type",ItemCrossReference."Cross-Reference Type"::Customer);
                     ItemCrossReference.SETRANGE("Cross-Reference Type No.","Sell-to Customer No.");
                     ItemCrossReference.SETRANGE("Item No.","No.");
                     ItemCrossReference.SETRANGE("Variant Code","Variant Code");
                     ItemCrossReference.SETRANGE("Unit of Measure","Unit of Measure Code");
-                    IF ItemCrossReference.FINDFIRST THEN BEGIN
-                      VALIDATE("IC Partner Ref. Type","IC Partner Ref. Type"::"Cross Reference");
-                      "IC Partner Reference" := ItemCrossReference."Cross-Reference No.";
-                    END ELSE BEGIN
-                      "IC Partner Ref. Type" := "IC Partner Ref. Type"::Item;
+                    IF ItemCrossReference.FINDFIRST THEN
+                      "IC Partner Reference" := ItemCrossReference."Cross-Reference No."
+                    ELSE
                       "IC Partner Reference" := "No.";
-                    END;
                   END;
               END;
             END;
@@ -5034,10 +5063,22 @@ OBJECT Table 37 Sales Line
 
     LOCAL PROCEDURE VerifyItemLineDim@87();
     BEGIN
-      IF ("Dimension Set ID" <> xRec."Dimension Set ID") AND (Type = Type::Item) THEN
-        IF ("Qty. Shipped Not Invoiced" <> 0) OR ("Return Rcd. Not Invd." <> 0) THEN
-          IF NOT CONFIRM(Text053,TRUE,TABLECAPTION) THEN
-            ERROR(Text054);
+      IF IsShippedReceivedItemDimChanged THEN
+        ConfirmShippedReceivedItemDimChange;
+    END;
+
+    PROCEDURE IsShippedReceivedItemDimChanged@113() : Boolean;
+    BEGIN
+      EXIT(("Dimension Set ID" <> xRec."Dimension Set ID") AND (Type = Type::Item) AND
+        (("Qty. Shipped Not Invoiced" <> 0) OR ("Return Rcd. Not Invd." <> 0)));
+    END;
+
+    PROCEDURE ConfirmShippedReceivedItemDimChange@114() : Boolean;
+    BEGIN
+      IF NOT CONFIRM(Text053,TRUE,TABLECAPTION) THEN
+        ERROR(Text054);
+
+      EXIT(TRUE);
     END;
 
     PROCEDURE InitType@91();
@@ -5241,6 +5282,138 @@ OBJECT Table 37 Sales Line
     PROCEDURE IsCreditDocType@110() : Boolean;
     BEGIN
       EXIT("Document Type" IN ["Document Type"::"Return Order","Document Type"::"Credit Memo"]);
+    END;
+
+    LOCAL PROCEDURE IsFullyInvoiced@124() : Boolean;
+    BEGIN
+      EXIT(("Qty. Shipped Not Invd. (Base)" = 0) AND ("Qty. Shipped (Base)" = "Quantity (Base)"))
+    END;
+
+    LOCAL PROCEDURE CleanDropShipmentFields@112();
+    BEGIN
+      IF ("Purch. Order Line No." <> 0) AND IsFullyInvoiced THEN
+        IF CleanPurchaseLineDropShipmentFields THEN BEGIN
+          "Purchase Order No." := '';
+          "Purch. Order Line No." := 0;
+        END;
+    END;
+
+    LOCAL PROCEDURE CleanSpecialOrderFieldsAndCheckAssocPurchOrder@125();
+    BEGIN
+      IF ("Special Order Purch. Line No." <> 0) AND IsFullyInvoiced THEN
+        IF CleanPurchaseLineSpecialOrderFields THEN BEGIN
+          "Special Order Purchase No." := '';
+          "Special Order Purch. Line No." := 0;
+        END;
+      CheckAssocPurchOrder('');
+    END;
+
+    LOCAL PROCEDURE CleanPurchaseLineDropShipmentFields@155() : Boolean;
+    VAR
+      PurchaseLine@1000 : Record 39;
+    BEGIN
+      IF PurchaseLine.GET(PurchaseLine."Document Type"::Order,"Purchase Order No.","Purch. Order Line No.") THEN BEGIN
+        IF PurchaseLine."Qty. Received (Base)" < "Qty. Shipped (Base)" THEN
+          EXIT(FALSE);
+
+        PurchaseLine."Sales Order No." := '';
+        PurchaseLine."Sales Order Line No." := 0;
+        PurchaseLine.MODIFY;
+      END;
+
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE CleanPurchaseLineSpecialOrderFields@119() : Boolean;
+    VAR
+      PurchaseLine@1000 : Record 39;
+    BEGIN
+      IF PurchaseLine.GET(PurchaseLine."Document Type"::Order,"Special Order Purchase No.","Special Order Purch. Line No.") THEN BEGIN
+        IF PurchaseLine."Qty. Received (Base)" < "Qty. Shipped (Base)" THEN
+          EXIT(FALSE);
+
+        PurchaseLine."Special Order" := FALSE;
+        PurchaseLine."Special Order Sales No." := '';
+        PurchaseLine."Special Order Sales Line No." := 0;
+        PurchaseLine.MODIFY;
+      END;
+
+      EXIT(TRUE);
+    END;
+
+    PROCEDURE InsertFreightLine@121(VAR FreightAmount@1000 : Decimal);
+    VAR
+      SalesLine@1001 : Record 37;
+    BEGIN
+      IF FreightAmount <= 0 THEN BEGIN
+        FreightAmount := 0;
+        EXIT;
+      END;
+
+      SalesSetup.GET;
+      SalesSetup.TESTFIELD("Freight G/L Acc. No.");
+
+      TESTFIELD("Document Type");
+      TESTFIELD("Document No.");
+
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","Document No.");
+
+      SalesLine.SETRANGE(Type,SalesLine.Type::"G/L Account");
+      SalesLine.SETRANGE("No.",SalesSetup."Freight G/L Acc. No.");
+      IF SalesLine.FINDFIRST THEN BEGIN
+        SalesLine.VALIDATE(Quantity,1);
+        SalesLine.VALIDATE("Unit Price",FreightAmount);
+        SalesLine.MODIFY;
+      END ELSE BEGIN
+        SalesLine.SETRANGE(Type);
+        SalesLine.SETRANGE("No.");
+        IF SalesLine.FINDLAST THEN;
+        SalesLine."Line No." += 10000;
+
+        SalesLine.INIT;
+        SalesLine.VALIDATE(Type,SalesLine.Type::"G/L Account");
+        SalesLine.VALIDATE("No.",SalesSetup."Freight G/L Acc. No.");
+        SalesLine.VALIDATE(Description,FreightLineDescriptionTxt);
+        SalesLine.VALIDATE(Quantity,1);
+        SalesLine.VALIDATE("Unit Price",FreightAmount);
+        SalesLine.INSERT;
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcTotalAmtToAssign@152(TotalQtyToAssign@1000 : Decimal) TotalAmtToAssign : Decimal;
+    BEGIN
+      TotalAmtToAssign := ("Line Amount" - "Inv. Discount Amount") * TotalQtyToAssign / Quantity;
+      IF SalesHeader."Prices Including VAT" THEN
+        TotalAmtToAssign := TotalAmtToAssign / (1 + "VAT %" / 100) - "VAT Difference";
+
+      TotalAmtToAssign := ROUND(TotalAmtToAssign,Currency."Amount Rounding Precision");
+    END;
+
+    LOCAL PROCEDURE UpdateLineDiscPct@189();
+    VAR
+      LineDiscountPct@1000 : Decimal;
+    BEGIN
+      IF ROUND(Quantity * "Unit Price",Currency."Amount Rounding Precision") <> 0 THEN BEGIN
+        LineDiscountPct := ROUND(
+            "Line Discount Amount" / ROUND(Quantity * "Unit Price",Currency."Amount Rounding Precision") * 100,
+            0.00001);
+        IF NOT (LineDiscountPct IN [0..100]) THEN
+          ERROR(LineDiscountPctErr);
+        "Line Discount %" := LineDiscountPct;
+      END ELSE
+        "Line Discount %" := 0;
+    END;
+
+    LOCAL PROCEDURE UpdateBaseAmounts@173(NewAmount@1000 : Decimal;NewAmountIncludingVAT@1001 : Decimal;NewVATBaseAmount@1002 : Decimal);
+    BEGIN
+      Amount := NewAmount;
+      "Amount Including VAT" := NewAmountIncludingVAT;
+      "VAT Base Amount" := NewVATBaseAmount;
+      IF NOT SalesHeader."Prices Including VAT" AND (Amount > 0) AND (Amount < "Prepmt. Line Amount") THEN
+        "Prepmt. Line Amount" := Amount;
+      IF SalesHeader."Prices Including VAT" AND ("Amount Including VAT" > 0) AND ("Amount Including VAT" < "Prepmt. Line Amount") THEN
+        "Prepmt. Line Amount" := "Amount Including VAT";
     END;
 
     BEGIN

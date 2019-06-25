@@ -2,9 +2,9 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402,NAVDK9.00.00.43402;
+    Version List=NAVW19.00.00.49575,NAVDK9.00.00.49575;
   }
   PROPERTIES
   {
@@ -144,7 +144,7 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
                                                                                                                            ELSE IF (Account Type=CONST(IC Partner)) "IC Partner";
                                                    OnValidate=BEGIN
                                                                 TESTFIELD("Applied Amount",0);
-                                                                CreateDim(DimMgt.TypeToTableID1("Account Type"),"Account No.");
+                                                                CreateDim;
                                                                 DimMgt.UpdateGlobalDimFromDimSetID("Dimension Set ID","Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
                                                               END;
 
@@ -324,7 +324,7 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
       DimMgt.UpdateGlobalDimFromDimSetID("Dimension Set ID","Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
     END;
 
-    LOCAL PROCEDURE CreateDim@26(Type1@1000 : Integer;No1@1001 : Code[20]);
+    LOCAL PROCEDURE CreateDim@26();
     VAR
       SourceCodeSetup@1002 : Record 242;
       BankAccReconciliation@1005 : Record 273;
@@ -332,8 +332,10 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
       No@1004 : ARRAY [10] OF Code[20];
     BEGIN
       SourceCodeSetup.GET;
-      TableID[1] := Type1;
-      No[1] := No1;
+      TableID[1] := DimMgt.TypeToTableID1("Account Type");
+      No[1] := "Account No.";
+      TableID[2] := DATABASE::"Salesperson/Purchaser";
+      No[2] := GetSalepersonPurchaserCode;
       "Shortcut Dimension 1 Code" := '';
       "Shortcut Dimension 2 Code" := '';
       BankAccReconciliation.GET("Statement Type","Bank Account No.","Statement No.");
@@ -350,7 +352,7 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
       "Document No." := '';
     END;
 
-    LOCAL PROCEDURE ValidateShortcutDimCode@29(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
+    PROCEDURE ValidateShortcutDimCode@29(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
     BEGIN
       DimMgt.ValidateShortcutDimValues(FieldNumber,ShortcutDimCode,"Dimension Set ID");
     END;
@@ -361,7 +363,7 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
       ValidateShortcutDimCode(FieldNumber,ShortcutDimCode);
     END;
 
-    LOCAL PROCEDURE ShowShortcutDimCode@27(VAR ShortcutDimCode@1000 : ARRAY [8] OF Code[20]);
+    PROCEDURE ShowShortcutDimCode@50(VAR ShortcutDimCode@1000 : ARRAY [8] OF Code[20]);
     BEGIN
       DimMgt.GetShortcutDimensions("Dimension Set ID",ShortcutDimCode);
     END;
@@ -459,18 +461,13 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
     VAR
       AppliedPmtEntry@1000 : Record 1294;
     BEGIN
-      AppliedPmtEntry.SETRANGE("Statement Type","Statement Type");
-      AppliedPmtEntry.SETRANGE("Bank Account No.","Bank Account No.");
-      AppliedPmtEntry.SETRANGE("Statement No.","Statement No.");
-      AppliedPmtEntry.SETRANGE("Statement Line No.","Statement Line No.");
-      AppliedPmtEntry.DELETEALL;
-      AppliedPmtEntry.FilterAppliedPmtEntry(Rec);
-      AppliedPmtEntry.DELETEALL(TRUE);
-
       VALIDATE("Applied Amount",0);
       VALIDATE("Applied Entries",0);
       VALIDATE("Account No.",'');
       MODIFY(TRUE);
+
+      AppliedPmtEntry.FilterAppliedPmtEntry(Rec);
+      AppliedPmtEntry.DELETEALL(TRUE);
     END;
 
     LOCAL PROCEDURE DeletePaymentMatchingDetails@10();
@@ -723,8 +720,8 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
           END;
         BankAccount."Match Tolerance Type"::Percentage:
           BEGIN
-            MinAmount := "Statement Amount" / (1 + BankAccount."Match Tolerance Value" / 100);
-            MaxAmount := "Statement Amount" / (1 - BankAccount."Match Tolerance Value" / 100);
+            MinAmount := "Statement Amount" * (1 - BankAccount."Match Tolerance Value" / 100);
+            MaxAmount := "Statement Amount" * (1 + BankAccount."Match Tolerance Value" / 100);
 
             IF "Statement Amount" < 0 THEN BEGIN
               TempAmount := MinAmount;
@@ -736,6 +733,70 @@ OBJECT Table 274 Bank Acc. Reconciliation Line
 
       MinAmount := ROUND(MinAmount);
       MaxAmount := ROUND(MaxAmount);
+    END;
+
+    PROCEDURE GetAppliedPmtData@37(VAR AppliedPmtEntry@1000 : Record 1294;VAR RemainingAmountAfterPosting@1002 : Decimal;VAR DifferenceStatementAmtToApplEntryAmount@1001 : Decimal;PmtAppliedToTxt@1004 : Text);
+    VAR
+      CurrRemAmtAfterPosting@1003 : Decimal;
+    BEGIN
+      AppliedPmtEntry.INIT;
+      RemainingAmountAfterPosting := 0;
+      DifferenceStatementAmtToApplEntryAmount := 0;
+
+      AppliedPmtEntry.FilterAppliedPmtEntry(Rec);
+      AppliedPmtEntry.SETFILTER("Applies-to Entry No.",'<>0');
+      IF AppliedPmtEntry.FINDSET THEN BEGIN
+        DifferenceStatementAmtToApplEntryAmount := "Statement Amount";
+        REPEAT
+          CurrRemAmtAfterPosting :=
+            AppliedPmtEntry.GetRemAmt -
+            AppliedPmtEntry.GetAmtAppliedToOtherStmtLines;
+
+          RemainingAmountAfterPosting += CurrRemAmtAfterPosting - AppliedPmtEntry."Applied Amount";
+          DifferenceStatementAmtToApplEntryAmount -= CurrRemAmtAfterPosting - AppliedPmtEntry."Applied Pmt. Discount";
+        UNTIL AppliedPmtEntry.NEXT = 0;
+      END;
+
+      IF "Applied Entries" > 1 THEN
+        AppliedPmtEntry.Description := STRSUBSTNO(PmtAppliedToTxt,"Applied Entries");
+    END;
+
+    PROCEDURE GetAppliesToID@62() : Code[50];
+    VAR
+      DummyCustLedgerEntry@1001 : Record 21;
+    BEGIN
+      EXIT(COPYSTR(FORMAT("Statement No.") + '-' + FORMAT("Statement Line No."),1,MAXSTRLEN(DummyCustLedgerEntry."Applies-to ID")));
+    END;
+
+    LOCAL PROCEDURE GetSalepersonPurchaserCode@51() : Code[20];
+    VAR
+      Customer@1002 : Record 18;
+      Vendor@1003 : Record 23;
+    BEGIN
+      CASE "Account Type" OF
+        "Account Type"::Customer:
+          IF Customer.GET("Account No.") THEN
+            EXIT(Customer."Salesperson Code");
+        "Account Type"::Vendor:
+          IF Vendor.GET("Account No.") THEN
+            EXIT(Vendor."Purchaser Code");
+      END;
+    END;
+
+    PROCEDURE GetDescription@53() : Text[50];
+    VAR
+      AppliedPaymentEntry@1000 : Record 1294;
+    BEGIN
+      IF Description <> '' THEN
+        EXIT(Description);
+
+      AppliedPaymentEntry.FilterAppliedPmtEntry(Rec);
+      AppliedPaymentEntry.SETFILTER("Applies-to Entry No.",'<>%1',0);
+      IF AppliedPaymentEntry.FINDSET THEN
+        IF AppliedPaymentEntry.NEXT = 0 THEN
+          EXIT(AppliedPaymentEntry.Description);
+
+      EXIT('');
     END;
 
     BEGIN

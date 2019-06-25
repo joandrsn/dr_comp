@@ -2,9 +2,9 @@ OBJECT Table 347 Close Income Statement Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,9 +13,11 @@ OBJECT Table 347 Close Income Statement Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Closing Date        ;Date          ;CaptionML=[DAN=Ultimodato;
+    { 1   ;   ;Closing Date        ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ultimodato;
                                                               ENU=Closing Date] }
     { 2   ;   ;G/L Account No.     ;Code20        ;TableRelation="G/L Account";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Finanskontonr.;
                                                               ENU=G/L Account No.] }
   }

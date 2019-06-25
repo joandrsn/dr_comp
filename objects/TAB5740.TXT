@@ -2,9 +2,9 @@ OBJECT Table 5740 Transfer Header
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -448,14 +448,16 @@ OBJECT Table 5740 Transfer Header
     { 5752;   ;Completely Shipped  ;Boolean       ;FieldClass=FlowField;
                                                    CalcFormula=Min("Transfer Line"."Completely Shipped" WHERE (Document No.=FIELD(No.),
                                                                                                                Shipment Date=FIELD(Date Filter),
-                                                                                                               Transfer-from Code=FIELD(Location Filter)));
+                                                                                                               Transfer-from Code=FIELD(Location Filter),
+                                                                                                               Derived From Line No.=CONST(0)));
                                                    CaptionML=[DAN=Levering komplet;
                                                               ENU=Completely Shipped];
                                                    Editable=No }
     { 5753;   ;Completely Received ;Boolean       ;FieldClass=FlowField;
                                                    CalcFormula=Min("Transfer Line"."Completely Received" WHERE (Document No.=FIELD(No.),
                                                                                                                 Receipt Date=FIELD(Date Filter),
-                                                                                                                Transfer-to Code=FIELD(Location Filter)));
+                                                                                                                Transfer-to Code=FIELD(Location Filter),
+                                                                                                                Derived From Line No.=CONST(0)));
                                                    CaptionML=[DAN=Modtagelse komplet;
                                                               ENU=Completely Received];
                                                    Editable=No }
@@ -505,6 +507,7 @@ OBJECT Table 5740 Transfer Header
                                                    CaptionML=[DAN=Datofilter;
                                                               ENU=Date Filter] }
     { 9000;   ;Assigned User ID    ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Tildelt bruger-id;
                                                               ENU=Assigned User ID] }
   }
@@ -536,8 +539,6 @@ OBJECT Table 5740 Transfer Header
       HasInventorySetup@1012 : Boolean;
       CalledFromWhse@1015 : Boolean;
       Text004@1018 : TextConst 'DAN=Overflytningsordren %1 har varesporing. Vil du slette den alligevel?;ENU=The transfer order %1 has item tracking. Do you want to delete it anyway?';
-      Text005@1017 : TextConst 'DAN=Der findes reservationer på denne ordre. Disse reservationer vil blive annulleret, hvis der opstår en datokonflikt som følge af denne ændring.\\;ENU=Reservations exist for this order. These reservations will be canceled if a date conflict is caused by this change.\\';
-      Text006@1019 : TextConst 'DAN=Vil du fortsætte?;ENU=Do you want to continue?';
       Text007@1014 : TextConst 'DAN=Du har muligvis ændret en dimension.\\Vil du opdatere linjerne?;ENU=You may have changed a dimension.\\Do you want to update the lines?';
 
     PROCEDURE InitRecord@10();
@@ -584,7 +585,7 @@ OBJECT Table 5740 Transfer Header
 
       IF OldDimSetID <> "Dimension Set ID" THEN BEGIN
         MODIFY;
-        IF SalesLinesExist THEN
+        IF TransferLinesExist THEN
           UpdateAllLineDim("Dimension Set ID",OldDimSetID);
       END;
     END;
@@ -601,18 +602,6 @@ OBJECT Table 5740 Transfer Header
     VAR
       TransLine@1001 : Record 5741;
     BEGIN
-      IF GUIALLOWED THEN
-        CASE FieldRef OF
-          FIELDNO("Shipping Agent Code"),
-          FIELDNO("Shipping Agent Service Code"),
-          FIELDNO("Shipment Date"),
-          FIELDNO("Receipt Date"),
-          FIELDNO("Shipping Time"),
-          FIELDNO("Outbound Whse. Handling Time"),
-          FIELDNO("Inbound Whse. Handling Time"):
-            ConfirmResvDateConflict;
-        END;
-
       TransLine.SETRANGE("Document No.","No.");
       TransLine.SETFILTER("Item No.",'<>%1','');
       IF TransLine.FINDSET THEN BEGIN
@@ -642,28 +631,40 @@ OBJECT Table 5740 Transfer Header
             FIELDNO("Shipping Agent Code"):
               BEGIN
                 TransLine.VALIDATE("Shipping Agent Code","Shipping Agent Code");
+                TransLine.BlockDynamicTracking(TRUE);
                 TransLine.VALIDATE("Shipping Agent Service Code","Shipping Agent Service Code");
                 TransLine.VALIDATE("Shipment Date","Shipment Date");
                 TransLine.VALIDATE("Receipt Date","Receipt Date");
                 TransLine.VALIDATE("Shipping Time","Shipping Time");
+                TransLine.BlockDynamicTracking(FALSE);
+                TransLine.DateConflictCheck;
               END;
             FIELDNO("Shipping Agent Service Code"):
               BEGIN
+                TransLine.BlockDynamicTracking(TRUE);
                 TransLine.VALIDATE("Shipping Agent Service Code","Shipping Agent Service Code");
                 TransLine.VALIDATE("Shipment Date","Shipment Date");
                 TransLine.VALIDATE("Receipt Date","Receipt Date");
                 TransLine.VALIDATE("Shipping Time","Shipping Time");
+                TransLine.BlockDynamicTracking(FALSE);
+                TransLine.DateConflictCheck;
               END;
             FIELDNO("Shipment Date"):
               BEGIN
+                TransLine.BlockDynamicTracking(TRUE);
                 TransLine.VALIDATE("Shipment Date","Shipment Date");
                 TransLine.VALIDATE("Receipt Date","Receipt Date");
                 TransLine.VALIDATE("Shipping Time","Shipping Time");
+                TransLine.BlockDynamicTracking(FALSE);
+                TransLine.DateConflictCheck;
               END;
             FIELDNO("Receipt Date"),FIELDNO("Shipping Time"):
               BEGIN
+                TransLine.BlockDynamicTracking(TRUE);
                 TransLine.VALIDATE("Shipping Time","Shipping Time");
                 TransLine.VALIDATE("Receipt Date","Receipt Date");
+                TransLine.BlockDynamicTracking(FALSE);
+                TransLine.DateConflictCheck;
               END;
             FIELDNO("Outbound Whse. Handling Time"):
               TransLine.VALIDATE("Outbound Whse. Handling Time","Outbound Whse. Handling Time");
@@ -675,15 +676,6 @@ OBJECT Table 5740 Transfer Header
           TransLine.MODIFY(TRUE);
         UNTIL TransLine.NEXT = 0;
       END;
-    END;
-
-    LOCAL PROCEDURE ConfirmResvDateConflict@41();
-    VAR
-      ResvEngMgt@1000 : Codeunit 99000831;
-    BEGIN
-      IF ResvEngMgt.ResvExistsForTransHeader(Rec) THEN
-        IF NOT CONFIRM(Text005 + Text006,FALSE) THEN
-          ERROR('');
     END;
 
     LOCAL PROCEDURE HandleItemTrackingDeletion@36();
@@ -807,12 +799,12 @@ OBJECT Table 5740 Transfer Header
 
       IF OldDimSetID <> "Dimension Set ID" THEN BEGIN
         MODIFY;
-        IF SalesLinesExist THEN
+        IF TransferLinesExist THEN
           UpdateAllLineDim("Dimension Set ID",OldDimSetID);
       END;
     END;
 
-    LOCAL PROCEDURE SalesLinesExist@5() : Boolean;
+    LOCAL PROCEDURE TransferLinesExist@5() : Boolean;
     BEGIN
       TransLine.RESET;
       TransLine.SETRANGE("Document No.","No.");
@@ -822,6 +814,7 @@ OBJECT Table 5740 Transfer Header
     LOCAL PROCEDURE UpdateAllLineDim@34(NewParentDimSetID@1000 : Integer;OldParentDimSetID@1001 : Integer);
     VAR
       NewDimSetID@1002 : Integer;
+      ShippedLineDimChangeConfirmed@1003 : Boolean;
     BEGIN
       // Update all lines with changed dimensions.
 
@@ -838,11 +831,21 @@ OBJECT Table 5740 Transfer Header
           NewDimSetID := DimMgt.GetDeltaDimSetID(TransLine."Dimension Set ID",NewParentDimSetID,OldParentDimSetID);
           IF TransLine."Dimension Set ID" <> NewDimSetID THEN BEGIN
             TransLine."Dimension Set ID" := NewDimSetID;
+
+            VerifyShippedLineDimChange(ShippedLineDimChangeConfirmed);
+
             DimMgt.UpdateGlobalDimFromDimSetID(
               TransLine."Dimension Set ID",TransLine."Shortcut Dimension 1 Code",TransLine."Shortcut Dimension 2 Code");
             TransLine.MODIFY;
           END;
         UNTIL TransLine.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE VerifyShippedLineDimChange@71(VAR ShippedLineDimChangeConfirmed@1000 : Boolean);
+    BEGIN
+      IF TransLine.IsShippedDimChanged THEN
+        IF NOT ShippedLineDimChangeConfirmed THEN
+          ShippedLineDimChangeConfirmed := TransLine.ConfirmShippedDimChange;
     END;
 
     BEGIN

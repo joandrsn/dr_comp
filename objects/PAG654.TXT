@@ -2,9 +2,9 @@ OBJECT Page 654 Requests to Approve
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -29,6 +29,7 @@ OBJECT Page 654 Requests to Approve
 
     OnAfterGetCurrRecord=BEGIN
                            ShowChangeFactBox := CurrPage.Change.PAGE.SetFilterFromApprovalEntry(Rec);
+                           ShowCommentFactbox := CurrPage.ApprovalCommentsFactBox.PAGE.SetRecIDFilter("Record ID to Approve");
                          END;
 
     ActionList=ACTIONS
@@ -184,14 +185,14 @@ OBJECT Page 654 Requests to Approve
                 SourceExpr=Status;
                 Visible=ShowAllEntries }
 
-    { 1900000007;0;Container;
+    { 1900000007;;Container;
+                Name=FactBoxArea;
                 ContainerType=FactBoxArea }
 
     { 3   ;1   ;Part      ;
-                SubPageLink=Table ID=FIELD(Table ID),
-                            Document Type=FIELD(Document Type),
-                            Document No.=FIELD(Document No.);
+                Name=ApprovalCommentsFactBox;
                 PagePartID=Page9104;
+                Visible=ShowCommentFactbox;
                 PartType=Page }
 
     { 8   ;1   ;Part      ;
@@ -221,6 +222,7 @@ OBJECT Page 654 Requests to Approve
       DateStyle@1002 : Text;
       ShowAllEntries@1007 : Boolean;
       ShowChangeFactBox@1000 : Boolean;
+      ShowCommentFactbox@1001 : Boolean;
 
     LOCAL PROCEDURE SetDateStyle@2();
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Page 55 Purch. Invoice Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -20,6 +20,7 @@ OBJECT Page 55 Purch. Invoice Subform
     OnAfterGetRecord=BEGIN
                        ShowShortcutDimCode(ShortcutDimCode);
                        TypeChosen := HasTypeToFillMandatotyFields;
+                       CLEAR(DocumentTotals);
                      END;
 
     OnNewRecord=BEGIN
@@ -41,7 +42,8 @@ OBJECT Page 55 Purch. Invoice Subform
     OnAfterGetCurrRecord=BEGIN
                            IF PurchHeader.GET("Document Type","Document No.") THEN;
 
-                           DocumentTotals.PurchaseUpdateTotalsControls(Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
+                           DocumentTotals.PurchaseUpdateTotalsControls(
+                             Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
                              TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,VATAmount);
                          END;
 
@@ -656,7 +658,9 @@ OBJECT Page 55 Purch. Invoice Subform
                 Editable=FALSE;
                 OnDrillDown=BEGIN
                               DocumentTotals.PurchaseRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalPurchaseLine);
-                              CurrPage.UPDATE(FALSE);
+                              DocumentTotals.PurchaseUpdateTotalsControls(
+                                Rec,TotalPurchaseHeader,TotalPurchaseLine,RefreshMessageEnabled,
+                                TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,VATAmount);
                             END;
 
                 ShowCaption=No }

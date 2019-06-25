@@ -2,9 +2,9 @@ OBJECT Codeunit 74 Purch.-Get Receipt
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=26-09-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50637;
   }
   PROPERTIES
   {
@@ -40,6 +40,7 @@ OBJECT Codeunit 74 Purch.-Get Receipt
     PROCEDURE CreateInvLines@1(VAR PurchRcptLine2@1000 : Record 121);
     VAR
       TransferLine@1001 : Boolean;
+      PrepmtAmtToDeductRounding@1002 : Decimal;
     BEGIN
       WITH PurchRcptLine2 DO BEGIN
         SETFILTER("Qty. Rcd. Not Invoiced",'<>0');
@@ -75,10 +76,15 @@ OBJECT Codeunit 74 Purch.-Get Receipt
               PurchRcptLine := PurchRcptLine2;
               PurchRcptLine.TESTFIELD("VAT Bus. Posting Group",PurchHeader."VAT Bus. Posting Group");
               PurchRcptLine.InsertInvLineFromRcptLine(PurchLine);
+              CalcUpdatePrepmtAmtToDeductRounding(PurchRcptLine,PurchLine,PrepmtAmtToDeductRounding);
               IF Type = Type::"Charge (Item)" THEN
                 GetItemChargeAssgnt(PurchRcptLine2,PurchLine."Qty. to Invoice");
             END;
           UNTIL NEXT = 0;
+
+          CalcInvoiceDiscount(PurchLine);
+          IF TransferLine THEN
+            AdjustPrepmtAmtToDeductRounding(PurchLine,PrepmtAmtToDeductRounding);
         END;
       END;
     END;
@@ -128,7 +134,7 @@ OBJECT Codeunit 74 Purch.-Get Receipt
           REPEAT
             IF ItemChargeAssgntPurch."Qty. to Assign" <> 0 THEN BEGIN
               ItemChargeAssgntPurch2 := ItemChargeAssgntPurch;
-              ItemChargeAssgntPurch2."Qty. to Assign" := QtyFactor * ItemChargeAssgntPurch2."Qty. to Assign";
+              ItemChargeAssgntPurch2."Qty. to Assign" := ROUND(QtyFactor * ItemChargeAssgntPurch2."Qty. to Assign",0.00001);
               PurchLine2.SETRANGE("Receipt No.",PurchRcptLine."Document No.");
               PurchLine2.SETRANGE("Receipt Line No.",PurchRcptLine."Line No.");
               IF PurchLine2.FIND('-') THEN
@@ -191,11 +197,46 @@ OBJECT Codeunit 74 Purch.-Get Receipt
       WITH ItemChargeAssgntPurch DO BEGIN
         SETRANGE("Document Type","Document Type");
         SETRANGE("Document No.","Document No.");
+        SETRANGE("Document Line No.","Document Line No.");
         SETRANGE("Applies-to Doc. Type","Applies-to Doc. Type");
         SETRANGE("Applies-to Doc. No.","Applies-to Doc. No.");
         SETRANGE("Applies-to Doc. Line No.","Applies-to Doc. Line No.");
         CALCSUMS("Qty. to Assign");
         EXIT("Qty. to Assign");
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcInvoiceDiscount@14(VAR PurchLine@1001 : Record 39);
+    VAR
+      PurchSetup@1000 : Record 312;
+      PurchCalcDiscount@1002 : Codeunit 70;
+    BEGIN
+      PurchSetup.GET;
+      IF PurchSetup."Calc. Inv. Discount" THEN
+        PurchCalcDiscount.CalculateInvoiceDiscountOnLine(PurchLine);
+    END;
+
+    LOCAL PROCEDURE CalcUpdatePrepmtAmtToDeductRounding@3(PurchRcptLine@1005 : Record 121;PurchaseLine@1002 : Record 39;VAR RoundingAmount@1004 : Decimal);
+    VAR
+      PurchOrderLine@1003 : Record 39;
+      Fraction@1001 : Decimal;
+      FractionAmount@1000 : Decimal;
+    BEGIN
+      IF (PurchaseLine."Prepayment %" > 0) AND (PurchaseLine."Prepayment %" < 100) AND
+         (PurchaseLine."Document Type" = PurchaseLine."Document Type"::Invoice)
+      THEN BEGIN
+        PurchOrderLine.GET(PurchOrderLine."Document Type"::Order,PurchRcptLine."Order No.",PurchRcptLine."Order Line No.");
+        Fraction := PurchRcptLine.Quantity / PurchOrderLine.Quantity;
+        FractionAmount := Fraction * PurchOrderLine."Prepmt Amt to Deduct";
+        RoundingAmount += PurchaseLine."Prepmt Amt to Deduct" - FractionAmount;
+      END;
+    END;
+
+    LOCAL PROCEDURE AdjustPrepmtAmtToDeductRounding@19(VAR PurchaseLine@1000 : Record 39;RoundingAmount@1001 : Decimal);
+    BEGIN
+      IF ROUND(RoundingAmount) <> 0 THEN BEGIN
+        PurchaseLine."Prepmt Amt to Deduct" -= ROUND(RoundingAmount);
+        PurchaseLine.MODIFY;
       END;
     END;
 

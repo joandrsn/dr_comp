@@ -2,9 +2,9 @@ OBJECT Page 39 General Journal
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402,NAVDK9.00.00.43402;
+    Version List=NAVW19.00.00.47444,NAVDK9.00.00.47444;
   }
   PROPERTIES
   {
@@ -557,14 +557,16 @@ OBJECT Page 39 General Journal
                       Name=Comment;
                       CaptionML=[DAN=Bemærkninger;
                                  ENU=Comments];
-                      RunObject=Page 660;
-                      RunPageLink=Table ID=CONST(81),
-                                  Document Type=FIELD(Document Type),
-                                  Document No.=FIELD(Document No.);
                       Promoted=Yes;
                       Visible=OpenApprovalEntriesExistForCurrUser;
                       Image=ViewComments;
-                      PromotedCategory=Category7 }
+                      PromotedCategory=Category7;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1000 : Codeunit 1535;
+                               BEGIN
+                                 ApprovalsMgmt.GetApprovalComment(Rec);
+                               END;
+                                }
     }
   }
   CONTROLS

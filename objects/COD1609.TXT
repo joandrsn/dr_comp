@@ -2,9 +2,9 @@ OBJECT Codeunit 1609 Exp. Service Cr.M. - PEPPOL2.0
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -24,28 +24,17 @@ OBJECT Codeunit 1609 Exp. Service Cr.M. - PEPPOL2.0
   }
   CODE
   {
-    VAR
-      ExportPathGreaterThan250Err@1000 : TextConst 'DAN=Eksportstien må ikke være længere end 250 tegn.;ENU=The export path is longer than 250 characters.';
 
     PROCEDURE GenerateXMLFile@19(VariantRec@1000 : Variant) : Text[250];
     VAR
-      FileManagement@1002 : Codeunit 419;
+      PEPPOLManagement@1002 : Codeunit 1605;
       SalesCreditMemoPEPPOL20@1005 : XMLport 1603;
       OutFile@1003 : File;
       OutStream@1004 : OutStream;
       XmlServerPath@1001 : Text;
     BEGIN
-      XmlServerPath := FileManagement.ServerTempFileName('xml');
+      PEPPOLManagement.InitializeXMLExport(OutFile,XmlServerPath);
 
-      IF STRLEN(XmlServerPath) > 250 THEN
-        ERROR(ExportPathGreaterThan250Err);
-
-      IF NOT EXISTS(XmlServerPath) THEN
-        OutFile.CREATE(XmlServerPath)
-      ELSE
-        OutFile.OPEN(XmlServerPath);
-
-      // Generate XML
       OutFile.CREATEOUTSTREAM(OutStream);
       SalesCreditMemoPEPPOL20.Initialize(VariantRec);
       SalesCreditMemoPEPPOL20.SETDESTINATION(OutStream);

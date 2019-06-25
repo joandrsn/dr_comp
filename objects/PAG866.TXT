@@ -2,9 +2,9 @@ OBJECT Page 866 Cash Flow Availability Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -110,8 +110,8 @@ OBJECT Page 866 Cash Flow Availability Lines
 
     { 1011;2   ;Field     ;
                 Name=ManualRevenues;
-                CaptionML=[DAN=Manuelle pengestrømsudgifter;
-                           ENU=Cash Flow Manual Expenses];
+                CaptionML=[DAN=Manuelle pengestrømsindtægter;
+                           ENU=Cash Flow Manual Revenues];
                 SourceExpr=Amounts[CFForecastEntry."Source Type"::"Cash Flow Manual Revenue"];
                 AutoFormatType=10;
                 AutoFormatExpr=FormatStr;

@@ -2,9 +2,9 @@ OBJECT Table 915 ATO Sales Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,26 +13,35 @@ OBJECT Table 915 ATO Sales Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+    { 1   ;   ;Type                ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Type;
                                                               ENU=Type];
                                                    OptionCaptionML=[DAN=,Salg,Samlet salg,Montage,Samlet montage;
                                                                     ENU=,Sale,Total Sale,Assembly,Total Assembly];
                                                    OptionString=,Sale,Total Sale,Assembly,Total Assembly }
-    { 2   ;   ;Order No.           ;Code20        ;CaptionML=[DAN=Ordrenr.;
+    { 2   ;   ;Order No.           ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Ordrenr.;
                                                               ENU=Order No.] }
-    { 3   ;   ;Item No.            ;Code20        ;CaptionML=[DAN=Varenr.;
+    { 3   ;   ;Item No.            ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Varenr.;
                                                               ENU=Item No.] }
-    { 4   ;   ;Parent Item No.     ;Code20        ;CaptionML=[DAN=Styklistenr.;
+    { 4   ;   ;Parent Item No.     ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Styklistenr.;
                                                               ENU=Parent Item No.] }
-    { 5   ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+    { 5   ;   ;Quantity            ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Antal;
                                                               ENU=Quantity] }
-    { 6   ;   ;Sales Cost          ;Decimal       ;CaptionML=[DAN=Salg (kostpris);
+    { 6   ;   ;Sales Cost          ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Salg (kostpris);
                                                               ENU=Sales Cost] }
-    { 7   ;   ;Sales Amount        ;Decimal       ;CaptionML=[DAN=Salgsbeløb;
+    { 7   ;   ;Sales Amount        ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Salgsbeløb;
                                                               ENU=Sales Amount] }
-    { 8   ;   ;Profit %            ;Decimal       ;CaptionML=[DAN=Avancepct.;
+    { 8   ;   ;Profit %            ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Avancepct.;
                                                               ENU=Profit %] }
-    { 9   ;   ;Parent Description  ;Text50        ;CaptionML=[DAN=Overordnet beskrivelse;
+    { 9   ;   ;Parent Description  ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Overordnet beskrivelse;
                                                               ENU=Parent Description] }
   }
   KEYS

@@ -2,9 +2,9 @@ OBJECT Table 9001 User Group Member
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -15,10 +15,23 @@ OBJECT Table 9001 User Group Member
                UserGroupAccessControl.AddUserGroupMember("User Group Code","User Security ID","Company Name");
              END;
 
+    OnModify=BEGIN
+               IF ("User Group Code" <> xRec."User Group Code") OR
+                  ("User Security ID" <> xRec."User Security ID") OR
+                  ("Company Name" <> xRec."Company Name")
+               THEN
+                 ModifyUserGroupMembership;
+             END;
+
     OnDelete=VAR
                UserGroupAccessControl@1000 : Record 9002;
              BEGIN
                UserGroupAccessControl.RemoveUserGroupMember("User Group Code","User Security ID","Company Name");
+               UpdateDefaultProfileOfUser("User Group Code");
+             END;
+
+    OnRename=BEGIN
+               ModifyUserGroupMembership;
              END;
 
     CaptionML=[DAN=Medlem af brugergruppe;
@@ -27,10 +40,12 @@ OBJECT Table 9001 User Group Member
   FIELDS
   {
     { 1   ;   ;User Group Code     ;Code20        ;TableRelation="User Group";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Brugergruppekode;
                                                               ENU=User Group Code];
                                                    NotBlank=Yes }
     { 2   ;   ;User Security ID    ;GUID          ;TableRelation=User;
+                                                   DataClassification=EndUserPseudonymousIdentifiers;
                                                    CaptionML=[DAN=Brugersikkerheds-id;
                                                               ENU=User Security ID] }
     { 3   ;   ;Company Name        ;Text30        ;TableRelation=Company;
@@ -46,7 +61,7 @@ OBJECT Table 9001 User Group Member
                                                    CaptionML=[DAN=Brugers fulde navn;
                                                               ENU=User Full Name];
                                                    Editable=No }
-    { 6   ;   ;User Group Name     ;Text30        ;FieldClass=FlowField;
+    { 6   ;   ;User Group Name     ;Text50        ;FieldClass=FlowField;
                                                    CalcFormula=Lookup("User Group".Name WHERE (Code=FIELD(User Group Code)));
                                                    CaptionML=[DAN=Brugergruppenavn;
                                                               ENU=User Group Name];
@@ -82,6 +97,64 @@ OBJECT Table 9001 User Group Member
             IF INSERT(TRUE) THEN;
           UNTIL User.NEXT = 0;
       END;
+    END;
+
+    LOCAL PROCEDURE ModifyUserGroupMembership@5();
+    VAR
+      UserGroupAccessControl@1001 : Record 9002;
+      UserGroupMember@1003 : Record 9001;
+      ConfPersonalizationMgt@1002 : Codeunit 9170;
+    BEGIN
+      IF ISNULLGUID("User Security ID") OR ("User Group Code" = '') THEN
+        EXIT;
+      UserGroupAccessControl.RemoveUserGroupMember(xRec."User Group Code",xRec."User Security ID",xRec."Company Name");
+      UserGroupAccessControl.AddUserGroupMember("User Group Code","User Security ID","Company Name");
+
+      // If there is more than one User group assigned to a user, then use the company default profile
+      UserGroupMember.SETRANGE("User Security ID","User Security ID");
+      UserGroupMember.SETFILTER("User Group Code",'<>%1',xRec."User Group Code");
+      IF NOT UserGroupMember.ISEMPTY THEN BEGIN
+        // When there are more than two user groups assigned to this user, assign to him the default profile
+        CopyDefaultProfileToUser(ConfPersonalizationMgt.GetProfileHavingDefaultRoleCenter,TRUE);
+        EXIT;
+      END;
+
+      // Else assign the profile of the current user group
+      UpdateDefaultProfileOfUser(xRec."User Group Code");
+    END;
+
+    LOCAL PROCEDURE UpdateDefaultProfileOfUser@12(UserGroupCode@1003 : Code[20]);
+    VAR
+      UserGroupMember@1002 : Record 9001;
+      UserPersonalization@1001 : Record 2000000073;
+    BEGIN
+      UserGroupMember.SETRANGE("User Security ID","User Security ID");
+      UserGroupMember.SETFILTER("User Group Code",'<>%1',UserGroupCode);
+      IF NOT UserGroupMember.FINDFIRST THEN BEGIN
+        IF NOT UserPersonalization.GET("User Security ID") THEN
+          EXIT;
+        UserPersonalization."Profile ID" := '';
+        UserPersonalization.MODIFY(TRUE);
+      END;
+    END;
+
+    LOCAL PROCEDURE CopyDefaultProfileToUser@9(DefaultProfileID@1003 : Code[30];Force@1000 : Boolean);
+    VAR
+      UserPersonalization@1002 : Record 2000000073;
+    BEGIN
+      IF DefaultProfileID = '' THEN
+        EXIT;
+      // Force = TRUE overwrites the current default profile
+      IF NOT UserPersonalization.GET("User Security ID") THEN BEGIN
+        UserPersonalization.INIT;
+        UserPersonalization."User SID" := "User Security ID";
+        UserPersonalization."Profile ID" := DefaultProfileID;
+        UserPersonalization.INSERT(TRUE);
+      END ELSE
+        IF (UserPersonalization."Profile ID" = '') OR Force THEN BEGIN
+          UserPersonalization."Profile ID" := DefaultProfileID;
+          UserPersonalization.MODIFY(TRUE);
+        END;
     END;
 
     BEGIN

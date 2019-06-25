@@ -2,9 +2,9 @@ OBJECT Codeunit 6500 Item Tracking Management
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -123,11 +123,16 @@ OBJECT Codeunit 6500 Item Tracking Management
       END;
       ItemTrackingCode.GET(ItemTrackingCode.Code);
 
-      SNInfoRequired := (Inbound AND ItemTrackingCode."SN Info. Inbound Must Exist") OR
-        (NOT Inbound AND ItemTrackingCode."SN Info. Outbound Must Exist");
+      IF EntryType = EntryType::Transfer THEN BEGIN
+        LotInfoRequired := ItemTrackingCode."Lot Info. Outbound Must Exist" OR ItemTrackingCode."Lot Info. Inbound Must Exist";
+        SNInfoRequired := ItemTrackingCode."SN Info. Outbound Must Exist" OR ItemTrackingCode."SN Info. Inbound Must Exist";
+      END ELSE BEGIN
+        SNInfoRequired := (Inbound AND ItemTrackingCode."SN Info. Inbound Must Exist") OR
+          (NOT Inbound AND ItemTrackingCode."SN Info. Outbound Must Exist");
 
-      LotInfoRequired := (Inbound AND ItemTrackingCode."Lot Info. Inbound Must Exist") OR
-        (NOT Inbound AND ItemTrackingCode."Lot Info. Outbound Must Exist");
+        LotInfoRequired := (Inbound AND ItemTrackingCode."Lot Info. Inbound Must Exist") OR
+          (NOT Inbound AND ItemTrackingCode."Lot Info. Outbound Must Exist");
+      END;
 
       IF ItemTrackingCode."SN Specific Tracking" THEN BEGIN
         SNRequired := TRUE;
@@ -467,7 +472,9 @@ OBJECT Codeunit 6500 Item Tracking Management
       THEN
         EXIT(FALSE);
 
-      ReservationEntry2.GET(ReservationEntry."Entry No.",NOT ReservationEntry.Positive);
+      IF NOT ReservationEntry2.GET(ReservationEntry."Entry No.",NOT ReservationEntry.Positive) THEN
+        EXIT(FALSE);
+
       IF (ReservationEntry2."Source Type" <> DATABASE::"Assembly Header") OR
          (ReservationEntry2."Source Subtype" <> AssembleToOrderLink."Assembly Document Type") OR
          (ReservationEntry2."Source ID" <> AssembleToOrderLink."Assembly Document No.")
@@ -662,12 +669,23 @@ OBJECT Codeunit 6500 Item Tracking Management
           ReservEntry.VALIDATE("Quantity (Base)",QtyBase);
           ReservEntry.Positive := (ReservEntry."Quantity (Base)" > 0);
           ReservEntry."Entry No." := 0;
+          ReservEntry."Item Tracking" := ItemTrackingOption(ReservEntry."Lot No.",ReservEntry."Serial No.");
           ReservEntry.INSERT;
         END;
       UNTIL ItemEntryRelation.NEXT = 0;
     END;
 
     PROCEDURE CopyHandledItemTrkgToInvLine2@43(FromPurchLine@1000 : Record 39;ToPurchInvLine@1001 : Record 39);
+    BEGIN
+      CopyHandledItemTrkgToPurchLine(FromPurchLine,ToPurchInvLine,FALSE);
+    END;
+
+    PROCEDURE CopyHandledItemTrkgToPurchLineWithLineQty@11(FromPurchLine@1000 : Record 39;ToPurchaseLineInvoice@1002 : Record 39);
+    BEGIN
+      CopyHandledItemTrkgToPurchLine(FromPurchLine,ToPurchaseLineInvoice,TRUE);
+    END;
+
+    LOCAL PROCEDURE CopyHandledItemTrkgToPurchLine@16(FromPurchLine@1000 : Record 39;ToPurchaseLineInvoice@1001 : Record 39;CheckLineQty@1004 : Boolean);
     VAR
       ReservEntry@1005 : Record 337;
       TrackingSpecification@1006 : Record 336;
@@ -683,21 +701,21 @@ OBJECT Codeunit 6500 Item Tracking Management
       ItemEntryRelation.SETRANGE("Source Batch Name",'');
       ItemEntryRelation.SETRANGE("Source Prod. Order Line",0);
 
-      CASE ToPurchInvLine."Document Type" OF
-        ToPurchInvLine."Document Type"::Invoice:
+      CASE ToPurchaseLineInvoice."Document Type" OF
+        ToPurchaseLineInvoice."Document Type"::Invoice:
           BEGIN
             ItemEntryRelation.SETRANGE("Source Type",DATABASE::"Purch. Rcpt. Line");
-            ItemEntryRelation.SETRANGE("Source ID",ToPurchInvLine."Receipt No.");
-            ItemEntryRelation.SETRANGE("Source Ref. No.",ToPurchInvLine."Receipt Line No.");
+            ItemEntryRelation.SETRANGE("Source ID",ToPurchaseLineInvoice."Receipt No.");
+            ItemEntryRelation.SETRANGE("Source Ref. No.",ToPurchaseLineInvoice."Receipt Line No.");
           END;
-        ToPurchInvLine."Document Type"::"Credit Memo":
+        ToPurchaseLineInvoice."Document Type"::"Credit Memo":
           BEGIN
             ItemEntryRelation.SETRANGE("Source Type",DATABASE::"Return Shipment Line");
-            ItemEntryRelation.SETRANGE("Source ID",ToPurchInvLine."Return Shipment No.");
-            ItemEntryRelation.SETRANGE("Source Ref. No.",ToPurchInvLine."Return Shipment Line No.");
+            ItemEntryRelation.SETRANGE("Source ID",ToPurchaseLineInvoice."Return Shipment No.");
+            ItemEntryRelation.SETRANGE("Source Ref. No.",ToPurchaseLineInvoice."Return Shipment Line No.");
           END;
         ELSE
-          ToPurchInvLine.FIELDERROR("Document Type",FORMAT(ToPurchInvLine."Document Type"));
+          ToPurchaseLineInvoice.FIELDERROR("Document Type",FORMAT(ToPurchaseLineInvoice."Document Type"));
       END;
 
       IF NOT ItemEntryRelation.FINDSET THEN
@@ -706,17 +724,20 @@ OBJECT Codeunit 6500 Item Tracking Management
       REPEAT
         TrackingSpecification.GET(ItemEntryRelation."Item Entry No.");
         QtyBase := TrackingSpecification."Quantity (Base)" - TrackingSpecification."Quantity Invoiced (Base)";
+        IF CheckLineQty AND (QtyBase > ToPurchaseLineInvoice.Quantity) THEN
+          QtyBase := ToPurchaseLineInvoice.Quantity;
         IF QtyBase <> 0 THEN BEGIN
           ReservEntry.INIT;
           ReservEntry.TRANSFERFIELDS(TrackingSpecification);
-          ReservEntry."Source Subtype" := ToPurchInvLine."Document Type";
-          ReservEntry."Source ID" := ToPurchInvLine."Document No.";
-          ReservEntry."Source Ref. No." := ToPurchInvLine."Line No.";
+          ReservEntry."Source Subtype" := ToPurchaseLineInvoice."Document Type";
+          ReservEntry."Source ID" := ToPurchaseLineInvoice."Document No.";
+          ReservEntry."Source Ref. No." := ToPurchaseLineInvoice."Line No.";
           ReservEntry."Reservation Status" := ReservEntry."Reservation Status"::Prospect;
           ReservEntry."Quantity Invoiced (Base)" := 0;
           ReservEntry.VALIDATE("Quantity (Base)",QtyBase);
           ReservEntry.Positive := (ReservEntry."Quantity (Base)" > 0);
           ReservEntry."Entry No." := 0;
+          ReservEntry."Item Tracking" := ItemTrackingOption(ReservEntry."Lot No.",ReservEntry."Serial No.");
           ReservEntry.INSERT;
         END;
       UNTIL ItemEntryRelation.NEXT = 0;
@@ -1184,11 +1205,8 @@ OBJECT Codeunit 6500 Item Tracking Management
       SourceType := WhseManagement.GetSourceType(WhseWkshLine);
       WITH WhseWkshLine DO BEGIN
         IF "Whse. Document Type" = "Whse. Document Type"::Receipt THEN BEGIN
-          PostedWhseReceiptLine.SETRANGE("No.","Whse. Document No.");
-          IF PostedWhseReceiptLine.FINDSET THEN
-            REPEAT
-              InsertWhseItemTrkgLines(PostedWhseReceiptLine,SourceType);
-            UNTIL PostedWhseReceiptLine.NEXT = 0;
+          IF PostedWhseReceiptLine.GET("Whse. Document No.","Whse. Document Line No.") THEN
+            InsertWhseItemTrkgLines(PostedWhseReceiptLine,SourceType);
         END;
 
         WhseItemTrkgLine.SETCURRENTKEY(
@@ -1306,7 +1324,8 @@ OBJECT Codeunit 6500 Item Tracking Management
         END;
         IF SourceItemTrackingLine.FINDSET THEN
           REPEAT
-            CreateWhseItemTrkgForResEntry(SourceItemTrackingLine,WhseWkshLine);
+            IF NOT IsResEntryReservedAgainstATO(SourceItemTrackingLine) THEN
+              CreateWhseItemTrkgForResEntry(SourceItemTrackingLine,WhseWkshLine);
           UNTIL SourceItemTrackingLine.NEXT = 0;
       END;
     END;
@@ -1375,10 +1394,15 @@ OBJECT Codeunit 6500 Item Tracking Management
       WhseItemTrackingLine."Warranty Date" := SourceItemTrackingLine."Warranty Date";
       WhseItemTrackingLine."Expiration Date" := SourceItemTrackingLine."Expiration Date";
       WhseItemTrackingLine."Quantity (Base)" := -SourceItemTrackingLine."Quantity (Base)";
-      IF WhseWkshLine."Qty. (Base)" = WhseWkshLine."Qty. to Handle (Base)" THEN BEGIN
-        WhseItemTrackingLine."Qty. to Handle (Base)" := WhseItemTrackingLine."Quantity (Base)";
-        WhseItemTrackingLine."Qty. to Handle" := -SourceItemTrackingLine.Quantity;
-      END;
+
+      IF WhseWkshLine."Qty. Handled (Base)" <> 0 THEN BEGIN
+        WhseItemTrackingLine."Quantity Handled (Base)" := WhseWkshLine."Qty. Handled (Base)";
+        WhseItemTrackingLine."Qty. Registered (Base)" := WhseWkshLine."Qty. Handled (Base)";
+      END ELSE
+        IF WhseWkshLine."Qty. (Base)" = WhseWkshLine."Qty. to Handle (Base)" THEN BEGIN
+          WhseItemTrackingLine."Qty. to Handle (Base)" := WhseItemTrackingLine."Quantity (Base)";
+          WhseItemTrackingLine."Qty. to Handle" := -SourceItemTrackingLine.Quantity;
+        END;
       WhseItemTrackingLine.INSERT;
     END;
 
@@ -1431,6 +1455,8 @@ OBJECT Codeunit 6500 Item Tracking Management
     END;
 
     PROCEDURE InitWhseWkshLine@99(VAR WhseWkshLine@1009 : Record 7326;WhseDocType@1007 : Option;WhseDocNo@1006 : Code[20];WhseDocLineNo@1005 : Integer;SourceType@1004 : Integer;SourceSubtype@1003 : '0,1,2,3,4,5,6,7,8,9,10';SourceNo@1002 : Code[20];SourceLineNo@1001 : Integer;SourceSublineNo@1000 : Integer);
+    VAR
+      ProdOrderComponent@1011 : Record 5407;
     BEGIN
       WhseWkshLine.INIT;
       WhseWkshLine."Whse. Document Type" := WhseDocType;
@@ -1441,6 +1467,11 @@ OBJECT Codeunit 6500 Item Tracking Management
       WhseWkshLine."Source No." := SourceNo;
       WhseWkshLine."Source Line No." := SourceLineNo;
       WhseWkshLine."Source Subline No." := SourceSublineNo;
+
+      IF WhseDocType = WhseWkshLine."Whse. Document Type"::Production THEN BEGIN
+        ProdOrderComponent.GET(SourceSubtype,SourceNo,SourceLineNo,SourceSublineNo);
+        WhseWkshLine."Qty. Handled (Base)" := ProdOrderComponent."Qty. Picked (Base)";
+      END;
     END;
 
     PROCEDURE UpdateWhseItemTrkgLines@38(VAR TempWhseItemTrkgLine@1000 : TEMPORARY Record 6550);
@@ -1473,6 +1504,7 @@ OBJECT Codeunit 6500 Item Tracking Management
       ItemLedgEntry@1005 : Record 32;
       EntryNo@1004 : Integer;
       QtyHandledBase@1007 : Decimal;
+      RemQtyHandledBase@1006 : Decimal;
     BEGIN
       IF WhseItemTrkgLine.FINDLAST THEN
         EntryNo := WhseItemTrkgLine."Entry No." + 1
@@ -1494,12 +1526,21 @@ OBJECT Codeunit 6500 Item Tracking Management
           WhseItemTrkgLine.SETRANGE("Source Subtype",0);
           WhseItemTrkgLine.SETRANGE("Source Ref. No.","Line No.");
           WhseItemTrkgLine.DELETEALL;
+          WhseItemTrkgLine.INIT;
           WhseItemTrkgLine.SETCURRENTKEY("Serial No.","Lot No.");
           REPEAT
             WhseItemTrkgLine.SETRANGE("Serial No.",WhseItemEntryRelation."Serial No.");
             WhseItemTrkgLine.SETRANGE("Lot No.",WhseItemEntryRelation."Lot No.");
             ItemLedgEntry.GET(WhseItemEntryRelation."Item Entry No.");
-            QtyHandledBase := RegisteredPutAwayQtyBase(PostedWhseReceiptLine,WhseItemEntryRelation);
+            IF (WhseItemEntryRelation."Lot No." <> WhseItemTrkgLine."Lot No.") OR
+               (WhseItemEntryRelation."Serial No." <> WhseItemTrkgLine."Serial No.")
+            THEN
+              RemQtyHandledBase := RegisteredPutAwayQtyBase(PostedWhseReceiptLine,WhseItemEntryRelation)
+            ELSE
+              RemQtyHandledBase -= QtyHandledBase;
+            QtyHandledBase := RemQtyHandledBase;
+            IF QtyHandledBase > ItemLedgEntry.Quantity THEN
+              QtyHandledBase := ItemLedgEntry.Quantity;
 
             IF NOT WhseItemTrkgLine.FINDFIRST THEN BEGIN
               WhseItemTrkgLine.INIT;
@@ -1525,9 +1566,9 @@ OBJECT Codeunit 6500 Item Tracking Management
               WhseItemTrkgLine.VALIDATE("Quantity (Base)",ItemLedgEntry.Quantity);
               WhseItemTrkgLine.INSERT;
             END ELSE BEGIN
-              WhseItemTrkgLine.VALIDATE("Quantity (Base)",WhseItemTrkgLine."Quantity (Base)" + ItemLedgEntry.Quantity);
               WhseItemTrkgLine."Quantity Handled (Base)" += QtyHandledBase;
               WhseItemTrkgLine."Qty. Registered (Base)" += QtyHandledBase;
+              WhseItemTrkgLine.VALIDATE("Quantity (Base)",WhseItemTrkgLine."Quantity (Base)" + ItemLedgEntry.Quantity);
               WhseItemTrkgLine.MODIFY;
             END;
           UNTIL WhseItemEntryRelation.NEXT = 0;
@@ -1574,6 +1615,7 @@ OBJECT Codeunit 6500 Item Tracking Management
                        DATABASE::"Assembly Header",
                        DATABASE::"Assembly Line",
                        DATABASE::"Prod. Order Line",
+                       DATABASE::"Service Line",
                        DATABASE::"Prod. Order Component"])
       THEN
         EXIT(FALSE);
@@ -1673,7 +1715,21 @@ OBJECT Codeunit 6500 Item Tracking Management
         QtyToBeHandled := NonDistrQuantity;
     END;
 
-    PROCEDURE SynchronizeItemTracking@47(FromRowID@1000 : Text[100];ToRowID@1001 : Text[100];DialogText@1006 : Text[250]);
+    PROCEDURE SynchronizeItemTrackingByPtrs@10(FromReservEntry@1002 : Record 337;ToReservEntry@1003 : Record 337);
+    VAR
+      FromRowID@1001 : Text[250];
+      ToRowID@1000 : Text[250];
+    BEGIN
+      FromRowID := ComposeRowID(
+          FromReservEntry."Source Type",FromReservEntry."Source Subtype",FromReservEntry."Source ID",
+          FromReservEntry."Source Batch Name",FromReservEntry."Source Prod. Order Line",FromReservEntry."Source Ref. No.");
+      ToRowID := ComposeRowID(
+          ToReservEntry."Source Type",ToReservEntry."Source Subtype",ToReservEntry."Source ID",
+          ToReservEntry."Source Batch Name",ToReservEntry."Source Prod. Order Line",ToReservEntry."Source Ref. No.");
+      SynchronizeItemTracking(FromRowID,ToRowID,'');
+    END;
+
+    PROCEDURE SynchronizeItemTracking@47(FromRowID@1000 : Text[250];ToRowID@1001 : Text[250];DialogText@1006 : Text[250]);
     VAR
       ReservEntry1@1002 : Record 337;
       ReservMgt@1004 : Codeunit 99000845;
@@ -1835,7 +1891,6 @@ OBJECT Codeunit 6500 Item Tracking Management
       SourceSpec@1000 : Record 336;
       ReservEntry@1003 : Record 337;
       RegisteredWhseActLine@1004 : Record 5773;
-      WhseShipmentLine@1008 : Record 7321;
       ItemTrackingForm@1001 : Page 6510;
       Qty@1102601000 : Decimal;
       ZeroQtyToHandle@1005 : Boolean;
@@ -1862,14 +1917,10 @@ OBJECT Codeunit 6500 Item Tracking Management
                 IF NOT RegisteredWhseActLine.FINDFIRST THEN
                   ZeroQtyToHandle := TRUE
                 ELSE
-                  IF RegisteredWhseActLine."Whse. Document Type" = RegisteredWhseActLine."Whse. Document Type"::Shipment THEN
-                    IF WhseShipmentLine.GET(RegisteredWhseActLine."Whse. Document No.",
-                         RegisteredWhseActLine."Whse. Document Line No.")
-                    THEN BEGIN
-                      ZeroQtyToHandle := TRUE;
-                      IF WhseShipmentLine."Qty. to Ship (Base)" <> TempTrackingSpecification."Qty. to Handle (Base)" THEN
-                        Qty := -WhseShipmentLine."Qty. to Ship (Base)";
-                    END;
+                  IF RegisteredWhseActLine."Whse. Document Type" = RegisteredWhseActLine."Whse. Document Type"::Shipment THEN BEGIN
+                    ZeroQtyToHandle := TRUE;
+                    Qty := -(TempTrackingSpecification."Qty. to Handle (Base)" + CalcQtyBaseRegistered(RegisteredWhseActLine));
+                  END;
               END;
 
               ReservEntry.SETCURRENTKEY(
@@ -1931,7 +1982,6 @@ OBJECT Codeunit 6500 Item Tracking Management
             ABS(ItemTrkgQtyPostedOnSource(SourceSpec));
           CLEAR(ItemTrackingForm);
           ItemTrackingForm.SetCalledFromSynchWhseItemTrkg(TRUE);
-          ItemTrackingForm.SetPick(IsPick);
           ItemTrackingForm.RegisterItemTrackingLines(
             SourceSpec,
             SourceSpec."Creation Date",
@@ -2128,8 +2178,8 @@ OBJECT Codeunit 6500 Item Tracking Management
           ItemLedgEntry.SETRANGE("Serial No.",SerialNo);
       ItemLedgEntry.SETRANGE(Positive,TRUE);
 
-      IF NOT ItemLedgEntry.ISEMPTY THEN
-        EXIT(ItemLedgEntry.FINDLAST);
+      IF ItemLedgEntry.FINDLAST THEN
+        EXIT(TRUE);
 
       ItemLedgEntry.SETRANGE(Open);
       EXIT(ItemLedgEntry.FINDLAST);
@@ -2341,6 +2391,18 @@ OBJECT Codeunit 6500 Item Tracking Management
       END;
     END;
 
+    LOCAL PROCEDURE CalcQtyBaseRegistered@110(VAR RegisteredWhseActivityLine@1001 : Record 5773) : Decimal;
+    VAR
+      RegisteredWhseActivityLineForCalcBaseQty@1002 : Record 5773;
+    BEGIN
+      RegisteredWhseActivityLineForCalcBaseQty.COPYFILTERS(RegisteredWhseActivityLine);
+      WITH RegisteredWhseActivityLineForCalcBaseQty DO BEGIN
+        SETRANGE("Action Type","Action Type"::Place);
+        CALCSUMS("Qty. (Base)");
+        EXIT("Qty. (Base)");
+      END;
+    END;
+
     PROCEDURE CopyItemLedgEntryTrkgToSalesLn@70(VAR ItemLedgEntryBuf@1000 : TEMPORARY Record 32;ToSalesLine@1001 : Record 37;FillExactCostRevLink@1015 : Boolean;VAR MissingExCostRevLink@1010 : Boolean;FromPricesInclVAT@1017 : Boolean;ToPricesInclVAT@1009 : Boolean;FromShptOrRcpt@1020 : Boolean);
     VAR
       TempReservEntry@1003 : TEMPORARY Record 337;
@@ -2448,12 +2510,12 @@ OBJECT Codeunit 6500 Item Tracking Management
 
     PROCEDURE CopyItemLedgEntryTrkgToPurchLn@71(VAR ItemLedgEntryBuf@1000 : Record 32;ToPurchLine@1001 : Record 39;FillExactCostRevLink@1015 : Boolean;VAR MissingExCostRevLink@1010 : Boolean;FromPricesInclVAT@1017 : Boolean;ToPricesInclVAT@1013 : Boolean;FromShptOrRcpt@1018 : Boolean);
     VAR
-      ReservEntry@1004 : Record 337;
       ItemLedgEntry@1012 : Record 32;
       CopyDocMgt@1011 : Codeunit 6620;
       ReservMgt@1007 : Codeunit 99000845;
       TotalCostLCY@1006 : Decimal;
       ItemLedgEntryQty@1002 : Decimal;
+      QtyBase@1005 : Decimal;
       SignFactor@1003 : Integer;
       LinkThisEntry@1009 : Boolean;
       EntriesExist@1008 : Boolean;
@@ -2491,65 +2553,31 @@ OBJECT Codeunit 6500 Item Tracking Management
 
           REPEAT
             LinkThisEntry := "Entry No." > 0;
-            ReservEntry.INIT;
-            ReservEntry."Item No." := "Item No.";
-            ReservEntry."Location Code" := "Location Code";
-            ReservEntry."Serial No." := "Serial No.";
-            ReservEntry."Qty. per Unit of Measure" := "Qty. per Unit of Measure";
-            ReservEntry."Lot No." := "Lot No.";
-            ReservEntry."Variant Code" := "Variant Code";
-            ReservEntry."Source Type" := DATABASE::"Purchase Line";
-            ReservEntry."Source Subtype" := ToPurchLine."Document Type";
-            ReservEntry."Source ID" := ToPurchLine."Document No.";
-            ReservEntry."Source Ref. No." := ToPurchLine."Line No.";
-            IF ToPurchLine."Document Type" IN
-               [ToPurchLine."Document Type"::Order,ToPurchLine."Document Type"::"Return Order"]
-            THEN
-              ReservEntry."Reservation Status" := ReservEntry."Reservation Status"::Surplus
-            ELSE
-              ReservEntry."Reservation Status" := ReservEntry."Reservation Status"::Prospect;
-            ReservEntry."Quantity Invoiced (Base)" := 0;
-            IF LinkThisEntry AND ("Lot No." = '') THEN
-              // The check for Lot No = '' is to avoid changing the remaining quantity for partly sold Lots
-              // because this will cause undefined quantities in the item tracking
-              "Remaining Quantity" := Quantity;
-            IF ToPurchLine."Job No." = '' THEN
-              ReservEntry.VALIDATE("Quantity (Base)","Remaining Quantity" * SignFactor)
-            ELSE BEGIN
-              ItemLedgEntry.GET("Entry No.");
-              ReservEntry.VALIDATE("Quantity (Base)",ABS(ItemLedgEntry.Quantity) * SignFactor);
-            END;
-            ReservEntry.Positive := (ReservEntry."Quantity (Base)" > 0);
-            ReservEntry."Entry No." := 0;
-            IF ReservEntry.Positive THEN BEGIN
-              ReservEntry."Warranty Date" := "Warranty Date";
-              ReservEntry."Expiration Date" :=
-                ExistingExpirationDate("Item No.","Variant Code","Lot No.","Serial No.",FALSE,EntriesExist);
-              ReservEntry."Expected Receipt Date" := ToPurchLine."Expected Receipt Date"
-            END ELSE
-              ReservEntry."Shipment Date" := ToPurchLine."Expected Receipt Date";
 
-            IF FillExactCostRevLink THEN BEGIN
-              IF LinkThisEntry THEN BEGIN
-                ReservEntry."Appl.-to Item Entry" := "Entry No.";
+            IF FillExactCostRevLink THEN
+              IF NOT LinkThisEntry THEN
+                MissingExCostRevLink := TRUE
+              ELSE
                 IF NOT MissingExCostRevLink THEN BEGIN
                   CALCFIELDS("Cost Amount (Actual)","Cost Amount (Expected)");
                   TotalCostLCY :=
                     TotalCostLCY + "Cost Amount (Expected)" + "Cost Amount (Actual)";
                   ItemLedgEntryQty := ItemLedgEntryQty - Quantity;
                 END;
-              END ELSE
-                MissingExCostRevLink := TRUE;
+
+            IF LinkThisEntry AND ("Lot No." = '') THEN
+              // The check for Lot No = '' is to avoid changing the remaining quantity for partly sold Lots
+              // because this will cause undefined quantities in the item tracking
+              "Remaining Quantity" := Quantity;
+            IF ToPurchLine."Job No." = '' THEN
+              QtyBase := "Remaining Quantity" * SignFactor
+            ELSE BEGIN
+              ItemLedgEntry.GET("Entry No.");
+              QtyBase := ABS(ItemLedgEntry.Quantity) * SignFactor;
             END;
 
-            ReservEntry.Description := ToPurchLine.Description;
-            ReservEntry."Creation Date" := WORKDATE;
-            ReservEntry."Created By" := USERID;
-            ReservEntry.UpdateItemTracking;
-            ReservEntry.INSERT;
-
-            IF FillExactCostRevLink AND NOT LinkThisEntry THEN
-              MissingExCostRevLink := TRUE;
+            InsertReservEntryForPurchLine(
+              ItemLedgEntryBuf,ToPurchLine,QtyBase,FillExactCostRevLink AND LinkThisEntry,EntriesExist);
           UNTIL NEXT = 0;
 
           IF FillExactCostRevLink AND NOT MissingExCostRevLink THEN BEGIN
@@ -2570,6 +2598,7 @@ OBJECT Codeunit 6500 Item Tracking Management
       TempTrackingSpec@1002 : TEMPORARY Record 336;
       TempReservEntry@1005 : TEMPORARY Record 337;
       ReservEntry@1008 : Record 337;
+      ReservEntryBindingCheck@1013 : Record 337;
       ATOSalesLine@1004 : Record 37;
       AsmHeader@1010 : Record 900;
       ItemTrackingMgt@1007 : Codeunit 6500;
@@ -2578,6 +2607,7 @@ OBJECT Codeunit 6500 Item Tracking Management
       ToRowID@1006 : Text[250];
       IsTransferReceipt@1012 : Boolean;
       IsATOPosting@1003 : Boolean;
+      IsBindingOrderToOrder@1011 : Boolean;
     BEGIN
       // Used for carrying the item tracking from the invt. pick/put-away to the parent line.
       WITH WhseActivLine DO BEGIN
@@ -2613,6 +2643,8 @@ OBJECT Codeunit 6500 Item Tracking Management
           END;
           TempReservEntry.SetPointer(ToRowID);
           SignFactor := WhseActivitySignFactor(WhseActivLine);
+          ReservEntryBindingCheck.SetPointer(ToRowID);
+          ReservMgt.SetPointerFilter(ReservEntryBindingCheck);
           REPEAT
             IF TrackingExists THEN BEGIN
               TempReservEntry."Entry No." += 1;
@@ -2633,6 +2665,13 @@ OBJECT Codeunit 6500 Item Tracking Management
               TempReservEntry."Serial No." := "Serial No.";
               TempReservEntry."Expiration Date" := "Expiration Date";
               TempReservEntry.INSERT;
+
+              IF NOT IsBindingOrderToOrder THEN BEGIN
+                ReservEntryBindingCheck.SETRANGE("Lot No.","Lot No.");
+                ReservEntryBindingCheck.SETRANGE("Serial No.","Serial No.");
+                ReservEntryBindingCheck.SETRANGE(Binding,ReservEntryBindingCheck.Binding::"Order-to-Order");
+                IsBindingOrderToOrder := NOT ReservEntryBindingCheck.ISEMPTY;
+              END;
             END;
           UNTIL NEXT = 0;
 
@@ -2642,7 +2681,8 @@ OBJECT Codeunit 6500 Item Tracking Management
       END;
 
       SumUpItemTracking(TempReservEntry,TempTrackingSpec,FALSE,TRUE);
-      IF NOT IsTransferReceipt THEN // Item Tracking on transfer receipt cannot be changed
+      // Item Tracking cannot be changed on transfer receipt and on binding order-to-order
+      IF NOT IsTransferReceipt AND NOT IsBindingOrderToOrder THEN
         SynchronizeItemTracking2(TempReservEntry,ToRowID,'');
       ReservEntry.SetPointer(ToRowID);
       ReservMgt.SetPointerFilter(ReservEntry);
@@ -2971,6 +3011,106 @@ OBJECT Codeunit 6500 Item Tracking Management
     BEGIN
       IF NoRequired THEN
         DestNo := SourceNo;
+    END;
+
+    PROCEDURE UpdateQuantities@116(WhseWorksheetLine@1006 : Record 7326;VAR TotalWhseItemTrackingLine@1008 : Record 6550;VAR SourceQuantityArray@1001 : ARRAY [2] OF Decimal;VAR UndefinedQtyArray@1007 : ARRAY [2] OF Decimal;SourceType@1002 : Integer) : Boolean;
+    BEGIN
+      SourceQuantityArray[1] := ABS(WhseWorksheetLine."Qty. (Base)");
+      SourceQuantityArray[2] := ABS(WhseWorksheetLine."Qty. to Handle (Base)");
+      EXIT(CalculateSums(WhseWorksheetLine,TotalWhseItemTrackingLine,SourceQuantityArray,UndefinedQtyArray,SourceType));
+    END;
+
+    PROCEDURE CalculateSums@115(WhseWorksheetLine@1005 : Record 7326;VAR TotalWhseItemTrackingLine@1003 : Record 6550;SourceQuantityArray@1001 : ARRAY [2] OF Decimal;VAR UndefinedQtyArray@1002 : ARRAY [2] OF Decimal;SourceType@1004 : Integer) : Boolean;
+    BEGIN
+      WITH TotalWhseItemTrackingLine DO BEGIN
+        SETCURRENTKEY(
+          "Source ID","Source Type","Source Subtype","Source Batch Name",
+          "Source Prod. Order Line","Source Ref. No.");
+        SETRANGE("Source Type",SourceType);
+        SETRANGE("Location Code",WhseWorksheetLine."Location Code");
+
+        CASE SourceType OF
+          DATABASE::"Posted Whse. Receipt Line",
+          DATABASE::"Warehouse Shipment Line",
+          DATABASE::"Whse. Internal Put-away Line",
+          DATABASE::"Whse. Internal Pick Line",
+          DATABASE::"Assembly Line",
+          DATABASE::"Internal Movement Line":
+            BEGIN
+              SETRANGE("Source ID",WhseWorksheetLine."Whse. Document No.");
+              SETRANGE("Source Ref. No.",WhseWorksheetLine."Whse. Document Line No.");
+            END;
+          DATABASE::"Prod. Order Component":
+            BEGIN
+              SETRANGE("Source Subtype",WhseWorksheetLine."Source Subtype");
+              SETRANGE("Source ID",WhseWorksheetLine."Source No.");
+              SETRANGE("Source Prod. Order Line",WhseWorksheetLine."Source Line No.");
+              SETRANGE("Source Ref. No.",WhseWorksheetLine."Source Subline No.");
+            END;
+          DATABASE::"Whse. Worksheet Line",
+          DATABASE::"Warehouse Journal Line":
+            BEGIN
+              SETRANGE("Source Batch Name",WhseWorksheetLine."Worksheet Template Name");
+              SETRANGE("Source ID",WhseWorksheetLine.Name);
+              SETRANGE("Source Ref. No.",WhseWorksheetLine."Line No.");
+            END;
+        END;
+        CALCSUMS("Quantity (Base)","Qty. to Handle (Base)");
+      END;
+      EXIT(UpdateUndefinedQty(TotalWhseItemTrackingLine,SourceQuantityArray,UndefinedQtyArray));
+    END;
+
+    PROCEDURE UpdateUndefinedQty@114(TotalWhseItemTrackingLine@1004 : Record 6550;SourceQuantityArray@1002 : ARRAY [2] OF Decimal;VAR UndefinedQtyArray@1003 : ARRAY [2] OF Decimal) : Boolean;
+    BEGIN
+      UndefinedQtyArray[1] := SourceQuantityArray[1] - TotalWhseItemTrackingLine."Quantity (Base)";
+      UndefinedQtyArray[2] := SourceQuantityArray[2] - TotalWhseItemTrackingLine."Qty. to Handle (Base)";
+      EXIT(NOT (ABS(SourceQuantityArray[1]) < ABS(TotalWhseItemTrackingLine."Quantity (Base)")));
+    END;
+
+    LOCAL PROCEDURE InsertReservEntryForPurchLine@117(ItemLedgEntryBuf@1001 : Record 32;PurchaseLine@1000 : Record 39;QtyBase@1003 : Decimal;AppliedToItemEntry@1004 : Boolean;VAR EntriesExist@1005 : Boolean);
+    VAR
+      ReservEntry@1002 : Record 337;
+    BEGIN
+      IF QtyBase = 0 THEN
+        EXIT;
+
+      WITH ReservEntry DO BEGIN
+        INIT;
+        "Item No." := ItemLedgEntryBuf."Item No.";
+        "Location Code" := ItemLedgEntryBuf."Location Code";
+        "Serial No." := ItemLedgEntryBuf."Serial No.";
+        "Qty. per Unit of Measure" := ItemLedgEntryBuf."Qty. per Unit of Measure";
+        "Lot No." := ItemLedgEntryBuf."Lot No.";
+        "Variant Code" := ItemLedgEntryBuf."Variant Code";
+        "Source Type" := DATABASE::"Purchase Line";
+        "Source Subtype" := PurchaseLine."Document Type";
+        "Source ID" := PurchaseLine."Document No.";
+        "Source Ref. No." := PurchaseLine."Line No.";
+        IF PurchaseLine."Document Type" IN
+           [PurchaseLine."Document Type"::Order,PurchaseLine."Document Type"::"Return Order"]
+        THEN
+          "Reservation Status" := "Reservation Status"::Surplus
+        ELSE
+          "Reservation Status" := "Reservation Status"::Prospect;
+        "Quantity Invoiced (Base)" := 0;
+        VALIDATE("Quantity (Base)",QtyBase);
+        Positive := ("Quantity (Base)" > 0);
+        "Entry No." := 0;
+        IF Positive THEN BEGIN
+          "Warranty Date" := ItemLedgEntryBuf."Warranty Date";
+          "Expiration Date" :=
+            ExistingExpirationDate("Item No.","Variant Code","Lot No.","Serial No.",FALSE,EntriesExist);
+          "Expected Receipt Date" := PurchaseLine."Expected Receipt Date"
+        END ELSE
+          "Shipment Date" := PurchaseLine."Expected Receipt Date";
+        IF AppliedToItemEntry THEN
+          "Appl.-to Item Entry" := ItemLedgEntryBuf."Entry No.";
+        Description := PurchaseLine.Description;
+        "Creation Date" := WORKDATE;
+        "Created By" := USERID;
+        UpdateItemTracking;
+        INSERT;
+      END;
     END;
 
     BEGIN

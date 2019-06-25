@@ -2,9 +2,9 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=25-04-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.51333;
   }
   PROPERTIES
   {
@@ -64,8 +64,10 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
       LineCount@1035 : Integer;
       HideDialog@1036 : Boolean;
       Text003@1003 : TextConst 'DAN=Der er intet at registrere.;ENU=There is nothing to register.';
-      Text004@1024 : TextConst 'DAN=Den varesporing, der er angivet for kildelinjen, beløber sig til mere end den mængde, du har angivet.\Du skal regulere den eksisterende varesporing og derefter indtaste den nye mængde igen.;ENU=Item tracking defined for the source line accounts for more than the quantity you have entered.\You must adjust the existing item tracking and then reenter the new quantity.';
+      InsufficientQtyItemTrkgErr@1024 : TextConst '@@@="%1=Source Line No.,%2=Source Document,%3=Source No.";DAN=Den varesporing, der er angivet for kildelinjen %1 af %2 %3, beløber sig til mere end den mængde, du har angivet.\\Du skal regulere den eksisterende varesporingsspecifikation og derefter indtaste en ny mængde igen.;ENU=Item tracking defined for source line %1 of %2 %3 amounts to more than the quantity you have entered.\\You must adjust the existing item tracking specification and then reenter a new quantity.';
       Text005@1028 : TextConst 'DAN=%1 %2 er ikke disponibel på lager eller er allerede reserveret til et andet dokument.;ENU=%1 %2 is not available on inventory or it has already been reserved for another document.';
+      OrderToOrderBindingOnSalesLineQst@1038 : TextConst 'DAN=Registering af plukket fjerner den eksisterende order-til-order-reservation til salgsordren.\Vil du fortsætte?;ENU=Registering the pick will remove the existing order-to-order reservation for the sales order.\Do you want to continue?';
+      RegisterInterruptedErr@1039 : TextConst 'DAN=Handlingen er afbrudt på grund af advarslen.;ENU=The action has been interrupted to respect the warning.';
 
     LOCAL PROCEDURE Code@3();
     VAR
@@ -114,6 +116,8 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
           "Activity Type","No.","Whse. Document Type","Whse. Document No.");
         IF WhseActivLine.FIND('-') THEN
           REPEAT
+            CopyWhseActivityLineToReservBuf(TempWhseActivLineToReserve,WhseActivLine);
+
             IF Type <> Type::Movement THEN
               UpdateWhseSourceDocLine(WhseActivLine);
             IF WhseActivLine."Qty. Outstanding" = WhseActivLine."Qty. to Handle" THEN
@@ -136,7 +140,6 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
 
             OldWhseActivLine := WhseActivLine;
 
-            CopyWhseActivityLineToReservBuf(TempWhseActivLineToReserve,WhseActivLine);
             LastLine := WhseActivLine.NEXT = 0;
 
             IF LastLine OR
@@ -146,12 +149,13 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
             THEN
               UpdateWhseDocHeader(OldWhseActivLine);
 
-            IF OldWhseActivLine."Action Type" = OldWhseActivLine."Action Type"::Take THEN
-              DeleteBinContent(OldWhseActivLine);
+            OldWhseActivLine.DeleteBinContent(OldWhseActivLine."Action Type"::Take);
           UNTIL LastLine;
+
+        CheckAndRemoveOrderToOrderBinding(TempWhseActivLineToReserve);
         ItemTrackingMgt.SetPick(OldWhseActivLine."Activity Type" = OldWhseActivLine."Activity Type"::Pick);
         ItemTrackingMgt.SynchronizeWhseItemTracking(TempTrackingSpecification,RegisteredWhseActivLine."No.",FALSE);
-        AutoReserveForSalesLine(TempWhseActivLineToReserve,WhseActivHeader);
+        AutoReserveForSalesLine(TempWhseActivLineToReserve);
 
         IF Location."Bin Mandatory" THEN BEGIN
           LineCount := 0;
@@ -785,25 +789,6 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
       EXIT(QtyBase);
     END;
 
-    LOCAL PROCEDURE DeleteBinContent@15(WhseActivLine@1000 : Record 5767);
-    VAR
-      FromBinContent@1001 : Record 7302;
-    BEGIN
-      WITH WhseActivLine DO
-        IF FromBinContent.GET(
-             "Location Code","Bin Code","Item No.","Variant Code","Unit of Measure Code")
-        THEN
-          IF NOT FromBinContent.Fixed THEN BEGIN
-            FromBinContent.CALCFIELDS(
-              "Quantity (Base)","Positive Adjmt. Qty. (Base)","Put-away Quantity (Base)");
-            IF (FromBinContent."Quantity (Base)" = 0) AND
-               (FromBinContent."Positive Adjmt. Qty. (Base)" = 0) AND
-               (FromBinContent."Put-away Quantity (Base)" - "Qty. Outstanding (Base)" <= 0)
-            THEN
-              FromBinContent.DELETE;
-          END;
-    END;
-
     LOCAL PROCEDURE CheckWhseItemTrkgLine@28(VAR WhseActivLine@1000 : Record 5767);
     VAR
       TempWhseActivLine@1003 : TEMPORARY Record 5767;
@@ -875,14 +860,13 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
             IF QtyToRegisterBase > QtyAvailToRegisterBase THEN
               QtyAvailToInsertBase -= QtyToRegisterBase - QtyAvailToRegisterBase;
             IF QtyAvailToInsertBase < 0 THEN
-              ERROR(Text004);
+              ERROR(
+                InsufficientQtyItemTrkgErr,TempWhseActivLine."Source Line No.",TempWhseActivLine."Source Document",
+                TempWhseActivLine."Source No.");
 
-            IF TempWhseActivLine."Serial No." <> '' THEN
-              IF CalcTotalAvailQtyToPick(TempWhseActivLine,WhseSNRequired,WhseLNRequired) < QtyToRegisterBase THEN
-                ERROR(Text005,TempWhseActivLine.FIELDCAPTION("Serial No."),TempWhseActivLine."Serial No.");
-            IF TempWhseActivLine."Lot No." <> '' THEN
-              IF CalcTotalAvailQtyToPick(TempWhseActivLine,WhseSNRequired,WhseLNRequired) < QtyToRegisterBase THEN
-                ERROR(Text005,TempWhseActivLine.FIELDCAPTION("Lot No."),TempWhseActivLine."Lot No.");
+            IF (TempWhseActivLine."Serial No." <> '') OR (TempWhseActivLine."Lot No." <> '') THEN
+              IF NOT IsQtyAvailToPickNonSpecificReservation(TempWhseActivLine,WhseSNRequired,WhseLNRequired,QtyToRegisterBase) THEN
+                AvailabilityError(TempWhseActivLine);
 
             // Clear filters, Lot/SN
             TempWhseActivLine.SETRANGE("Serial No.");
@@ -1161,6 +1145,30 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
       EXIT(SourceLineQtyBase(WhseActivLine) - WhseItemTrkgLine."Quantity (Base)");
     END;
 
+    LOCAL PROCEDURE CalcQtyReservedOnInventory@40(WhseActivLine@1000 : Record 5767;SNRequired@1001 : Boolean;LNRequired@1002 : Boolean);
+    BEGIN
+      WITH WhseActivLine DO BEGIN
+        GetItem("Item No.");
+        Item.SETRANGE("Location Filter","Location Code");
+        Item.SETRANGE("Variant Filter","Variant Code");
+        IF "Lot No." <> '' THEN BEGIN
+          IF LNRequired THEN
+            Item.SETRANGE("Lot No. Filter","Lot No.")
+          ELSE
+            Item.SETFILTER("Lot No. Filter",'%1|%2',"Lot No.",'')
+        END ELSE
+          Item.SETRANGE("Lot No. Filter");
+        IF "Serial No." <> '' THEN BEGIN
+          IF SNRequired THEN
+            Item.SETRANGE("Serial No. Filter","Serial No.")
+          ELSE
+            Item.SETFILTER("Serial No. Filter",'%1|%2',"Serial No.",'');
+        END ELSE
+          Item.SETRANGE("Serial No. Filter");
+        Item.CALCFIELDS("Reserved Qty. on Inventory");
+      END;
+    END;
+
     LOCAL PROCEDURE InsertRegWhseItemTrkgLine@21(WhseActivLine@1000 : Record 5767;QtyToRegisterBase@1001 : Decimal);
     VAR
       WhseItemTrkgLine2@1002 : Record 6550;
@@ -1301,9 +1309,10 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
     VAR
       WhseEntry@1006 : Record 7312;
       ItemLedgEntry@1012 : Record 32;
-      WhseActivLine2@1015 : Record 5767;
+      TempWhseActivLine2@1015 : TEMPORARY Record 5767;
       CreatePick@1025 : Codeunit 7312;
       WhseAvailMgt@1013 : Codeunit 7314;
+      BinTypeFilter@1016 : Text;
       TotalAvailQtyBase@1004 : Decimal;
       QtyInWhseBase@1008 : Decimal;
       QtyOnPickBinsBase@1007 : Decimal;
@@ -1315,26 +1324,9 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
       QtyPickedNotShipped@1003 : Decimal;
     BEGIN
       WITH WhseActivLine DO BEGIN
-        GetItem("Item No.");
-        LocationGet("Location Code");
-        Item.SETRANGE("Location Filter","Location Code");
-        Item.SETRANGE("Variant Filter","Variant Code");
-        IF "Lot No." <> '' THEN BEGIN
-          IF LNRequired THEN
-            Item.SETRANGE("Lot No. Filter","Lot No.")
-          ELSE
-            Item.SETFILTER("Lot No. Filter",'%1|%2',"Lot No.",'')
-        END ELSE
-          Item.SETRANGE("Lot No. Filter");
-        IF "Serial No." <> '' THEN BEGIN
-          IF SNRequired THEN
-            Item.SETRANGE("Serial No. Filter","Serial No.")
-          ELSE
-            Item.SETFILTER("Serial No. Filter",'%1|%2',"Serial No.",'');
-        END ELSE
-          Item.SETRANGE("Serial No. Filter");
-        Item.CALCFIELDS("Reserved Qty. on Inventory");
+        CalcQtyReservedOnInventory(WhseActivLine,SNRequired,LNRequired);
 
+        LocationGet("Location Code");
         IF Location."Directed Put-away and Pick" OR
            ("Activity Type" = "Activity Type"::"Invt. Movement")
         THEN BEGIN
@@ -1355,7 +1347,9 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
           WhseEntry.CALCSUMS("Qty. (Base)");
           QtyInWhseBase := WhseEntry."Qty. (Base)";
 
-          WhseEntry.SETFILTER("Bin Type Code",'<>%1',CreatePick.GetBinTypeFilter(0)); // Pick from all but Receive area
+          BinTypeFilter := CreatePick.GetBinTypeFilter(0);
+          IF BinTypeFilter <> '' THEN
+            WhseEntry.SETFILTER("Bin Type Code",'<>%1',BinTypeFilter); // Pick from all but Receive area
           WhseEntry.CALCSUMS("Qty. (Base)");
           QtyOnPickBinsBase := WhseEntry."Qty. (Base)";
 
@@ -1368,14 +1362,17 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
 
           SubTotalBase :=
             QtyInWhseBase -
-            QtyOnPickBinsBase - QtyOnOutboundBinsBase - QtyOnDedicatedBinsBase - ABS(Item."Reserved Qty. on Inventory");
+            QtyOnPickBinsBase - QtyOnOutboundBinsBase - QtyOnDedicatedBinsBase;
+          IF "Activity Type" <> "Activity Type"::"Invt. Movement" THEN
+            SubTotalBase -= ABS(Item."Reserved Qty. on Inventory");
+
           IF SubTotalBase < 0 THEN BEGIN
             QtyReservedOnPickShipBase :=
-              WhseAvailMgt.CalcReservQtyOnPicksShips("Location Code","Item No.","Variant Code",WhseActivLine2);
+              WhseAvailMgt.CalcReservQtyOnPicksShips("Location Code","Item No.","Variant Code",TempWhseActivLine2);
 
             LineReservedQtyBase :=
               WhseAvailMgt.CalcLineReservedQtyOnInvt(
-                "Source Type","Source Subtype","Source No.","Source Line No.","Source Subline No.",TRUE,'','',WhseActivLine2);
+                "Source Type","Source Subtype","Source No.","Source Line No.","Source Subline No.",TRUE,'','',TempWhseActivLine2);
 
             IF ABS(SubTotalBase) < QtyReservedOnPickShipBase + LineReservedQtyBase THEN
               QtyReservedOnPickShipBase := ABS(SubTotalBase) - LineReservedQtyBase;
@@ -1414,7 +1411,7 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
 
           LineReservedQtyBase :=
             WhseAvailMgt.CalcLineReservedQtyOnInvt(
-              "Source Type","Source Subtype","Source No.","Source Line No.","Source Subline No.",FALSE,'','',WhseActivLine2);
+              "Source Type","Source Subtype","Source No.","Source Line No.","Source Subline No.",FALSE,'','',TempWhseActivLine2);
 
           TotalAvailQtyBase :=
             QtyInWhseBase -
@@ -1425,6 +1422,18 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
 
         EXIT(TotalAvailQtyBase);
       END;
+    END;
+
+    LOCAL PROCEDURE IsQtyAvailToPickNonSpecificReservation@51(WhseActivLine@1001 : Record 5767;SNRequired@1002 : Boolean;LNRequired@1003 : Boolean;QtyToRegister@1004 : Decimal) : Boolean;
+    VAR
+      QtyAvailToPick@1000 : Decimal;
+    BEGIN
+      QtyAvailToPick := CalcTotalAvailQtyToPick(WhseActivLine,SNRequired,LNRequired);
+      IF QtyAvailToPick < QtyToRegister THEN
+        IF ReleaseNonSpecificReservations(WhseActivLine,SNRequired,LNRequired,QtyToRegister - QtyAvailToPick) THEN
+          QtyAvailToPick := CalcTotalAvailQtyToPick(WhseActivLine,SNRequired,LNRequired);
+
+      EXIT(QtyAvailToPick >= QtyToRegister);
     END;
 
     LOCAL PROCEDURE CalcQtyPickedNotShipped@24(WhseActivLine@1001 : Record 5767;SNRequired@1000 : Boolean;LNRequired@1004 : Boolean) QtyBasePicked : Decimal;
@@ -1670,7 +1679,7 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
       EXIT(1);
     END;
 
-    LOCAL PROCEDURE AutoReserveForSalesLine@38(VAR TempWhseActivLineToReserve@1003 : TEMPORARY Record 5767;WhseActivHeader@1004 : Record 5766);
+    LOCAL PROCEDURE AutoReserveForSalesLine@38(VAR TempWhseActivLineToReserve@1003 : TEMPORARY Record 5767);
     VAR
       SalesLine@1002 : Record 37;
       ReservMgt@1001 : Codeunit 99000845;
@@ -1678,13 +1687,11 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
     BEGIN
       IF TempWhseActivLineToReserve.FINDSET THEN
         REPEAT
-          IF (WhseActivHeader.Type = WhseActivHeader.Type::Pick) AND
-             (TempWhseActivLineToReserve."Action Type" = TempWhseActivLineToReserve."Action Type"::Place) AND
-             (TempWhseActivLineToReserve."Source Document" = TempWhseActivLineToReserve."Source Document"::"Sales Order") AND
-             (TempWhseActivLineToReserve."Serial No." <> '')
+          SalesLine.GET(
+            SalesLine."Document Type"::Order,TempWhseActivLineToReserve."Source No.",TempWhseActivLineToReserve."Source Line No.");
+
+          IF NOT IsSalesLineCompletelyReserved(SalesLine,TempWhseActivLineToReserve."Serial No.",TempWhseActivLineToReserve."Lot No.")
           THEN BEGIN
-            SalesLine.GET(
-              SalesLine."Document Type"::Order,TempWhseActivLineToReserve."Source No.",TempWhseActivLineToReserve."Source Line No.");
             ReservMgt.SetSalesLine(SalesLine);
             ReservMgt.SetSerialLotNo(TempWhseActivLineToReserve."Serial No.",TempWhseActivLineToReserve."Lot No.");
             ReservMgt.AutoReserve(
@@ -1694,17 +1701,105 @@ OBJECT Codeunit 7307 Whse.-Activity-Register
         UNTIL TempWhseActivLineToReserve.NEXT = 0;
     END;
 
+    LOCAL PROCEDURE CheckAndRemoveOrderToOrderBinding@42(VAR TempWhseActivLineToReserve@1003 : TEMPORARY Record 5767);
+    VAR
+      SalesLine@1002 : Record 37;
+      ReservationEntry@1005 : Record 337;
+      ReservMgt@1001 : Codeunit 99000845;
+      ReservationEngineMgt@1006 : Codeunit 99000831;
+      IsConfirmed@1000 : Boolean;
+    BEGIN
+      IF TempWhseActivLineToReserve.FINDSET THEN
+        REPEAT
+          SalesLine.GET(
+            SalesLine."Document Type"::Order,TempWhseActivLineToReserve."Source No.",TempWhseActivLineToReserve."Source Line No.");
+          ReservationEntry.SETRANGE("Source Type",DATABASE::"Sales Line");
+          ReservationEntry.SETRANGE("Source Subtype",SalesLine."Document Type");
+          ReservationEntry.SETRANGE("Source ID",SalesLine."Document No.");
+          ReservationEntry.SETRANGE("Source Ref. No.",SalesLine."Line No.");
+          ReservationEntry.SETFILTER("Item Tracking",'<>%1',ReservationEntry."Item Tracking"::None);
+          ReservationEntry.SETRANGE(Binding,ReservationEntry.Binding::"Order-to-Order");
+          ReservationEntry.SETRANGE("Disallow Cancellation",FALSE);
+
+          IF ReservationEntry.FINDSET THEN BEGIN
+            IF NOT IsConfirmed AND GUIALLOWED THEN
+              IF NOT CONFIRM(OrderToOrderBindingOnSalesLineQst) THEN
+                ERROR(RegisterInterruptedErr);
+            IsConfirmed := TRUE;
+            REPEAT
+              ReservationEngineMgt.CancelReservation(ReservationEntry);
+              ReservMgt.SetSalesLine(SalesLine);
+              ReservMgt.SetItemTrackingHandling(1);
+              ReservMgt.ClearSurplus;
+            UNTIL ReservationEntry.NEXT = 0;
+          END;
+        UNTIL TempWhseActivLineToReserve.NEXT = 0;
+    END;
+
     LOCAL PROCEDURE CopyWhseActivityLineToReservBuf@39(VAR TempWhseActivLineToReserve@1001 : TEMPORARY Record 5767;WhseActivLine@1000 : Record 5767);
     BEGIN
-      IF (WhseActivHeader.Type <> WhseActivHeader.Type::Pick) OR
-         (WhseActivLine."Action Type" <> WhseActivLine."Action Type"::Place) OR
-         (WhseActivLine."Source Document" <> WhseActivLine."Source Document"::"Sales Order") OR
-         (WhseActivLine."Serial No." = '')
-      THEN
+      IF NOT IsPickPlaceForSalesOrderTrackedItem(WhseActivLine) THEN
         EXIT;
 
       TempWhseActivLineToReserve.TRANSFERFIELDS(WhseActivLine);
       TempWhseActivLineToReserve.INSERT;
+    END;
+
+    LOCAL PROCEDURE ReleaseNonSpecificReservations@52(WhseActivLine@1005 : Record 5767;SNRequired@1004 : Boolean;LNRequired@1003 : Boolean;QtyToRelease@1000 : Decimal) : Boolean;
+    VAR
+      LateBindingMgt@1002 : Codeunit 6502;
+      xReservedQty@1001 : Decimal;
+    BEGIN
+      IF QtyToRelease <= 0 THEN
+        EXIT;
+
+      CalcQtyReservedOnInventory(WhseActivLine,SNRequired,LNRequired);
+
+      IF LNRequired OR SNRequired THEN
+        IF Item."Reserved Qty. on Inventory" > 0 THEN BEGIN
+          xReservedQty := Item."Reserved Qty. on Inventory";
+          LateBindingMgt.ReleaseForReservation(
+            WhseActivLine."Item No.",WhseActivLine."Variant Code",WhseActivLine."Location Code",
+            WhseActivLine."Serial No.",WhseActivLine."Lot No.",QtyToRelease);
+          Item.CALCFIELDS("Reserved Qty. on Inventory");
+        END;
+
+      EXIT(xReservedQty > Item."Reserved Qty. on Inventory");
+    END;
+
+    LOCAL PROCEDURE AvailabilityError@49(WhseActivLine@1000 : Record 5767);
+    BEGIN
+      IF WhseActivLine."Serial No." <> '' THEN
+        ERROR(Text005,WhseActivLine.FIELDCAPTION("Serial No."),WhseActivLine."Serial No.");
+
+      IF WhseActivLine."Lot No." <> '' THEN
+        ERROR(Text005,WhseActivLine.FIELDCAPTION("Lot No."),WhseActivLine."Lot No.");
+    END;
+
+    LOCAL PROCEDURE IsPickPlaceForSalesOrderTrackedItem@44(WhseActivityLine@1000 : Record 5767) : Boolean;
+    BEGIN
+      EXIT(
+        (WhseActivityLine."Activity Type" = WhseActivityLine."Activity Type"::Pick) AND
+        (WhseActivityLine."Action Type" IN [WhseActivityLine."Action Type"::Place,WhseActivityLine."Action Type"::" "]) AND
+        (WhseActivityLine."Source Document" = WhseActivityLine."Source Document"::"Sales Order") AND
+        ((WhseActivityLine."Serial No." <> '') OR (WhseActivityLine."Lot No." <> '')));
+    END;
+
+    LOCAL PROCEDURE IsSalesLineCompletelyReserved@41(SalesLine@1000 : Record 37;SerialNo@1001 : Code[20];LotNo@1002 : Code[20]) : Boolean;
+    VAR
+      ReservationEntry@1003 : Record 337;
+    BEGIN
+      ReservationEntry.SETRANGE("Source Type",DATABASE::"Sales Line");
+      ReservationEntry.SETRANGE("Source Subtype",SalesLine."Document Type");
+      ReservationEntry.SETRANGE("Source ID",SalesLine."Document No.");
+      ReservationEntry.SETRANGE("Source Ref. No.",SalesLine."Line No.");
+      ReservationEntry.SETRANGE("Serial No.",SerialNo);
+      ReservationEntry.SETRANGE("Lot No.",LotNo);
+      IF ReservationEntry.ISEMPTY THEN
+        EXIT(FALSE);
+
+      ReservationEntry.SETFILTER("Reservation Status",'<>%1',ReservationEntry."Reservation Status"::Reservation);
+      EXIT(ReservationEntry.ISEMPTY);
     END;
 
     BEGIN

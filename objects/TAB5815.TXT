@@ -2,9 +2,9 @@ OBJECT Table 5815 Inventory Period Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -29,6 +29,7 @@ OBJECT Table 5815 Inventory Period Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 4   ;   ;Creation Date       ;Date          ;CaptionML=[DAN=Oprettelsesdato;

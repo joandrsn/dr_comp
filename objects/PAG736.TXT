@@ -1,0 +1,49 @@
+OBJECT Page 736 VAT Return Period FactBox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21-12-18;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.50868;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[DAN=Flere oplysninger;
+               ENU=Additional Information];
+    LinksAllowed=No;
+    SourceTable=Table737;
+    PageType=ListPart;
+    OnAfterGetCurrRecord=BEGIN
+                           WarningText := CheckOpenOrOverdue;
+                         END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                GroupType=Group }
+
+    { 3   ;2   ;Field     ;
+                Name=WarningText;
+                ToolTipML=[DAN=Angiver den advarselstekst, der vises for en åben eller forfaldne forpligtelse.;
+                           ENU=Specifies the warning text that is displayed for an open or overdue oligation.];
+                SourceExpr=WarningText;
+                Style=Unfavorable;
+                StyleExpr=TRUE;
+                ShowCaption=No }
+
+  }
+  CODE
+  {
+    VAR
+      WarningText@1000 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

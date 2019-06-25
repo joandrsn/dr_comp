@@ -2,9 +2,9 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-02-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51103;
   }
   PROPERTIES
   {
@@ -100,6 +100,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       CloseCondition := TRUE;
       CLEAR(ServPostingJnlsMgt);
       CLEAR(ServAmountsMgt);
+      PassedServiceHeader.ValidateSalesPersonOnServiceHeader(PassedServiceHeader,TRUE,TRUE);
       PrepareDocument(PassedServiceHeader,PassedServiceLine);
       CheckSysCreatedEntry;
       CheckShippingAdvice;
@@ -133,7 +134,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       TempVATAmountLine@1006 : TEMPORARY Record 290;
       TempVATAmountLineForSLE@1018 : TEMPORARY Record 290;
       TempVATAmountLineRemainder@1003 : TEMPORARY Record 290;
-      InvPostingBuffer@1004 : ARRAY [2] OF Record 49;
+      InvPostingBuffer@1004 : ARRAY [2] OF TEMPORARY Record 49;
       DummyTrackingSpecification@1016 : Record 336;
       TempDimBuf@1007 : TEMPORARY Record 360;
       Item@1021 : Record 27;
@@ -150,8 +151,6 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       LastLineRetrieved@1017 : Boolean;
     BEGIN
       LineCount := 0;
-      TempVATAmountLineRemainder.DELETEALL;
-      InvPostingBuffer[1].DELETEALL;
 
       // init cu for posting SLE type Usage
       ServPostingJnlsMgt.InitServiceRegister(NextServLedgerEntryNo,NextWarrantyLedgerEntryNo);
@@ -288,10 +287,6 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
 
             // post service line via journals
             CASE Type OF
-              Type::"G/L Account":
-                PostGlLines(ServHeader,ServLine,ServShptHeader."No.",Consume);
-              Type::Cost:
-                PostCostLines(ServHeader,ServLine,ServShptHeader."No.",Consume);
               Type::Item:
                 BEGIN
                   IF Ship AND ("Document Type" = "Document Type"::Order) THEN BEGIN
@@ -438,9 +433,6 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
                 InvPostingBuffer,GenJnlLineDocType,GenJnlLineDocNo,GenJnlLineExtDocNo);
             UNTIL InvPostingBuffer[1].NEXT(-1) = 0;
 
-          // we don't need it any longer
-          InvPostingBuffer[1].DELETEALL;
-
           // Post customer entry
           Window.UPDATE(4,1);
           ServPostingJnlsMgt.SetPostingDate("Posting Date");
@@ -562,7 +554,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       END;
     END;
 
-    PROCEDURE PrepareShipmentHeader@11();
+    PROCEDURE PrepareShipmentHeader@11() : Code[20];
     VAR
       ServLine@1003 : Record 5902;
       PServShptHeader@1001 : Record 5990;
@@ -633,6 +625,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
         END;
 
         ServItemMgt.CopyReservationEntryService(ServHeader);
+        EXIT(ServShptHeader."No.");
       END;
     END;
 
@@ -704,7 +697,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       END;
     END;
 
-    PROCEDURE PrepareInvoiceHeader@12(VAR Window@1001 : Dialog);
+    PROCEDURE PrepareInvoiceHeader@12(VAR Window@1001 : Dialog) : Code[20];
     VAR
       RecordLinkManagement@1000 : Codeunit 447;
     BEGIN
@@ -753,6 +746,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
             TempServCommentLine."Table Name"::"Service Header",
             TempServCommentLine."Table Name"::"Service Invoice Header",
             "No.",ServInvHeader."No.");
+        EXIT(ServInvHeader."No.");
       END;
     END;
 
@@ -771,7 +765,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       END;
     END;
 
-    PROCEDURE PrepareCrMemoHeader@14(VAR Window@1001 : Dialog);
+    PROCEDURE PrepareCrMemoHeader@14(VAR Window@1001 : Dialog) : Code[20];
     VAR
       RecordLinkManagement@1000 : Codeunit 447;
     BEGIN
@@ -802,6 +796,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
           TempServCommentLine."Table Name"::"Service Header",
           TempServCommentLine."Table Name"::"Service Cr.Memo Header",
           "No.",ServCrMemoHeader."No.");
+        EXIT(ServCrMemoHeader."No.");
       END;
     END;
 
@@ -865,7 +860,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       ServLine.SETFILTER(Quantity,'<>0');
       IF ServLine.FIND('-') THEN
         REPEAT
-          WITH ServLine DO BEGIN
+          WITH ServLine DO
             IF PServLine.GET("Document Type","Document No.","Line No.") THEN BEGIN
               PServLine.COPY(ServLine);
               PServLine.MODIFY;
@@ -876,7 +871,6 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
                 PServLine.COPY(ServLine);
                 PServLine.INSERT;
               END;
-          END;
         UNTIL ServLine.NEXT = 0;
       ServLine.RESET;
       ServLine.DELETEALL; // just temp records
@@ -1345,6 +1339,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       ServiceItemLineTemp.SETCURRENTKEY("Document Type","Document No.","Line No.");
       ServiceItemLineTemp.SETRANGE("Document Type",ServItemLine."Document Type");
       ServiceItemLineTemp.SETRANGE("Document No.",ServItemLine."Document No.");
+      ServiceItemLineTemp.SETFILTER("Service Item No.",'<>%1','');
       IF ServiceItemLineTemp.FINDSET THEN
         REPEAT
           ServiceLineTemp.SETCURRENTKEY("Document Type","Document No.","Service Item No.");
@@ -1359,7 +1354,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
 
     LOCAL PROCEDURE CheckSysCreatedEntry@45();
     BEGIN
-      WITH ServLine DO BEGIN
+      WITH ServLine DO
         IF ServHeader."Document Type" = ServHeader."Document Type"::Invoice THEN BEGIN
           RESET;
           SETRANGE("System-Created Entry",FALSE);
@@ -1368,7 +1363,6 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
             ERROR(Text001);
           RESET;
         END;
-      END;
     END;
 
     LOCAL PROCEDURE CheckShippingAdvice@40();
@@ -1468,10 +1462,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
     BEGIN
       GenJnlLineDocType := DocType;
       GenJnlLineDocNo := DocNo;
-      IF SalesSetup."Ext. Doc. No. Mandatory" THEN
-        GenJnlLineExtDocNo := ExtDocNo
-      ELSE
-        GenJnlLineExtDocNo := '';
+      GenJnlLineExtDocNo := ExtDocNo;
       ServPostingJnlsMgt.SetGenJnlLineDocNos(GenJnlLineDocType,GenJnlLineDocNo,GenJnlLineExtDocNo);
     END;
 
@@ -1653,12 +1644,15 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
     LOCAL PROCEDURE UpdateServLinesOnPostOrder@26();
     VAR
       CalcInvDiscAmt@1000 : Boolean;
+      OldInvDiscountAmount@1001 : Decimal;
     BEGIN
       CalcInvDiscAmt := FALSE;
       WITH ServLine DO BEGIN
         IF FIND('-') THEN
           REPEAT
             IF Quantity <> 0 THEN BEGIN
+              OldInvDiscountAmount := "Inv. Discount Amount";
+
               IF Ship THEN BEGIN
                 "Quantity Shipped" := "Quantity Shipped" + "Qty. to Ship";
                 "Qty. Shipped (Base)" := "Qty. Shipped (Base)" + "Qty. to Ship (Base)";
@@ -1691,7 +1685,7 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
               InitOutstanding;
               InitQtyToShip;
 
-              IF "Inv. Discount Amount" <> 0 THEN
+              IF "Inv. Discount Amount" <> OldInvDiscountAmount THEN
                 CalcInvDiscAmt := TRUE;
 
               MODIFY;
@@ -1907,24 +1901,6 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
       TempWarrantyLedgerEntry.DELETEALL;
     END;
 
-    LOCAL PROCEDURE PostGlLines@31(TempServiceHeader@1001 : TEMPORARY Record 5900;TempServiceLine@1000 : TEMPORARY Record 5902;ServShptNo@1002 : Code[20];Consume@1003 : Boolean);
-    BEGIN
-      IF (TempServiceLine."No." <> '') AND NOT TempServiceLine."System-Created Entry" THEN BEGIN
-        ServPostingJnlsMgt.TestGLAccDirectPost(TempServiceLine."No.");
-        IF Consume THEN
-          ServPostingJnlsMgt.PostDirectConsumption(TempServiceLine,TempServiceHeader,ServShptNo);
-      END;
-    END;
-
-    LOCAL PROCEDURE PostCostLines@55(TempServiceHeader@1001 : TEMPORARY Record 5900;TempServiceLine@1000 : TEMPORARY Record 5902;ServShptNo@1002 : Code[20];Consume@1003 : Boolean);
-    BEGIN
-      IF (TempServiceLine."No." <> '') AND NOT TempServiceLine."System-Created Entry" THEN BEGIN
-        ServPostingJnlsMgt.TestSrvCostDirectPost(TempServiceLine."No.");
-        IF Consume THEN
-          ServPostingJnlsMgt.PostDirectConsumption(TempServiceLine,TempServiceHeader,ServShptNo);
-      END;
-    END;
-
     LOCAL PROCEDURE CheckCertificateOfSupplyStatus@88(ServShptHeader@1001 : Record 5990;ServShptLine@1000 : Record 5991);
     VAR
       CertificateOfSupply@1002 : Record 780;
@@ -1937,6 +1913,19 @@ OBJECT Codeunit 5988 Serv-Documents Mgt.
           CertificateOfSupply.InitFromService(ServShptHeader);
           CertificateOfSupply.SetRequired(ServShptHeader."No.");
         END
+    END;
+
+    PROCEDURE CollectTrackingSpecification@55(VAR TempTargetTrackingSpecification@1001 : TEMPORARY Record 336);
+    BEGIN
+      TempTrackingSpecification.RESET;
+      TempTargetTrackingSpecification.RESET;
+      TempTargetTrackingSpecification.DELETEALL;
+
+      IF TempTrackingSpecification.FINDSET THEN
+        REPEAT
+          TempTargetTrackingSpecification := TempTrackingSpecification;
+          TempTargetTrackingSpecification.INSERT;
+        UNTIL TempTrackingSpecification.NEXT = 0;
     END;
 
     BEGIN

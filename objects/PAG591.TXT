@@ -2,9 +2,9 @@ OBJECT Page 591 Payment Tolerance Warning
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -54,8 +54,8 @@ OBJECT Page 591 Payment Tolerance Warning
                 Editable=FALSE }
 
     { 19  ;2   ;Field     ;
-                CaptionML=[DAN=Nr.;
-                           ENU=No];
+                CaptionML=[DAN=Nej.;
+                           ENU=No.];
                 SourceExpr=CustVendNo;
                 Editable=FALSE }
 

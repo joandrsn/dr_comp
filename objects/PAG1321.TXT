@@ -2,9 +2,9 @@ OBJECT Page 1321 Mini Posted Sales Credit Memos
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.46290,NAVDK9.00.00.46290;
   }
   PROPERTIES
   {
@@ -16,12 +16,8 @@ OBJECT Page 1321 Mini Posted Sales Credit Memos
     CardPageID=Mini Posted Sales Credit Memo;
     PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Ret,Kreditnota;
                                 ENU=New,Process,Report,Correct,Credit Memo];
-    OnOpenPage=VAR
-                 FileManagement@1000 : Codeunit 419;
-               BEGIN
+    OnOpenPage=BEGIN
                  SetSecurityFilterOnRespCenter;
-
-                 AllowDotNetAddIn := FileManagement.CanRunDotNetOnClient;
                END;
 
     OnAfterGetRecord=BEGIN
@@ -108,6 +104,7 @@ OBJECT Page 1321 Mini Posted Sales Credit Memos
                                END;
                                 }
       { 33      ;2   ;Action    ;
+                      Name=Print;
                       Ellipsis=Yes;
                       CaptionML=[DAN=&Udskriv;
                                  ENU=&Print];
@@ -122,10 +119,11 @@ OBJECT Page 1321 Mini Posted Sales Credit Memos
                                BEGIN
                                  SalesCrMemoHeader := Rec;
                                  CurrPage.SETSELECTIONFILTER(SalesCrMemoHeader);
-                                 SalesCrMemoHeader.PrintRecords(NOT AllowDotNetAddIn);
+                                 SalesCrMemoHeader.PrintRecords(TRUE);
                                END;
                                 }
       { 4       ;2   ;Action    ;
+                      Name=Email;
                       Ellipsis=Yes;
                       CaptionML=[DAN=&Mail;
                                  ENU=&Email];
@@ -136,9 +134,11 @@ OBJECT Page 1321 Mini Posted Sales Credit Memos
                       PromotedCategory=Process;
                       Scope=Repeater;
                       OnAction=VAR
-                                 ReportDistributionManagement@1000 : Codeunit 452;
+                                 SalesCrMemoHeader@1000 : Record 114;
                                BEGIN
-                                 ReportDistributionManagement.EmailDocumentReport(Rec);
+                                 SalesCrMemoHeader := Rec;
+                                 CurrPage.SETSELECTIONFILTER(SalesCrMemoHeader);
+                                 SalesCrMemoHeader.EmailRecords(TRUE);
                                END;
                                 }
       { 11      ;1   ;Action    ;
@@ -241,10 +241,9 @@ OBJECT Page 1321 Mini Posted Sales Credit Memos
   CODE
   {
     VAR
-      AllowDotNetAddIn@1000 : Boolean INDATASET;
+      DocExchStatusStyle@1001 : Text;
       EnableXMLFileAction@1060000 : Boolean;
       SendAsXMLFileQst@1060001 : TextConst '@@@={Locked};DAN=Export?;ENU=Export?';
-      DocExchStatusStyle@1001 : Text;
 
     LOCAL PROCEDURE EnableActions@1060000();
     BEGIN

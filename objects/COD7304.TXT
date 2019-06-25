@@ -2,9 +2,9 @@ OBJECT Codeunit 7304 Whse. Jnl.-Register Batch
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -472,33 +472,33 @@ OBJECT Codeunit 7304 Whse. Jnl.-Register Batch
         (PhysInvtCountingPeriodCode <> ''));
     END;
 
-    LOCAL PROCEDURE CheckItemAvailability@11(WhseJnlLine@1000 : Record 7311);
+    LOCAL PROCEDURE CheckItemAvailability@11(VAR WhseJnlLine@1000 : Record 7311);
     VAR
       TempSKU@1002 : TEMPORARY Record 5700;
+      WhseJnlLineToPost@1005 : Record 7311;
       WhseJnlLineQty@1003 : Decimal;
       ReservedQtyOnInventory@1004 : Decimal;
       QtyOnWarehouseEntries@1001 : Decimal;
     BEGIN
-      IF WhseJnlLine.FINDSET THEN
+      WhseJnlLineToPost.COPYFILTERS(WhseJnlLine);
+      IF WhseJnlLineToPost.FINDSET THEN
         REPEAT
-          IF NOT TempSKU.GET(WhseJnlLine."Location Code",WhseJnlLine."Item No.",WhseJnlLine."Variant Code") THEN
-            InsertTempSKU(TempSKU,WhseJnlLine);
-        UNTIL WhseJnlLine.NEXT = 0;
+          IF NOT TempSKU.GET(WhseJnlLineToPost."Location Code",WhseJnlLineToPost."Item No.",WhseJnlLineToPost."Variant Code") THEN BEGIN
+            InsertTempSKU(TempSKU,WhseJnlLineToPost);
 
-      IF TempSKU.FINDSET THEN
-        REPEAT
-          CalcRequiredQty(TempSKU,WhseJnlLine,WhseJnlLineQty);
-          IF WhseJnlLineQty < 0 THEN BEGIN
-            ReservedQtyOnInventory := CalcReservedQtyOnInventory(TempSKU."Item No.",TempSKU."Location Code",TempSKU."Variant Code");
-            QtyOnWarehouseEntries := CalcQtyOnWarehouseEntry(TempSKU."Item No.",TempSKU."Location Code",TempSKU."Variant Code");
-            IF (ReservedQtyOnInventory > 0) AND ((QtyOnWarehouseEntries - ReservedQtyOnInventory) < ABS(WhseJnlLineQty)) THEN
-              IF NOT CONFIRM(
-                   Text007,FALSE,TempSKU.FIELDCAPTION("Item No."),TempSKU."Item No.",TempSKU.FIELDCAPTION("Location Code"),
-                   TempSKU."Location Code",TempSKU.FIELDCAPTION("Variant Code"),TempSKU."Variant Code")
-              THEN
-                ERROR('');
+            WhseJnlLineQty := CalcRequiredQty(TempSKU,WhseJnlLine);
+            IF WhseJnlLineQty < 0 THEN BEGIN
+              ReservedQtyOnInventory := CalcReservedQtyOnInventory(TempSKU."Item No.",TempSKU."Location Code",TempSKU."Variant Code");
+              QtyOnWarehouseEntries := CalcQtyOnWarehouseEntry(TempSKU."Item No.",TempSKU."Location Code",TempSKU."Variant Code");
+              IF (ReservedQtyOnInventory > 0) AND ((QtyOnWarehouseEntries - ReservedQtyOnInventory) < ABS(WhseJnlLineQty)) THEN
+                IF NOT CONFIRM(
+                     Text007,FALSE,TempSKU.FIELDCAPTION("Item No."),TempSKU."Item No.",TempSKU.FIELDCAPTION("Location Code"),
+                     TempSKU."Location Code",TempSKU.FIELDCAPTION("Variant Code"),TempSKU."Variant Code")
+                THEN
+                  ERROR('');
+            END;
           END;
-        UNTIL TempSKU.NEXT = 0;
+        UNTIL WhseJnlLineToPost.NEXT = 0;
     END;
 
     LOCAL PROCEDURE CalcReservedQtyOnInventory@12(ItemNo@1000 : Code[20];LocationCode@1001 : Code[20];VariantCode@1002 : Code[20]) : Decimal;
@@ -540,17 +540,16 @@ OBJECT Codeunit 7304 Whse. Jnl.-Register Batch
       END;
     END;
 
-    LOCAL PROCEDURE CalcRequiredQty@14(TempSKU@1000 : TEMPORARY Record 5700;WhseJnlLine@1001 : Record 7311;VAR WhseJnlLineQty@1002 : Decimal);
+    LOCAL PROCEDURE CalcRequiredQty@14(TempSKU@1000 : TEMPORARY Record 5700;VAR WhseJnlLineFiltered@1001 : Record 7311) : Decimal;
+    VAR
+      WhseJnlLine@1002 : Record 7311;
     BEGIN
-      WhseJnlLine.SETCURRENTKEY("Location Code","Item No.","Variant Code");
-      WhseJnlLineQty := 0;
+      WhseJnlLine.COPYFILTERS(WhseJnlLineFiltered);
       WhseJnlLine.SETRANGE("Item No.",TempSKU."Item No.");
       WhseJnlLine.SETRANGE("Location Code",TempSKU."Location Code");
       WhseJnlLine.SETRANGE("Variant Code",TempSKU."Variant Code");
-      WhseJnlLine.FINDSET;
-      REPEAT
-        WhseJnlLineQty += WhseJnlLine."Qty. (Base)";
-      UNTIL WhseJnlLine.NEXT = 0;
+      WhseJnlLine.CALCSUMS("Qty. (Base)");
+      EXIT(WhseJnlLine."Qty. (Base)");
     END;
 
     BEGIN

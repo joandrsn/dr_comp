@@ -2,9 +2,9 @@ OBJECT Codeunit 1605 PEPPOL Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -29,6 +29,7 @@ OBJECT Codeunit 1605 PEPPOL Management
       GTINTxt@1010 : TextConst '@@@={locked};DAN=GTIN;ENU=GTIN';
       UoMforPieceINUNECERec20ListIDTxt@1013 : TextConst '@@@={Locked};DAN=EA;ENU=EA';
       NoUnitOfMeasureErr@1014 : TextConst '@@@=1: document type, 2: document no 3 Unit of Measure Code;DAN=%1 %2 indeholder linjer, hvor feltet %3 er tomt.;ENU=The %1 %2 contains lines on which the %3 field is empty.';
+      ExportPathGreaterThan250Err@1012 : TextConst 'DAN=Eksportstien må ikke være længere end 250 tegn.;ENU=The export path is longer than 250 characters.';
 
     PROCEDURE GetGeneralInfo@11(SalesHeader@1014 : Record 36;VAR ID@1010 : Text;VAR IssueDate@1009 : Text;VAR InvoiceTypeCode@1008 : Text;VAR InvoiceTypeCodeListID@1007 : Text;VAR Note@1006 : Text;VAR TaxPointDate@1005 : Text;VAR DocumentCurrencyCode@1004 : Text;VAR DocumentCurrencyCodeListID@1003 : Text;VAR TaxCurrencyCode@1002 : Text;VAR TaxCurrencyCodeListID@1001 : Text;VAR AccountingCost@1000 : Text);
     VAR
@@ -61,6 +62,13 @@ OBJECT Codeunit 1605 PEPPOL Management
       OrderReferenceID := SalesHeader."External Document No.";
     END;
 
+    PROCEDURE GetOrderReferenceInfoBIS@45(SalesHeader@1001 : Record 36;VAR OrderReferenceID@1000 : Text);
+    BEGIN
+      OrderReferenceID := SalesHeader."External Document No.";
+      IF OrderReferenceID = '' THEN
+        OrderReferenceID := SalesHeader."No.";
+    END;
+
     PROCEDURE GetContractDocRefInfo@14(SalesHeader@1004 : Record 36;VAR ContractDocumentReferenceID@1000 : Text;VAR DocumentTypeCode@1001 : Text;VAR ContractRefDocTypeCodeListID@1002 : Text;VAR DocumentType@1003 : Text);
     BEGIN
       ContractDocumentReferenceID := SalesHeader."No.";
@@ -79,16 +87,26 @@ OBJECT Codeunit 1605 PEPPOL Management
     END;
 
     PROCEDURE GetAccountingSupplierPartyInfo@16(VAR SupplierEndpointID@1005 : Text;VAR SupplierSchemeID@1006 : Text;VAR SupplierName@1007 : Text);
+    BEGIN
+      GetAccountingSupplierPartyInfoByFormat(SupplierEndpointID,SupplierSchemeID,SupplierName,FALSE);
+    END;
+
+    PROCEDURE GetAccountingSupplierPartyInfoBIS@49(VAR SupplierEndpointID@1005 : Text;VAR SupplierSchemeID@1006 : Text;VAR SupplierName@1007 : Text);
+    BEGIN
+      GetAccountingSupplierPartyInfoByFormat(SupplierEndpointID,SupplierSchemeID,SupplierName,TRUE);
+    END;
+
+    LOCAL PROCEDURE GetAccountingSupplierPartyInfoByFormat@77(VAR SupplierEndpointID@1005 : Text;VAR SupplierSchemeID@1006 : Text;VAR SupplierName@1007 : Text;IsBISBilling@1000 : Boolean);
     VAR
       CompanyInfo@1002 : Record 79;
     BEGIN
       CompanyInfo.GET;
       IF CompanyInfo.GLN <> '' THEN BEGIN
         SupplierEndpointID := CompanyInfo.GLN;
-        SupplierSchemeID := GLNTxt;
+        SupplierSchemeID := GetGLNSchemeIDByFormat(IsBISBilling);
       END ELSE
         IF CompanyInfo."VAT Registration No." <> '' THEN BEGIN
-          SupplierEndpointID := CompanyInfo."VAT Registration No.";
+          SupplierEndpointID := FormatVATRegitrationNo(CompanyInfo."VAT Registration No.",IsBISBilling);
           SupplierSchemeID := GetVATScheme(CompanyInfo."Country/Region Code");
         END;
 
@@ -127,13 +145,37 @@ OBJECT Codeunit 1605 PEPPOL Management
     BEGIN
       CompanyInfo.GET;
       IF CompanyInfo."VAT Registration No." <> '' THEN BEGIN
-        CompanyID := CompanyInfo."VAT Registration No.";
+        CompanyID := GetCompanyID(CompanyInfo."VAT Registration No.");
         CompanyIDSchemeID := GetVATScheme(CompanyInfo."Country/Region Code");
         TaxSchemeID := VATTxt;
       END;
     END;
 
+    PROCEDURE GetAccountingSupplierPartyTaxSchemeBIS@54(VAR VATAmtLine@1001 : Record 290;VAR CompanyID@1015 : Text;VAR CompanyIDSchemeID@1016 : Text;VAR TaxSchemeID@1017 : Text);
+    BEGIN
+      VATAmtLine.SETFILTER("VAT Identifier",'<>%1',GetTaxCategoryO);
+      IF NOT VATAmtLine.ISEMPTY THEN
+        GetAccountingSupplierPartyTaxScheme(CompanyID,CompanyIDSchemeID,TaxSchemeID);
+      VATAmtLine.SETRANGE("VAT Identifier");
+      CompanyID := DELCHR(CompanyID);
+      CompanyIDSchemeID := '';
+    END;
+
     PROCEDURE GetAccountingSupplierPartyLegalEntity@6(VAR PartyLegalEntityRegName@1018 : Text;VAR PartyLegalEntityCompanyID@1019 : Text;VAR PartyLegalEntitySchemeID@1020 : Text;VAR SupplierRegAddrCityName@1021 : Text;VAR SupplierRegAddrCountryIdCode@1022 : Text;VAR SupplRegAddrCountryIdListId@1023 : Text);
+    BEGIN
+      GetAccountingSupplierPartyLegalEntityByFormat(
+        PartyLegalEntityRegName,PartyLegalEntityCompanyID,PartyLegalEntitySchemeID,
+        SupplierRegAddrCityName,SupplierRegAddrCountryIdCode,SupplRegAddrCountryIdListId,FALSE);
+    END;
+
+    PROCEDURE GetAccountingSupplierPartyLegalEntityBIS@50(VAR PartyLegalEntityRegName@1018 : Text;VAR PartyLegalEntityCompanyID@1019 : Text;VAR PartyLegalEntitySchemeID@1020 : Text;VAR SupplierRegAddrCityName@1021 : Text;VAR SupplierRegAddrCountryIdCode@1022 : Text;VAR SupplRegAddrCountryIdListId@1023 : Text);
+    BEGIN
+      GetAccountingSupplierPartyLegalEntityByFormat(
+        PartyLegalEntityRegName,PartyLegalEntityCompanyID,PartyLegalEntitySchemeID,
+        SupplierRegAddrCityName,SupplierRegAddrCountryIdCode,SupplRegAddrCountryIdListId,TRUE);
+    END;
+
+    LOCAL PROCEDURE GetAccountingSupplierPartyLegalEntityByFormat@86(VAR PartyLegalEntityRegName@1018 : Text;VAR PartyLegalEntityCompanyID@1019 : Text;VAR PartyLegalEntitySchemeID@1020 : Text;VAR SupplierRegAddrCityName@1021 : Text;VAR SupplierRegAddrCountryIdCode@1022 : Text;VAR SupplRegAddrCountryIdListId@1023 : Text;IsBISBilling@1001 : Boolean);
     VAR
       CompanyInfo@1000 : Record 79;
     BEGIN
@@ -142,11 +184,11 @@ OBJECT Codeunit 1605 PEPPOL Management
       PartyLegalEntityRegName := CompanyInfo.Name;
       IF CompanyInfo.GLN <> '' THEN BEGIN
         PartyLegalEntityCompanyID := CompanyInfo.GLN;
-        PartyLegalEntitySchemeID := GLNTxt;
+        PartyLegalEntitySchemeID := GetGLNSchemeIDByFormat(IsBISBilling);
       END ELSE
         IF CompanyInfo."VAT Registration No." <> '' THEN BEGIN
-          PartyLegalEntityCompanyID := CompanyInfo."VAT Registration No.";
-          PartyLegalEntitySchemeID := GetVATScheme(CompanyInfo."Country/Region Code");
+          PartyLegalEntityCompanyID := FormatVATRegitrationNo(CompanyInfo."VAT Registration No.",IsBISBilling);
+          PartyLegalEntitySchemeID := GetVATSchemeByFormat(CompanyInfo."Country/Region Code",IsBISBilling);
         END;
 
       SupplierRegAddrCityName := CompanyInfo.City;
@@ -169,21 +211,35 @@ OBJECT Codeunit 1605 PEPPOL Management
     END;
 
     PROCEDURE GetAccountingCustomerPartyInfo@17(SalesHeader@1003 : Record 36;VAR CustomerEndpointID@1004 : Text;VAR CustomerSchemeID@1005 : Text;VAR CustomerPartyIdentificationID@1006 : Text;VAR CustomerPartyIDSchemeID@1007 : Text;VAR CustomerName@1008 : Text);
+    BEGIN
+      GetAccountingCustomerPartyInfoByFormat(
+        SalesHeader,CustomerEndpointID,CustomerSchemeID,
+        CustomerPartyIdentificationID,CustomerPartyIDSchemeID,CustomerName,FALSE);
+    END;
+
+    PROCEDURE GetAccountingCustomerPartyInfoBIS@46(SalesHeader@1003 : Record 36;VAR CustomerEndpointID@1004 : Text;VAR CustomerSchemeID@1005 : Text;VAR CustomerPartyIdentificationID@1006 : Text;VAR CustomerPartyIDSchemeID@1007 : Text;VAR CustomerName@1008 : Text);
+    BEGIN
+      GetAccountingCustomerPartyInfoByFormat(
+        SalesHeader,CustomerEndpointID,CustomerSchemeID,
+        CustomerPartyIdentificationID,CustomerPartyIDSchemeID,CustomerName,TRUE);
+    END;
+
+    LOCAL PROCEDURE GetAccountingCustomerPartyInfoByFormat@102(SalesHeader@1003 : Record 36;VAR CustomerEndpointID@1004 : Text;VAR CustomerSchemeID@1005 : Text;VAR CustomerPartyIdentificationID@1006 : Text;VAR CustomerPartyIDSchemeID@1007 : Text;VAR CustomerName@1008 : Text;IsBISBilling@1000 : Boolean);
     VAR
       Cust@1001 : Record 18;
     BEGIN
       Cust.GET(SalesHeader."Bill-to Customer No.");
       IF Cust.GLN <> '' THEN BEGIN
         CustomerEndpointID := Cust.GLN;
-        CustomerSchemeID := GLNTxt;
+        CustomerSchemeID := GetGLNSchemeIDByFormat(IsBISBilling);
       END ELSE
         IF SalesHeader."VAT Registration No." <> '' THEN BEGIN
-          CustomerEndpointID := SalesHeader."VAT Registration No.";
+          CustomerEndpointID := FormatVATRegitrationNo(SalesHeader."VAT Registration No.",IsBISBilling);
           CustomerSchemeID := GetVATScheme(SalesHeader."Bill-to Country/Region Code");
         END;
 
       CustomerPartyIdentificationID := Cust.GLN;
-      CustomerPartyIDSchemeID := GLNTxt;
+      CustomerPartyIDSchemeID := GetGLNSchemeIDByFormat(IsBISBilling);
       CustomerName := SalesHeader."Bill-to Name";
     END;
 
@@ -200,14 +256,38 @@ OBJECT Codeunit 1605 PEPPOL Management
 
     PROCEDURE GetAccountingCustomerPartyTaxScheme@20(SalesHeader@1003 : Record 36;VAR CustPartyTaxSchemeCompanyID@1017 : Text;VAR CustPartyTaxSchemeCompIDSchID@1018 : Text;VAR CustTaxSchemeID@1019 : Text);
     BEGIN
+      GetAccountingCustomerPartyTaxSchemeByFormat(
+        SalesHeader,CustPartyTaxSchemeCompanyID,CustPartyTaxSchemeCompIDSchID,CustTaxSchemeID,FALSE);
+    END;
+
+    PROCEDURE GetAccountingCustomerPartyTaxSchemeBIS@63(SalesHeader@1003 : Record 36;VAR CustPartyTaxSchemeCompanyID@1017 : Text;VAR CustPartyTaxSchemeCompIDSchID@1018 : Text;VAR CustTaxSchemeID@1019 : Text);
+    BEGIN
+      GetAccountingCustomerPartyTaxSchemeByFormat(
+        SalesHeader,CustPartyTaxSchemeCompanyID,CustPartyTaxSchemeCompIDSchID,CustTaxSchemeID,TRUE);
+    END;
+
+    LOCAL PROCEDURE GetAccountingCustomerPartyTaxSchemeByFormat@108(SalesHeader@1003 : Record 36;VAR CustPartyTaxSchemeCompanyID@1017 : Text;VAR CustPartyTaxSchemeCompIDSchID@1018 : Text;VAR CustTaxSchemeID@1019 : Text;IsBISBilling@1000 : Boolean);
+    BEGIN
       IF SalesHeader."VAT Registration No." <> '' THEN BEGIN
-        CustPartyTaxSchemeCompanyID := SalesHeader."VAT Registration No.";
-        CustPartyTaxSchemeCompIDSchID := GetVATScheme(SalesHeader."Bill-to Country/Region Code");
+        CustPartyTaxSchemeCompanyID := FormatVATRegitrationNo(SalesHeader."VAT Registration No.",IsBISBilling);
+        CustPartyTaxSchemeCompIDSchID := GetVATSchemeByFormat(SalesHeader."Bill-to Country/Region Code",IsBISBilling);
         CustTaxSchemeID := VATTxt;
       END;
     END;
 
     PROCEDURE GetAccountingCustomerPartyLegalEntity@24(SalesHeader@1000 : Record 36;VAR CustPartyLegalEntityRegName@1020 : Text;VAR CustPartyLegalEntityCompanyID@1021 : Text;VAR CustPartyLegalEntityIDSchemeID@1022 : Text);
+    BEGIN
+      GetAccountingCustomerPartyLegalEntityByFormat(
+        SalesHeader,CustPartyLegalEntityRegName,CustPartyLegalEntityCompanyID,CustPartyLegalEntityIDSchemeID,FALSE);
+    END;
+
+    PROCEDURE GetAccountingCustomerPartyLegalEntityBIS@67(SalesHeader@1000 : Record 36;VAR CustPartyLegalEntityRegName@1020 : Text;VAR CustPartyLegalEntityCompanyID@1021 : Text;VAR CustPartyLegalEntityIDSchemeID@1022 : Text);
+    BEGIN
+      GetAccountingCustomerPartyLegalEntityByFormat(
+        SalesHeader,CustPartyLegalEntityRegName,CustPartyLegalEntityCompanyID,CustPartyLegalEntityIDSchemeID,TRUE);
+    END;
+
+    LOCAL PROCEDURE GetAccountingCustomerPartyLegalEntityByFormat@115(SalesHeader@1000 : Record 36;VAR CustPartyLegalEntityRegName@1020 : Text;VAR CustPartyLegalEntityCompanyID@1021 : Text;VAR CustPartyLegalEntityIDSchemeID@1022 : Text;IsBISBilling@1001 : Boolean);
     VAR
       Customer@1002 : Record 18;
     BEGIN
@@ -215,11 +295,11 @@ OBJECT Codeunit 1605 PEPPOL Management
         CustPartyLegalEntityRegName := Customer.Name;
         IF Customer.GLN <> '' THEN BEGIN
           CustPartyLegalEntityCompanyID := Customer.GLN;
-          CustPartyLegalEntityIDSchemeID := GLNTxt;
+          CustPartyLegalEntityIDSchemeID := GetGLNSchemeIDByFormat(IsBISBilling);
         END ELSE
           IF SalesHeader."VAT Registration No." <> '' THEN BEGIN
-            CustPartyLegalEntityCompanyID := SalesHeader."VAT Registration No.";
-            CustPartyLegalEntityIDSchemeID := GetVATScheme(SalesHeader."Bill-to Country/Region Code");
+            CustPartyLegalEntityCompanyID := FormatVATRegitrationNo(SalesHeader."VAT Registration No.",IsBISBilling);
+            CustPartyLegalEntityIDSchemeID := GetVATSchemeByFormat(SalesHeader."Bill-to Country/Region Code",IsBISBilling);
           END;
       END;
     END;
@@ -248,7 +328,7 @@ OBJECT Codeunit 1605 PEPPOL Management
       PayeePartyIDSchemeID := GLNTxt;
       PayeePartyNameName := CompanyInfo.Name;
       PayeePartyLegalEntityCompanyID := CompanyInfo."VAT Registration No.";
-      PayeePartyLegalCompIDSchemeID := VATTxt;
+      PayeePartyLegalCompIDSchemeID := GetVATScheme(CompanyInfo."Country/Region Code");
     END;
 
     PROCEDURE GetTaxRepresentativePartyInfo@19(VAR TaxRepPartyNameName@1000 : Text;VAR PayeePartyTaxSchemeCompanyID@1001 : Text;VAR PayeePartyTaxSchCompIDSchemeID@1002 : Text;VAR PayeePartyTaxSchemeTaxSchemeID@1003 : Text);
@@ -264,6 +344,23 @@ OBJECT Codeunit 1605 PEPPOL Management
       ActualDeliveryDate := '';
       DeliveryID := '';
       DeliveryIDSchemeID := '';
+    END;
+
+    PROCEDURE GetGLNDeliveryInfo@43(SalesHeader@1000 : Record 36;VAR ActualDeliveryDate@1003 : Text;VAR DeliveryID@1001 : Text;VAR DeliveryIDSchemeID@1002 : Text);
+    VAR
+      Customer@1004 : Record 18;
+    BEGIN
+      ActualDeliveryDate := FORMAT(SalesHeader."Shipment Date",0,9);
+
+      IF Customer.GET(SalesHeader."Sell-to Customer No.") THEN
+        DeliveryID := Customer.GLN
+      ELSE
+        DeliveryID := '';
+
+      IF DeliveryID <> '' THEN
+        DeliveryIDSchemeID := '0088'
+      ELSE
+        DeliveryIDSchemeID := '';
     END;
 
     PROCEDURE GetDeliveryAddress@33(SalesHeader@1010 : Record 36;VAR DeliveryStreetName@1003 : Text;VAR DeliveryAdditionalStreetName@1004 : Text;VAR DeliveryCityName@1005 : Text;VAR DeliveryPostalZone@1006 : Text;VAR DeliveryCountrySubentity@1007 : Text;VAR DeliveryCountryIdCode@1008 : Text;VAR DeliveryCountryListID@1009 : Text);
@@ -350,6 +447,15 @@ OBJECT Codeunit 1605 PEPPOL Management
       TaxCategorySchemeID := GetUNCL5305ListID;
       Percent := FORMAT(VATAmtLine."VAT %",0,9);
       AllowanceChargeTaxSchemeID := VATTxt;
+    END;
+
+    PROCEDURE GetAllowanceChargeInfoBIS@51(VATAmtLine@1000 : Record 290;SalesHeader@1011 : Record 36;VAR ChargeIndicator@1001 : Text;VAR AllowanceChargeReasonCode@1002 : Text;VAR AllowanceChargeListID@1003 : Text;VAR AllowanceChargeReason@1004 : Text;VAR Amount@1005 : Text;VAR AllowanceChargeCurrencyID@1006 : Text;VAR TaxCategoryID@1007 : Text;VAR TaxCategorySchemeID@1008 : Text;VAR Percent@1009 : Text;VAR AllowanceChargeTaxSchemeID@1010 : Text);
+    BEGIN
+      GetAllowanceChargeInfo(
+        VATAmtLine,SalesHeader,ChargeIndicator,AllowanceChargeReasonCode,AllowanceChargeListID,AllowanceChargeReason,
+        Amount,AllowanceChargeCurrencyID,TaxCategoryID,TaxCategorySchemeID,Percent,AllowanceChargeTaxSchemeID);
+      IF TaxCategoryID = GetTaxCategoryO THEN
+        Percent := '';
     END;
 
     PROCEDURE GetTaxExchangeRateInfo@32(SalesHeader@1008 : Record 36;VAR SourceCurrencyCode@1001 : Text;VAR SourceCurrencyCodeListID@1002 : Text;VAR TargetCurrencyCode@1003 : Text;VAR TargetCurrencyCodeListID@1004 : Text;VAR CalculationRate@1005 : Text;VAR MathematicOperatorCode@1006 : Text;VAR Date@1007 : Text);
@@ -565,6 +671,14 @@ OBJECT Codeunit 1605 PEPPOL Management
       ClassifiedTaxCategorySchemeID := VATTxt;
     END;
 
+    PROCEDURE GetLineItemClassfiedTaxCategoryBIS@55(SalesLine@1004 : Record 37;VAR ClassifiedTaxCategoryID@1003 : Text;VAR ItemSchemeID@1002 : Text;VAR InvoiceLineTaxPercent@1001 : Text;VAR ClassifiedTaxCategorySchemeID@1000 : Text);
+    BEGIN
+      GetLineItemClassfiedTaxCategory(
+        SalesLine,ClassifiedTaxCategoryID,ItemSchemeID,InvoiceLineTaxPercent,ClassifiedTaxCategorySchemeID);
+      IF ClassifiedTaxCategoryID = GetTaxCategoryO THEN
+        InvoiceLineTaxPercent := '';
+    END;
+
     PROCEDURE GetLineAdditionalItemPropertyInfo@97(SalesLine@1003 : Record 37;VAR AdditionalItemPropertyName@1001 : Text;VAR AdditionalItemPropertyValue@1002 : Text);
     VAR
       ItemVariant@1000 : Record 5401;
@@ -656,6 +770,30 @@ OBJECT Codeunit 1605 PEPPOL Management
       END;
     END;
 
+    PROCEDURE GetTaxCategories@56(SalesLine@1000 : Record 37;VAR VATProductPostingGroupCategory@1007 : Record 324);
+    VAR
+      VATPostingSetup@1001 : Record 325;
+      VATProductPostingGroup@1002 : Record 324;
+    BEGIN
+      IF NOT VATPostingSetup.GET(SalesLine."VAT Bus. Posting Group",SalesLine."VAT Prod. Posting Group") THEN
+        VATPostingSetup.INIT;
+      IF NOT VATProductPostingGroup.GET(SalesLine."VAT Prod. Posting Group") THEN
+        VATProductPostingGroup.INIT;
+
+      VATProductPostingGroupCategory.INIT;
+      VATProductPostingGroupCategory.Code := VATPostingSetup."Tax Category";
+      VATProductPostingGroupCategory.Description := VATProductPostingGroup.Description;
+      IF VATProductPostingGroupCategory.INSERT THEN;
+    END;
+
+    PROCEDURE GetTaxExemptionReason@59(VAR VATProductPostingGroupCategory@1000 : Record 324;VAR TaxExemptionReasonTxt@1002 : Text;TaxCategoryID@1001 : Text);
+    BEGIN
+      IF NOT (TaxCategoryID IN [GetTaxCategoryE,GetTaxCategoryG,GetTaxCategoryK,GetTaxCategoryO,GetTaxCategoryAE]) THEN
+        EXIT;
+      IF VATProductPostingGroupCategory.GET(TaxCategoryID) THEN
+        TaxExemptionReasonTxt := VATProductPostingGroupCategory.Description;
+    END;
+
     LOCAL PROCEDURE GetInvoiceTypeCode@2() : Text;
     BEGIN
       EXIT('380');
@@ -696,6 +834,25 @@ OBJECT Codeunit 1605 PEPPOL Management
       EXIT('UNECERec20');
     END;
 
+    LOCAL PROCEDURE GetGLNSchemeIDByFormat@70(IsBISBillling@1000 : Boolean) : Text;
+    BEGIN
+      IF IsBISBillling THEN
+        EXIT(GetGLNSchemeID);
+      EXIT(GLNTxt);
+    END;
+
+    LOCAL PROCEDURE GetGLNSchemeID@48() : Text;
+    BEGIN
+      EXIT('0088');
+    END;
+
+    LOCAL PROCEDURE GetVATSchemeByFormat@88(CountryRegionCode@1000 : Code[10];IsBISBilling@1003 : Boolean) : Text;
+    BEGIN
+      IF IsBISBilling THEN
+        EXIT('');
+      EXIT(GetVATScheme(CountryRegionCode));
+    END;
+
     LOCAL PROCEDURE GetVATScheme@41(CountryRegionCode@1000 : Code[10]) : Text;
     VAR
       CountryRegion@1001 : Record 9;
@@ -708,6 +865,65 @@ OBJECT Codeunit 1605 PEPPOL Management
       END ELSE
         CountryRegion.GET(CountryRegionCode);
       EXIT(CountryRegion."VAT Scheme");
+    END;
+
+    LOCAL PROCEDURE GetTaxCategoryAE@52() : Text;
+    BEGIN
+      EXIT('AE');
+    END;
+
+    LOCAL PROCEDURE GetTaxCategoryE@58() : Text;
+    BEGIN
+      EXIT('E');
+    END;
+
+    LOCAL PROCEDURE GetTaxCategoryG@60() : Text;
+    BEGIN
+      EXIT('G');
+    END;
+
+    LOCAL PROCEDURE GetTaxCategoryK@62() : Text;
+    BEGIN
+      EXIT('K');
+    END;
+
+    LOCAL PROCEDURE GetTaxCategoryO@57() : Text;
+    BEGIN
+      EXIT('O');
+    END;
+
+    LOCAL PROCEDURE FormatVATRegitrationNo@74(VATRegistrartionNo@1000 : Text;IsBISBilling@1001 : Boolean) : Text;
+    BEGIN
+      IF IsBISBilling THEN
+        EXIT(DELCHR(VATRegistrartionNo));
+
+      EXIT(VATRegistrartionNo);
+    END;
+
+    PROCEDURE InitializeXMLExport@69(VAR OutFile@1003 : File;VAR XmlServerPath@1000 : Text);
+    VAR
+      FileManagement@1002 : Codeunit 419;
+    BEGIN
+      XmlServerPath := FileManagement.ServerTempFileName('xml');
+
+      IF STRLEN(XmlServerPath) > 250 THEN
+        ERROR(ExportPathGreaterThan250Err);
+
+      IF NOT EXISTS(XmlServerPath) THEN
+        OutFile.CREATE(XmlServerPath)
+      ELSE
+        OutFile.OPEN(XmlServerPath);
+    END;
+
+    LOCAL PROCEDURE GetCompanyID@1021(CompanyNo@1000 : Text) : Text;
+    VAR
+      CompanyInformation@1001 : Record 79;
+    BEGIN
+      CompanyInformation.GET;
+      CompanyInformation.TESTFIELD("Country/Region Code");
+      IF STRPOS(CompanyNo,CompanyInformation."Country/Region Code") = 1 THEN
+        EXIT(CompanyNo);
+      EXIT(CompanyInformation."Country/Region Code" + ' ' + CompanyNo);
     END;
 
     PROCEDURE MapServiceLineTypeToSalesLineType@9(ServiceLineType@1000 : Option) : Integer;
@@ -777,6 +993,135 @@ OBJECT Codeunit 1605 PEPPOL Management
         EXIT;
 
       ToFieldRef.VALUE := FromFieldRef.VALUE;
+    END;
+
+    PROCEDURE FindNextInvoiceRec@80(VAR SalesInvoiceHeader@1004 : Record 112;VAR ServiceInvoiceHeader@1005 : Record 5992;VAR SalesHeader@1006 : Record 36;ProcessedDocType@1003 : 'Sale,Service';Position@1000 : Integer) : Boolean;
+    VAR
+      PEPPOLValidation@1002 : Codeunit 1620;
+      Found@1001 : Boolean;
+    BEGIN
+      CASE ProcessedDocType OF
+        ProcessedDocType::Sale:
+          BEGIN
+            IF Position = 1 THEN
+              Found := SalesInvoiceHeader.FIND('-')
+            ELSE
+              Found := SalesInvoiceHeader.NEXT <> 0;
+            IF Found THEN BEGIN
+              SalesHeader.TRANSFERFIELDS(SalesInvoiceHeader);
+              PEPPOLValidation.CheckSalesInvoice(SalesInvoiceHeader);
+            END;
+          END;
+        ProcessedDocType::Service:
+          BEGIN
+            IF Position = 1 THEN
+              Found := ServiceInvoiceHeader.FIND('-')
+            ELSE
+              Found := ServiceInvoiceHeader.NEXT <> 0;
+            IF Found THEN BEGIN
+              TransferHeaderToSalesHeader(ServiceInvoiceHeader,SalesHeader);
+              PEPPOLValidation.CheckServiceInvoice(ServiceInvoiceHeader);
+            END;
+          END;
+      END;
+      SalesHeader."Document Type" := SalesHeader."Document Type"::Invoice;
+
+      EXIT(Found);
+    END;
+
+    PROCEDURE FindNextInvoiceLineRec@84(VAR SalesInvoiceLine@1003 : Record 113;VAR ServiceInvoiceLine@1004 : Record 5993;VAR SalesLine@1005 : Record 37;ProcessedDocType@1002 : 'Sale,Service';Position@1000 : Integer) : Boolean;
+    VAR
+      Found@1001 : Boolean;
+    BEGIN
+      CASE ProcessedDocType OF
+        ProcessedDocType::Sale:
+          BEGIN
+            IF Position = 1 THEN
+              Found := SalesInvoiceLine.FIND('-')
+            ELSE
+              Found := SalesInvoiceLine.NEXT <> 0;
+            IF Found THEN
+              SalesLine.TRANSFERFIELDS(SalesInvoiceLine);
+          END;
+        ProcessedDocType::Service:
+          BEGIN
+            IF Position = 1 THEN
+              Found := ServiceInvoiceLine.FIND('-')
+            ELSE
+              Found := ServiceInvoiceLine.NEXT <> 0;
+            IF Found THEN BEGIN
+              TransferLineToSalesLine(ServiceInvoiceLine,SalesLine);
+              SalesLine.Type := MapServiceLineTypeToSalesLineType(ServiceInvoiceLine.Type);
+            END;
+          END;
+      END;
+
+      EXIT(Found);
+    END;
+
+    PROCEDURE FindNextCreditMemoRec@68(VAR SalesCrMemoHeader@1004 : Record 114;VAR ServiceCrMemoHeader@1005 : Record 5994;VAR SalesHeader@1006 : Record 36;ProcessedDocType@1003 : 'Sale,Service';Position@1000 : Integer) : Boolean;
+    VAR
+      PEPPOLValidation@1002 : Codeunit 1620;
+      Found@1001 : Boolean;
+    BEGIN
+      CASE ProcessedDocType OF
+        ProcessedDocType::Sale:
+          BEGIN
+            IF Position = 1 THEN
+              Found := SalesCrMemoHeader.FIND('-')
+            ELSE
+              Found := SalesCrMemoHeader.NEXT <> 0;
+            IF Found THEN BEGIN
+              SalesHeader.TRANSFERFIELDS(SalesCrMemoHeader);
+              PEPPOLValidation.CheckSalesCreditMemo(SalesCrMemoHeader);
+            END;
+          END;
+        ProcessedDocType::Service:
+          BEGIN
+            IF Position = 1 THEN
+              Found := ServiceCrMemoHeader.FIND('-')
+            ELSE
+              Found := ServiceCrMemoHeader.NEXT <> 0;
+            IF Found THEN BEGIN
+              TransferHeaderToSalesHeader(ServiceCrMemoHeader,SalesHeader);
+              PEPPOLValidation.CheckServiceCreditMemo(ServiceCrMemoHeader);
+            END;
+          END;
+      END;
+
+      SalesHeader."Document Type" := SalesHeader."Document Type"::"Credit Memo";
+
+      EXIT(Found);
+    END;
+
+    PROCEDURE FindNextCreditMemoLineRec@66(VAR SalesCrMemoLine@1003 : Record 115;VAR ServiceCrMemoLine@1004 : Record 5995;VAR SalesLine@1005 : Record 37;ProcessedDocType@1002 : 'Sale,Service';Position@1000 : Integer) : Boolean;
+    VAR
+      Found@1001 : Boolean;
+    BEGIN
+      CASE ProcessedDocType OF
+        ProcessedDocType::Sale:
+          BEGIN
+            IF Position = 1 THEN
+              Found := SalesCrMemoLine.FIND('-')
+            ELSE
+              Found := SalesCrMemoLine.NEXT <> 0;
+            IF Found THEN
+              SalesLine.TRANSFERFIELDS(SalesCrMemoLine);
+          END;
+        ProcessedDocType::Service:
+          BEGIN
+            IF Position = 1 THEN
+              Found := ServiceCrMemoLine.FIND('-')
+            ELSE
+              Found := ServiceCrMemoLine.NEXT <> 0;
+            IF Found THEN BEGIN
+              TransferLineToSalesLine(ServiceCrMemoLine,SalesLine);
+              SalesLine.Type := MapServiceLineTypeToSalesLineType(ServiceCrMemoLine.Type);
+            END;
+          END;
+      END;
+
+      EXIT(Found);
     END;
 
     BEGIN

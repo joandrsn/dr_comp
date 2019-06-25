@@ -2,9 +2,9 @@ OBJECT Table 5810 Rounding Residual Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,15 +13,20 @@ OBJECT Table 5810 Rounding Residual Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Item Ledger Entry No.;Integer      ;CaptionML=[DAN=Varepostløbenr.;
+    { 1   ;   ;Item Ledger Entry No.;Integer      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Varepostløbenr.;
                                                               ENU=Item Ledger Entry No.] }
-    { 2   ;   ;Adjusted Cost       ;Decimal       ;CaptionML=[DAN=Reguleret kostværdi;
+    { 2   ;   ;Adjusted Cost       ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Reguleret kostværdi;
                                                               ENU=Adjusted Cost] }
-    { 3   ;   ;Adjusted Cost (ACY) ;Decimal       ;CaptionML=[DAN=Reguleret kostværdi (EV);
+    { 3   ;   ;Adjusted Cost (ACY) ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Reguleret kostværdi (EV);
                                                               ENU=Adjusted Cost (ACY)] }
-    { 4   ;   ;Completely Invoiced ;Boolean       ;CaptionML=[DAN=Fuldt faktureret;
+    { 4   ;   ;Completely Invoiced ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Fuldt faktureret;
                                                               ENU=Completely Invoiced] }
-    { 5   ;   ;No. of Hits         ;Integer       ;CaptionML=[DAN=Antal hit;
+    { 5   ;   ;No. of Hits         ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Antal hit;
                                                               ENU=No. of Hits] }
   }
   KEYS

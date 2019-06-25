@@ -2,9 +2,9 @@ OBJECT Report 5855 Implement Standard Cost Change
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -275,6 +275,7 @@ OBJECT Report 5855 Implement Standard Cost Change
 
     LOCAL PROCEDURE InsertRevalItemJnlLine@7();
     VAR
+      GLSetup@1004 : Record 98;
       Item@1001 : Record 27;
       ItemJnlLine2@1000 : Record 83;
       CalcInvtValue@1002 : Report 5899;
@@ -295,9 +296,11 @@ OBJECT Report 5855 Implement Standard Cost Change
       CalcInvtValue.RUN;
       HideDuplWarning := TRUE;
 
+      GLSetup.GET;
       IF ItemJnlLine2.NEXT <> 0 THEN
         REPEAT
-          ItemJnlLine2.VALIDATE("Unit Cost (Revalued)","Standard Cost Worksheet"."New Standard Cost");
+          ItemJnlLine2.VALIDATE(
+            "Unit Cost (Revalued)",ROUND("Standard Cost Worksheet"."New Standard Cost",GLSetup."Unit-Amount Rounding Precision"));
           ItemJnlLine2.MODIFY(TRUE);
           RevalJnlCreated := TRUE;
         UNTIL ItemJnlLine2.NEXT = 0;

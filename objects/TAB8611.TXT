@@ -2,9 +2,9 @@ OBJECT Table 8611 Config. Question Area
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -44,7 +44,7 @@ OBJECT Table 8611 Config. Question Area
                                                    NotBlank=Yes }
     { 3   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
-    { 4   ;   ;Table ID            ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=FILTER(Table));
+    { 4   ;   ;Table ID            ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=FILTER(Table));
                                                    OnValidate=VAR
                                                                 ConfigQuestion@1000 : Record 8612;
                                                                 ConfigQuestionArea@1001 : Record 8611;

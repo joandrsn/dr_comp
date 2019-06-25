@@ -2,9 +2,9 @@ OBJECT Table 5530 Inventory Event Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,81 +13,100 @@ OBJECT Table 5530 Inventory Event Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+    { 1   ;   ;Entry No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.];
                                                    Editable=No }
-    { 9   ;   ;Source Line ID      ;RecordID      ;CaptionML=[DAN=Kildelinje-id;
+    { 9   ;   ;Source Line ID      ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildelinje-id;
                                                               ENU=Source Line ID];
                                                    Editable=No }
     { 10  ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Varenr.;
                                                               ENU=Item No.];
                                                    Editable=No }
     { 11  ;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Variantkode;
                                                               ENU=Variant Code];
                                                    Editable=No }
     { 12  ;   ;Location Code       ;Code10        ;TableRelation=Location;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code];
                                                    Editable=No }
-    { 14  ;   ;Availability Date   ;Date          ;CaptionML=[DAN=Disponibilitetsdato;
+    { 14  ;   ;Availability Date   ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Disponibilitetsdato;
                                                               ENU=Availability Date];
                                                    Editable=No }
-    { 15  ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+    { 15  ;   ;Type                ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Type;
                                                               ENU=Type];
                                                    OptionCaptionML=[DAN=Lagerbeholdning,Køb,Salg,,,Overførsel,Komponent,Producktion,Service,Sag,Forecast,Rammesalgsordre,Plan,Tilbagefør plan,Montageordre,Montagekomponent;
                                                                     ENU=Inventory,Purchase,Sale,,,Transfer,Component,Production,Service,Job,Forecast,Blanket Sales Order,Plan,Plan Revert,Assembly Order,Assembly Component];
                                                    OptionString=Inventory,Purchase,Sale,,,Transfer,Component,Production,Service,Job,Forecast,Blanket Sales Order,Plan,Plan Revert,Assembly Order,Assembly Component;
                                                    Editable=No }
-    { 20  ;   ;Remaining Quantity (Base);Decimal  ;CaptionML=[DAN=Restantal (basis);
+    { 20  ;   ;Remaining Quantity (Base);Decimal  ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Restantal (basis);
                                                               ENU=Remaining Quantity (Base)];
                                                    DecimalPlaces=0:5;
                                                    Editable=No }
-    { 21  ;   ;Positive            ;Boolean       ;CaptionML=[DAN=Positiv;
+    { 21  ;   ;Positive            ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Positiv;
                                                               ENU=Positive];
                                                    Editable=No }
-    { 22  ;   ;Transfer Direction  ;Option        ;CaptionML=[DAN=Overførselsretning;
+    { 22  ;   ;Transfer Direction  ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Overførselsretning;
                                                               ENU=Transfer Direction];
                                                    OptionCaptionML=[DAN=Udgående,Indgående;
                                                                     ENU=Outbound,Inbound];
                                                    OptionString=Outbound,Inbound;
                                                    Editable=No }
-    { 23  ;   ;Reserved Quantity (Base);Decimal   ;CaptionML=[DAN=Reserveret antal (basis);
+    { 23  ;   ;Reserved Quantity (Base);Decimal   ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Reserveret antal (basis);
                                                               ENU=Reserved Quantity (Base)];
                                                    DecimalPlaces=0:5;
                                                    Editable=No }
-    { 29  ;   ;Action Message      ;Option        ;CaptionML=[DAN=Aktionsmeddelelse;
+    { 29  ;   ;Action Message      ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Aktionsmeddelelse;
                                                               ENU=Action Message];
                                                    OptionCaptionML=[DAN=" ,Ny,Ret antal,Omplanlæg,Omplanlæg & ret antal,Annuller";
                                                                     ENU=" ,New,Change Qty.,Reschedule,Resched. & Chg. Qty.,Cancel"];
                                                    OptionString=[ ,New,Change Qty.,Reschedule,Resched. & Chg. Qty.,Cancel];
                                                    Editable=No }
-    { 31  ;   ;Attached to Line No.;Integer       ;CaptionML=[DAN=Tilknyttet linjenr.;
+    { 31  ;   ;Attached to Line No.;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Tilknyttet linjenr.;
                                                               ENU=Attached to Line No.];
                                                    Editable=No }
-    { 32  ;   ;Forecast Type       ;Option        ;CaptionML=[DAN=Forecasttype;
+    { 32  ;   ;Forecast Type       ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Forecasttype;
                                                               ENU=Forecast Type];
                                                    OptionCaptionML=[DAN=,Salg,Komponent;
                                                                     ENU=,Sales,Component];
                                                    OptionString=,Sales,Component;
                                                    Editable=No }
-    { 33  ;   ;Derived from Blanket Order;Boolean ;CaptionML=[DAN=Afledt fra rammeordre;
+    { 33  ;   ;Derived from Blanket Order;Boolean ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Afledt fra rammeordre;
                                                               ENU=Derived from Blanket Order];
                                                    Editable=No }
-    { 34  ;   ;Ref. Order No.      ;Code20        ;CaptionML=[DAN=Referenceordrenr.;
+    { 34  ;   ;Ref. Order No.      ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Referenceordrenr.;
                                                               ENU=Ref. Order No.];
                                                    Editable=No }
-    { 35  ;   ;Orig. Quantity (Base);Decimal      ;CaptionML=[DAN=Orig. antal (basis);
+    { 35  ;   ;Orig. Quantity (Base);Decimal      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Orig. antal (basis);
                                                               ENU=Orig. Quantity (Base)];
                                                    Editable=No }
-    { 37  ;   ;Ref. Order Type     ;Option        ;CaptionML=[DAN=Referenceordretype;
+    { 37  ;   ;Ref. Order Type     ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Referenceordretype;
                                                               ENU=Ref. Order Type];
                                                    OptionCaptionML=[DAN=" ,Køb,Prod.ordre,Montage,Overførsel";
                                                                     ENU=" ,Purchase,Prod. Order,Assembly,Transfer"];
                                                    OptionString=[ ,Purchase,Prod. Order,Assembly,Transfer];
                                                    Editable=No }
-    { 38  ;   ;Ref. Order Line No. ;Integer       ;CaptionML=[DAN=Referenceordrelinjenr.;
+    { 38  ;   ;Ref. Order Line No. ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Referenceordrelinjenr.;
                                                               ENU=Ref. Order Line No.];
                                                    Editable=No }
   }
@@ -366,9 +385,9 @@ OBJECT Table 5530 Inventory Event Buffer
       "Location Code" := TransLine."Transfer-to Code";
       "Availability Date" := TransLine."Receipt Date";
       Type := Type::Transfer;
-      TransLine.CALCFIELDS("Reserved Qty. Inbnd. (Base)");
+      TransLine.CALCFIELDS("Reserved Qty. Inbnd. (Base)","Reserved Qty. Shipped (Base)");
       "Remaining Quantity (Base)" := TransLine."Quantity (Base)" - TransLine."Qty. Received (Base)";
-      "Reserved Quantity (Base)" := TransLine."Reserved Qty. Inbnd. (Base)";
+      "Reserved Quantity (Base)" := TransLine."Reserved Qty. Inbnd. (Base)" + TransLine."Reserved Qty. Shipped (Base)";
       Positive := NOT ("Remaining Quantity (Base)" < 0);
       "Transfer Direction" := "Transfer Direction"::Inbound;
     END;

@@ -2,9 +2,9 @@ OBJECT Table 290 VAT Amount Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-09-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50637;
   }
   PROPERTIES
   {
@@ -188,11 +188,24 @@ OBJECT Table 290 VAT Amount Line
     END;
 
     PROCEDURE VATAmountText@3() : Text[30];
+    VAR
+      TempVATAmountLine@1003 : TEMPORARY Record 290;
+      FullCount@1000 : Integer;
     BEGIN
-      IF COUNT = 1 THEN BEGIN
+      FullCount := COUNT;
+      IF FullCount = 1 THEN BEGIN
         FINDFIRST;
         IF "VAT %" <> 0 THEN
           EXIT(STRSUBSTNO(Text000,"VAT %"));
+      END;
+      IF FullCount > 1 THEN BEGIN
+        TempVATAmountLine.COPY(Rec,TRUE);
+        TempVATAmountLine.FINDFIRST;
+        IF TempVATAmountLine."VAT %" <> 0 THEN BEGIN
+          TempVATAmountLine.SETRANGE("VAT %",TempVATAmountLine."VAT %");
+          IF TempVATAmountLine.COUNT = FullCount THEN
+            EXIT(STRSUBSTNO(Text000,TempVATAmountLine."VAT %"));
+        END;
       END;
       EXIT(Text001);
     END;
@@ -276,6 +289,7 @@ OBJECT Table 290 VAT Amount Line
     PROCEDURE GetTotalVATDiscount@19(CurrencyCode@1001 : Code[10];NewPricesIncludingVAT@1000 : Boolean) : Decimal;
     VAR
       VATDiscount@1002 : Decimal;
+      VATBase@1003 : Decimal;
     BEGIN
       SetCurrency(CurrencyCode);
 
@@ -284,19 +298,16 @@ OBJECT Table 290 VAT Amount Line
       IF FIND('-') THEN
         REPEAT
           IF NewPricesIncludingVAT THEN
-            VATDiscount :=
-              VATDiscount +
-              ROUND(
-                ("Line Amount" - "Invoice Discount Amount") * "VAT %" / (100 + "VAT %"),
-                Currency."Amount Rounding Precision",Currency.VATRoundingDirection) -
-              "VAT Amount" + "VAT Difference"
+            VATBase += ("Line Amount" - "Invoice Discount Amount") * "VAT %" / (100 + "VAT %")
           ELSE
-            VATDiscount :=
-              VATDiscount +
-              ROUND(
-                "VAT Base" * "VAT %" / 100,
-                Currency."Amount Rounding Precision",Currency.VATRoundingDirection) -
-              "VAT Amount";
+            VATBase += "VAT Base" * "VAT %" / 100;
+          VATDiscount :=
+            VATDiscount +
+            ROUND(
+              VATBase,
+              Currency."Amount Rounding Precision",Currency.VATRoundingDirection) -
+            "VAT Amount" + "VAT Difference";
+          VATBase := VATBase - ROUND(VATBase,Currency."Amount Rounding Precision",Currency.VATRoundingDirection);
         UNTIL NEXT = 0;
       EXIT(VATDiscount);
     END;

@@ -2,9 +2,9 @@ OBJECT Table 5965 Service Contract Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -327,8 +327,10 @@ OBJECT Table 5965 Service Contract Header
                                                               ENU=Contact Name] }
     { 14  ;   ;Your Reference      ;Text35        ;CaptionML=[DAN=Reference;
                                                               ENU=Your Reference] }
-    { 15  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 15  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    OnValidate=BEGIN
+                                                                ValidateSalesPersonOnServiceContractHeader(Rec,FALSE,FALSE);
+
                                                                 CheckChangeStatus;
                                                                 MODIFY;
 
@@ -343,7 +345,9 @@ OBJECT Table 5965 Service Contract Header
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 16  ;   ;Bill-to Customer No.;Code20        ;TableRelation=Customer;
-                                                   OnValidate=BEGIN
+                                                   OnValidate=VAR
+                                                                CustCheckCrLimit@1000 : Codeunit 312;
+                                                              BEGIN
                                                                 CheckChangeStatus;
                                                                 IF xRec."Bill-to Customer No." <> "Bill-to Customer No." THEN
                                                                   IF xRec."Bill-to Customer No." <> '' THEN BEGIN
@@ -358,8 +362,10 @@ OBJECT Table 5965 Service Contract Header
                                                                   IF "Bill-to Customer No." <> xRec."Bill-to Customer No." THEN
                                                                     IF "Bill-to Customer No." <> '' THEN BEGIN
                                                                       Cust.GET("Bill-to Customer No.");
+                                                                      IF Cust."Privacy Blocked" THEN
+                                                                        Cust.CustPrivacyBlockedErrorMessage(Cust,FALSE);
                                                                       IF Cust.Blocked = Cust.Blocked::All THEN
-                                                                        Cust.CustBlockedErrorMessage(Cust,FALSE)
+                                                                        Cust.CustBlockedErrorMessage(Cust,FALSE);
                                                                     END;
 
                                                                   IF "Customer No." <> '' THEN BEGIN
@@ -374,10 +380,13 @@ OBJECT Table 5965 Service Contract Header
                                                                     "Currency Code" := Cust."Currency Code";
                                                                     "Payment Terms Code" := Cust."Payment Terms Code";
                                                                     "Language Code" := Cust."Language Code";
-                                                                    "Salesperson Code" := Cust."Salesperson Code";
+                                                                    SetSalespersonCode(Cust."Salesperson Code","Salesperson Code");
                                                                     IF NOT SkipBillToContact THEN
                                                                       "Bill-to Contact" := Cust.Contact;
                                                                   END;
+
+                                                                  IF NOT HideValidationDialog THEN
+                                                                    CustCheckCrLimit.ServiceContractHeaderCheck(Rec);
 
                                                                   CALCFIELDS(
                                                                     "Bill-to Name","Bill-to Name 2","Bill-to Address","Bill-to Address 2",
@@ -1384,6 +1393,7 @@ OBJECT Table 5965 Service Contract Header
       ServHour@1069 : Record 5910;
       ServContractLine2@1031 : Record 5964;
       Currency@1061 : Record 4;
+      Salesperson@1913 : Record 13;
       NoSeriesMgt@1045 : Codeunit 396;
       UserMgt@1046 : Codeunit 5700;
       ServContractMgt@1047 : Codeunit 5940;
@@ -2136,6 +2146,28 @@ OBJECT Table 5965 Service Contract Header
           "Invoice Period"::Year:
             EVALUATE(InvPeriodDuration,'<1Y>');
         END;
+    END;
+
+    LOCAL PROCEDURE SetSalespersonCode@433(SalesPersonCodeToCheck@1000 : Code[20];VAR SalesPersonCodeToAssign@1001 : Code[20]);
+    BEGIN
+      IF SalesPersonCodeToCheck <> '' THEN
+        IF Salesperson.GET(SalesPersonCodeToCheck) THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN
+            SalesPersonCodeToAssign := ''
+          ELSE
+            SalesPersonCodeToAssign := SalesPersonCodeToCheck;
+    END;
+
+    PROCEDURE ValidateSalesPersonOnServiceContractHeader@218(ServiceContractHeader2@1000 : Record 5965;IsTransaction@1001 : Boolean;IsPostAction@1002 : Boolean);
+    BEGIN
+      IF ServiceContractHeader2."Salesperson Code" <> '' THEN
+        IF Salesperson.GET(ServiceContractHeader2."Salesperson Code") THEN
+          IF Salesperson.VerifySalesPersonPurchaserPrivacyBlocked(Salesperson) THEN BEGIN
+            IF IsTransaction THEN
+              ERROR(Salesperson.GetPrivacyBlockedTransactionText(Salesperson,IsPostAction,TRUE));
+            IF NOT IsTransaction THEN
+              ERROR(Salesperson.GetPrivacyBlockedGenericText(Salesperson,TRUE));
+          END;
     END;
 
     LOCAL PROCEDURE CheckChangeStatus@20();

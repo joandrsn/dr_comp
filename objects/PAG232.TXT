@@ -2,9 +2,9 @@ OBJECT Page 232 Apply Customer Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -260,8 +260,15 @@ OBJECT Page 232 Apply Customer Entries
                 GroupType=Repeater }
 
     { 22  ;2   ;Field     ;
+                Name=AppliesToID;
+                CaptionML=[DAN=Udlignings-id;
+                           ENU=Applies To ID];
                 SourceExpr="Applies-to ID";
-                Visible="Applies-to IDVisible" }
+                Visible="Applies-to IDVisible";
+                OnValidate=BEGIN
+                             CurrPage.UPDATE(TRUE);
+                           END;
+                            }
 
     { 2   ;2   ;Field     ;
                 SourceExpr="Posting Date";
@@ -315,7 +322,7 @@ OBJECT Page 232 Apply Customer Entries
                              CODEUNIT.RUN(CODEUNIT::"Cust. Entry-Edit",Rec);
 
                              IF (xRec."Amount to Apply" = 0) OR ("Amount to Apply" = 0) AND
-                                (ApplnType = ApplnType::"Applies-to ID")
+                                ((ApplnType = ApplnType::"Applies-to ID") OR (CalcType = CalcType::Direct))
                              THEN
                                SetCustApplId;
                              GET("Entry No.");
@@ -411,6 +418,7 @@ OBJECT Page 232 Apply Customer Entries
                            ENU=Pmt. Disc. Amount] }
 
     { 91  ;4   ;Field     ;
+                Name=PmtDiscAmount;
                 CaptionML=[DAN=Kontantrabatbeløb;
                            ENU=Pmt. Disc. Amount];
                 SourceExpr=-PmtDiscAmount;
@@ -984,6 +992,7 @@ OBJECT Page 232 Apply Customer Entries
       PossiblePmtDisc@1007 : Decimal;
       OldPmtDisc@1008 : Decimal;
       CorrectionAmount@1009 : Decimal;
+      RemainingAmountExclDiscounts@1012 : Decimal;
       CanUseDisc@1005 : Boolean;
       FromZeroGenJnl@1010 : Boolean;
     BEGIN
@@ -1026,10 +1035,9 @@ OBJECT Page 232 Apply Customer Entries
               IF (ABS(CurrentAmount) = ABS(AppliedCustLedgEntryTemp."Remaining Amount" -
                     AppliedCustLedgEntryTemp."Remaining Pmt. Disc. Possible"))
               THEN BEGIN
-                PmtDiscAmount := PmtDiscAmount + AppliedCustLedgEntryTemp."Remaining Pmt. Disc. Possible" + PossiblePmtDisc;
+                PmtDiscAmount := PmtDiscAmount + AppliedCustLedgEntryTemp."Remaining Pmt. Disc. Possible";
                 CurrentAmount := CurrentAmount + AppliedCustLedgEntryTemp."Remaining Amount" -
-                  AppliedCustLedgEntryTemp."Remaining Pmt. Disc. Possible" - PossiblePmtDisc;
-                PossiblePmtDisc := 0;
+                  AppliedCustLedgEntryTemp."Remaining Pmt. Disc. Possible";
                 AppliedAmount := AppliedAmount + CorrectionAmount;
               END ELSE
                 IF FromZeroGenJnl THEN BEGIN
@@ -1038,7 +1046,10 @@ OBJECT Page 232 Apply Customer Entries
                     AppliedCustLedgEntryTemp."Remaining Amount" - AppliedCustLedgEntryTemp."Remaining Pmt. Disc. Possible";
                 END ELSE BEGIN
                   PossiblePmtDisc := AppliedCustLedgEntryTemp."Remaining Pmt. Disc. Possible";
-                  IF (CurrentAmount + AppliedCustLedgEntryTemp."Remaining Amount" >= 0) <> (CurrentAmount >= 0) THEN BEGIN
+                  RemainingAmountExclDiscounts := AppliedCustLedgEntryTemp."Remaining Amount" - PossiblePmtDisc -
+                    AppliedCustLedgEntryTemp."Max. Payment Tolerance";
+                  IF ABS(CurrentAmount) + ABS(CalcOppositeEntriesAmount(AppliedCustLedgEntryTemp)) >= ABS(RemainingAmountExclDiscounts)
+                  THEN BEGIN
                     PmtDiscAmount := PmtDiscAmount + PossiblePmtDisc;
                     AppliedAmount := AppliedAmount + CorrectionAmount;
                   END;
@@ -1046,12 +1057,8 @@ OBJECT Page 232 Apply Customer Entries
                     AppliedCustLedgEntryTemp."Remaining Pmt. Disc. Possible";
                 END;
           END ELSE BEGIN
-            IF ((CurrentAmount - PossiblePmtDisc + AppliedCustLedgEntryTemp."Amount to Apply") * CurrentAmount) <= 0 THEN BEGIN
-              PmtDiscAmount := PmtDiscAmount + PossiblePmtDisc;
-              CurrentAmount := CurrentAmount - PossiblePmtDisc;
-              PossiblePmtDisc := 0;
+            IF ((CurrentAmount + AppliedCustLedgEntryTemp."Amount to Apply") * CurrentAmount) <= 0 THEN
               AppliedAmount := AppliedAmount + CorrectionAmount;
-            END;
             CurrentAmount := CurrentAmount + AppliedCustLedgEntryTemp."Amount to Apply";
           END;
         END ELSE BEGIN
@@ -1104,6 +1111,7 @@ OBJECT Page 232 Apply Customer Entries
     VAR
       CustEntryApplyPostedEntries@1000 : Codeunit 226;
       PostApplication@1002 : Page 579;
+      Applied@1006 : Boolean;
       ApplicationDate@1001 : Date;
       NewApplicationDate@1003 : Date;
       NewDocumentNo@1004 : Code[20];
@@ -1124,9 +1132,9 @@ OBJECT Page 232 Apply Customer Entries
           IF PreviewMode THEN
             CustEntryApplyPostedEntries.PreviewApply(Rec,NewDocumentNo,NewApplicationDate)
           ELSE
-            CustEntryApplyPostedEntries.Apply(Rec,NewDocumentNo,NewApplicationDate);
+            Applied := CustEntryApplyPostedEntries.Apply(Rec,NewDocumentNo,NewApplicationDate);
 
-          IF NOT PreviewMode THEN BEGIN
+          IF (NOT PreviewMode) AND Applied THEN BEGIN
             MESSAGE(Text012);
             PostingDone := TRUE;
             CurrPage.CLOSE;
@@ -1164,6 +1172,27 @@ OBJECT Page 232 Apply Customer Entries
             CalcCustLedgEntry."Amount to Apply",
             CalcCustLedgEntry."Currency Code",
             CurrencyCode,PostingDate);
+      END;
+    END;
+
+    LOCAL PROCEDURE CalcOppositeEntriesAmount@17(VAR TempAppliedCustLedgerEntry@1000 : TEMPORARY Record 21) Result : Decimal;
+    VAR
+      SavedAppliedCustLedgerEntry@1002 : Record 21;
+      CurrPosFilter@1001 : Text;
+    BEGIN
+      WITH TempAppliedCustLedgerEntry DO BEGIN
+        CurrPosFilter := GETFILTER(Positive);
+        IF CurrPosFilter <> '' THEN BEGIN
+          SavedAppliedCustLedgerEntry := TempAppliedCustLedgerEntry;
+          SETRANGE(Positive,NOT Positive);
+          IF FINDSET THEN
+            REPEAT
+              CALCFIELDS("Remaining Amount");
+              Result += "Remaining Amount";
+            UNTIL NEXT = 0;
+          SETFILTER(Positive,CurrPosFilter);
+          TempAppliedCustLedgerEntry := SavedAppliedCustLedgerEntry;
+        END;
       END;
     END;
 

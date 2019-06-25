@@ -2,9 +2,9 @@ OBJECT Page 5851 Get Post.Doc - S.ShptLn Sbfrm
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -75,6 +75,7 @@ OBJECT Page 5851 Get Post.Doc - S.ShptLn Sbfrm
                                  ENU=&Line];
                       Image=Line }
       { 1902759804;2 ;Action    ;
+                      Name=ShowDocument;
                       ShortCutKey=Shift+F7;
                       CaptionML=[DAN=Vis bilag;
                                  ENU=Show Document];
@@ -84,6 +85,7 @@ OBJECT Page 5851 Get Post.Doc - S.ShptLn Sbfrm
                                END;
                                 }
       { 1900206204;2 ;Action    ;
+                      Name=Dimensions;
                       AccessByPermission=TableData 348=R;
                       ShortCutKey=Shift+Ctrl+D;
                       CaptionML=[DAN=Dimensioner;
@@ -94,12 +96,13 @@ OBJECT Page 5851 Get Post.Doc - S.ShptLn Sbfrm
                                END;
                                 }
       { 1901652604;2 ;Action    ;
+                      Name=ItemTrackingLines;
                       ShortCutKey=Shift+Ctrl+I;
                       CaptionML=[DAN=Vare&sporingslinjer;
                                  ENU=Item &Tracking Lines];
                       Image=ItemTrackingLines;
                       OnAction=BEGIN
-                                 PostedShipmentItemTrackingLns;
+                                 ItemTrackingLines;
                                END;
                                 }
     }
@@ -318,12 +321,6 @@ OBJECT Page 5851 Get Post.Doc - S.ShptLn Sbfrm
       IF NOT SalesShptHeader.GET("Document No.") THEN
         EXIT;
       PAGE.RUN(PAGE::"Posted Sales Shipment",SalesShptHeader);
-    END;
-
-    LOCAL PROCEDURE PostedShipmentItemTrackingLns@18();
-    BEGIN
-      GetSelectedLine(Rec);
-      ShowItemTrackingLines;
     END;
 
     LOCAL PROCEDURE ShowDocument@7();

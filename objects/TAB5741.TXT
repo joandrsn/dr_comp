@@ -2,9 +2,9 @@ OBJECT Table 5741 Transfer Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -51,7 +51,6 @@ OBJECT Table 5741 Transfer Line
 
     CaptionML=[DAN=Overflytningslinje;
                ENU=Transfer Line];
-    PasteIsValid=No;
     LookupPageID=Page5749;
     DrillDownPageID=Page5749;
   }
@@ -430,8 +429,7 @@ OBJECT Table 5741 Transfer Line
                                                                   "Shipping Time","Outbound Whse. Handling Time","Inbound Whse. Handling Time",
                                                                   "Transfer-from Code","Transfer-to Code","Shipping Agent Code","Shipping Agent Service Code");
                                                                 CheckItemAvailable(FIELDNO("Shipment Date"));
-                                                                IF NOT TrackingBlocked THEN
-                                                                  CheckDateConflict.TransferLineCheck(Rec,CurrFieldNo <> 0,0);
+                                                                DateConflictCheck;
                                                               END;
 
                                                    CaptionML=[DAN=Afsendelsesdato;
@@ -443,8 +441,7 @@ OBJECT Table 5741 Transfer Line
                                                                   "Shipping Time","Outbound Whse. Handling Time","Inbound Whse. Handling Time",
                                                                   "Transfer-from Code","Transfer-to Code","Shipping Agent Code","Shipping Agent Service Code");
                                                                 CheckItemAvailable(FIELDNO("Shipment Date"));
-                                                                IF NOT TrackingBlocked THEN
-                                                                  CheckDateConflict.TransferLineCheck(Rec,CurrFieldNo <> 0,1);
+                                                                DateConflictCheck;
                                                               END;
 
                                                    CaptionML=[DAN=Modtagelsesdato;
@@ -475,6 +472,7 @@ OBJECT Table 5741 Transfer Line
                                                                   "Shipping Time","Outbound Whse. Handling Time","Inbound Whse. Handling Time",
                                                                   "Transfer-from Code","Transfer-to Code","Shipping Agent Code","Shipping Agent Service Code");
                                                                 CheckItemAvailable(FIELDNO("Shipping Agent Service Code"));
+                                                                DateConflictCheck;
                                                               END;
 
                                                    CaptionML=[DAN=Speditørservicekode;
@@ -556,6 +554,7 @@ OBJECT Table 5741 Transfer Line
                                                                 TransferRoute.CalcReceiptDate("Shipment Date","Receipt Date",
                                                                   "Shipping Time","Outbound Whse. Handling Time","Inbound Whse. Handling Time",
                                                                   "Transfer-from Code","Transfer-to Code","Shipping Agent Code","Shipping Agent Service Code");
+                                                                DateConflictCheck;
                                                               END;
 
                                                    AccessByPermission=TableData 5790=R;
@@ -633,6 +632,7 @@ OBJECT Table 5741 Transfer Line
                                                                 TransferRoute.CalcReceiptDate("Shipment Date","Receipt Date",
                                                                   "Shipping Time","Outbound Whse. Handling Time","Inbound Whse. Handling Time",
                                                                   "Transfer-from Code","Transfer-to Code","Shipping Agent Code","Shipping Agent Service Code");
+                                                                DateConflictCheck;
                                                               END;
 
                                                    CaptionML=[DAN=Udgående lagerekspeditionstid;
@@ -644,6 +644,7 @@ OBJECT Table 5741 Transfer Line
                                                                 TransferRoute.CalcReceiptDate("Shipment Date","Receipt Date",
                                                                   "Shipping Time","Outbound Whse. Handling Time","Inbound Whse. Handling Time",
                                                                   "Transfer-from Code","Transfer-to Code","Shipping Agent Code","Shipping Agent Service Code");
+                                                                DateConflictCheck;
                                                               END;
 
                                                    CaptionML=[DAN=Indgående lagerekspeditionstid;
@@ -761,7 +762,7 @@ OBJECT Table 5741 Transfer Line
     BEGIN
       "Qty. in Transit" := "Quantity Shipped" - "Quantity Received";
       "Qty. in Transit (Base)" := "Qty. Shipped (Base)" - "Qty. Received (Base)";
-      "Completely Received" := ("Quantity Shipped" <> 0) AND ("Qty. in Transit" = 0);
+      "Completely Received" := (Quantity <> 0) AND (Quantity = "Quantity Received");
     END;
 
     LOCAL PROCEDURE CalcBaseQty@14(Qty@1000 : Decimal) : Decimal;
@@ -835,6 +836,7 @@ OBJECT Table 5741 Transfer Line
     PROCEDURE ValidateShortcutDimCode@29(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
     BEGIN
       DimMgt.ValidateShortcutDimValues(FieldNumber,ShortcutDimCode,"Dimension Set ID");
+      VerifyItemLineDim;
     END;
 
     PROCEDURE LookupShortcutDimCode@28(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
@@ -1042,10 +1044,22 @@ OBJECT Table 5741 Transfer Line
 
     LOCAL PROCEDURE VerifyItemLineDim@87();
     BEGIN
-      IF "Dimension Set ID" <> xRec."Dimension Set ID" THEN
-        IF ("Quantity Shipped" <> 0) OR ("Qty. Shipped (Base)" <> 0)THEN
-          IF NOT CONFIRM(Text012,FALSE,TABLECAPTION) THEN
-            ERROR(Text013);
+      IF IsShippedDimChanged THEN
+        ConfirmShippedDimChange;
+    END;
+
+    PROCEDURE IsShippedDimChanged@105() : Boolean;
+    BEGIN
+      EXIT(("Dimension Set ID" <> xRec."Dimension Set ID") AND
+        (("Quantity Shipped" <> 0) OR ("Qty. Shipped (Base)" <> 0)));
+    END;
+
+    PROCEDURE ConfirmShippedDimChange@106() : Boolean;
+    BEGIN
+      IF NOT CONFIRM(Text012,FALSE,TABLECAPTION) THEN
+        ERROR(Text013);
+
+      EXIT(TRUE);
     END;
 
     LOCAL PROCEDURE SelectItemEntry@11(CurrentFieldNo@1000 : Integer);
@@ -1067,6 +1081,12 @@ OBJECT Table 5741 Transfer Line
         CheckItemAvailable(CurrentFieldNo);
         Rec := TransferLine2;
       END;
+    END;
+
+    PROCEDURE DateConflictCheck@13();
+    BEGIN
+      IF NOT TrackingBlocked THEN
+        CheckDateConflict.TransferLineCheck(Rec);
     END;
 
     BEGIN

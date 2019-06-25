@@ -2,9 +2,9 @@ OBJECT Report 88 VAT- VIES Declaration Disk
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-03-19;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.51234,NAVDK9.00.00.51234;
   }
   PROPERTIES
   {
@@ -20,7 +20,7 @@ OBJECT Report 88 VAT- VIES Declaration Disk
 
     OnPostReport=BEGIN
                    IF NOT HideFileDialog THEN BEGIN
-                     FileManagement.DownloadHandler(FileName ,'','',FileManagement.GetToFilterText('',FileName),Text007);
+                     FileManagement.DownloadHandler(FileName ,'','',FileManagement.GetToFilterText('',FileName),ToFileNameTxt);
                      FileManagement.DeleteServerFile(FileName);
                    END
                  END;
@@ -39,6 +39,7 @@ OBJECT Report 88 VAT- VIES Declaration Disk
                                VATFile.CREATE(FileName);
 
                                CompanyInfo.GET;
+                               GeneralLedgerSetup.GET;
                                VATRegNo := DeleteCountryPrefix(CompanyInfo."VAT Registration No.",CompanyInfo."Country/Region Code");
                                VATRegNo := CONVERTSTR(VATRegNo,Text001,'    ');
                                WriteToFile(AddFiller('0') + AddFiller(FORMAT(VATRegNo,8)) + AddFiller(Text002) +
@@ -156,6 +157,7 @@ OBJECT Report 88 VAT- VIES Declaration Disk
       CompanyInfo@1005 : Record 79;
       Country@1006 : Record 9;
       Cust@1007 : Record 18;
+      GeneralLedgerSetup@1017 : Record 98;
       FileManagement@1000 : Codeunit 419;
       VATFile@1008 : File;
       EU3PartyTradeTotalAmt@1016 : Decimal;
@@ -165,7 +167,7 @@ OBJECT Report 88 VAT- VIES Declaration Disk
       InternalReferenceNo@1011 : Text[10];
       Period@1012 : Date;
       UseAmtsInAddCurr@1015 : Boolean;
-      Text007@1018 : TextConst 'DAN=Default.txt;ENU=Default.txt';
+      ToFileNameTxt@1018 : TextConst 'DAN=Default.txt;ENU=Default.txt';
       TotalValueofItemSupplies@1060007 : Decimal;
       EU3PartyItemTradeAmt@1014 : Decimal;
       TotalValueofServiceSupplies@1060009 : Decimal;
@@ -206,7 +208,7 @@ OBJECT Report 88 VAT- VIES Declaration Disk
               FIELDCAPTION("VAT Registration No."),FIELDCAPTION(Type),Type);
           END;
 
-          Cust.GET("Bill-to/Pay-to No.");
+          Cust.GET(GetCustomerNoToCheck("VAT Entry"));
           Cust.TESTFIELD("Country/Region Code");
           Country.GET(Cust."Country/Region Code");
           Cust.TESTFIELD("VAT Registration No.");
@@ -215,11 +217,7 @@ OBJECT Report 88 VAT- VIES Declaration Disk
           NoOfGrTotal := NoOfGrTotal + 1;
 
           InternalReferenceNo := INCSTR(InternalReferenceNo);
-          SETRANGE("Country/Region Code","Country/Region Code");
-          SETRANGE("Bill-to/Pay-to No.","Bill-to/Pay-to No.");
-          MODIFYALL("Internal Ref. No.",InternalReferenceNo);
-          SETRANGE("Country/Region Code");
-          SETRANGE("Bill-to/Pay-to No.");
+          ModifyVATEntryInternalRefNo("Country/Region Code","Bill-to/Pay-to No.",InternalReferenceNo);
 
           WriteToFile(
             AddFiller('2') +
@@ -272,6 +270,23 @@ OBJECT Report 88 VAT- VIES Declaration Disk
         EXIT('-');
     END;
 
+    LOCAL PROCEDURE GetCustomerNoToCheck@8(VATEntry@1000 : Record 254) : Code[20];
+    VAR
+      CustLedgerEntry@1001 : Record 21;
+    BEGIN
+      IF GeneralLedgerSetup."Bill-to/Sell-to VAT Calc." = GeneralLedgerSetup."Bill-to/Sell-to VAT Calc."::"Bill-to/Pay-to No." THEN
+        EXIT(VATEntry."Bill-to/Pay-to No.");
+
+      WITH CustLedgerEntry DO BEGIN
+        SETRANGE("Customer No.",VATEntry."Bill-to/Pay-to No.");
+        SETRANGE("Document Type",VATEntry."Document Type");
+        SETRANGE("Document No.",VATEntry."Document No.");
+        SETRANGE("Posting Date",VATEntry."Posting Date");
+        FINDFIRST;
+        EXIT("Sell-to Customer No.");
+      END;
+    END;
+
     PROCEDURE GetFileName@6() : Text[1024];
     BEGIN
       EXIT(FileName);
@@ -280,6 +295,15 @@ OBJECT Report 88 VAT- VIES Declaration Disk
     PROCEDURE InitializeRequest@5(NewHideFileDialog@1000 : Boolean);
     BEGIN
       HideFileDialog := NewHideFileDialog;
+    END;
+
+    LOCAL PROCEDURE ModifyVATEntryInternalRefNo@7(CountryRegionCode@1001 : Code[10];BillToPayToNo@1002 : Code[20];InternalRefNo@1003 : Text[30]);
+    VAR
+      VATEntry@1000 : Record 254;
+    BEGIN
+      VATEntry.SETRANGE("Country/Region Code",CountryRegionCode);
+      VATEntry.SETRANGE("Bill-to/Pay-to No.",BillToPayToNo);
+      VATEntry.MODIFYALL("Internal Ref. No.",InternalRefNo);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Report 295 Combine Shipments
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -114,9 +114,7 @@ OBJECT Report 295 Combine Shipments
     { 2502;2   ;DataItem;                    ;
                DataItemTable=Table111;
                DataItemTableView=SORTING(Document No.,Line No.);
-               OnAfterGetRecord=VAR
-                                  SalesGetShpt@1002 : Codeunit 64;
-                                BEGIN
+               OnAfterGetRecord=BEGIN
                                   IF Type = 0 THEN BEGIN
                                     IF (NOT CopyTextLines) OR ("Attached to Line No." <> 0) THEN
                                       CurrReport.SKIP;
@@ -147,12 +145,27 @@ OBJECT Report 295 Combine Shipments
                                       SalesShptLine := "Sales Shipment Line";
                                       HasAmount := HasAmount OR ("Qty. Shipped Not Invoiced" <> 0);
                                       SalesShptLine.InsertInvLineFromShptLine(SalesLine);
-                                      IF Type = Type::"Charge (Item)" THEN
-                                        SalesGetShpt.GetItemChargeAssgnt("Sales Shipment Line",SalesLine."Qty. to Invoice");
                                     END ELSE
                                       NoOfSalesInvErrors := NoOfSalesInvErrors + 1;
                                   END;
                                 END;
+
+               OnPostDataItem=VAR
+                                SalesShipmentLine@1000 : Record 111;
+                                SalesLineInvoice@1002 : Record 37;
+                                SalesGetShpt@1001 : Codeunit 64;
+                              BEGIN
+                                SalesShipmentLine.SETRANGE("Document No.","Document No.");
+                                SalesShipmentLine.SETRANGE(Type,Type::"Charge (Item)");
+                                IF SalesShipmentLine.FINDSET THEN
+                                  REPEAT
+                                    SalesLineInvoice.SETRANGE("Document Type",SalesLineInvoice."Document Type"::Invoice);
+                                    SalesLineInvoice.SETRANGE("Document No.",SalesHeader."No.");
+                                    SalesLineInvoice.SETRANGE("Shipment Line No.",SalesShipmentLine."Line No.");
+                                    IF SalesLineInvoice.FINDFIRST THEN
+                                      SalesGetShpt.GetItemChargeAssgnt(SalesShipmentLine,SalesLineInvoice."Qty. to Invoice");
+                                  UNTIL SalesShipmentLine.NEXT = 0;
+                              END;
 
                DataItemLink=Document No.=FIELD(No.) }
 

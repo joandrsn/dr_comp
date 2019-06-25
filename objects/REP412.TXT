@@ -2,9 +2,9 @@ OBJECT Report 412 Purchase Prepmt. Doc. - Test
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
@@ -32,6 +32,7 @@ OBJECT Report 412 Purchase Prepmt. Doc. - Test
                OnAfterGetRecord=VAR
                                   VendLedgEntry@1001 : Record 25;
                                   FormatAddr@1000 : Codeunit 365;
+                                  MiniVendorMgt@1004 : Codeunit 1312;
                                   TableID@1003 : ARRAY [10] OF Integer;
                                   No@1002 : ARRAY [10] OF Code[20];
                                 BEGIN
@@ -79,10 +80,9 @@ OBJECT Report 412 Purchase Prepmt. Doc. - Test
                                           AddError(STRSUBSTNO(Text006,FIELDCAPTION("Vendor Invoice No.")));
                                         IF ("Prepayment No." = '') AND ("Prepayment No. Series" = '') THEN
                                           AddError(STRSUBSTNO(Text012,FIELDCAPTION("Prepayment No. Series")));
-                                        IF "Vendor Invoice No." <> '' THEN BEGIN
-                                          VendLedgEntry.SETRANGE("Document Type","Document Type"::Invoice);
-                                          VendLedgEntry.SETRANGE("External Document No.","Vendor Invoice No.");
-                                        END;
+                                        IF "Vendor Invoice No." <> '' THEN
+                                          MiniVendorMgt.SetFilterForExternalDocNo(
+                                            VendLedgEntry,VendLedgEntry."Document Type"::Invoice,"Vendor Invoice No.","Pay-to Vendor No.","Document Date");
                                       END;
                                     DocumentType::"Credit Memo":
                                       BEGIN
@@ -90,10 +90,9 @@ OBJECT Report 412 Purchase Prepmt. Doc. - Test
                                           AddError(STRSUBSTNO(Text006,FIELDCAPTION("Vendor Cr. Memo No.")));
                                         IF ("Prepmt. Cr. Memo No." = '') AND ("Prepmt. Cr. Memo No. Series" = '') THEN
                                           AddError(STRSUBSTNO(Text012,FIELDCAPTION("Prepmt. Cr. Memo No.")));
-                                        IF "Vendor Cr. Memo No." <> '' THEN BEGIN
-                                          VendLedgEntry.SETRANGE("Document Type","Document Type"::"Credit Memo");
-                                          VendLedgEntry.SETRANGE("External Document No.","Vendor Cr. Memo No.");
-                                        END;
+                                        IF "Vendor Cr. Memo No." <> '' THEN
+                                          MiniVendorMgt.SetFilterForExternalDocNo(
+                                            VendLedgEntry,VendLedgEntry."Document Type"::"Credit Memo","Vendor Cr. Memo No.","Pay-to Vendor No.","Posting Date");
                                       END;
                                   END;
 
@@ -1040,6 +1039,9 @@ OBJECT Report 412 Purchase Prepmt. Doc. - Test
         AddError(STRSUBSTNO(Text007,Vend.TABLECAPTION,VendNo));
         EXIT;
       END;
+      IF Vend."Privacy Blocked" THEN
+        AddError(Vend.GetPrivacyBlockedGenericErrorText(Vend));
+
       IF Vend.Blocked IN [Vend.Blocked::All,Vend.Blocked::Payment] THEN
         AddError(
           STRSUBSTNO(Text008,Vend.FIELDCAPTION(Blocked),Vend.Blocked,Vend.TABLECAPTION,VendNo));

@@ -2,9 +2,9 @@ OBJECT Page 5900 Service Order
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.48822,NAVDK9.00.00.48822;
   }
   PROPERTIES
   {
@@ -321,6 +321,7 @@ OBJECT Page 5900 Service Order
                                BEGIN
                                  ServHeader.GET("Document Type","No.");
                                  ServPostYesNo.PostDocument(ServHeader);
+                                 CurrPage.UPDATE(FALSE);
                                END;
                                 }
       { 30      ;2   ;Action    ;

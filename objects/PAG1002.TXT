@@ -2,9 +2,9 @@ OBJECT Page 1002 Job Task Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -47,9 +47,10 @@ OBJECT Page 1002 Job Task Lines
                                  TESTFIELD("Job Task Type","Job Task Type"::Posting);
                                  TESTFIELD("Job No.");
                                  TESTFIELD("Job Task No.");
+                                 JobPlanningLine.FILTERGROUP(2);
                                  JobPlanningLine.SETRANGE("Job No.","Job No.");
                                  JobPlanningLine.SETRANGE("Job Task No.","Job Task No.");
-                                 JobPlanningLines.SetJobNoVisible(FALSE);
+                                 JobPlanningLine.FILTERGROUP(0);
                                  JobPlanningLines.SetJobTaskNoVisible(FALSE);
                                  JobPlanningLines.SetJobNo("Job No.");
                                  JobPlanningLines.SETTABLEVIEW(JobPlanningLine);

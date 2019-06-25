@@ -2,9 +2,9 @@ OBJECT Report 7391 Whse. Get Bin Content
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-09-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49326;
   }
   PROPERTIES
   {
@@ -28,26 +28,24 @@ OBJECT Report 7391 Whse. Get Bin Content
                                     BinType.GET("Bin Type Code");
                                   IF BinType.Receive AND NOT "Cross-Dock Bin" THEN
                                     CurrReport.SKIP;
-                                  IF DestinationType2 = 3 THEN
-                                    QtyToEmptyBase := CalcQtyAvailToPick(0)
-                                  ELSE
-                                    QtyToEmptyBase := CalcQtyAvailToTake(0);
+
+                                  QtyToEmptyBase := GetQtyToEmptyBase('','');
                                   IF QtyToEmptyBase <= 0 THEN
                                     CurrReport.SKIP;
 
                                   CASE DestinationType2 OF
-                                    0:
+                                    DestinationType2::MovementWorksheet:
                                       InsertWWL;
-                                    1:
+                                    DestinationType2::WhseInternalPutawayHeader:
                                       InsertWIPL;
-                                    2:
+                                    DestinationType2::ItemJournalLine:
                                       InsertItemJournalLine;
-                                    3:
+                                    DestinationType2::TransferHeader:
                                       BEGIN
                                         TransferHeader.TESTFIELD("Transfer-from Code","Location Code");
                                         InsertTransferLine;
                                       END;
-                                    4:
+                                    DestinationType2::InternalMovementHeader:
                                       InsertIntMovementLine;
                                   END;
 
@@ -68,7 +66,7 @@ OBJECT Report 7391 Whse. Get Bin Content
 
       OnOpenPage=BEGIN
                    CASE DestinationType2 OF
-                     2:
+                     DestinationType2::ItemJournalLine:
                        BEGIN
                          PostingDateEditable := TRUE;
                          DocNoEditable := TRUE;
@@ -124,7 +122,7 @@ OBJECT Report 7391 Whse. Get Bin Content
       QtyToEmptyBase@1001 : Decimal;
       ReportInitialized@1002 : Boolean;
       Text001@1003 : TextConst 'DAN=Rapporten skal initialiseres.;ENU=Report must be initialized.';
-      DestinationType2@1005 : Option;
+      DestinationType2@1005 : 'MovementWorksheet,WhseInternalPutawayHeader,ItemJournalLine,TransferHeader,InternalMovementHeader';
       PostingDate@1008 : Date;
       DocNo@1009 : Code[20];
       PostingDateEditable@19050785 : Boolean INDATASET;
@@ -132,8 +130,9 @@ OBJECT Report 7391 Whse. Get Bin Content
 
     PROCEDURE InitializeReport@1(WWL@1000 : Record 7326;WIPH@1001 : Record 7331;DestinationType@1002 : Option);
     BEGIN
-      CASE DestinationType OF
-        0:
+      DestinationType2 := DestinationType;
+      CASE DestinationType2 OF
+        DestinationType2::MovementWorksheet:
           BEGIN
             WWLine := WWL;
             WWLine.SETCURRENTKEY("Worksheet Template Name",Name,"Location Code","Line No.");
@@ -142,15 +141,13 @@ OBJECT Report 7391 Whse. Get Bin Content
             WWLine.SETRANGE("Location Code",WWLine."Location Code");
             IF WWLine.FINDLAST THEN;
           END;
-        1:
+        DestinationType2::WhseInternalPutawayHeader:
           BEGIN
             WIPLine."No." := WIPH."No.";
             WIPLine.SETRANGE("No.",WIPLine."No.");
             IF WIPLine.FINDLAST THEN;
           END;
       END;
-
-      DestinationType2 := DestinationType;
       ReportInitialized := TRUE;
     END;
 
@@ -164,7 +161,7 @@ OBJECT Report 7391 Whse. Get Bin Content
       PostingDate := ItemJournalLine2."Posting Date";
       DocNo := ItemJournalLine2."Document No.";
 
-      DestinationType2 := 2;
+      DestinationType2 := DestinationType2::ItemJournalLine;
       ReportInitialized := TRUE;
     END;
 
@@ -179,7 +176,7 @@ OBJECT Report 7391 Whse. Get Bin Content
 
       TransferHeader := TransferHeader2;
 
-      DestinationType2 := 3;
+      DestinationType2 := DestinationType2::TransferHeader;
       ReportInitialized := TRUE;
     END;
 
@@ -193,7 +190,7 @@ OBJECT Report 7391 Whse. Get Bin Content
       END;
       InternalMovementHeader := InternalMovementHeader2;
 
-      DestinationType2 := 4;
+      DestinationType2 := DestinationType2::InternalMovementHeader;
       ReportInitialized := TRUE;
     END;
 
@@ -310,6 +307,8 @@ OBJECT Report 7391 Whse. Get Bin Content
       Direction@1008 : 'Outbound,Inbound';
       SNRequired@1004 : Boolean;
       LNRequired@1003 : Boolean;
+      TrackedQtyToEmptyBase@1007 : Decimal;
+      TotalTrackedQtyBase@1009 : Decimal;
     BEGIN
       CLEAR(ItemTrackingMgt);
       ItemTrackingMgt.CheckWhseItemTrkgSetup("Bin Content"."Item No.",SNRequired,LNRequired,FALSE);
@@ -332,43 +331,41 @@ OBJECT Report 7391 Whse. Get Bin Content
                 SETRANGE("Lot No.","Lot No.");
               IF "Serial No." <> '' THEN
                 SETRANGE("Serial No.","Serial No.");
-              CALCSUMS("Qty. (Base)");
-              QtyToEmptyBase := "Qty. (Base)";
-              IF QtyToEmptyBase > 0 THEN BEGIN
+
+              TrackedQtyToEmptyBase := GetQtyToEmptyBase("Lot No.","Serial No.");
+              TotalTrackedQtyBase += TrackedQtyToEmptyBase;
+
+              IF TrackedQtyToEmptyBase > 0 THEN BEGIN
                 GetLocation("Location Code",Location);
                 ItemTrackingMgt.GetWhseExpirationDate("Item No.","Variant Code",Location,"Lot No.","Serial No.","Expiration Date");
 
                 CASE DestinationType2 OF
-                  0:
-                    BEGIN
-                      IF NOT OutstandingWhseActiveLineExists(WarehouseEntry,QtyToEmptyBase) THEN
-                        WWLine.SetItemTrackingLines("Serial No.","Lot No.","Expiration Date",QtyToEmptyBase);
-                    END;
-                  1:
-                    BEGIN
-                      IF NOT OutstandingWhseActiveLineExists(WarehouseEntry,QtyToEmptyBase) THEN
-                        WIPLine.SetItemTrackingLines("Serial No.","Lot No.","Expiration Date",QtyToEmptyBase);
-                    END;
-                  2:
+                  DestinationType2::MovementWorksheet:
+                    WWLine.SetItemTrackingLines("Serial No.","Lot No.","Expiration Date",TrackedQtyToEmptyBase);
+                  DestinationType2::WhseInternalPutawayHeader:
+                    WIPLine.SetItemTrackingLines("Serial No.","Lot No.","Expiration Date",TrackedQtyToEmptyBase);
+                  DestinationType2::ItemJournalLine:
                     ReserveItemJnlLine.InitTrackingSpecification(ItemJournalLine,TempTrackingSpecification);
-                  3:
+                  DestinationType2::TransferHeader:
                     ReserveTransferLine.InitTrackingSpecification(
                       TransferLine,TempTrackingSpecification,TransferLine."Shipment Date",Direction::Outbound);
-                  4:
-                    InternalMovementLine.SetItemTrackingLines("Serial No.","Lot No.","Expiration Date",QtyToEmptyBase);
+                  DestinationType2::InternalMovementHeader:
+                    InternalMovementLine.SetItemTrackingLines("Serial No.","Lot No.","Expiration Date",TrackedQtyToEmptyBase);
                 END;
               END;
               FIND('+');
               SETRANGE("Lot No.");
               SETRANGE("Serial No.");
             END;
-            IF DestinationType2 IN [2,3] THEN
-              InsertTempTrackingSpec(WarehouseEntry,QtyToEmptyBase,TempTrackingSpecification);
+            IF DestinationType2 IN [DestinationType2::ItemJournalLine,DestinationType2::TransferHeader] THEN
+              InsertTempTrackingSpec(WarehouseEntry,TrackedQtyToEmptyBase,TempTrackingSpecification);
           UNTIL NEXT = 0;
+        IF TotalTrackedQtyBase > QtyToEmptyBase THEN
+          EXIT;
         CASE DestinationType2 OF
-          2:
+          DestinationType2::ItemJournalLine:
             ReserveItemJnlLine.RegisterBinContentItemTracking(ItemJournalLine,TempTrackingSpecification);
-          3:
+          DestinationType2::TransferHeader:
             ReserveTransferLine.RegisterBinContentItemTracking(TransferLine,TempTrackingSpecification);
         END;
       END;
@@ -411,32 +408,22 @@ OBJECT Report 7391 Whse. Get Bin Content
       EXIT(ROUND(QtyBase / QtyPerUOM,0.00001));
     END;
 
-    LOCAL PROCEDURE OutstandingWhseActiveLineExists@14(WarehouseEntry@1000 : Record 7312;VAR QtyToInsert@1005 : Decimal) : Boolean;
+    LOCAL PROCEDURE GetQtyToEmptyBase@47(LotNo@1001 : Code[20];SerialNo@1002 : Code[20]) : Decimal;
     VAR
-      WhseActivityLine@1004 : Record 5767;
+      BinContent@1000 : Record 7302;
     BEGIN
-      WITH WhseActivityLine DO BEGIN
-        SETCURRENTKEY(
-          "Item No.","Bin Code","Location Code","Action Type",
-          "Variant Code","Unit of Measure Code","Breakbulk No.",
-          "Activity Type","Lot No.","Serial No.","Original Breakbulk");
-        SETRANGE("Action Type","Action Type"::Take);
-        SETRANGE("Item No.",WarehouseEntry."Item No.");
-        SETRANGE("Location Code",WarehouseEntry."Location Code");
-        SETRANGE("Bin Code",WarehouseEntry."Bin Code");
-        SETRANGE("Variant Code",WarehouseEntry."Variant Code");
-        SETRANGE("Unit of Measure Code",WarehouseEntry."Unit of Measure Code");
-        IF WarehouseEntry."Lot No." <> '' THEN
-          SETRANGE("Lot No.",WarehouseEntry."Lot No.");
-        IF WarehouseEntry."Serial No." <> '' THEN
-          SETRANGE("Serial No.",WarehouseEntry."Serial No.");
-        CALCSUMS("Qty. Outstanding (Base)");
-        IF "Qty. Outstanding (Base)" < QtyToInsert THEN
-          QtyToInsert := QtyToInsert - "Qty. Outstanding (Base)"
-        ELSE
-          EXIT(TRUE);
+      WITH BinContent DO BEGIN
+        INIT;
+        COPY("Bin Content");
+        FILTERGROUP(8);
+        IF LotNo <> '' THEN
+          SETRANGE("Lot No. Filter",LotNo);
+        IF SerialNo <> '' THEN
+          SETRANGE("Serial No. Filter",SerialNo);
+        IF DestinationType2 = DestinationType2::TransferHeader THEN
+          EXIT(CalcQtyAvailToPick(0));
+        EXIT(CalcQtyAvailToTake(0));
       END;
-      EXIT(FALSE);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Table 1224 Data Exch. Mapping
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
@@ -32,7 +32,7 @@ OBJECT Table 1224 Data Exch. Mapping
                                                    CaptionML=[DAN=Tabel-id;
                                                               ENU=Table ID];
                                                    NotBlank=Yes }
-    { 3   ;   ;Name                ;Text50        ;CaptionML=[DAN=Navn;
+    { 3   ;   ;Name                ;Text250       ;CaptionML=[DAN=Navn;
                                                               ENU=Name] }
     { 4   ;   ;Mapping Codeunit    ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Codeunit));
                                                    CaptionML=[DAN=Koblings-codeunit;
@@ -73,7 +73,7 @@ OBJECT Table 1224 Data Exch. Mapping
       RecordNameFormatTok@1003 : TextConst 'DAN=%1 til %2;ENU=%1 to %2';
       RenameErr@1004 : TextConst 'DAN=Du kan ikke omdøbe posten, hvis der findes én eller flere feltkoblingslinjer.;ENU=You cannot rename the record if one or more field mapping lines exist.';
 
-    PROCEDURE InsertRec@1(DataExchDefCode@1002 : Code[20];DataExchLineDefCode@1006 : Code[20];TableId@1003 : Integer;Name@1001 : Text[50];MappingCodeunit@1004 : Integer;DataExchNoFieldId@1000 : Integer;DataExchLineFieldId@1005 : Integer);
+    PROCEDURE InsertRec@1(DataExchDefCode@1002 : Code[20];DataExchLineDefCode@1006 : Code[20];TableId@1003 : Integer;Name@1001 : Text[250];MappingCodeunit@1004 : Integer;DataExchNoFieldId@1000 : Integer;DataExchLineFieldId@1005 : Integer);
     BEGIN
       INIT;
       VALIDATE("Data Exch. Def Code",DataExchDefCode);
@@ -86,7 +86,7 @@ OBJECT Table 1224 Data Exch. Mapping
       INSERT;
     END;
 
-    PROCEDURE InsertRecForExport@2(DataExchDefCode@1002 : Code[20];DataExchLineDefCode@1006 : Code[20];TableId@1003 : Integer;Name@1001 : Text[50];ProcessingCodeunit@1004 : Integer);
+    PROCEDURE InsertRecForExport@2(DataExchDefCode@1002 : Code[20];DataExchLineDefCode@1006 : Code[20];TableId@1003 : Integer;Name@1001 : Text[250];ProcessingCodeunit@1004 : Integer);
     BEGIN
       INIT;
       VALIDATE("Data Exch. Def Code",DataExchDefCode);
@@ -97,7 +97,7 @@ OBJECT Table 1224 Data Exch. Mapping
       INSERT;
     END;
 
-    PROCEDURE InsertRecForImport@3(DataExchDefCode@1002 : Code[20];DataExchLineDefCode@1006 : Code[20];TableId@1003 : Integer;Name@1001 : Text[50];DataExchNoFieldId@1000 : Integer;DataExchLineFieldId@1005 : Integer);
+    PROCEDURE InsertRecForImport@3(DataExchDefCode@1002 : Code[20];DataExchLineDefCode@1006 : Code[20];TableId@1003 : Integer;Name@1001 : Text[250];DataExchNoFieldId@1000 : Integer;DataExchLineFieldId@1005 : Integer);
     BEGIN
       INIT;
       VALIDATE("Data Exch. Def Code",DataExchDefCode);
@@ -115,7 +115,7 @@ OBJECT Table 1224 Data Exch. Mapping
         CreateName(TableID,"Data Exch. Def Code"),CodeunitID,DataExchNoFieldID,DataExchLineFieldID);
     END;
 
-    LOCAL PROCEDURE CreateName@5(TableID@1000 : Integer;Code@1002 : Code[20]) : Text[50];
+    LOCAL PROCEDURE CreateName@5(TableID@1000 : Integer;Code@1002 : Code[20]) : Text[250];
     VAR
       recRef@1001 : RecordRef;
     BEGIN

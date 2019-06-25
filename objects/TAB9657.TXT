@@ -2,9 +2,9 @@ OBJECT Table 9657 Custom Report Selection
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -21,13 +21,13 @@ OBJECT Table 9657 Custom Report Selection
                                                               ENU=Source No.] }
     { 3   ;   ;Usage               ;Option        ;CaptionML=[DAN=Forbrug;
                                                               ENU=Usage];
-                                                   OptionCaptionML=[DAN=S.tilbud,S.ordre,S.faktura,S.kred.nota,S.test,K.tilbud,K.ordre,K.faktura,K.kred.nota,K.lev,K.ret.vare,K.test,B.udtog,B.afstem.test,B.check,Rykker,Rente,Indbet.test,Rente.test,Prod.ordre,S.ramme,K.ramme,R1,R2,R3,R4,Fak1,Fak2,Fak3,SM.tilbud,SM.ordre,SM.faktura,SM.kred.nota,SM.kontrakttilbud,SM.kontrakt,SM.test,S.returvare,K.returvare,S.leverance,S.ret.vare.,S.arbejdsseddel,Lager.periode.test,SM.leverance,S.test.forudbet.,K..test.forudbet,S.ark.tilbud,S.ark.ordre,K.ark.tilbud,K.ark.ordre,S.ark.ret.ordre,K.ark.ret.ordre,Asm.ordre,K.montageordre,S.ordre plukinstruktion,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,C.udtog,V.indbet.;
+                                                   OptionCaptionML=[DAN=S.Quote,S.Order,S.Invoice,S.Cr.Memo,S.Test,P.Quote,P.Order,P.Invoice,P.Cr.Memo,P.Receipt,P.Ret.Shpt.,P.Test,B.Stmt,B.Recon.Test,B.Check,Reminder,Fin.Charge,Rem.Test,F.C.Test,Prod. Order,S.Blanket,P.Blanket,M1,M2,M3,M4,Inv1,Inv2,Inv3,SM.Quote,SM.Order,SM.Invoice,SM.Credit Memo,SM.Contract Quote,SM.Contract,SM.Test,S.Return,P.Return,S.Shipment,S.Ret.Rcpt.,S.Work Order,Invt. Period Test,SM.Shipment,S.Test Prepmt.,P.Test Prepmt.,S.Arch. Quote,S.Arch. Order,P.Arch. Quote,P.Arch. Order,S. Arch. Return Order,P. Arch. Return Order,Asm. Order,P.Assembly Order,S.Order Pick Instruction,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,C.Statement,V.Remittance;
                                                                     ENU=S.Quote,S.Order,S.Invoice,S.Cr.Memo,S.Test,P.Quote,P.Order,P.Invoice,P.Cr.Memo,P.Receipt,P.Ret.Shpt.,P.Test,B.Stmt,B.Recon.Test,B.Check,Reminder,Fin.Charge,Rem.Test,F.C.Test,Prod. Order,S.Blanket,P.Blanket,M1,M2,M3,M4,Inv1,Inv2,Inv3,SM.Quote,SM.Order,SM.Invoice,SM.Credit Memo,SM.Contract Quote,SM.Contract,SM.Test,S.Return,P.Return,S.Shipment,S.Ret.Rcpt.,S.Work Order,Invt. Period Test,SM.Shipment,S.Test Prepmt.,P.Test Prepmt.,S.Arch. Quote,S.Arch. Order,P.Arch. Quote,P.Arch. Order,S. Arch. Return Order,P. Arch. Return Order,Asm. Order,P.Assembly Order,S.Order Pick Instruction,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,C.Statement,V.Remittance];
                                                    OptionString=S.Quote,S.Order,S.Invoice,S.Cr.Memo,S.Test,P.Quote,P.Order,P.Invoice,P.Cr.Memo,P.Receipt,P.Ret.Shpt.,P.Test,B.Stmt,B.Recon.Test,B.Check,Reminder,Fin.Charge,Rem.Test,F.C.Test,Prod. Order,S.Blanket,P.Blanket,M1,M2,M3,M4,Inv1,Inv2,Inv3,SM.Quote,SM.Order,SM.Invoice,SM.Credit Memo,SM.Contract Quote,SM.Contract,SM.Test,S.Return,P.Return,S.Shipment,S.Ret.Rcpt.,S.Work Order,Invt. Period Test,SM.Shipment,S.Test Prepmt.,P.Test Prepmt.,S.Arch. Quote,S.Arch. Order,P.Arch. Quote,P.Arch. Order,S. Arch. Return Order,P. Arch. Return Order,Asm. Order,P.Assembly Order,S.Order Pick Instruction,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,C.Statement,V.Remittance }
     { 4   ;   ;Sequence            ;Integer       ;AutoIncrement=Yes;
                                                    CaptionML=[DAN=Rækkefølge;
                                                               ENU=Sequence] }
-    { 5   ;   ;Report ID           ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Report));
+    { 5   ;   ;Report ID           ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Report));
                                                    OnValidate=BEGIN
                                                                 CALCFIELDS("Report Caption");
                                                               END;
@@ -41,26 +41,14 @@ OBJECT Table 9657 Custom Report Selection
                                                               ENU=Report Caption];
                                                    Editable=No }
     { 7   ;   ;Custom Report Layout ID;Integer    ;TableRelation="Custom Report Layout".ID WHERE (ID=FIELD(Custom Report Layout ID));
+                                                   OnValidate=BEGIN
+                                                                CALCFIELDS("Custom Report Description");
+                                                              END;
+
                                                    CaptionML=[DAN=Tilpasset rapportlayout-id;
                                                               ENU=Custom Report Layout ID] }
     { 8   ;   ;Custom Report Description;Text250  ;FieldClass=FlowField;
                                                    CalcFormula=Lookup("Custom Report Layout".Description WHERE (ID=FIELD(Custom Report Layout ID)));
-                                                   OnLookup=VAR
-                                                              CustomReportLayout@1001 : Record 9650;
-                                                              CustomReportLayouts@1000 : Page 9650;
-                                                            BEGIN
-                                                              CustomReportLayout.SETCURRENTKEY("Report ID","Company Name",Type);
-                                                              CustomReportLayout.SETRANGE("Report ID","Report ID");
-                                                              CustomReportLayout.SETFILTER("Company Name",'%1|%2','',COMPANYNAME);
-                                                              CustomReportLayouts.SETTABLEVIEW(CustomReportLayout);
-                                                              IF CustomReportLayouts.RUNMODAL = ACTION::OK THEN BEGIN
-                                                                CustomReportLayouts.GETRECORD(CustomReportLayout);
-                                                                "Custom Report Layout ID" := CustomReportLayout.ID;
-                                                                MODIFY;
-                                                                CALCFIELDS("Custom Report Description");
-                                                              END;
-                                                            END;
-
                                                    CaptionML=[DAN=Beskrivelse af brugerdefineret layout;
                                                               ENU=Custom Layout Description];
                                                    Editable=No }
@@ -161,6 +149,9 @@ OBJECT Table 9657 Custom Report Selection
           ERROR(UnsupportedReportErr);
       END;
 
+      IF GETFILTER(Usage) <> '' THEN
+        CustomReportSelection2.SETFILTER(Usage,GETFILTER(Usage));
+
       IF CustomReportSelection2.FIND('-') THEN BEGIN
         REPEAT
           CustomLayoutPresent := CustomReportLayout.GET(CustomReportSelection2."Custom Report Layout ID");
@@ -234,6 +225,34 @@ OBJECT Table 9657 Custom Report Selection
     PROCEDURE InitUsage@3();
     BEGIN
       Usage := xRec.Usage;
+    END;
+
+    LOCAL PROCEDURE LookupCustomReportLayout@4(CurrentLayoutId@1000 : Integer) : Integer;
+    VAR
+      CustomReportLayout@1002 : Record 9650;
+      CustomReportLayouts@1001 : Page 9650;
+    BEGIN
+      CustomReportLayout.SETCURRENTKEY("Report ID","Company Name",Type);
+      CustomReportLayout.SETRANGE("Report ID","Report ID");
+      CustomReportLayout.SETFILTER("Company Name",'%1|%2','',COMPANYNAME);
+      CustomReportLayouts.SETTABLEVIEW(CustomReportLayout);
+      CustomReportLayouts.LOOKUPMODE := TRUE;
+
+      IF CustomReportLayouts.RUNMODAL = ACTION::LookupOK THEN BEGIN
+        CustomReportLayouts.GETRECORD(CustomReportLayout);
+        EXIT(CustomReportLayout.ID);
+      END;
+
+      // If the lookup was canceled, use the same ID that we previously had
+      EXIT(CurrentLayoutId);
+    END;
+
+    PROCEDURE LookupCustomReportDescription@6();
+    BEGIN
+      VALIDATE("Custom Report Layout ID",LookupCustomReportLayout("Custom Report Layout ID"));
+      IF NOT MODIFY THEN
+        INSERT;
+      CALCFIELDS("Custom Report Description");
     END;
 
     BEGIN

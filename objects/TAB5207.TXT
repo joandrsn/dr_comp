@@ -2,9 +2,9 @@ OBJECT Table 5207 Employee Absence
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -27,6 +27,8 @@ OBJECT Table 5207 Employee Absence
     { 1   ;   ;Employee No.        ;Code20        ;TableRelation=Employee;
                                                    OnValidate=BEGIN
                                                                 Employee.GET("Employee No.");
+                                                                IF Employee."Privacy Blocked" THEN
+                                                                  ERROR(BlockedErr);
                                                               END;
 
                                                    CaptionML=[DAN=Medarbejdernr.;
@@ -104,6 +106,7 @@ OBJECT Table 5207 Employee Absence
       Employee@1001 : Record 5200;
       EmployeeAbsence@1002 : Record 5207;
       HumanResUnitOfMeasure@1003 : Record 5220;
+      BlockedErr@1004 : TextConst 'DAN=Du kan ikke registrere fravær, fordi medarbejderen er blokeret på grund af beskyttelse af personlige oplysninger.;ENU=You cannot register absence because the employee is blocked due to privacy.';
 
     LOCAL PROCEDURE CalcBaseQty@14(Qty@1000 : Decimal) : Decimal;
     BEGIN

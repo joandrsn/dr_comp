@@ -2,9 +2,9 @@ OBJECT Table 7350 Lot Numbers by Bin Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,19 +13,26 @@ OBJECT Table 7350 Lot Numbers by Bin Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Item No.            ;Code20        ;CaptionML=[DAN=Varenr.;
+    { 1   ;   ;Item No.            ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Varenr.;
                                                               ENU=Item No.] }
-    { 2   ;   ;Variant Code        ;Code10        ;CaptionML=[DAN=Variantkode;
+    { 2   ;   ;Variant Code        ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Variantkode;
                                                               ENU=Variant Code] }
-    { 3   ;   ;Location Code       ;Code10        ;CaptionML=[DAN=Lokationskode;
+    { 3   ;   ;Location Code       ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code] }
-    { 4   ;   ;Zone Code           ;Code10        ;CaptionML=[DAN=Zonekode;
+    { 4   ;   ;Zone Code           ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Zonekode;
                                                               ENU=Zone Code] }
-    { 5   ;   ;Bin Code            ;Code20        ;CaptionML=[DAN=Placeringskode;
+    { 5   ;   ;Bin Code            ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Placeringskode;
                                                               ENU=Bin Code] }
-    { 6   ;   ;Lot No.             ;Code20        ;CaptionML=[DAN=Lotnr.;
+    { 6   ;   ;Lot No.             ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lotnr.;
                                                               ENU=Lot No.] }
-    { 7   ;   ;Qty. (Base)         ;Decimal       ;CaptionML=[DAN=Antal (basis);
+    { 7   ;   ;Qty. (Base)         ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Antal (basis);
                                                               ENU=Qty. (Base)];
                                                    DecimalPlaces=0:5 }
   }

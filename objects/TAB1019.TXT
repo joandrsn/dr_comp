@@ -2,9 +2,9 @@ OBJECT Table 1019 Job Difference Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,35 +13,47 @@ OBJECT Table 1019 Job Difference Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Job No.             ;Code20        ;CaptionML=[DAN=Sagsnr.;
+    { 1   ;   ;Job No.             ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Sagsnr.;
                                                               ENU=Job No.] }
-    { 2   ;   ;Job Task No.        ;Code20        ;CaptionML=[DAN=Sagsopgavenr.;
+    { 2   ;   ;Job Task No.        ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Sagsopgavenr.;
                                                               ENU=Job Task No.] }
-    { 3   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+    { 3   ;   ;Type                ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Type;
                                                               ENU=Type];
                                                    OptionCaptionML=[DAN=Ressource,Vare,Finanskonto;
                                                                     ENU=Resource,Item,G/L Account];
                                                    OptionString=Resource,Item,G/L Account }
-    { 4   ;   ;Location Code       ;Code10        ;CaptionML=[DAN=Lokationskode;
+    { 4   ;   ;Location Code       ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code] }
-    { 5   ;   ;Variant Code        ;Code10        ;CaptionML=[DAN=Variantkode;
+    { 5   ;   ;Variant Code        ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Variantkode;
                                                               ENU=Variant Code] }
-    { 6   ;   ;Unit of Measure code;Code10        ;CaptionML=[DAN=Måleenhedskode;
+    { 6   ;   ;Unit of Measure code;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Måleenhedskode;
                                                               ENU=Unit of Measure code] }
-    { 7   ;   ;Entry type          ;Option        ;CaptionML=[DAN=Posttype;
+    { 7   ;   ;Entry type          ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Posttype;
                                                               ENU=Entry type];
                                                    OptionCaptionML=[DAN=Budget,Forbrug;
                                                                     ENU=Schedule,Usage];
                                                    OptionString=Schedule,Usage }
-    { 8   ;   ;Work Type Code      ;Code10        ;CaptionML=[DAN=Arbejdstypekode;
+    { 8   ;   ;Work Type Code      ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Arbejdstypekode;
                                                               ENU=Work Type Code] }
-    { 9   ;   ;No.                 ;Code20        ;CaptionML=[DAN=Nummer;
+    { 9   ;   ;No.                 ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
-    { 10  ;   ;Quantity            ;Decimal       ;CaptionML=[DAN=Antal;
+    { 10  ;   ;Quantity            ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Antal;
                                                               ENU=Quantity] }
-    { 11  ;   ;Total Cost          ;Decimal       ;CaptionML=[DAN=Kostbeløb;
+    { 11  ;   ;Total Cost          ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kostbeløb;
                                                               ENU=Total Cost] }
-    { 12  ;   ;Line Amount         ;Decimal       ;CaptionML=[DAN=Linjebeløb;
+    { 12  ;   ;Line Amount         ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Linjebeløb;
                                                               ENU=Line Amount] }
   }
   KEYS

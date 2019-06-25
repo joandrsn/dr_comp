@@ -2,9 +2,9 @@ OBJECT Report 120 Aged Accounts Receivable
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -738,13 +738,15 @@ OBJECT Report 120 Aged Accounts Receivable
       OriginalAmtCptnLbl@4991 : TextConst 'DAN=Valutakode;ENU=Currency Code';
       TotalLCYCptnLbl@4055 : TextConst 'DAN=I alt (RV);ENU=Total (LCY)';
       CurrSpecificationCptnLbl@3382 : TextConst 'DAN=Valutaspecifikation;ENU=Currency Specification';
+      EnterDateFormulaErr@1026 : TextConst 'DAN=Angiv en datoformel i feltet Periodelængde.;ENU=Enter a date formula in the Period Length field.';
 
     LOCAL PROCEDURE CalcDates@5();
     VAR
       i@1000 : Integer;
       PeriodLength2@1001 : DateFormula;
     BEGIN
-      EVALUATE(PeriodLength2,STRSUBSTNO(Text032,PeriodLength));
+      IF NOT EVALUATE(PeriodLength2,STRSUBSTNO(Text032,PeriodLength)) THEN
+        ERROR(EnterDateFormulaErr);
       IF AgingBy = AgingBy::"Due Date" THEN BEGIN
         PeriodEndDate[1] := 31129999D;
         PeriodStartDate[1] := EndingDate + 1;
@@ -6860,6 +6862,7 @@ OBJECT Report 120 Aged Accounts Receivable
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

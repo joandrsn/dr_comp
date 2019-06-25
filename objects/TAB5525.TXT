@@ -2,9 +2,9 @@ OBJECT Table 5525 Manufacturing User Template
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -28,6 +28,7 @@ OBJECT Table 5525 Manufacturing User Template
 
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 2   ;   ;Create Purchase Order;Option       ;AccessByPermission=TableData 120=R;
@@ -71,7 +72,7 @@ OBJECT Table 5525 Manufacturing User Template
     { 20  ;   ;Transfer Wksh. Name ;Code10        ;TableRelation="Requisition Wksh. Name".Name WHERE (Worksheet Template Name=FIELD(Transfer Req. Wksh. Template));
                                                    CaptionML=[DAN=Overførselskladdenavn;
                                                               ENU=Transfer Wksh. Name] }
-    { 21  ;   ;Make Orders         ;Option        ;CaptionML=[DAN=Lav ordrer;
+    { 21  ;   ;Make Orders         ;Option        ;CaptionML=[DAN=Opret ordrer;
                                                               ENU=Make Orders];
                                                    OptionCaptionML=[DAN=Den aktive linje,Den aktive ordre,Alle linjer;
                                                                     ENU=The Active Line,The Active Order,All Lines];

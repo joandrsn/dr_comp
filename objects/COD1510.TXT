@@ -2,9 +2,9 @@ OBJECT Codeunit 1510 Notification Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50293;
   }
   PROPERTIES
   {
@@ -40,6 +40,7 @@ OBJECT Codeunit 1510 Notification Management
       LinkNotAvailableTxt@1017 : TextConst 'DAN=Der er intet link til denne notifikationspost, da den relaterede record ikke længere findes.;ENU=There is no link for this notification entry, because the related record no longer exists.';
       ClientLinksTok@1025 : TextConst '@@@={Locked};DAN="<a href=""%1"">%2</a> (<a href=""%3"">%4</a>)";ENU="<a href=""%1"">%2</a> (<a href=""%3"">%4</a>)"';
       OverdueEntriesMsg@1047 : TextConst 'DAN=Der er oprettet forfaldne godkendelsesposter.;ENU=Overdue approval entries have been created.';
+      CreatedByPrefixTxt@1014 : TextConst 'DAN=Oprettet af;ENU=Created by';
 
     PROCEDURE CreateOverdueNotifications@14(WorkflowStepArgument@1002 : Record 1523);
     VAR
@@ -183,6 +184,7 @@ OBJECT Codeunit 1510 Notification Management
       Customer@1007 : Record 18;
       Vendor@1008 : Record 23;
       ApprovalEntry@1004 : Record 454;
+      User@1010 : Record 2000000120;
       CustVendorNo@1003 : Code[20];
       CustVendorName@1002 : Text[50];
       HtmlCommentLines@1006 : Text;
@@ -266,6 +268,15 @@ OBJECT Codeunit 1510 Notification Management
       END;
 
       NotificationBody := NotificationBody.Replace('%ApprovalComments%',HtmlCommentLines);
+
+      User.SETRANGE("User Name",ApprovalEntry."Sender ID");
+      IF User.FINDFIRST AND (User."Full Name" <> '') THEN BEGIN
+        NotificationBody := NotificationBody.Replace('%SenderNameCaption%',CreatedByPrefixTxt);
+        NotificationBody := NotificationBody.Replace('%SenderName%',User."Full Name");
+      END ELSE BEGIN
+        NotificationBody := NotificationBody.Replace('%SenderNameCaption%','');
+        NotificationBody := NotificationBody.Replace('%SenderName%','');
+      END;
     END;
 
     LOCAL PROCEDURE ReplaceTokensWithBlanks@3(VAR NotificationBody@1000 : DotNet "'mscorlib'.System.String";RecordIdentifier@1001 : Text);

@@ -2,9 +2,9 @@ OBJECT Report 6661 Delete Invd Purch. Ret. Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -80,7 +80,7 @@ OBJECT Report 6661 Delete Invd Purch. Ret. Orders
                                             WhseRequest.SETRANGE("Source No.","No.");
                                             WhseRequest.DELETEALL(TRUE);
 
-                                            ApprovalsMgmt.DeleteApprovalEntry(DATABASE::"Purchase Header","Document Type","No.");
+                                            ApprovalsMgmt.DeleteApprovalEntries(RECORDID);
 
                                             DELETE;
                                           END;

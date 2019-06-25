@@ -2,9 +2,9 @@ OBJECT Page 132 Posted Sales Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.47042,NAVDK9.00.00.47042;
   }
   PROPERTIES
   {
@@ -133,13 +133,8 @@ OBJECT Page 132 Posted Sales Invoice
                       Image=NewInvoice;
                       OnAction=VAR
                                  CRMIntegrationManagement@1000 : Codeunit 5330;
-                                 CRMCouplingManagement@1001 : Codeunit 5331;
                                BEGIN
                                  CRMIntegrationManagement.CreateNewRecordInCRM(RECORDID,FALSE);
-                                 IF CRMCouplingManagement.IsRecordCoupledToCRM(RECORDID) THEN BEGIN
-                                   VALIDATE("Coupled to CRM",TRUE);
-                                   MODIFY;
-                                 END;
                                END;
                                 }
       { 1900000004;0 ;ActionContainer;
@@ -176,6 +171,7 @@ OBJECT Page 132 Posted Sales Invoice
                                BEGIN
                                  SalesInvHeader := Rec;
                                  CurrPage.SETSELECTIONFILTER(SalesInvHeader);
+                                 // Call SendRecords to open sending profile dialog
                                  SalesInvHeader.SendRecords;
                                END;
                                 }
@@ -537,14 +533,15 @@ OBJECT Page 132 Posted Sales Invoice
     { 87  ;2   ;Field     ;
                 SourceExpr="Currency Code";
                 Importance=Promoted;
-                OnAssistEdit=BEGIN
+                OnAssistEdit=VAR
+                               ChangeExchangeRate@1000 : Page 511;
+                             BEGIN
                                ChangeExchangeRate.SetParameter("Currency Code","Currency Factor","Posting Date");
                                ChangeExchangeRate.EDITABLE(FALSE);
                                IF ChangeExchangeRate.RUNMODAL = ACTION::OK THEN BEGIN
                                  "Currency Factor" := ChangeExchangeRate.GetParameter;
                                  MODIFY;
                                END;
-                               CLEAR(ChangeExchangeRate);
                              END;
                               }
 
@@ -576,7 +573,6 @@ OBJECT Page 132 Posted Sales Invoice
   {
     VAR
       SalesInvHeader@1000 : Record 112;
-      ChangeExchangeRate@1001 : Page 511;
       HasIncomingDocument@1002 : Boolean;
       DocExchStatusStyle@1003 : Text;
       CRMIntegrationEnabled@1004 : Boolean;

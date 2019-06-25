@@ -2,9 +2,9 @@ OBJECT Table 5896 Inventory Adjmt. Entry (Order)
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -112,26 +112,25 @@ OBJECT Table 5896 Inventory Adjmt. Entry (Order)
       GLSetupRead@1003 : Boolean;
       AmtRndgPrec@1001 : Decimal;
       AmtRndgPrecACY@1000 : Decimal;
-      RndgResidual@1004 : Decimal;
-      RndgResidualACY@1005 : Decimal;
-      UnitRndgResidual@1009 : Decimal;
-      UnitRndgResidualACY@1008 : Decimal;
       UnitAmtRndgPrec@1006 : Decimal;
       UnitAmtRndgPrecACY@1007 : Decimal;
 
     PROCEDURE RoundCosts@77(ShareOfTotalCost@1003 : Decimal);
     BEGIN
       GetRoundingPrecision(AmtRndgPrec,AmtRndgPrecACY);
-      RoundAmounts(AmtRndgPrec,AmtRndgPrecACY,ShareOfTotalCost,RndgResidual,RndgResidualACY);
+      RoundAmounts(AmtRndgPrec,AmtRndgPrecACY,ShareOfTotalCost);
     END;
 
     LOCAL PROCEDURE RoundUnitCosts@19();
     BEGIN
       GetUnitAmtRoundingPrecision(UnitAmtRndgPrec,UnitAmtRndgPrecACY);
-      RoundAmounts(UnitAmtRndgPrec,UnitAmtRndgPrecACY,1,UnitRndgResidual,UnitRndgResidualACY);
+      RoundAmounts(UnitAmtRndgPrec,UnitAmtRndgPrecACY,1);
     END;
 
-    LOCAL PROCEDURE RoundAmounts@20(RndPrecLCY@1000 : Decimal;RndPrecACY@1001 : Decimal;ShareOfTotalCost@1002 : Decimal;VAR RndResLCY@1003 : Decimal;VAR RndResACY@1004 : Decimal);
+    LOCAL PROCEDURE RoundAmounts@20(RndPrecLCY@1000 : Decimal;RndPrecACY@1001 : Decimal;ShareOfTotalCost@1002 : Decimal);
+    VAR
+      RndResLCY@1003 : Decimal;
+      RndResACY@1004 : Decimal;
     BEGIN
       "Direct Cost" := RoundCost("Direct Cost",ShareOfTotalCost,RndResLCY,RndPrecLCY);
       "Indirect Cost" := RoundCost("Indirect Cost",ShareOfTotalCost,RndResLCY,RndPrecLCY);
@@ -242,9 +241,12 @@ OBJECT Table 5896 Inventory Adjmt. Entry (Order)
         OutputItemLedgEntry.SETCURRENTKEY("Order Type","Order No.","Order Line No.","Entry Type");
         OutputItemLedgEntry.SETRANGE("Order Type","Order Type");
         OutputItemLedgEntry.SETRANGE("Order No.","Order No.");
-        IF "Order Type" = "Order Type"::Production THEN
+        IF "Order Type" = "Order Type"::Production THEN BEGIN
           OutputItemLedgEntry.SETRANGE("Order Line No.","Order Line No.");
-        OutputItemLedgEntry.SETRANGE("Entry Type",OutputItemLedgEntry."Entry Type"::Output);
+          OutputItemLedgEntry.SETRANGE("Entry Type",OutputItemLedgEntry."Entry Type"::Output);
+        END ELSE
+          OutputItemLedgEntry.SETRANGE("Entry Type",OutputItemLedgEntry."Entry Type"::"Assembly Output");
+
         IF OutputItemLedgEntry.FINDLAST THEN
           EXIT(CurrExchRate.ExchangeRate(OutputItemLedgEntry."Posting Date",GLSetup."Additional Reporting Currency"));
       END;

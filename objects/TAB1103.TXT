@@ -2,15 +2,16 @@ OBJECT Table 1103 Cost Type
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
     Permissions=;
     DataCaptionFields=No.,Name;
     OnInsert=BEGIN
+               TESTFIELD("No.");
                Modified;
              END;
 
@@ -141,6 +142,7 @@ OBJECT Table 1103 Cost Type
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Rettet af;
                                                               ENU=Modified By];
                                                    Editable=No }

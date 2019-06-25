@@ -2,9 +2,9 @@ OBJECT Report 7315 Calculate Whse. Adjustment
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -66,6 +66,8 @@ OBJECT Report 7315 Calculate Whse. Adjustment
                                WhseEntry.SETCURRENTKEY("Item No.","Bin Code","Location Code","Variant Code");
                                WhseEntry.SETRANGE("Item No.",Item."No.");
                                Item.COPYFILTER("Variant Filter",WhseEntry."Variant Code");
+                               Item.COPYFILTER("Lot No. Filter",WhseEntry."Lot No.");
+                               Item.COPYFILTER("Serial No. Filter",WhseEntry."Serial No.");
 
                                IF NOT WhseEntry.FIND('-') THEN
                                  CurrReport.BREAK;
@@ -356,6 +358,8 @@ OBJECT Report 7315 Calculate Whse. Adjustment
               WhseEntry2.SETRANGE("Location Code","Location Code");
               WhseEntry2.SETRANGE("Variant Code","Variant Code");
               WhseEntry2.SETRANGE("Unit of Measure Code",UOM2);
+              WhseEntry2.SETFILTER("Lot No.",Item.GETFILTER("Lot No. Filter"));
+              WhseEntry2.SETFILTER("Serial No.",Item.GETFILTER("Serial No. Filter"));
               WhseEntry2.SETFILTER("Entry Type",'%1|%2',EntryType2,WhseEntry2."Entry Type"::Movement);
               IF WhseEntry2.FIND('-') THEN
                 REPEAT
@@ -407,8 +411,8 @@ OBJECT Report 7315 Calculate Whse. Adjustment
                       ReservEntry."Reservation Status"::Prospect);
                   END;
                   WhseEntry2.FIND('+');
-                  WhseEntry2.SETRANGE("Lot No.");
-                  WhseEntry2.SETRANGE("Serial No.");
+                  WhseEntry2.SETFILTER("Lot No.",Item.GETFILTER("Lot No. Filter"));
+                  WhseEntry2.SETFILTER("Serial No.",Item.GETFILTER("Serial No. Filter"));
                 UNTIL WhseEntry2.NEXT = 0;
             END;
         END;

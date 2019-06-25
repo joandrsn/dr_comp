@@ -2,9 +2,9 @@ OBJECT Table 954 Time Sheet Header Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -35,9 +35,11 @@ OBJECT Table 954 Time Sheet Header Archive
                                                    CaptionML=[DAN=Ressourcenr.;
                                                               ENU=Resource No.] }
     { 7   ;   ;Owner User ID       ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id på ejer;
                                                               ENU=Owner User ID] }
     { 8   ;   ;Approver User ID    ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id på godkender;
                                                               ENU=Approver User ID] }
     { 20  ;   ;Quantity            ;Decimal       ;FieldClass=FlowField;

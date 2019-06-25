@@ -2,9 +2,9 @@ OBJECT Codeunit 1312 Mini Vendor Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
@@ -327,6 +327,15 @@ OBJECT Codeunit 1312 Mini Vendor Mgt.
       END;
     END;
 
+    PROCEDURE SetFilterForExternalDocNo@11(VAR VendorLedgerEntry@1000 : Record 25;DocumentType@1001 : Option;ExternalDocNo@1002 : Text[35];VendorNo@1003 : Code[20];DocumentDate@1004 : Date);
+    BEGIN
+      VendorLedgerEntry.SETRANGE("Document Type",DocumentType);
+      VendorLedgerEntry.SETRANGE("External Document No.",ExternalDocNo);
+      VendorLedgerEntry.SETRANGE("Vendor No.",VendorNo);
+      VendorLedgerEntry.SETRANGE(Reversed,FALSE);
+      OnAfterSetFilterForExternalDocNo(VendorLedgerEntry,DocumentDate);
+    END;
+
     PROCEDURE GetCurrentYearFilter@10() : Text[30];
     VAR
       DateFilterCalc@1002 : Codeunit 358;
@@ -335,6 +344,11 @@ OBJECT Codeunit 1312 Mini Vendor Mgt.
     BEGIN
       DateFilterCalc.CreateFiscalYearFilter(CustDateFilter,CustDateName,WORKDATE,0);
       EXIT(CustDateFilter);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterSetFilterForExternalDocNo@79(VAR VendorLedgerEntry@1000 : Record 25;DocumentDate@1001 : Date);
+    BEGIN
     END;
 
     BEGIN

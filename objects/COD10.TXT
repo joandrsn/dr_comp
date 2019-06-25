@@ -2,9 +2,9 @@ OBJECT Codeunit 10 Type Helper
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=25-04-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.51333;
   }
   PROPERTIES
   {
@@ -26,6 +26,8 @@ OBJECT Codeunit 10 Type Helper
       CASE TRUE OF
         Variable.ISDATE:
           EXIT(TryEvaluateDate(String,Format,CultureName,Variable));
+        Variable.ISDATETIME:
+          EXIT(TryEvaluateDateTime(String,Format,CultureName,Variable));
         Variable.ISDECIMAL:
           EXIT(TryEvaluateDecimal(String,CultureName,Variable));
         ELSE
@@ -56,6 +58,43 @@ OBJECT Codeunit 10 Type Helper
       END;
 
       EvaluatedDate := DMY2DATE(DotNetDateTime.Day,DotNetDateTime.Month,DotNetDateTime.Year);
+      EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE TryEvaluateDateTime@41(DateTimeText@1000 : Text;Format@1001 : Text;CultureName@1004 : Text;VAR EvaluatedDateTime@1006 : DateTime) : Boolean;
+    VAR
+      CultureInfo@1003 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Globalization.CultureInfo";
+      DotNetDateTime@1002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.DateTime";
+      DateTimeStyles@1005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Globalization.DateTimeStyles";
+      EvaluatedTime@1008 : Time;
+    BEGIN
+      DotNetDateTime := DotNetDateTime.DateTime(0);
+      IF CultureName = '' THEN
+        CultureInfo := CultureInfo.InvariantCulture
+      ELSE
+        CultureInfo := CultureInfo.GetCultureInfo(CultureName);
+      CASE Format OF
+        '':
+          IF NOT DotNetDateTime.TryParse(DateTimeText,CultureInfo,DateTimeStyles.None,DotNetDateTime) THEN
+            EXIT(FALSE);
+        ELSE
+          IF NOT DotNetDateTime.TryParseExact(DateTimeText,Format,CultureInfo,DateTimeStyles.None,DotNetDateTime) THEN
+            EXIT(FALSE);
+      END;
+
+      IF NOT EVALUATE(
+           EvaluatedTime,
+           STRSUBSTNO(
+             '%1:%2:%3.%4',
+             DotNetDateTime.Hour,
+             DotNetDateTime.Minute,
+             DotNetDateTime.Second,
+             DotNetDateTime.Millisecond))
+      THEN
+        EXIT(FALSE);
+      EvaluatedDateTime :=
+        CREATEDATETIME(
+          DMY2DATE(DotNetDateTime.Day,DotNetDateTime.Month,DotNetDateTime.Year),EvaluatedTime);
       EXIT(TRUE);
     END;
 
@@ -251,6 +290,57 @@ OBJECT Codeunit 10 Type Helper
       TempBlob.Blob := BlobFieldRef.VALUE;
       TempBlob.Blob.CREATEINSTREAM(InStream,Encoding);
       IF InStream.READ(BlobContent) = 0 THEN;
+    END;
+
+    PROCEDURE UrlEncode@10(VAR Value@1000 : Text) : Text;
+    VAR
+      HttpUtility@1001 : DotNet "'System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'.System.Web.HttpUtility";
+    BEGIN
+      Value := HttpUtility.UrlEncode(Value);
+      EXIT(Value);
+    END;
+
+    PROCEDURE WriteRecordLinkNote@24(VAR RecordLink@1000 : Record 2000000068;Note@1001 : Text);
+    VAR
+      BinWriter@1003 : DotNet "'mscorlib'.System.IO.BinaryWriter";
+      OStr@1002 : OutStream;
+    BEGIN
+      // Writes the Note BLOB into the format the client code expects
+      RecordLink.Note.CREATEOUTSTREAM(OStr,TEXTENCODING::UTF8);
+      BinWriter := BinWriter.BinaryWriter(OStr);
+      BinWriter.Write(Note);
+    END;
+
+    PROCEDURE AddMinutesToDateTime@53(SourceDateTime@1000 : DateTime;NoOfMinutes@1001 : Integer) : DateTime;
+    VAR
+      NewDateTime@1002 : DateTime;
+      i@1003 : Integer;
+      Sign@1004 : Boolean;
+    BEGIN
+      IF (NoOfMinutes < 1000) AND (NoOfMinutes > -1000) THEN
+        NewDateTime := SourceDateTime + 60000 * NoOfMinutes
+      ELSE BEGIN
+        NewDateTime := SourceDateTime;
+        Sign := NoOfMinutes > 0;
+        FOR i := 1 TO ABS(ROUND(NoOfMinutes / 1000,1,'<')) DO BEGIN
+          IF Sign THEN
+            NewDateTime += 60000 * 1000
+          ELSE
+            NewDateTime += 60000 * -1000
+        END;
+        NewDateTime += 60000 * (NoOfMinutes MOD 1000)
+      END;
+      EXIT(NewDateTime);
+    END;
+
+    PROCEDURE GetXMLAmountFormatWithTwoDecimalPlaces@122() : Text;
+    BEGIN
+      EXIT('<Precision,2:2><Standard Format,9>');
+    END;
+
+    PROCEDURE GetXMLDateFormat@126() : Text;
+    BEGIN
+      EXIT('<Standard Format,9>');
     END;
 
     BEGIN

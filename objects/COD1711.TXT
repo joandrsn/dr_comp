@@ -2,9 +2,9 @@ OBJECT Codeunit 1711 Positive Pay Export Mgt
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -24,7 +24,7 @@ OBJECT Codeunit 1711 Positive Pay Export Mgt
       DataExchLineDefNotFoundErr@1015 : TextConst '@@@="%1=Data Exch. Def. Name;%2=Data Exch. Line Def. Code";DAN=Eksportformatet %1 understøtter ikke betalingstypen %2.;ENU=The %1 export format does not support the Payment Type %2.';
       IncorrectLengthOfValuesErr@1016 : TextConst '@@@="%1=Data Exch.Def Type;%2=Data Exch. Def Code;%3=Field;%4=Expected length;%5=Actual length;%6=Actual Value";DAN=Den betaling, du prøver at eksportere, er forskellig fra den angivne %1, %2.\\Værdien i feltet %3 har ikke den længde, der kræves af eksportformatet. \Forventet: %4 \Faktisk: %5 \Feltværdi: %6.;ENU=The payment that you are trying to export is different from the specified %1, %2.\\The value in the %3 field does not have the length that is required by the export format. \Expected: %4 \Actual: %5 \Field Value: %6.';
 
-    PROCEDURE ExportDataExchToFlatFile@2(DataExchNo@1000 : Integer;Filename@1002 : Text;LineFileType@1011 : Integer;HeaderCount@1012 : Integer);
+    PROCEDURE ExportDataExchToFlatFile@2(DataExchNo@1000 : Integer;Filename@1002 : Text;LineFileType@1011 : Integer;HeaderCount@1012 : Integer;VAR FileIsNotEmpty@1013 : Boolean);
     VAR
       DataExchField@1006 : Record 1221;
       DataExch@1009 : Record 1220;
@@ -58,7 +58,9 @@ OBJECT Codeunit 1711 Positive Pay Export Mgt
         ExportFile.CREATEOUTSTREAM(OutStream);
         COPYSTREAM(OutStream,InStream);
 
-        IF (LineFileType <> LineType::Header) OR ((LineFileType = LineType::Header) AND (HeaderCount > 1)) THEN BEGIN
+        IF FileIsNotEmpty AND
+           ((LineFileType <> LineType::Header) OR (LineFileType = LineType::Header) AND (HeaderCount > 1))
+        THEN BEGIN
           // Only the first line needs to not write a CRLF.
           CRLF[1] := 13;
           CRLF[2] := 10;
@@ -79,6 +81,7 @@ OBJECT Codeunit 1711 Positive Pay Export Mgt
         ExportGenericFixedWidth.SETDESTINATION(OutStream);
         ExportGenericFixedWidth.SETTABLEVIEW(DataExchField);
         ExportGenericFixedWidth.EXPORT;
+        FileIsNotEmpty := TRUE;
         ExportFile.CLOSE;
 
         DataExchField.DELETEALL(TRUE);
@@ -105,6 +108,8 @@ OBJECT Codeunit 1711 Positive Pay Export Mgt
       DataExchColumnDef@1001 : Record 1223;
       DataExchField@1009 : Record 1221;
       DataExchFieldMapping@1010 : Record 1225;
+      TransformationRule@1003 : Record 1237;
+      StringConversionManagement@1008 : Codeunit 47;
       ValueAsDestType@1007 : Variant;
       FieldRef@1002 : FieldRef;
       ValueAsString@1000 : Text[250];
@@ -130,9 +135,20 @@ OBJECT Codeunit 1711 Positive Pay Export Mgt
           CheckOptional(DataExchFieldMapping.Optional,FieldRef);
           CastToDestinationType(ValueAsDestType,FieldRef.VALUE,DataExchColumnDef,DataExchFieldMapping.Multiplier);
           ValueAsString := FormatToText(ValueAsDestType,DataExchDef,DataExchColumnDef);
+
+          IF TransformationRule.GET(DataExchFieldMapping."Transformation Rule") THEN
+            ValueAsString := COPYSTR(TransformationRule.TransformText(ValueAsString),1,STRLEN(ValueAsString));
+
+          IF DataExchColumnDef."Text Padding Required" AND (DataExchColumnDef."Pad Character" <> '') THEN
+            ValueAsString :=
+              StringConversionManagement.GetPaddedString(
+                ValueAsString,
+                DataExchColumnDef.Length,
+                DataExchColumnDef."Pad Character");
         END;
-        IF DataExchColumnDef."Data Type" <> DataExchColumnDef."Data Type"::Decimal THEN
-          CheckLength(ValueAsString,RecRef.FIELD(DataExchFieldMapping."Field ID"),DataExchDef,DataExchColumnDef);
+        IF DataExchDef."File Type" = DataExchDef."File Type"::"Fixed Text" THEN
+          ValueAsString := FORMAT(ValueAsString,0,STRSUBSTNO('<Text,%1>',DataExchColumnDef.Length));
+        CheckLength(ValueAsString,RecRef.FIELD(DataExchFieldMapping."Field ID"),DataExchDef,DataExchColumnDef);
 
         DataExchField.GET(DataExch."Entry No.",LineNo,DataExchFieldMapping."Column No.");
         DataExchField.Value := ValueAsString;
@@ -218,41 +234,17 @@ OBJECT Codeunit 1711 Positive Pay Export Mgt
     END;
 
     LOCAL PROCEDURE FormatToText@7(ValueToFormat@1003 : Variant;DataExchDef@1001 : Record 1222;DataExchColumnDef@1000 : Record 1223) : Text[250];
-    VAR
-      StringConversionManagement@1004 : Codeunit 47;
-      NewString@1002 : Text[250];
     BEGIN
-      IF DataExchColumnDef."Data Format" <> '' THEN
-        EXIT(FORMAT(ValueToFormat,0,DataExchColumnDef."Data Format"));
-
-      IF DataExchDef."File Type" = DataExchDef."File Type"::Xml THEN
-        EXIT(FORMAT(ValueToFormat,0,9));
-
-      IF (DataExchDef."File Type" = DataExchDef."File Type"::"Fixed Text") AND
-         (DataExchColumnDef."Data Type" = DataExchColumnDef."Data Type"::Text)
-      THEN BEGIN
-        IF DataExchColumnDef."Text Padding Required" AND (DataExchColumnDef."Pad Character" <> '') THEN BEGIN
-          NewString :=
-            StringConversionManagement.GetPaddedString(
-              ValueToFormat,
-              DataExchColumnDef.Length,
-              DataExchColumnDef."Pad Character");
-          EXIT(FORMAT(NewString,0,STRSUBSTNO('<Text,%1>',DataExchColumnDef.Length)));
-        END;
-        EXIT(FORMAT(ValueToFormat,0,STRSUBSTNO('<Text,%1>',DataExchColumnDef.Length)));
+      CASE TRUE OF
+        DataExchDef."File Type" = DataExchDef."File Type"::Xml:
+          EXIT(FORMAT(ValueToFormat,0,9));
+        DataExchColumnDef."Data Format" <> '':
+          EXIT(FORMAT(ValueToFormat,0,DataExchColumnDef."Data Format"));
+        DataExchColumnDef."Data Type" = DataExchColumnDef."Data Type"::Decimal:
+          EXIT(FORMAT(ValueToFormat,0,'<Precision,2><Standard Format,2>')); // Format 2 always uses a period (.) as the decimal separator, regardless of the Regional setting.
+        ELSE
+          EXIT(FORMAT(ValueToFormat));
       END;
-
-      IF (DataExchColumnDef."Data Type" = DataExchColumnDef."Data Type"::Decimal) AND
-         DataExchColumnDef."Text Padding Required" AND (DataExchColumnDef."Pad Character" <> '')
-      THEN BEGIN
-        NewString :=
-          StringConversionManagement.RemoveDecimalFromString(
-            FORMAT(ValueToFormat),
-            DataExchColumnDef.Length,
-            DataExchColumnDef."Pad Character");
-        EXIT(NewString);
-      END;
-      EXIT(FORMAT(ValueToFormat));
     END;
 
     LOCAL PROCEDURE CheckLength@49(Value@1001 : Text;FieldRef@1002 : FieldRef;DataExchDef@1003 : Record 1222;DataExchColumnDef@1000 : Record 1223);

@@ -2,9 +2,9 @@ OBJECT Table 375 Dimension Code Amount Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,11 +13,14 @@ OBJECT Table 375 Dimension Code Amount Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Line Code           ;Code20        ;CaptionML=[DAN=Linjekode;
+    { 1   ;   ;Line Code           ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Linjekode;
                                                               ENU=Line Code] }
-    { 2   ;   ;Column Code         ;Code20        ;CaptionML=[DAN=Kolonnekode;
+    { 2   ;   ;Column Code         ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kolonnekode;
                                                               ENU=Column Code] }
-    { 3   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+    { 3   ;   ;Amount              ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb;
                                                               ENU=Amount];
                                                    AutoFormatType=1 }
   }

@@ -2,9 +2,9 @@ OBJECT Codeunit 441 Prepayment Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -175,6 +175,119 @@ OBJECT Codeunit 441 Prepayment Mgt.
         UNTIL PurchInvHeader.NEXT = 0;
 
       EXIT(FALSE);
+    END;
+
+    PROCEDURE UpdatePendingPrepaymentSales@4();
+    VAR
+      SalesHeader@1000 : Record 36;
+      PrepaymentMgt@1002 : Codeunit 441;
+    BEGIN
+      SalesHeader.SETRANGE("Document Type",SalesHeader."Document Type"::Order);
+      SalesHeader.SETRANGE(Status,SalesHeader.Status::"Pending Prepayment");
+      IF SalesHeader.FINDSET(TRUE) THEN
+        REPEAT
+          IF NOT PrepaymentMgt.TestSalesPayment(SalesHeader) THEN
+            CODEUNIT.RUN(CODEUNIT::"Release Sales Document",SalesHeader);
+        UNTIL SalesHeader.NEXT = 0;
+    END;
+
+    PROCEDURE UpdatePendingPrepaymentPurchase@10();
+    VAR
+      PurchaseHeader@1000 : Record 38;
+      PrepaymentMgt@1001 : Codeunit 441;
+    BEGIN
+      PurchaseHeader.SETRANGE("Document Type",PurchaseHeader."Document Type"::Order);
+      PurchaseHeader.SETRANGE(Status,PurchaseHeader.Status::"Pending Prepayment");
+      IF PurchaseHeader.FINDSET(TRUE) THEN
+        REPEAT
+          IF NOT PrepaymentMgt.TestPurchasePayment(PurchaseHeader) THEN
+            CODEUNIT.RUN(CODEUNIT::"Release Purchase Document",PurchaseHeader);
+        UNTIL PurchaseHeader.NEXT = 0;
+    END;
+
+    PROCEDURE CreateAndStartJobQueueEntrySales@11(UpdateFrequency@1002 : 'Never,Daily,Weekly');
+    BEGIN
+      CreateAndStartJobQueueEntry(
+        CODEUNIT::"Upd. Pending Prepmt. Sales",UpdateFrequency);
+    END;
+
+    PROCEDURE CreateAndStartJobQueueEntryPurchase@12(UpdateFrequency@1002 : 'Never,Daily,Weekly');
+    BEGIN
+      CreateAndStartJobQueueEntry(
+        CODEUNIT::"Upd. Pending Prepmt. Purchase",UpdateFrequency);
+    END;
+
+    PROCEDURE CreateAndStartJobQueueEntry@5(CodeunitID@1001 : Integer;UpdateFrequency@1002 : 'Never,Daily,Weekly');
+    VAR
+      JobQueueEntry@1000 : Record 472;
+    BEGIN
+      CreateJobQueueCategory(CodeunitID);
+      CreateJobQueue(CodeunitID);
+
+      WITH JobQueueEntry DO BEGIN
+        SETRANGE("Object Type to Run","Object Type to Run"::Codeunit);
+        SETRANGE("Object ID to Run",CodeunitID);
+        IF FINDFIRST THEN
+          DELETE(TRUE);
+
+        INIT;
+        CLEAR(ID);
+        IF UpdateFrequency <> UpdateFrequency::Never THEN
+          InitRecurringJob(UpdateFrequencyToNoOfMinutes(UpdateFrequency));
+        "Earliest Start Date/Time" := CURRENTDATETIME;
+        "Object Type to Run" := "Object Type to Run"::Codeunit;
+        "Object ID to Run" := CodeunitID;
+        "Report Output Type" := "Report Output Type"::"None (Processing only)";
+        "Maximum No. of Attempts to Run" := 3;
+        "Job Queue Category Code" := FORMAT(CodeunitID);
+        CODEUNIT.RUN(CODEUNIT::"Job Queue - Enqueue",JobQueueEntry);
+      END;
+    END;
+
+    LOCAL PROCEDURE UpdateFrequencyToNoOfMinutes@46(UpdateFrequency@1000 : 'Never,Daily,Weekly') : Integer;
+    BEGIN
+      CASE UpdateFrequency OF
+        UpdateFrequency::Never:
+          EXIT(0);
+        UpdateFrequency::Daily:
+          EXIT(60 * 24);
+        UpdateFrequency::Weekly:
+          EXIT(60 * 24 * 7);
+      END;
+    END;
+
+    LOCAL PROCEDURE CreateJobQueueCategory@66(CodeunitID@1001 : Integer);
+    VAR
+      JobQueueCategory@1000 : Record 471;
+    BEGIN
+      IF JobQueueCategory.GET(FORMAT(CodeunitID)) THEN
+        EXIT;
+
+      JobQueueCategory.INIT;
+      JobQueueCategory.Code := FORMAT(CodeunitID);
+      JobQueueCategory.Description := FORMAT(CodeunitID);
+      JobQueueCategory.INSERT(TRUE);
+    END;
+
+    LOCAL PROCEDURE CreateJobQueue@72(CodeunitID@1002 : Integer);
+    VAR
+      JobQueue@1001 : Record 470;
+      StartFromNAS@1000 : Boolean;
+    BEGIN
+      IF JobQueue.GET(FORMAT(CodeunitID)) THEN
+        EXIT;
+
+      JobQueue.SETRANGE("Start Automatically From NAS",TRUE);
+      StartFromNAS := NOT JobQueue.ISEMPTY;
+
+      JobQueue.INIT;
+      JobQueue.VALIDATE(Code,FORMAT(CodeunitID));
+      JobQueue.VALIDATE(Description,FORMAT(CodeunitID));
+      JobQueue.VALIDATE("Job Queue Category Filter",FORMAT(CodeunitID));
+      JobQueue.VALIDATE("Start Automatically From NAS",StartFromNAS);
+      JobQueue.INSERT(TRUE);
+
+      JobQueue.StartQueue(COMPANYNAME);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Page 550 VAT Rate Change Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -186,6 +186,11 @@ OBJECT Page 550 VAT Rate Change Setup
 
     { 20  ;2   ;Field     ;
                 SourceExpr="Update Service Docs." }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, at alle eksisterende servicedokumenter uanset frigivelsesstatus opdateres.;
+                           ENU=Specifies that all existing service documents regardless of release status are updated.];
+                SourceExpr="Ignore Status on Service Docs." }
 
     { 30  ;2   ;Field     ;
                 SourceExpr="Update Production Orders" }

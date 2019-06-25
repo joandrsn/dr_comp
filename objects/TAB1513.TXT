@@ -2,9 +2,9 @@ OBJECT Table 1513 Notification Schedule
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -16,6 +16,7 @@ OBJECT Table 1513 Notification Schedule
   FIELDS
   {
     { 1   ;   ;User ID             ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 2   ;   ;Notification Type   ;Option        ;CaptionML=[DAN=Notifikationstype;

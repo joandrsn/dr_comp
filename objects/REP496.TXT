@@ -2,9 +2,9 @@ OBJECT Report 496 Batch Post Purchase Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -40,16 +40,21 @@ OBJECT Report 496 Batch Post Purchase Orders
                                   Counter := Counter + 1;
                                   Window.UPDATE(1,"No.");
                                   Window.UPDATE(2,ROUND(Counter / CounterTotal * 10000,1));
+
+                                  IF NOT IsApprovedForPostingBatch THEN
+                                    CurrReport.SKIP;
+
+                                  BatchConfirmUpdateDeferralDate(BatchConfirm,ReplacePostingDate,PostingDateReq);
+
                                   Receive := ReceiveReq;
                                   Invoice := InvReq;
                                   CLEAR(PurchPost);
                                   PurchPost.SetPostingDate(ReplacePostingDate,ReplaceDocumentDate,PostingDateReq);
-                                  IF IsApprovedForPostingBatch THEN
-                                    IF PurchPost.RUN("Purchase Header") THEN BEGIN
-                                      CounterOK := CounterOK + 1;
-                                      IF MARKEDONLY THEN
-                                        MARK(FALSE);
-                                    END;
+                                  IF PurchPost.RUN("Purchase Header") THEN BEGIN
+                                    CounterOK := CounterOK + 1;
+                                    IF MARKEDONLY THEN
+                                      MARK(FALSE);
+                                  END;
                                 END;
 
                OnPostDataItem=BEGIN
@@ -151,6 +156,7 @@ OBJECT Report 496 Batch Post Purchase Orders
       ReplaceDocumentDate@1015 : Boolean;
       CalcInvDisc@1016 : Boolean;
       Text003@1017 : TextConst 'DAN=Den valutakurs, som er knyttet til den nye bogføringsdato i købshovedet, gælder ikke for købslinjerne.;ENU=The exchange rate associated with the new posting date on the purchase header will not apply to the purchase lines.';
+      BatchConfirm@1018 : ' ,Skip,Update';
 
     LOCAL PROCEDURE CalculateInvoiceDiscount@1();
     BEGIN

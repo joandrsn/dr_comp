@@ -2,9 +2,9 @@ OBJECT Codeunit 1240 Read Data Exch. from File
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49424;
   }
   PROPERTIES
   {
@@ -13,8 +13,11 @@ OBJECT Codeunit 1240 Read Data Exch. from File
             TempBlob@1000 : Record 99008535;
             FileMgt@1001 : Codeunit 419;
           BEGIN
-            INIT;
-            "File Name" := COPYSTR(FileMgt.BLOBImportWithFilter(TempBlob,ImportBankStmtTxt,'',FileFilterTxt,FileFilterExtensionTxt),1,250);
+            OnBeforeFileImport(TempBlob,"File Name");
+
+            IF NOT TempBlob.Blob.HASVALUE THEN
+              "File Name" := COPYSTR(FileMgt.BLOBImportWithFilter(TempBlob,ImportBankStmtTxt,'',FileFilterTxt,FileFilterExtensionTxt),1,250);
+
             IF "File Name" <> '' THEN
               "File Content" := TempBlob.Blob;
           END;
@@ -26,6 +29,11 @@ OBJECT Codeunit 1240 Read Data Exch. from File
       ImportBankStmtTxt@1007 : TextConst 'DAN=Vælg en fil, der skal importeres;ENU=Select a file to import';
       FileFilterTxt@1006 : TextConst 'DAN="Alle filer(*.*)|*.*|XML-filer(*.xml)|*.xml|Tekstfiler(*.txt;*.csv;*.asc)|*.txt;*.csv;*.asc,*.nda";ENU="All Files(*.*)|*.*|XML Files(*.xml)|*.xml|Text Files(*.txt;*.csv;*.asc)|*.txt;*.csv;*.asc,*.nda"';
       FileFilterExtensionTxt@1005 : TextConst '@@@={Locked};DAN=txt,csv,asc,xml,nda;ENU=txt,csv,asc,xml,nda';
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeFileImport@1(VAR TempBlob@1000 : Record 99008535;VAR FileName@1001 : Text);
+    BEGIN
+    END;
 
     BEGIN
     END.

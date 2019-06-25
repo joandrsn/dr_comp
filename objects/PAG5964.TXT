@@ -2,9 +2,9 @@ OBJECT Page 5964 Service Quote
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -123,7 +123,7 @@ OBJECT Page 5964 Service Quote
                                 }
       { 205     ;2   ;Separator  }
       { 33      ;1   ;Action    ;
-                      CaptionML=[DAN=Lav &ordre;
+                      CaptionML=[DAN=Opret &ordre;
                                  ENU=Make &Order];
                       Promoted=Yes;
                       Image=MakeOrder;
@@ -291,9 +291,6 @@ OBJECT Page 5964 Service Quote
     { 79  ;2   ;Field     ;
                 SourceExpr="Max. Labor Unit Price" }
 
-    { 113 ;2   ;Field     ;
-                SourceExpr="Posting Date" }
-
     { 118 ;2   ;Field     ;
                 SourceExpr="Document Date" }
 
@@ -372,6 +369,9 @@ OBJECT Page 5964 Service Quote
 
     { 8   ;2   ;Field     ;
                 SourceExpr="Ship-to E-Mail" }
+
+    { 3   ;2   ;Field     ;
+                SourceExpr="Location Code" }
 
     { 1901902601;1;Group  ;
                 CaptionML=[DAN=Detaljer;

@@ -2,9 +2,9 @@ OBJECT Table 461 Prepayment Inv. Line Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -14,87 +14,115 @@ OBJECT Table 461 Prepayment Inv. Line Buffer
   FIELDS
   {
     { 1   ;   ;G/L Account No.     ;Code20        ;TableRelation="G/L Account";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Finanskontonr.;
                                                               ENU=G/L Account No.] }
-    { 2   ;   ;Line No.            ;Integer       ;CaptionML=[DAN=Linjenr.;
+    { 2   ;   ;Line No.            ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Linjenr.;
                                                               ENU=Line No.] }
-    { 3   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+    { 3   ;   ;Amount              ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb;
                                                               ENU=Amount];
                                                    AutoFormatType=2 }
-    { 4   ;   ;Description         ;Text50        ;CaptionML=[DAN=Beskrivelse;
+    { 4   ;   ;Description         ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
     { 5   ;   ;Gen. Bus. Posting Group;Code10     ;TableRelation="Gen. Business Posting Group";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Virksomhedsbogføringsgruppe;
                                                               ENU=Gen. Bus. Posting Group] }
     { 6   ;   ;Gen. Prod. Posting Group;Code10    ;TableRelation="Gen. Product Posting Group";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Produktbogføringsgruppe;
                                                               ENU=Gen. Prod. Posting Group] }
     { 7   ;   ;VAT Bus. Posting Group;Code10      ;TableRelation="VAT Business Posting Group";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Momsvirksomhedsbogf.gruppe;
                                                               ENU=VAT Bus. Posting Group] }
     { 8   ;   ;VAT Prod. Posting Group;Code10     ;TableRelation="VAT Product Posting Group";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Momsproduktbogf.gruppe;
                                                               ENU=VAT Prod. Posting Group] }
-    { 9   ;   ;VAT Amount          ;Decimal       ;CaptionML=[DAN=Momsbeløb;
+    { 9   ;   ;VAT Amount          ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Momsbeløb;
                                                               ENU=VAT Amount];
                                                    AutoFormatType=1 }
-    { 10  ;   ;VAT Calculation Type;Option        ;CaptionML=[DAN=Momsberegningstype;
+    { 10  ;   ;VAT Calculation Type;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Momsberegningstype;
                                                               ENU=VAT Calculation Type];
                                                    OptionCaptionML=[DAN=Normal moms,Modtagermoms,Momskorrektion,Sales tax;
                                                                     ENU=Normal VAT,Reverse Charge VAT,Full VAT,Sales Tax];
                                                    OptionString=Normal VAT,Reverse Charge VAT,Full VAT,Sales Tax }
-    { 11  ;   ;VAT Base Amount     ;Decimal       ;CaptionML=[DAN=Momsgrundlag (beløb);
+    { 11  ;   ;VAT Base Amount     ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Momsgrundlag (beløb);
                                                               ENU=VAT Base Amount];
                                                    AutoFormatType=1 }
-    { 12  ;   ;Amount (ACY)        ;Decimal       ;CaptionML=[DAN=Beløb (EV);
+    { 12  ;   ;Amount (ACY)        ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb (EV);
                                                               ENU=Amount (ACY)];
                                                    AutoFormatType=1 }
-    { 13  ;   ;VAT Amount (ACY)    ;Decimal       ;CaptionML=[DAN=Momsbeløb (EV);
+    { 13  ;   ;VAT Amount (ACY)    ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Momsbeløb (EV);
                                                               ENU=VAT Amount (ACY)];
                                                    AutoFormatType=1 }
-    { 14  ;   ;VAT Base Amount (ACY);Decimal      ;CaptionML=[DAN=Momsgrundl.beløb (EV);
+    { 14  ;   ;VAT Base Amount (ACY);Decimal      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Momsgrundl.beløb (EV);
                                                               ENU=VAT Base Amount (ACY)];
                                                    AutoFormatType=1 }
-    { 15  ;   ;VAT Difference      ;Decimal       ;CaptionML=[DAN=Momsdifference;
+    { 15  ;   ;VAT Difference      ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Momsdifference;
                                                               ENU=VAT Difference];
                                                    AutoFormatType=1 }
-    { 16  ;   ;VAT %               ;Decimal       ;CaptionML=[DAN=Momspct.;
+    { 16  ;   ;VAT %               ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Momspct.;
                                                               ENU=VAT %];
                                                    DecimalPlaces=1:1 }
-    { 17  ;   ;VAT Identifier      ;Code10        ;CaptionML=[DAN=Moms-id;
+    { 17  ;   ;VAT Identifier      ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Moms-id;
                                                               ENU=VAT Identifier];
                                                    Editable=No }
     { 19  ;   ;Global Dimension 1 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Global dimension 1-kode;
                                                               ENU=Global Dimension 1 Code];
                                                    CaptionClass='1,1,1' }
     { 20  ;   ;Global Dimension 2 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Global dimension 2-kode;
                                                               ENU=Global Dimension 2 Code];
                                                    CaptionClass='1,1,2' }
     { 21  ;   ;Job No.             ;Code20        ;TableRelation=Job;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Sagsnr.;
                                                               ENU=Job No.] }
-    { 22  ;   ;Amount Incl. VAT    ;Decimal       ;CaptionML=[DAN=Beløb inkl. moms;
+    { 22  ;   ;Amount Incl. VAT    ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb inkl. moms;
                                                               ENU=Amount Incl. VAT];
                                                    AutoFormatType=1 }
     { 24  ;   ;Tax Area Code       ;Code20        ;TableRelation="Tax Area";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Skatteområdekode;
                                                               ENU=Tax Area Code] }
-    { 25  ;   ;Tax Liable          ;Boolean       ;CaptionML=[DAN=Skattepligtig;
+    { 25  ;   ;Tax Liable          ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Skattepligtig;
                                                               ENU=Tax Liable] }
     { 26  ;   ;Tax Group Code      ;Code10        ;TableRelation="Tax Group";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Skattegruppekode;
                                                               ENU=Tax Group Code] }
-    { 27  ;   ;Invoice Rounding    ;Boolean       ;CaptionML=[DAN=Fakturaafrunding;
+    { 27  ;   ;Invoice Rounding    ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Fakturaafrunding;
                                                               ENU=Invoice Rounding] }
-    { 28  ;   ;Adjustment          ;Boolean       ;CaptionML=[DAN=Regulering;
+    { 28  ;   ;Adjustment          ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Regulering;
                                                               ENU=Adjustment] }
     { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Dimensionsgruppe-id;
                                                               ENU=Dimension Set ID];
                                                    Editable=No }
     { 1001;   ;Job Task No.        ;Code20        ;TableRelation="Job Task";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Sagsopgavenr.;
                                                               ENU=Job Task No.] }
   }

@@ -2,9 +2,9 @@ OBJECT Page 5850 Posted Sales Document Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -104,7 +104,7 @@ OBJECT Page 5850 Posted Sales Document Lines
                 Name=NoOfPostedInvoices;
                 CaptionML=[DAN=B&ogførte fakturaer;
                            ENU=Posted I&nvoices];
-                SourceExpr=STRSUBSTNO('(%1)',"No. of Pstd. Invoices" - NoOfPostedPrepayments);
+                SourceExpr=STRSUBSTNO('(%1)',"No. of Pstd. Invoices" - NoOfPostedPrepmtInvoices);
                 Editable=FALSE }
 
     { 41  ;3   ;Field     ;
@@ -114,9 +114,10 @@ OBJECT Page 5850 Posted Sales Document Lines
                 Editable=FALSE }
 
     { 11  ;3   ;Field     ;
+                Name=NoOfPostedCrMemos;
                 CaptionML=[DAN=&Bogførte kreditnotaer;
                            ENU=Posted Cr. &Memos];
-                SourceExpr=STRSUBSTNO('(%1)',"No. of Pstd. Credit Memos");
+                SourceExpr=STRSUBSTNO('(%1)',"No. of Pstd. Credit Memos" - NoOfPostedPrepmtCrMemos);
                 Editable=FALSE }
 
     { 44  ;3   ;Field     ;
@@ -189,6 +190,7 @@ OBJECT Page 5850 Posted Sales Document Lines
           BEGIN
             CurrPage.PostedShpts.PAGE.GetSelectedLine(FromSalesShptLine);
             CopyDocMgt.SetProperties(FALSE,FALSE,FALSE,FALSE,TRUE,TRUE,OriginalQuantity);
+            CopyDocMgt.SetCopyExtText;
             CopyDocMgt.CopySalesShptLinesToDoc(
               ToSalesHeader,FromSalesShptLine,LinesNotCopied,MissingExCostRevLink);
           END;
@@ -196,6 +198,7 @@ OBJECT Page 5850 Posted Sales Document Lines
           BEGIN
             CurrPage.PostedInvoices.PAGE.GetSelectedLine(FromSalesInvLine);
             CopyDocMgt.SetProperties(FALSE,FALSE,FALSE,FALSE,TRUE,TRUE,OriginalQuantity);
+            CopyDocMgt.SetCopyExtText;
             CopyDocMgt.CopySalesInvLinesToDoc(
               ToSalesHeader,FromSalesInvLine,LinesNotCopied,MissingExCostRevLink);
           END;
@@ -203,6 +206,7 @@ OBJECT Page 5850 Posted Sales Document Lines
           BEGIN
             CurrPage.PostedReturnRcpts.PAGE.GetSelectedLine(FromReturnRcptLine);
             CopyDocMgt.SetProperties(FALSE,TRUE,FALSE,FALSE,TRUE,TRUE,OriginalQuantity);
+            CopyDocMgt.SetCopyExtText;
             CopyDocMgt.CopySalesReturnRcptLinesToDoc(
               ToSalesHeader,FromReturnRcptLine,LinesNotCopied,MissingExCostRevLink);
           END;
@@ -210,6 +214,7 @@ OBJECT Page 5850 Posted Sales Document Lines
           BEGIN
             CurrPage.PostedCrMemos.PAGE.GetSelectedLine(FromSalesCrMemoLine);
             CopyDocMgt.SetProperties(FALSE,FALSE,FALSE,FALSE,TRUE,TRUE,OriginalQuantity);
+            CopyDocMgt.SetCopyExtText;
             CopyDocMgt.CopySalesCrMemoLinesToDoc(
               ToSalesHeader,FromSalesCrMemoLine,LinesNotCopied,MissingExCostRevLink);
           END;
@@ -314,13 +319,22 @@ OBJECT Page 5850 Posted Sales Document Lines
       x3CurrentMenuTypeOptOnPush;
     END;
 
-    LOCAL PROCEDURE NoOfPostedPrepayments@3() : Integer;
+    LOCAL PROCEDURE NoOfPostedPrepmtInvoices@3() : Integer;
     VAR
       SalesInvHeader@1000 : Record 112;
     BEGIN
       SalesInvHeader.SETRANGE("Sell-to Customer No.","No.");
       SalesInvHeader.SETRANGE("Prepayment Invoice",TRUE);
       EXIT(SalesInvHeader.COUNT);
+    END;
+
+    LOCAL PROCEDURE NoOfPostedPrepmtCrMemos@6() : Integer;
+    VAR
+      SalesCrMemoHeader@1000 : Record 114;
+    BEGIN
+      SalesCrMemoHeader.SETRANGE("Sell-to Customer No.","No.");
+      SalesCrMemoHeader.SETRANGE("Prepayment Credit Memo",TRUE);
+      EXIT(SalesCrMemoHeader.COUNT);
     END;
 
     BEGIN

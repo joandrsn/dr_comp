@@ -2,9 +2,9 @@ OBJECT Table 17 G/L Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -72,6 +72,7 @@ OBJECT Table 17 G/L Entry
 
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 28  ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
@@ -90,7 +91,7 @@ OBJECT Table 17 G/L Entry
     { 43  ;   ;VAT Amount          ;Decimal       ;CaptionML=[DAN=Momsbeløb;
                                                               ENU=VAT Amount];
                                                    AutoFormatType=1 }
-    { 45  ;   ;Business Unit Code  ;Code10        ;TableRelation="Business Unit";
+    { 45  ;   ;Business Unit Code  ;Code20        ;TableRelation="Business Unit";
                                                    CaptionML=[DAN=Konc.virksomhedskode;
                                                               ENU=Business Unit Code] }
     { 46  ;   ;Journal Batch Name  ;Code10        ;CaptionML=[DAN=Kladdenavn;
@@ -389,6 +390,20 @@ OBJECT Table 17 G/L Entry
     [Integration]
     LOCAL PROCEDURE OnAfterCopyGLEntryFromGenJnlLine@6(VAR GLEntry@1000 : Record 17;VAR GenJournalLine@1001 : Record 81);
     BEGIN
+    END;
+
+    PROCEDURE CopyFromDeferralPostBuffer@46(DeferralPostBuffer@1001 : Record 1703);
+    BEGIN
+      "System-Created Entry" := DeferralPostBuffer."System-Created Entry";
+      "Gen. Posting Type" := DeferralPostBuffer."Gen. Posting Type";
+      "Gen. Bus. Posting Group" := DeferralPostBuffer."Gen. Bus. Posting Group";
+      "Gen. Prod. Posting Group" := DeferralPostBuffer."Gen. Prod. Posting Group";
+      "VAT Bus. Posting Group" := DeferralPostBuffer."VAT Bus. Posting Group";
+      "VAT Prod. Posting Group" := DeferralPostBuffer."VAT Prod. Posting Group";
+      "Tax Area Code" := DeferralPostBuffer."Tax Area Code";
+      "Tax Liable" := DeferralPostBuffer."Tax Liable";
+      "Tax Group Code" := DeferralPostBuffer."Tax Group Code";
+      "Use Tax" := DeferralPostBuffer."Use Tax";
     END;
 
     BEGIN

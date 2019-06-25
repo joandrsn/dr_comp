@@ -2,9 +2,9 @@ OBJECT Codeunit 741 VAT Report Release/Reopen
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -16,9 +16,25 @@ OBJECT Codeunit 741 VAT Report Release/Reopen
   {
 
     PROCEDURE Release@1(VAR VATReportHeader@1000 : Record 740);
+    VAR
+      VATReportsConfiguration@1040 : Record 746;
+      ErrorMessage@1041 : Record 700;
     BEGIN
       VATReportHeader.CheckIfCanBeReleased(VATReportHeader);
-      CODEUNIT.RUN(CODEUNIT::"VAT Report Validate",VATReportHeader);
+
+      ErrorMessage.SetContext(VATReportHeader);
+      ErrorMessage.ClearLog;
+
+      VATReportsConfiguration.SETRANGE("VAT Report Type",VATReportHeader."VAT Report Config. Code");
+      IF VATReportHeader."VAT Report Version" <> '' THEN
+        VATReportsConfiguration.SETRANGE("VAT Report Version",VATReportHeader."VAT Report Version");
+      IF VATReportsConfiguration.FINDFIRST AND (VATReportsConfiguration."Validate Codeunit ID" <> 0) THEN
+        CODEUNIT.RUN(VATReportsConfiguration."Validate Codeunit ID",VATReportHeader)
+      ELSE
+        CODEUNIT.RUN(CODEUNIT::"VAT Report Validate",VATReportHeader);
+
+      IF ErrorMessage.HasErrors(FALSE) THEN
+        EXIT;
 
       VATReportHeader.Status := VATReportHeader.Status::Released;
       VATReportHeader.MODIFY;

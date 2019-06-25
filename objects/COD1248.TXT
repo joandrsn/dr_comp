@@ -2,9 +2,9 @@ OBJECT Codeunit 1248 Process Bank Acc. Rec Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.49424,NAVDK9.00.00.49424;
   }
   PROPERTIES
   {
@@ -39,6 +39,8 @@ OBJECT Codeunit 1248 Process Bank Acc. Rec Lines
     BEGIN
       BankAcc.GET(BankAccRecon."Bank Account No.");
       BankAcc.GetDataExchDef(DataExchDef);
+
+      DataExch."Data Exch. Def Code" := DataExchDef.Code;
 
       IF NOT DataExch.ImportToDataExch(DataExchDef)THEN
         EXIT(FALSE);

@@ -2,9 +2,9 @@ OBJECT Codeunit 353 Item Availability Forms Mgt
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -20,7 +20,7 @@ OBJECT Codeunit 353 Item Availability Forms Mgt
       ForecastName@1001 : Code[10];
       AvailabilityType@1002 : 'Date,Variant,Location,Bin,Event,BOM';
 
-    LOCAL PROCEDURE CalcItemPlanningFields@13(VAR Item@1000 : Record 27);
+    LOCAL PROCEDURE CalcItemPlanningFields@13(VAR Item@1000 : Record 27;CalculateTransferQuantities@1001 : Boolean);
     BEGIN
       WITH Item DO BEGIN
         INIT;
@@ -45,7 +45,7 @@ OBJECT Codeunit 353 Item Availability Forms Mgt
           "Qty. on Asm. Component",
           "Qty. on Purch. Return",
           "Qty. on Sales Return");
-        IF GETFILTER("Location Filter") <> '' THEN
+        IF CalculateTransferQuantities THEN
           CALCFIELDS(
             "Trans. Ord. Shipment (Qty.)",
             "Qty. in Transit",
@@ -54,16 +54,29 @@ OBJECT Codeunit 353 Item Availability Forms Mgt
     END;
 
     PROCEDURE CalculateNeed@5(VAR Item@1004 : Record 27;VAR GrossRequirement@1003 : Decimal;VAR PlannedOrderReceipt@1002 : Decimal;VAR ScheduledReceipt@1001 : Decimal;VAR PlannedOrderReleases@1000 : Decimal);
+    VAR
+      TransOrdShipmentQty@1005 : Decimal;
+      QtyinTransit@1006 : Decimal;
+      TransOrdReceiptQty@1007 : Decimal;
     BEGIN
-      CalcItemPlanningFields(Item);
+      CalcItemPlanningFields(Item,TRUE);
 
       WITH Item DO BEGIN
+        IF GETFILTER("Location Filter") = '' THEN BEGIN
+          TransOrdShipmentQty := 0;
+          QtyinTransit := 0;
+          TransOrdReceiptQty := 0;
+        END ELSE BEGIN
+          TransOrdShipmentQty := "Trans. Ord. Shipment (Qty.)";
+          QtyinTransit := "Qty. in Transit";
+          TransOrdReceiptQty := "Trans. Ord. Receipt (Qty.)";
+        END;
         GrossRequirement :=
           "Qty. on Sales Order" +
           "Qty. on Service Order" +
           "Qty. on Job Order" +
           "Scheduled Need (Qty.)" +
-          "Trans. Ord. Shipment (Qty.)" +
+          TransOrdShipmentQty +
           "Planning Issues (Qty.)" +
           "Qty. on Asm. Component" +
           "Qty. on Purch. Return";
@@ -74,8 +87,8 @@ OBJECT Codeunit 353 Item Availability Forms Mgt
           "FP Order Receipt (Qty.)" +
           "Rel. Order Receipt (Qty.)" +
           "Qty. on Purch. Order" +
-          "Qty. in Transit" +
-          "Trans. Ord. Receipt (Qty.)" +
+          QtyinTransit +
+          TransOrdReceiptQty +
           "Qty. on Assembly Order" +
           "Qty. on Sales Return";
         PlannedOrderReleases :=
@@ -204,10 +217,12 @@ OBJECT Codeunit 353 Item Availability Forms Mgt
 
     PROCEDURE ShowItemAvailLineList@11(VAR Item@1002 : Record 27;What@1000 : Integer);
     VAR
+      ItemCopy@1003 : Record 27;
       ItemAvailLineList@1001 : Page 99000902;
     BEGIN
-      CalcItemPlanningFields(Item);
-      ItemAvailLineList.Init(What,Item);
+      ItemCopy.COPY(Item);
+      CalcItemPlanningFields(ItemCopy,ItemCopy.GETFILTER("Location Filter") <> '');
+      ItemAvailLineList.Init(What,ItemCopy);
       ItemAvailLineList.RUNMODAL;
     END;
 

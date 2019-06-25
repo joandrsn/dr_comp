@@ -2,9 +2,9 @@ OBJECT Page 5966 Service Quote Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
@@ -68,6 +68,10 @@ OBJECT Page 5966 Service Quote Lines
                   ELSE
                     VALIDATE("Service Item Line No.",0);
                 END;
+
+    OnInsertRecord=BEGIN
+                     "Line No." := GetNextLineNo(xRec,BelowxRec);
+                   END;
 
     OnDeleteRecord=VAR
                      ReserveServLine@1000 : Codeunit 99000842;

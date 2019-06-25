@@ -2,9 +2,9 @@ OBJECT Table 5649 FA Posting Group Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,20 +13,26 @@ OBJECT Table 5649 FA Posting Group Buffer
   }
   FIELDS
   {
-    { 1   ;   ;FA Posting Group    ;Code10        ;CaptionML=[DAN=Anlægsbogføringsgruppe;
+    { 1   ;   ;FA Posting Group    ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Anlægsbogføringsgruppe;
                                                               ENU=FA Posting Group] }
-    { 2   ;   ;Posting Type        ;Option        ;CaptionML=[DAN=Bogføringstype;
+    { 2   ;   ;Posting Type        ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogføringstype;
                                                               ENU=Posting Type];
                                                    OptionCaptionML=[DAN=Anskaf,Afskr,Nedskr,Opskr,Br1,Br2,AfskrUdlb,Rep,Salg,Finans,ModpV,AnskSalg,AfskrSalg,NskrSalg,OskrSalg,B1Salg,B2Salg,ModpNskr,ModpOskr,ModpB1,ModpB2;
                                                                     ENU=Acq,Depr,WD,Appr,C1,C2,DeprExp,Maint,Disp,GL,BV,DispAcq,DispDepr,DispWD,DispAppr,DispC1,DispC2,BalWD,BalAppr,BalC1,BalC2];
                                                    OptionString=Acq,Depr,WD,Appr,C1,C2,DeprExp,Maint,Disp,GL,BV,DispAcq,DispDepr,DispWD,DispAppr,DispC1,DispC2,BalWD,BalAppr,BalC1,BalC2 }
-    { 3   ;   ;Account No.         ;Code20        ;CaptionML=[DAN=Kontonr.;
+    { 3   ;   ;Account No.         ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontonr.;
                                                               ENU=Account No.] }
-    { 4   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+    { 4   ;   ;Amount              ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb;
                                                               ENU=Amount] }
-    { 5   ;   ;Account Name        ;Text50        ;CaptionML=[DAN=Kontonavn;
+    { 5   ;   ;Account Name        ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontonavn;
                                                               ENU=Account Name] }
-    { 6   ;   ;FA FieldCaption     ;Text50        ;CaptionML=[DAN=Anlæg - feltnavn;
+    { 6   ;   ;FA FieldCaption     ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Anlæg - feltnavn;
                                                               ENU=FA FieldCaption] }
   }
   KEYS

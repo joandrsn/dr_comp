@@ -2,9 +2,9 @@ OBJECT Table 1504 Workflow Step Instance
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -49,12 +49,14 @@ OBJECT Table 1504 Workflow Step Instance
                                                               ENU=Description] }
     { 9   ;   ;Entry Point         ;Boolean       ;CaptionML=[DAN=Startpunkt;
                                                               ENU=Entry Point] }
-    { 11  ;   ;Record ID           ;RecordID      ;CaptionML=[DAN=Record-id;
+    { 11  ;   ;Record ID           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-id;
                                                               ENU=Record ID] }
     { 12  ;   ;Created Date-Time   ;DateTime      ;CaptionML=[DAN=Oprettet dato/klokkeslæt;
                                                               ENU=Created Date-Time];
                                                    Editable=No }
     { 13  ;   ;Created By User ID  ;Code50        ;TableRelation=User."User Name";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Oprettet af bruger-id;
                                                               ENU=Created By User ID];
                                                    Editable=No }
@@ -62,6 +64,7 @@ OBJECT Table 1504 Workflow Step Instance
                                                               ENU=Last Modified Date-Time];
                                                    Editable=No }
     { 15  ;   ;Last Modified By User ID;Code50    ;TableRelation=User."User Name";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id for seneste ændring;
                                                               ENU=Last Modified By User ID];
                                                    Editable=No }

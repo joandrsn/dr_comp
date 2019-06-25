@@ -2,20 +2,22 @@ OBJECT Codeunit 13610 OIOUBL Export Sales Cr. Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVDK9.00;
+    Version List=NAVDK9.00.00.51014;
   }
   PROPERTIES
   {
-    TableNo=823;
+    TableNo=62;
     Permissions=TableData 114=rm;
     OnRun=VAR
             SalesCrMemoHeader@1060019 : Record 114;
+            RecordRef@1060000 : RecordRef;
           BEGIN
-            SalesCrMemoHeader.GET(Name);
+            RecordRef.GET(RecordID);
+            RecordRef.SETTABLE(SalesCrMemoHeader);
 
-            Value := CreateXML(SalesCrMemoHeader);
+            ServerFilePath := CreateXML(SalesCrMemoHeader);
             MODIFY;
 
             SalesCrMemoHeader."Electronic Credit Memo Created" := TRUE;
@@ -77,6 +79,7 @@ OBJECT Codeunit 13610 OIOUBL Export Sales Cr. Memo
       SalespersonPurchaser@1060021 : Record 13;
       OIOUBLProfile@1060020 : Record 13600;
       RBMgt@1060019 : Codeunit 419;
+      XMLDOMManagement@1060000 : Codeunit 6224;
       XMLdocOut@1060018 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
       XMLCurrNode@1060017 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
       XMLNewChild@1060016 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
@@ -114,8 +117,6 @@ OBJECT Codeunit 13610 OIOUBL Export Sales Cr. Memo
       IF NOT SalesCrMemoLine.FINDSET THEN
         EXIT;
 
-      XMLdocOut := XMLdocOut.XmlDocument;
-
       FromFile := RBMgt.ServerTempFileName('');
 
       // Credit Memo
@@ -128,7 +129,7 @@ OBJECT Codeunit 13610 OIOUBL Export Sales Cr. Memo
         'xmlns:sdt="urn:oasis:names:specification:ubl:schema:xsd:SpecializedDatatypes-2" ' +
         'xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2"/> ';
 
-      XMLdocOut.LoadXml := Header;
+      XMLDOMManagement.LoadXMLDocumentFromText(Header,XMLdocOut);
       XMLCurrNode := XMLdocOut.DocumentElement;
 
       WITH OIOUBLDOMManagement DO BEGIN
@@ -750,7 +751,7 @@ OBJECT Codeunit 13610 OIOUBL Export Sales Cr. Memo
           AddAttribute(XMLCurrNode,'currencyID',CurrencyCode);
           XMLCurrNode := XMLCurrNode.ParentNode;
 
-          AddElement(XMLCurrNode,'BaseQuantity',OIOUBLDocumentEncode.DecimalToText(SalesCrMemoLine.Quantity),
+          AddElement(XMLCurrNode,'BaseQuantity','1',
             DocNameSpace,XMLNewChild,Prefix);
           XMLCurrNode := XMLNewChild;
           AddAttribute(XMLNewChild,'unitCode',OIOUBLDocumentEncode.GetUoMCode(SalesCrMemoLine."Unit of Measure Code"));

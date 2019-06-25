@@ -2,9 +2,9 @@ OBJECT Codeunit 1521 Workflow Response Handling
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -536,9 +536,9 @@ OBJECT Codeunit 1521 Workflow Response Handling
             ReleaseDocument(Variant);
           END;
         DATABASE::"Purchase Header":
-          ReleasePurchaseDocument.PerformManualRelease(Variant);
+          ReleasePurchaseDocument.PerformManualCheckAndRelease(Variant);
         DATABASE::"Sales Header":
-          ReleaseSalesDocument.PerformManualRelease(Variant);
+          ReleaseSalesDocument.PerformManualCheckAndRelease(Variant);
         DATABASE::"Incoming Document":
           ReleaseIncomingDocument.PerformManualRelease(Variant);
         ELSE

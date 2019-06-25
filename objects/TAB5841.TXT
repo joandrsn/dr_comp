@@ -2,9 +2,9 @@ OBJECT Table 5841 Standard Cost Worksheet
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=26-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.47864;
   }
   PROPERTIES
   {
@@ -282,7 +282,7 @@ OBJECT Table 5841 Standard Cost Worksheet
       Ratio@1000 : Decimal;
       RoundingResidual@1001 : Decimal;
     BEGIN
-      IF xRec."Standard Cost" <> 0 THEN
+      IF xRec."New Standard Cost" <> 0 THEN
         Ratio := "New Standard Cost" / xRec."New Standard Cost";
 
       "New Single-Lvl Material Cost" := RoundAmt("New Single-Lvl Material Cost",Ratio);

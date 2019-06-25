@@ -2,9 +2,9 @@ OBJECT Report 122 Reminder - Test
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -36,6 +36,8 @@ OBJECT Report 122 Reminder - Test
                                     AddError(STRSUBSTNO(Text000,FIELDCAPTION("Customer No.")))
                                   ELSE BEGIN
                                     IF Cust.GET("Customer No.") THEN BEGIN
+                                      IF Cust."Privacy Blocked" THEN
+                                        AddError(Cust.GetPrivacyBlockedGenericErrorText(Cust));
                                       IF Cust.Blocked = Cust.Blocked::All THEN
                                         AddError(
                                           STRSUBSTNO(
@@ -9789,6 +9791,7 @@ OBJECT Report 122 Reminder - Test
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

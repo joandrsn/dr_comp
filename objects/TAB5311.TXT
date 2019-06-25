@@ -2,9 +2,9 @@ OBJECT Table 5311 Outlook Synch. Dependency
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -81,7 +81,8 @@ OBJECT Table 5311 Outlook Synch. Dependency
                                                    CaptionML=[DAN=Tabelrelation;
                                                               ENU=Table Relation];
                                                    Editable=No }
-    { 7   ;   ;Record GUID         ;GUID          ;CaptionML=[DAN=Record-GUID;
+    { 7   ;   ;Record GUID         ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-GUID;
                                                               ENU=Record GUID];
                                                    Editable=No }
     { 8   ;   ;Depend. Synch. Entity Tab. No.;Integer;

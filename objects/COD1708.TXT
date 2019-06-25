@@ -2,12 +2,13 @@ OBJECT Codeunit 1708 Exp. Writing Pos. Pay
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
+    Permissions=TableData 1220=rimd;
     OnRun=BEGIN
           END;
 
@@ -29,28 +30,28 @@ OBJECT Codeunit 1708 Exp. Writing Pos. Pay
       ArrayLength@1014 : Integer;
     BEGIN
       // Need to copy the File Name and File from the footer to the Detail record.
+      ExportFile.WRITEMODE := TRUE;
+      ExportFile.TEXTMODE := TRUE;
+      ExportFile.OPEN(Filename);
+
+      // Copy current file contents to TempBlob
+      ExportFile.CREATEINSTREAM(InStream);
+      TempBlob.Blob.CREATEOUTSTREAM(OutStream);
+      COPYSTREAM(OutStream,InStream);
+
+      Filename2 := COPYSTR(Filename,1,250);
+
+      DataExchDetail.SETRANGE("Entry No.",DataExchEntryCodeDetail);
+      IF DataExchDetail.FINDFIRST THEN BEGIN
+        DataExchDetail."File Name" := Filename2;
+        DataExchDetail."File Content" := TempBlob.Blob;
+        DataExchDetail.MODIFY;
+      END;
+      ExportFile.CLOSE;
+
+      // Need to clear out the File Name and blob (File Content) for the footer record(s)
       DataExchFooter.SETRANGE("Entry No.",DataExchEntryCodeFooter);
       IF DataExchFooter.FINDFIRST THEN BEGIN
-        ExportFile.WRITEMODE := TRUE;
-        ExportFile.TEXTMODE := TRUE;
-        ExportFile.OPEN(Filename);
-
-        // Copy current file contents to TempBlob
-        ExportFile.CREATEINSTREAM(InStream);
-        TempBlob.Blob.CREATEOUTSTREAM(OutStream);
-        COPYSTREAM(OutStream,InStream);
-
-        Filename2 := COPYSTR(Filename,1,250);
-
-        DataExchDetail.SETRANGE("Entry No.",DataExchEntryCodeDetail);
-        IF DataExchDetail.FINDFIRST THEN BEGIN
-          DataExchDetail."File Name" := Filename2;
-          DataExchDetail."File Content" := TempBlob.Blob;
-          DataExchDetail.MODIFY;
-        END;
-        ExportFile.CLOSE;
-
-        // Need to clear out the File Name and blob (File Content) for the footer record(s)
         ArrayLength := ARRAYLEN(DataExchEntryCodeFooterArray);
         RecordCount := 1;
         WHILE (DataExchEntryCodeFooterArray[RecordCount] > 0) AND (RecordCount < ArrayLength) DO BEGIN

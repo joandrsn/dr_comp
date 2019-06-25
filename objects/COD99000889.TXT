@@ -2,9 +2,9 @@ OBJECT Codeunit 99000889 AvailabilityManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -47,11 +47,13 @@ OBJECT Codeunit 99000889 AvailabilityManagement
       SalesLine.SETFILTER("Outstanding Quantity",'>0');
       IF SalesLine.FINDSET THEN
         REPEAT
-          OrderPromisingLine.INIT;
-          OrderPromisingLine."Entry No." := OrderPromisingLine.GetLastEntryNo + 10000;
-          OrderPromisingLine.TransferFromSalesLine(SalesLine);
-          SalesLine.CALCFIELDS("Reserved Qty. (Base)");
-          InsertPromisingLine(OrderPromisingLine,SalesLine."Outstanding Qty. (Base)" - SalesLine."Reserved Qty. (Base)");
+          IF NOT SalesLine.IsServiceItem THEN BEGIN
+            OrderPromisingLine.INIT;
+            OrderPromisingLine."Entry No." := OrderPromisingLine.GetLastEntryNo + 10000;
+            OrderPromisingLine.TransferFromSalesLine(SalesLine);
+            SalesLine.CALCFIELDS("Reserved Qty. (Base)");
+            InsertPromisingLine(OrderPromisingLine,SalesLine."Outstanding Qty. (Base)" - SalesLine."Reserved Qty. (Base)");
+          END;
         UNTIL SalesLine.NEXT = 0;
     END;
 
@@ -82,10 +84,12 @@ OBJECT Codeunit 99000889 AvailabilityManagement
       JobPlanningLine.SETFILTER("Remaining Qty.",'>0');
       IF JobPlanningLine.FIND('-') THEN
         REPEAT
-          OrderPromisingLine."Entry No." := OrderPromisingLine.GetLastEntryNo + 10000;
-          OrderPromisingLine.TransferFromJobPlanningLine(JobPlanningLine);
-          JobPlanningLine.CALCFIELDS("Reserved Qty. (Base)");
-          InsertPromisingLine(OrderPromisingLine,JobPlanningLine."Remaining Qty. (Base)" - JobPlanningLine."Reserved Qty. (Base)");
+          IF JobPlanningLineIsInventoryItem THEN BEGIN
+            OrderPromisingLine."Entry No." := OrderPromisingLine.GetLastEntryNo + 10000;
+            OrderPromisingLine.TransferFromJobPlanningLine(JobPlanningLine);
+            JobPlanningLine.CALCFIELDS("Reserved Qty. (Base)");
+            InsertPromisingLine(OrderPromisingLine,JobPlanningLine."Remaining Qty. (Base)" - JobPlanningLine."Reserved Qty. (Base)");
+          END;
         UNTIL JobPlanningLine.NEXT = 0;
     END;
 
@@ -500,6 +504,12 @@ OBJECT Codeunit 99000889 AvailabilityManagement
             END;
         END;
       END;
+    END;
+
+    LOCAL PROCEDURE JobPlanningLineIsInventoryItem@15() : Boolean;
+    BEGIN
+      Item.GET(JobPlanningLine."No.");
+      EXIT(Item.Type = Item.Type::Inventory);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Table 458 Overdue Approval Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -48,6 +48,7 @@ OBJECT Table 458 Overdue Approval Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Godkender-id;
                                                               ENU=Approver ID] }
     { 12  ;   ;Approval Code       ;Code20        ;CaptionML=[DAN=Godkendelseskode;
@@ -62,7 +63,8 @@ OBJECT Table 458 Overdue Approval Entry
                                                    OptionCaptionML=[DAN=Godkendelsesgrænser,Kreditgrænser,Anmodningsgrænser,Ingen grænser;
                                                                     ENU=Approval Limits,Credit Limits,Request Limits,No Limits];
                                                    OptionString=Approval Limits,Credit Limits,Request Limits,No Limits }
-    { 15  ;   ;Record ID to Approve;RecordID      ;CaptionML=[DAN=Record-id, der skal godkendes;
+    { 15  ;   ;Record ID to Approve;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-id, der skal godkendes;
                                                               ENU=Record ID to Approve] }
   }
   KEYS

@@ -2,9 +2,9 @@ OBJECT Codeunit 5899 Calc. Inventory Value-Check
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -67,7 +67,7 @@ OBJECT Codeunit 5899 Calc. Inventory Value-Check
             IF ShowDialog THEN
               Window.UPDATE(1,"No.");
 
-            IF FindOpenOutboundEntry(Item2,GETFILTER("Location Filter"),GETFILTER("Variant Filter")) THEN
+            IF FindOpenOutboundEntry(Item2) THEN
               IF NOT TestMode THEN
                 ERROR(Text018,"No.");
             IF NOT Adjusted(Item2) THEN
@@ -154,7 +154,7 @@ OBJECT Codeunit 5899 Calc. Inventory Value-Check
       END;
     END;
 
-    LOCAL PROCEDURE FindOpenOutboundEntry@1102601000(Item@1102601001 : Record 27;LocationCode@1102601002 : Code[10];VariantCode@1102601003 : Code[10]) : Boolean;
+    LOCAL PROCEDURE FindOpenOutboundEntry@2(VAR Item@1000 : Record 27) : Boolean;
     VAR
       ItemLedgEntry@1102601000 : Record 32;
     BEGIN
@@ -162,12 +162,12 @@ OBJECT Codeunit 5899 Calc. Inventory Value-Check
       ItemLedgEntry.SETCURRENTKEY("Item No.",Open,"Variant Code",Positive,"Location Code","Posting Date");
       ItemLedgEntry.SETRANGE("Item No.",Item."No.");
       ItemLedgEntry.SETRANGE(Open,TRUE);
-      IF VariantCode <> '' THEN
-        ItemLedgEntry.SETRANGE("Variant Code",VariantCode);
       ItemLedgEntry.SETRANGE(Positive,FALSE);
-      IF LocationCode <> '' THEN
-        ItemLedgEntry.SETRANGE("Location Code",LocationCode);
       ItemLedgEntry.SETRANGE("Posting Date",0D,PostingDate);
+
+      Item.COPYFILTER("Variant Filter",ItemLedgEntry."Variant Code");
+      Item.COPYFILTER("Location Filter",ItemLedgEntry."Location Code");
+
       IF ItemLedgEntry.FINDSET THEN BEGIN
         REPEAT
           AddError(

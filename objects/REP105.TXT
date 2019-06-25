@@ -2,9 +2,9 @@ OBJECT Report 105 Customer - Summary Aging
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -616,19 +616,19 @@ OBJECT Report 105 Customer - Summary Aging
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1.64019cm</Width>
+                  <Width>1.53813cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.81196cm</Width>
+                  <Width>2.69857cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.87041cm</Width>
+                  <Width>0.84521cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.17744cm</Width>
+                  <Width>2.31729cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.35884cm</Width>
+                  <Width>2.29584cm</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>1.97949cm</Width>
@@ -640,7 +640,7 @@ OBJECT Report 105 Customer - Summary Aging
                   <Width>1.89323cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.11682cm</Width>
+                  <Width>2.29321cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -2643,7 +2643,7 @@ OBJECT Report 105 Customer - Summary Aging
               </Filter>
             </Filters>
             <Height>1.66539in</Height>
-            <Width>18.01773cm</Width>
+            <Width>18.03033cm</Width>
             <Style />
           </Tablix>
         </ReportItems>
@@ -2653,7 +2653,7 @@ OBJECT Report 105 Customer - Summary Aging
       <Width>18.07059cm</Width>
       <Page>
         <PageHeader>
-          <Height>1.269cm</Height>
+          <Height>1.49389cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -2682,6 +2682,7 @@ OBJECT Report 105 Customer - Summary Aging
               </Style>
             </Textbox>
             <Textbox Name="Customer_Summary_AgingCaption1">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -2757,6 +2758,7 @@ OBJECT Report 105 Customer - Summary Aging
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

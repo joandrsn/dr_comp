@@ -2,9 +2,9 @@ OBJECT Report 594 Get Item Ledger Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897,NAVDK9.00.00.43897;
+    Version List=NAVW19.00.00.50785,NAVDK9.00.00.50785;
   }
   PROPERTIES
   {
@@ -142,12 +142,7 @@ OBJECT Report 594 Get Item Ledger Entries
       OnOpenPage=BEGIN
                    IntraJnlTemplate.GET(IntrastatJnlLine."Journal Template Name");
                    IntrastatJnlBatch.GET(IntrastatJnlLine."Journal Template Name",IntrastatJnlLine."Journal Batch Name");
-                   IntrastatJnlBatch.TESTFIELD("Statistics Period");
-                   Century := DATE2DMY(WORKDATE,3) DIV 100;
-                   EVALUATE(Year,COPYSTR(IntrastatJnlBatch."Statistics Period",1,2));
-                   Year := Year + Century * 100;
-                   EVALUATE(Month,COPYSTR(IntrastatJnlBatch."Statistics Period",3,2));
-                   StartDate := DMY2DATE(1,Month,Year);
+                   StartDate := IntrastatJnlBatch.GetStatisticsStartDate;
                    EndDate := CALCDATE('<+1M-1D>',StartDate);
                  END;
 
@@ -186,15 +181,21 @@ OBJECT Report 594 Get Item Ledger Entries
 
       { 4   ;2   ;Field     ;
                   Name=SkipRecalcForZeros;
-                  CaptionML=[DAN=Spring genberegning af nul-beløb over;
-                             ENU=Skip recalculation for zero amounts];
+                  CaptionML=[DAN=Spring over genberegning af nul-beløb;
+                             ENU=Skip Recalculation for Zero Amounts];
                   SourceExpr=SkipRecalcZeroAmounts }
 
       { 5   ;2   ;Field     ;
                   Name=SkipZeros;
-                  CaptionML=[DAN=Spring nul-beløb over;
-                             ENU=Skip zero amounts];
+                  CaptionML=[DAN=Spring over nul-beløb;
+                             ENU=Skip Zero Amounts];
                   SourceExpr=SkipZeroAmounts }
+
+      { 7   ;2   ;Field     ;
+                  Name=ShowingItemCharges;
+                  CaptionML=[DAN=Vis varegebyrposter;
+                             ENU=Show Item Charge Entries];
+                  SourceExpr=ShowItemCharges }
 
     }
   }
@@ -219,9 +220,6 @@ OBJECT Report 594 Get Item Ledger Entries
       EndDate@1014 : Date;
       IndirectCostPctReq@1015 : Decimal;
       TotalAmt@1017 : Decimal;
-      Century@1018 : Integer;
-      Year@1019 : Integer;
-      Month@1020 : Integer;
       AddCurrencyFactor@1021 : Decimal;
       AverageCost@1022 : Decimal;
       AverageCostACY@1023 : Decimal;
@@ -229,6 +227,7 @@ OBJECT Report 594 Get Item Ledger Entries
       ShowBlank@1012 : Boolean;
       SkipRecalcZeroAmounts@1008 : Boolean;
       SkipZeroAmounts@1016 : Boolean;
+      ShowItemCharges@1025 : Boolean;
 
     PROCEDURE SetIntrastatJnlLine@1(NewIntrastatJnlLine@1000 : Record 263);
     BEGIN
@@ -276,6 +275,7 @@ OBJECT Report 594 Get Item Ledger Entries
         VALIDATE(Quantity,ROUND(ABS(Quantity),0.00001));
         VALIDATE("Cost Regulation %",IndirectCostPctReq);
 
+        OnBeforeInsertItemJnlLine(IntrastatJnlLine,"Item Ledger Entry");
         INSERT;
       END;
     END;
@@ -317,6 +317,7 @@ OBJECT Report 594 Get Item Ledger Entries
 
         VALIDATE("Cost Regulation %",IndirectCostPctReq);
 
+        OnBeforeInsertJobLedgerLine(IntrastatJnlLine,"Job Ledger Entry");
         INSERT;
       END;
     END;
@@ -655,6 +656,16 @@ OBJECT Report 594 Get Item Ledger Entries
           ItemApplicationEntry.SETRANGE("Inbound Item Entry No.",ItemLedgerEntryNo);
       END;
       EXIT(NOT ItemApplicationEntry.ISEMPTY);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeInsertItemJnlLine@11(VAR IntrastatJnlLine@1000 : Record 263;ItemLedgerEntry@1001 : Record 32);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeInsertJobLedgerLine@13(VAR IntrastatJnlLine@1000 : Record 263;JobLedgerEntry@1001 : Record 169);
+    BEGIN
     END;
 
     BEGIN

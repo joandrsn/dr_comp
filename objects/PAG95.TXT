@@ -2,9 +2,9 @@ OBJECT Page 95 Sales Quote Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -19,6 +19,7 @@ OBJECT Page 95 Sales Quote Subform
     AutoSplitKey=Yes;
     OnAfterGetRecord=BEGIN
                        ShowShortcutDimCode(ShortcutDimCode);
+                       CLEAR(DocumentTotals);
                      END;
 
     OnNewRecord=BEGIN
@@ -40,7 +41,8 @@ OBJECT Page 95 Sales Quote Subform
     OnAfterGetCurrRecord=BEGIN
                            IF SalesHeader.GET("Document Type","Document No.") THEN;
 
-                           DocumentTotals.SalesUpdateTotalsControls(Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
+                           DocumentTotals.SalesUpdateTotalsControls(
+                             Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
                              TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,CurrPage.EDITABLE,VATAmount);
 
                            TypeChosen := HasTypeToFillMandatotyFields;
@@ -213,6 +215,7 @@ OBJECT Page 95 Sales Quote Subform
                                END;
                                 }
       { 17      ;2   ;Action    ;
+                      Name=InsertExtTexts;
                       AccessByPermission=TableData 279=R;
                       CaptionML=[DAN=&Indsæt udv. tekster;
                                  ENU=Insert &Ext. Texts];
@@ -602,7 +605,9 @@ OBJECT Page 95 Sales Quote Subform
                 Editable=FALSE;
                 OnDrillDown=BEGIN
                               DocumentTotals.SalesRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalSalesLine);
-                              CurrPage.UPDATE(FALSE);
+                              DocumentTotals.SalesUpdateTotalsControls(
+                                Rec,TotalSalesHeader,TotalSalesLine,RefreshMessageEnabled,
+                                TotalAmountStyle,RefreshMessageText,InvDiscAmountEditable,CurrPage.EDITABLE,VATAmount);
                             END;
 
                 ShowCaption=No }

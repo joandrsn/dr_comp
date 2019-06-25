@@ -2,9 +2,9 @@ OBJECT Codeunit 99000774 Calculate Routing Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -388,10 +388,8 @@ OBJECT Codeunit 99000774 Calculate Routing Line
       IF ProdOrderRoutingLine."Schedule Manually" AND (TimeType = TimeType::"Run Time") THEN BEGIN
         IF (RunEndingDateTime < RunStartingDateTime) OR
            ((RunEndingDateTime = RunStartingDateTime) AND
-            ((ProdOrderRoutingLine."Wait Time" <> 0) OR
-             (ProdOrderRoutingLine."Move Time" <> 0) OR
-             ((ProdOrderRoutingLine."Run Time" <> 0) AND
-              (ProdOrderRoutingLine."Input Quantity" <> 0))))
+            (ProdOrderRoutingLine."Run Time" <> 0) AND
+            (ProdOrderRoutingLine."Input Quantity" <> 0))
         THEN
           ERROR(Text005);
         TotalAvailCapacity :=
@@ -433,7 +431,7 @@ OBJECT Codeunit 99000774 Calculate Routing Line
       LoadCapBack(ProdOrderRoutingLine.Type,ProdOrderRoutingLine."No.",2,FALSE);
     END;
 
-    LOCAL PROCEDURE GetSendAheadStartingTime@5(ProdOrderRoutingLine2@1000 : Record 5409;FirstLine@1001 : Boolean;VAR SendAheadLotSize@1002 : Decimal;VAR DeltaTotal@1006 : Integer) : Boolean;
+    LOCAL PROCEDURE GetSendAheadStartingTime@5(ProdOrderRoutingLine2@1000 : Record 5409;FirstLine@1001 : Boolean;VAR SendAheadLotSize@1002 : Decimal;VAR DeltaTotal@1006 : BigInteger) : Boolean;
     VAR
       ProdOrderCapNeed3@1005 : Record 5410;
       ExpectedTime@1003 : Decimal;
@@ -535,8 +533,8 @@ OBJECT Codeunit 99000774 Calculate Routing Line
       SendAheadLotSize@1005 : Decimal;
       ParentIsConstrained@1006 : Boolean;
       ResourceIsConstrained@1007 : Boolean;
-      DeltaTotal@1010 : Integer;
-      DeltaLoadedBack@1011 : Integer;
+      DeltaTotal@1010 : BigInteger;
+      DeltaLoadedBack@1011 : BigInteger;
       PrevEndingDateTime@1012 : DateTime;
     BEGIN
       CalendarEntry.SETRANGE(Date,0D,ProdOrderRoutingLine."Ending Date");
@@ -1043,11 +1041,7 @@ OBJECT Codeunit 99000774 Calculate Routing Line
       ProdOrderCapNeed.SETRANGE("Operation No.",ProdOrderRoutingLine."Operation No.");
       ProdOrderCapNeed.DELETEALL;
 
-      ProdOrderCapNeed.SETRANGE("Operation No.");
-      IF ProdOrderCapNeed.FINDLAST THEN
-        NextCapNeedLineNo := ProdOrderCapNeed."Line No." + 1
-      ELSE
-        NextCapNeedLineNo := 1;
+      NextCapNeedLineNo := 1;
 
       ProdOrderRoutingLine.TESTFIELD("Work Center No.");
 
@@ -1205,8 +1199,6 @@ OBJECT Codeunit 99000774 Calculate Routing Line
               "Starting Date-Time",'>= %1 & < %2',CalendarEntry."Starting Date-Time",ProdEndingDateTime);
             IF LastProdOrderCapNeed.FIND('+') THEN
               REPEAT
-                IF LastProdOrderCapNeed."Starting Time" < EndTime THEN
-                  EndTime := LastProdOrderCapNeed."Starting Time";
                 IF LastProdOrderCapNeed."Ending Time" < EndTime THEN BEGIN
                   AvailTime := Min(CalendarMgt.CalcTimeDelta(EndTime,LastProdOrderCapNeed."Ending Time"),AvailCap);
                   IF AvailTime > 0 THEN BEGIN
@@ -1224,6 +1216,8 @@ OBJECT Codeunit 99000774 Calculate Routing Line
                     EndTime := StartTime;
                   END;
                 END;
+                IF LastProdOrderCapNeed."Starting Time" < EndTime THEN
+                  EndTime := LastProdOrderCapNeed."Starting Time";
               UNTIL (LastProdOrderCapNeed.NEXT(-1) = 0) OR (RemainNeedQty = 0) OR (AvailCap = 0);
 
             IF (AvailCap > 0) AND (RemainNeedQty > 0) THEN BEGIN
@@ -1556,7 +1550,7 @@ OBJECT Codeunit 99000774 Calculate Routing Line
       EXIT(Result);
     END;
 
-    LOCAL PROCEDURE FindSendAheadStartingTime@25(VAR TmpProdOrderRtngLine@1000 : Record 5409;VAR TmpProdOrderCapNeed@1001 : Record 5410;VAR SendAheadLotSize@1002 : Decimal;VAR DeltaTotal@1007 : Integer) : Boolean;
+    LOCAL PROCEDURE FindSendAheadStartingTime@25(VAR TmpProdOrderRtngLine@1000 : Record 5409;VAR TmpProdOrderCapNeed@1001 : Record 5410;VAR SendAheadLotSize@1002 : Decimal;VAR DeltaTotal@1007 : BigInteger) : Boolean;
     VAR
       Result@1003 : Boolean;
       xTotalLotSize@1004 : Decimal;

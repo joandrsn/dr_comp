@@ -2,9 +2,9 @@ OBJECT Report 4 Detail Trial Balance
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -28,15 +28,20 @@ OBJECT Report 4 Detail Trial Balance
                                CurrReport.NEWPAGEPERRECORD := PrintOnlyOnePerPage;
                              END;
 
-               OnAfterGetRecord=BEGIN
+               OnAfterGetRecord=VAR
+                                  Date@1000 : Record 2000000007;
+                                BEGIN
                                   StartBalance := 0;
-                                  IF GLDateFilter <> '' THEN
-                                    IF GETRANGEMIN("Date Filter") <> 0D THEN BEGIN
-                                      SETRANGE("Date Filter",0D,CLOSINGDATE(GETRANGEMIN("Date Filter") - 1));
+                                  IF GLDateFilter <> '' THEN BEGIN
+                                    Date.SETRANGE("Period Type",Date."Period Type"::Date);
+                                    Date.SETFILTER("Period Start",GLDateFilter);
+                                    IF Date.FINDFIRST THEN BEGIN
+                                      SETRANGE("Date Filter",0D,CLOSINGDATE(Date."Period Start" - 1));
                                       CALCFIELDS("Net Change");
                                       StartBalance := "Net Change";
                                       SETFILTER("Date Filter",GLDateFilter);
                                     END;
+                                  END;
 
                                   IF PrintOnlyOnePerPage THEN BEGIN
                                     GLEntryPage.RESET;
@@ -2620,6 +2625,7 @@ Fields!EntryNo_GLEntry.Value&lt;=0 or
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

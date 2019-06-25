@@ -2,9 +2,9 @@ OBJECT Codeunit 5944 SignServContractDoc
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -234,6 +234,7 @@ OBJECT Codeunit 5944 SignServContractDoc
     VAR
       ServContractLine@1008 : Record 5964;
       ServContractHeader@1007 : Record 5965;
+      LockOpenServContract@1001 : Codeunit 5943;
     BEGIN
       IF NOT HideDialog THEN
         CLEARALL;
@@ -244,6 +245,11 @@ OBJECT Codeunit 5944 SignServContractDoc
 
       ServContractHeader.GET(FromServContractHeader."Contract Type",FromServContractHeader."Contract No.");
       CheckServContract(ServContractHeader);
+
+      IF ServContractHeader.Status = ServContractHeader.Status::Signed THEN BEGIN
+        LockOpenServContract.LockServContract(ServContractHeader);
+        EXIT;
+      END;
 
       Window.OPEN(
         Text012 +
@@ -608,9 +614,9 @@ OBJECT Codeunit 5944 SignServContractDoc
         UNTIL ServContractLine.NEXT = 0;
       IF InvoiceNow AND (NOT NonExpiredContractLineExists) THEN BEGIN
         IF NOT FromServContractHeader.Prepaid THEN
-          FromServContractHeader.VALIDATE("Last Invoice Date",InvoiceTo)
+          FromServContractHeader."Last Invoice Date" := InvoiceTo
         ELSE
-          FromServContractHeader.VALIDATE("Last Invoice Date",FromServContractHeader."Next Invoice Date");
+          FromServContractHeader."Last Invoice Date" := FromServContractHeader."Next Invoice Date";
         FromServContractHeader.MODIFY;
       END;
 
@@ -701,6 +707,7 @@ OBJECT Codeunit 5944 SignServContractDoc
       FromServContractLine.SETRANGE("Contract Type",FromServContractHeader."Contract Type");
       FromServContractLine.SETRANGE("Contract No.",FromServContractHeader."Contract No.");
       FromServContractLine.SETRANGE("Line Amount",0);
+      FromServContractLine.SETFILTER("Line Discount %",'<%1',100);
       IF FromServContractLine.FINDFIRST THEN
         ERROR(
           Text001,
@@ -780,6 +787,7 @@ OBJECT Codeunit 5944 SignServContractDoc
       ServContractLine.SETRANGE("Contract Type",ServContractHeader."Contract Type");
       ServContractLine.SETRANGE("Contract No.",ServContractHeader."Contract No.");
       ServContractLine.SETRANGE("Line Amount",0);
+      ServContractLine.SETFILTER("Line Discount %",'<%1',100);
       IF ServContractLine.FINDFIRST THEN
         ERROR(
           Text004,
@@ -883,14 +891,14 @@ OBJECT Codeunit 5944 SignServContractDoc
               ServContractMgt.CreateServiceLedgerEntry(
                 ServHeader,ServContractHeader."Contract Type",
                 ServContractHeader."Contract No.",InvoiceFrom,
-                InvoiceTo,Amt,TRUE,FALSE,
+                InvoiceTo,Amt,NOT NewLine,NewLine,
                 ServContractLine."Line No.");
 
             ServContractMgt.CreateServLine(
               ServHeader,
               ServContractHeader."Contract Type",
               ServContractHeader."Contract No.",
-              InvoiceFrom,InvoiceTo,AppliedEntry,TRUE);
+              InvoiceFrom,InvoiceTo,AppliedEntry,NOT NewLine);
           UNTIL ServContractLine.NEXT = 0;
       END ELSE BEGIN
         ServContractMgt.CreateHeadingServLine(
@@ -902,13 +910,13 @@ OBJECT Codeunit 5944 SignServContractDoc
           ServContractMgt.CreateServiceLedgerEntry(
             ServHeader,ServContractHeader."Contract Type",
             ServContractHeader."Contract No.",InvoiceFrom,
-            InvoiceTo,Amt,TRUE,FALSE,0);
+            InvoiceTo,Amt,NOT NewLine,NewLine,0);
 
         ServContractMgt.CreateServLine(
           ServHeader,
           ServContractHeader."Contract Type",
           ServContractHeader."Contract No.",
-          InvoiceFrom,InvoiceTo,AppliedEntry,TRUE);
+          InvoiceFrom,InvoiceTo,AppliedEntry,NOT NewLine);
       END;
 
       ServContractHeader.MODIFY;

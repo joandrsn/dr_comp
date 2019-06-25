@@ -2,9 +2,9 @@ OBJECT Table 5717 Item Cross Reference
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-10-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50682;
   }
   PROPERTIES
   {
@@ -167,6 +167,23 @@ OBJECT Table 5717 Item Cross Reference
       ItemCrossReference2.SETFILTER("Unit of Measure",'<>%1',ItemCrossReference."Unit of Measure");
 
       EXIT(NOT ItemCrossReference2.ISEMPTY);
+    END;
+
+    PROCEDURE GetItemDescription@4(VAR ItemDescription@1006 : Text;ItemNo@1000 : Code[20];VariantCode@1001 : Code[10];UnitOfMeasureCode@1002 : Code[10];CrossRefType@1003 : Option;CrossRefTypeNo@1004 : Code[20]) : Boolean;
+    VAR
+      ItemCrossReference@1005 : Record 5717;
+    BEGIN
+      ItemCrossReference.SETRANGE("Item No.",ItemNo);
+      ItemCrossReference.SETRANGE("Variant Code",VariantCode);
+      ItemCrossReference.SETRANGE("Unit of Measure",UnitOfMeasureCode);
+      ItemCrossReference.SETRANGE("Cross-Reference Type",CrossRefType);
+      ItemCrossReference.SETRANGE("Cross-Reference Type No.",CrossRefTypeNo);
+      IF NOT ItemCrossReference.FINDFIRST THEN
+        EXIT(FALSE);
+      IF ItemCrossReference.Description = '' THEN
+        EXIT(FALSE);
+      ItemDescription := ItemCrossReference.Description;
+      EXIT(TRUE);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Codeunit 5818 Undo Service Shipment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -269,7 +269,7 @@ OBJECT Codeunit 5818 Undo Service Shipment Line
         ItemJnlLine."Document No." := ServShptHeader."No.";
         ItemJnlLine."Document Line No." := "Line No." + GetCorrectiveShptLineNoStep("Document No.","Line No.");
         ItemJnlLine."Item No." := "No.";
-        ItemJnlLine."Posting Date" := ServShptHeader."Posting Date";
+        ItemJnlLine."Posting Date" := "Posting Date";
         ItemJnlLine."Document No." := "Document No.";
         ItemJnlLine."Gen. Bus. Posting Group" := "Gen. Bus. Posting Group";
         ItemJnlLine."Gen. Prod. Posting Group" := "Gen. Prod. Posting Group";
@@ -393,7 +393,7 @@ OBJECT Codeunit 5818 Undo Service Shipment Line
         ServiceShptHeader.GET(ServiceShptLine."Document No.");
         "Entry Type" := "Entry Type"::Usage;
         "Document No." := ServiceShptLine."Document No.";
-        "Posting Date" := ServiceShptHeader."Posting Date";
+        "Posting Date" := ServiceShptLine."Posting Date";
         "Document Date" := ServiceShptHeader."Document Date";
         "Resource No." := ServiceShptLine."No.";
         Description := ServiceShptLine.Description;

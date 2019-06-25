@@ -2,9 +2,9 @@ OBJECT Page 9658 Vendor Report Selections
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -66,23 +66,19 @@ OBJECT Page 9658 Vendor Report Selections
 
     { 6   ;2   ;Field     ;
                 Name=CustomReportDescription;
+                Lookup=Yes;
+                DrillDown=Yes;
                 CaptionML=[DAN=Beskrivelse af brugerdefineret layout;
                            ENU=Custom Layout Description];
                 SourceExpr="Custom Report Description";
-                OnDrillDown=VAR
-                              CustomReportLayout@1000 : Record 9650;
-                              CustomReportLayouts@1001 : Page 9650;
-                            BEGIN
-                              CustomReportLayout.SETCURRENTKEY("Report ID","Company Name",Type);
-                              CustomReportLayout.SETRANGE("Report ID","Report ID");
-                              CustomReportLayout.SETFILTER("Company Name",'%1|%2','',COMPANYNAME);
-                              CustomReportLayouts.SETTABLEVIEW(CustomReportLayout);
-                              IF CustomReportLayouts.RUNMODAL = ACTION::OK THEN BEGIN
-                                CustomReportLayouts.GETRECORD(CustomReportLayout);
-                                "Custom Report Layout ID" := CustomReportLayout.ID;
-                                MODIFY;
-                                CALCFIELDS("Custom Report Description");
-                              END;
+                OnLookup=BEGIN
+                           LookupCustomReportDescription;
+                           CurrPage.UPDATE;
+                         END;
+
+                OnDrillDown=BEGIN
+                              LookupCustomReportDescription;
+                              CurrPage.UPDATE;
                             END;
                              }
 

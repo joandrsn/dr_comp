@@ -2,9 +2,9 @@ OBJECT Codeunit 408 DimensionManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-02-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51103;
   }
   PROPERTIES
   {
@@ -56,6 +56,10 @@ OBJECT Codeunit 408 DimensionManagement
       GLSetupShortcutDimCode@1026 : ARRAY [8] OF Code[20];
       DimSetFilterCtr@1036 : Integer;
       LastDimSetIDInFilter@1037 : Integer;
+      DimensionIsBlockedErr@1040 : TextConst '@@@="%1 = Document Type, %2 = Document No, %3 = Error text";DAN=Kombinationen af dimensioner, der bliver brugt i %1 %2, er spærret (Fejl: %3).;ENU=The combination of dimensions used in %1 %2 is blocked (Error: %3).';
+      LineDimensionBlockedErr@1039 : TextConst '@@@="%1 = Document Type, %2 = Document No, %3 = LineNo., %4 = Error text";DAN=Kombinationen af de dimensioner, der bliver brugt i %1 %2, linjenr. %3, er spærret (Fejl: %4).;ENU=The combination of dimensions used in %1 %2, line no. %3 is blocked (Error: %4).';
+      InvalidDimensionsErr@1038 : TextConst '@@@="%1 = Document Type, %2 = Document No, %3 = Error text";DAN=De dimensioner, der bliver brugt i %1 %2, er ugyldige (Fejl: %3).;ENU=The dimensions used in %1 %2 are invalid (Error: %3).';
+      LineInvalidDimensionsErr@1041 : TextConst '@@@="%1 = Document Type, %2 = Document No, %3 = LineNo., %4 = Error text";DAN=De dimensioner, der bliver brugt i %1 %2 linjenr. %3, er ugyldige (Fejl: %4).;ENU=The dimensions used in %1 %2, line no. %3 are invalid (Error: %4).';
 
     PROCEDURE GetDimensionSetID@123(VAR DimSetEntry2@1000 : Record 480) : Integer;
     BEGIN
@@ -1796,6 +1800,250 @@ OBJECT Codeunit 408 DimensionManagement
         REPEAT
           ConsolidatedDimFilter += '|' + Dimension.Code;
         UNTIL Dimension.NEXT = 0;
+    END;
+
+    PROCEDURE ResolveDimValueFilter@47(VAR DimValueFilter@1001 : Text;DimensionCode@1000 : Code[20]);
+    BEGIN
+      DimValueFilter := GetDimValuesWithTotalings(DimValueFilter,DimensionCode);
+    END;
+
+    LOCAL PROCEDURE GetDimValuesWithTotalings@85(DimValueFilter@1002 : Text;DimensionCode@1000 : Code[20]) ResultTxt : Text;
+    VAR
+      FilterChars@1007 : Text;
+      DimParam@1009 : Text;
+      CharTxt@1011 : Text;
+      DimFilterLen@1003 : Integer;
+      i@1005 : Integer;
+    BEGIN
+      IF DimensionCode = '' THEN
+        EXIT(DimValueFilter);
+      IF DimValueFilter = '' THEN
+        EXIT(DimValueFilter);
+
+      FilterChars := '()|"&@<>=.';
+      DimValueFilter := UPPERCASE(DimValueFilter);
+      DimFilterLen := STRLEN(DimValueFilter);
+      i := 1;
+      REPEAT
+        DimParam := '';
+        CharTxt := FORMAT(DimValueFilter[i]);
+
+        WHILE (STRPOS(FilterChars,CharTxt) > 0) AND (i <= DimFilterLen) DO BEGIN
+          ResultTxt += CharTxt;
+          i += 1;
+          CharTxt := FORMAT(DimValueFilter[i]);
+        END;
+
+        WHILE (STRPOS(FilterChars,CharTxt) = 0) AND (i <= DimFilterLen) DO BEGIN
+          DimParam += CharTxt;
+          i += 1;
+          CharTxt := FORMAT(DimValueFilter[i]);
+        END;
+        IF DimParam <> '' THEN
+          ResultTxt += ParseDimParam(DimParam,DimensionCode);
+      UNTIL i > DimFilterLen;
+    END;
+
+    LOCAL PROCEDURE ParseDimParam@145(DimValueFilter@1000 : Text;DimensionCode@1002 : Code[20]) ResultTxt : Text;
+    VAR
+      DimensionValue@1001 : Record 349;
+      TempDimensionValue@1003 : TEMPORARY Record 349;
+      CheckStr@1005 : Text;
+    BEGIN
+      // Possible input values: blank filter, code or code with *
+      IF DELCHR(DimValueFilter) = '' THEN
+        EXIT(DimValueFilter);
+
+      DimensionValue.SETRANGE("Dimension Code",DimensionCode);
+      DimensionValue.SETFILTER(Code,DimValueFilter);
+      DimensionValue.SETFILTER(Totaling,'<>%1','');
+      IF DimensionValue.ISEMPTY THEN
+        EXIT(DimValueFilter);
+
+      AddTempDimValueFromTotaling(TempDimensionValue,CheckStr,DimensionCode,DimValueFilter);
+
+      IF TempDimensionValue.FINDSET THEN
+        REPEAT
+          ResultTxt += TempDimensionValue.Code + '|'
+        UNTIL TempDimensionValue.NEXT = 0;
+      IF ResultTxt <> '' THEN
+        ResultTxt := '(' + COPYSTR(ResultTxt,1,STRLEN(ResultTxt) - 1) + ')';
+    END;
+
+    LOCAL PROCEDURE AddTempDimValueFromTotaling@166(VAR TempDimensionValue@1002 : TEMPORARY Record 349;VAR CheckStr@1005 : Text;DimensionCode@1000 : Code[20];Totaling@1001 : Text);
+    VAR
+      DimensionValue@1003 : Record 349;
+    BEGIN
+      IF STRPOS(CheckStr,'(' + Totaling + ')') > 0 THEN
+        EXIT;
+      CheckStr += '(' + Totaling + ')';
+      DimensionValue.SETRANGE("Dimension Code",DimensionCode);
+      DimensionValue.SETFILTER(Code,Totaling);
+      IF DimensionValue.FINDSET THEN
+        REPEAT
+          IF DimensionValue.Totaling <> '' THEN
+            AddTempDimValueFromTotaling(TempDimensionValue,CheckStr,DimensionCode,DimensionValue.Totaling)
+          ELSE BEGIN
+            TempDimensionValue := DimensionValue;
+            IF TempDimensionValue.INSERT THEN;
+          END;
+        UNTIL DimensionValue.NEXT = 0;
+    END;
+
+    PROCEDURE CheckPurchDim@38(PurchHeader@1001 : Record 38;VAR TempPurchLine@1000 : TEMPORARY Record 39);
+    VAR
+      TempPurchLineLocal@1002 : TEMPORARY Record 39;
+    BEGIN
+      CheckPurchDimCombHeader(PurchHeader);
+      CheckPurchDimValuePostingHeader(PurchHeader);
+
+      TempPurchLineLocal.COPY(TempPurchLine,TRUE);
+      CheckPurchDimLines(PurchHeader,TempPurchLineLocal);
+    END;
+
+    LOCAL PROCEDURE CheckPurchDimCombHeader@1730(PurchHeader@1002 : Record 38);
+    BEGIN
+      WITH PurchHeader DO
+        IF NOT CheckDimIDComb("Dimension Set ID") THEN
+          ERROR(DimensionIsBlockedErr,"Document Type","No.",GetDimCombErr);
+    END;
+
+    LOCAL PROCEDURE CheckPurchDimCombLine@1740(PurchLine@1000 : Record 39);
+    BEGIN
+      WITH PurchLine DO
+        IF NOT CheckDimIDComb("Dimension Set ID") THEN
+          ERROR(LineDimensionBlockedErr,"Document Type","Document No.","Line No.",GetDimCombErr);
+    END;
+
+    LOCAL PROCEDURE CheckPurchDimLines@1760(PurchHeader@1002 : Record 38;VAR TempPurchLine@1000 : TEMPORARY Record 39);
+    BEGIN
+      WITH TempPurchLine DO BEGIN
+        RESET;
+        SETFILTER(Type,'<>%1',Type::" ");
+        IF FINDSET THEN
+          REPEAT
+            IF (PurchHeader.Receive AND ("Qty. to Receive" <> 0)) OR
+               (PurchHeader.Invoice AND ("Qty. to Invoice" <> 0)) OR
+               (PurchHeader.Ship AND ("Return Qty. to Ship" <> 0))
+            THEN BEGIN
+              CheckPurchDimCombLine(TempPurchLine);
+              CheckPurchDimValuePostingLine(TempPurchLine);
+            END
+          UNTIL NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE CheckPurchDimValuePostingHeader@1780(PurchHeader@1004 : Record 38);
+    VAR
+      TableIDArr@1002 : ARRAY [10] OF Integer;
+      NumberArr@1003 : ARRAY [10] OF Code[20];
+    BEGIN
+      WITH PurchHeader DO BEGIN
+        TableIDArr[1] := DATABASE::Vendor;
+        NumberArr[1] := "Pay-to Vendor No.";
+        TableIDArr[2] := DATABASE::"Salesperson/Purchaser";
+        NumberArr[2] := "Purchaser Code";
+        TableIDArr[3] := DATABASE::Campaign;
+        NumberArr[3] := "Campaign No.";
+        TableIDArr[4] := DATABASE::"Responsibility Center";
+        NumberArr[4] := "Responsibility Center";
+        IF NOT CheckDimValuePosting(TableIDArr,NumberArr,"Dimension Set ID") THEN
+          ERROR(InvalidDimensionsErr,"Document Type","No.",GetDimValuePostingErr);
+      END;
+    END;
+
+    LOCAL PROCEDURE CheckPurchDimValuePostingLine@1770(PurchLine@1000 : Record 39);
+    VAR
+      TableIDArr@1002 : ARRAY [10] OF Integer;
+      NumberArr@1001 : ARRAY [10] OF Code[20];
+    BEGIN
+      WITH PurchLine DO BEGIN
+        TableIDArr[1] := TypeToTableID3(Type);
+        NumberArr[1] := "No.";
+        TableIDArr[2] := DATABASE::Job;
+        NumberArr[2] := "Job No.";
+        TableIDArr[3] := DATABASE::"Work Center";
+        NumberArr[3] := "Work Center No.";
+        IF NOT CheckDimValuePosting(TableIDArr,NumberArr,"Dimension Set ID") THEN
+          ERROR(LineInvalidDimensionsErr,"Document Type","Document No.","Line No.",GetDimValuePostingErr);
+      END;
+    END;
+
+    PROCEDURE CheckSalesDim@72(SalesHeader@1000 : Record 36;VAR TempSalesLine@1001 : TEMPORARY Record 37);
+    VAR
+      TempSalesLineLocal@1003 : TEMPORARY Record 37;
+    BEGIN
+      CheckSalesDimCombHeader(SalesHeader);
+      CheckSalesDimValuePostingHeader(SalesHeader);
+
+      TempSalesLineLocal.COPY(TempSalesLine,TRUE);
+      CheckSalesDimLines(SalesHeader,TempSalesLineLocal);
+    END;
+
+    LOCAL PROCEDURE CheckSalesDimCombHeader@70(SalesHeader@1000 : Record 36);
+    BEGIN
+      WITH SalesHeader DO
+        IF NOT CheckDimIDComb("Dimension Set ID") THEN
+          ERROR(DimensionIsBlockedErr,"Document Type","No.",GetDimCombErr);
+    END;
+
+    LOCAL PROCEDURE CheckSalesDimCombLine@1710(SalesLine@1000 : Record 37);
+    BEGIN
+      WITH SalesLine DO
+        IF NOT CheckDimIDComb("Dimension Set ID") THEN
+          ERROR(LineDimensionBlockedErr,"Document Type","Document No.","Line No.",GetDimCombErr);
+    END;
+
+    LOCAL PROCEDURE CheckSalesDimLines@44(SalesHeader@1000 : Record 36;VAR TempSalesLine@1002 : TEMPORARY Record 37);
+    BEGIN
+      WITH TempSalesLine DO BEGIN
+        RESET;
+        SETFILTER(Type,'<>%1',Type::" ");
+        IF FINDSET THEN
+          REPEAT
+            IF (SalesHeader.Invoice AND ("Qty. to Invoice" <> 0)) OR
+               (SalesHeader.Ship AND ("Qty. to Ship" <> 0)) OR
+               (SalesHeader.Receive AND ("Return Qty. to Receive" <> 0))
+            THEN BEGIN
+              CheckSalesDimCombLine(TempSalesLine);
+              CheckSalesDimValuePostingLine(TempSalesLine);
+            END
+          UNTIL NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE CheckSalesDimValuePostingHeader@42(SalesHeader@1000 : Record 36);
+    VAR
+      TableIDArr@1002 : ARRAY [10] OF Integer;
+      NumberArr@1003 : ARRAY [10] OF Code[20];
+    BEGIN
+      WITH SalesHeader DO BEGIN
+        TableIDArr[1] := DATABASE::Customer;
+        NumberArr[1] := "Bill-to Customer No.";
+        TableIDArr[2] := DATABASE::"Salesperson/Purchaser";
+        NumberArr[2] := "Salesperson Code";
+        TableIDArr[3] := DATABASE::Campaign;
+        NumberArr[3] := "Campaign No.";
+        TableIDArr[4] := DATABASE::"Responsibility Center";
+        NumberArr[4] := "Responsibility Center";
+        IF NOT CheckDimValuePosting(TableIDArr,NumberArr,"Dimension Set ID") THEN
+          ERROR(InvalidDimensionsErr,"Document Type","No.",GetDimValuePostingErr);
+      END;
+    END;
+
+    LOCAL PROCEDURE CheckSalesDimValuePostingLine@1750(SalesLine@1000 : Record 37);
+    VAR
+      TableIDArr@1002 : ARRAY [10] OF Integer;
+      NumberArr@1003 : ARRAY [10] OF Code[20];
+    BEGIN
+      WITH SalesLine DO BEGIN
+        TableIDArr[1] := TypeToTableID3(Type);
+        NumberArr[1] := "No.";
+        TableIDArr[2] := DATABASE::Job;
+        NumberArr[2] := "Job No.";
+        IF NOT CheckDimValuePosting(TableIDArr,NumberArr,"Dimension Set ID") THEN
+          ERROR(LineInvalidDimensionsErr,"Document Type","Document No.","Line No.",GetDimValuePostingErr);
+      END;
     END;
 
     BEGIN

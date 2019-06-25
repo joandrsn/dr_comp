@@ -2,9 +2,9 @@ OBJECT Page 9201 Inventory Analysis Matrix
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -50,9 +50,11 @@ OBJECT Page 9201 Inventory Analysis Matrix
            END;
 
     OnOpenPage=BEGIN
+                 SETFILTER(Show,'<>%1',Show::No);
                  AnalysisColumn.SETRANGE("Analysis Area",AnalysisColumn."Analysis Area"::Inventory);
                  AnalysisColumn.SETRANGE("Analysis Column Template",AnalysisColumn."Analysis Column Template");
                  AnalysisColumn.SETRANGE("Line No.",FirstLineNo,LastLineNo);
+                 AnalysisColumn.SETFILTER(Show,'<>%1',AnalysisColumn.Show::Never);
 
                  SetVisible;
                END;
@@ -76,6 +78,7 @@ OBJECT Page 9201 Inventory Analysis Matrix
                            SetStyle(i);
                            i := i + 1;
                          UNTIL AnalysisColumn.NEXT = 0;
+                       Emphasize := Bold;
                      END;
 
   }
@@ -88,10 +91,14 @@ OBJECT Page 9201 Inventory Analysis Matrix
                 GroupType=Repeater }
 
     { 2   ;2   ;Field     ;
-                SourceExpr="Row Ref. No." }
+                SourceExpr="Row Ref. No.";
+                Style=Strong;
+                StyleExpr=Emphasize }
 
     { 4   ;2   ;Field     ;
-                SourceExpr=Description }
+                SourceExpr=Description;
+                Style=Strong;
+                StyleExpr=Emphasize }
 
     { 9   ;2   ;Field     ;
                 Name=Field1;
@@ -588,6 +595,7 @@ OBJECT Page 9201 Inventory Analysis Matrix
       Field30Visible@19010597 : Boolean INDATASET;
       Field31Visible@19056564 : Boolean INDATASET;
       Field32Visible@19017135 : Boolean INDATASET;
+      Emphasize@1006 : Boolean;
       Field1Style@1018 : Text INDATASET;
       Field2Style@1021 : Text INDATASET;
       Field3Style@1022 : Text INDATASET;

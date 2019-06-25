@@ -2,9 +2,9 @@ OBJECT Table 271 Bank Account Ledger Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -62,7 +62,7 @@ OBJECT Table 271 Bank Account Ledger Entry
                                                    CaptionML=[DAN=Global dimension 2-kode;
                                                               ENU=Global Dimension 2 Code];
                                                    CaptionClass='1,1,2' }
-    { 25  ;   ;Our Contact Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 25  ;   ;Our Contact Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Vores attentionkode;
                                                               ENU=Our Contact Code] }
     { 27  ;   ;User ID             ;Code50        ;TableRelation=User."User Name";
@@ -73,6 +73,7 @@ OBJECT Table 271 Bank Account Ledger Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 28  ;   ;Source Code         ;Code10        ;TableRelation="Source Code";

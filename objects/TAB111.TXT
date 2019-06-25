@@ -2,9 +2,9 @@ OBJECT Table 111 Sales Shipment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=26-07-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50528;
   }
   PROPERTIES
   {
@@ -226,6 +226,15 @@ OBJECT Table 111 Sales Shipment Line
                                                    Editable=No;
                                                    AutoFormatType=2;
                                                    AutoFormatExpr=GetCurrencyCode }
+    { 107 ;   ;IC Partner Ref. Type;Option        ;DataClassification=CustomerContent;
+                                                   CaptionML=[DAN=Ref.type for IC-partner;
+                                                              ENU=IC Partner Ref. Type];
+                                                   OptionCaptionML=[DAN=" ,Finanskonto,Vare,,,Gebyr (vare),Varereference,Fælles varenr.";
+                                                                    ENU=" ,G/L Account,Item,,,Charge (Item),Cross reference,Common Item No."];
+                                                   OptionString=[ ,G/L Account,Item,,,Charge (Item),Cross reference,Common Item No.] }
+    { 108 ;   ;IC Partner Reference;Code20        ;DataClassification=CustomerContent;
+                                                   CaptionML=[DAN=Reference for IC-partner;
+                                                              ENU=IC Partner Reference] }
     { 131 ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
                                                               ENU=Posting Date] }
     { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
@@ -400,10 +409,9 @@ OBJECT Table 111 Sales Shipment Line
       SalesOrderHeader@1008 : Record 36;
       SalesOrderLine@1005 : Record 37;
       TempSalesLine@1002 : TEMPORARY Record 37;
-      SalesSetup@1004 : Record 311;
       TransferOldExtLines@1007 : Codeunit 379;
       ItemTrackingMgt@1009 : Codeunit 6500;
-      SalesCalcDiscount@1003 : Codeunit 60;
+      CopyDocumentMgt@1010 : Codeunit 6620;
       ExtTextLine@1006 : Boolean;
       NextLineNo@1001 : Integer;
     BEGIN
@@ -423,7 +431,9 @@ OBJECT Table 111 Sales Shipment Line
         SalesLine."Line No." := NextLineNo;
         SalesLine."Document Type" := TempSalesLine."Document Type";
         SalesLine."Document No." := TempSalesLine."Document No.";
+        CopyDocumentMgt.ChangeLanguage(SalesInvHeader."Language Code");
         SalesLine.Description := STRSUBSTNO(Text000,"Document No.");
+        CopyDocumentMgt.RestoreLanguage;
         SalesLine.INSERT;
         NextLineNo := NextLineNo + 10000;
       END;
@@ -494,6 +504,7 @@ OBJECT Table 111 Sales Shipment Line
         SalesLine."Appl.-from Item Entry" := 0;
         IF NOT ExtTextLine AND (SalesLine.Type <> 0) THEN BEGIN
           SalesLine.VALIDATE(Quantity,Quantity - "Quantity Invoiced");
+          CalcBaseQuantities(SalesLine,"Quantity (Base)" / Quantity);
           SalesLine.VALIDATE("Unit Price",SalesOrderLine."Unit Price");
           SalesLine."Allow Line Disc." := SalesOrderLine."Allow Line Disc.";
           SalesLine."Allow Invoice Disc." := SalesOrderLine."Allow Invoice Disc.";
@@ -536,9 +547,6 @@ OBJECT Table 111 Sales Shipment Line
         SalesLine."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
         SalesLine."Dimension Set ID" := "Dimension Set ID";
         SalesLine.INSERT;
-        SalesSetup.GET;
-        IF SalesSetup."Calc. Inv. Discount" THEN
-          SalesCalcDiscount.CalculateInvoiceDiscountOnLine(SalesLine);
 
         ItemTrackingMgt.CopyHandledItemTrkgToInvLine(SalesOrderLine,SalesLine);
 
@@ -697,6 +705,8 @@ OBJECT Table 111 Sales Shipment Line
     BEGIN
       INIT;
       TRANSFERFIELDS(SalesLine);
+      IF ("No." = '') AND (Type IN [Type::"G/L Account"..Type::"Charge (Item)"]) THEN
+        Type := Type::" ";
       "Posting Date" := SalesShptHeader."Posting Date";
       "Document No." := SalesShptHeader."No.";
       Quantity := SalesLine."Qty. to Ship";
@@ -713,6 +723,21 @@ OBJECT Table 111 Sales Shipment Line
         "Order No." := SalesLine."Document No.";
         "Order Line No." := SalesLine."Line No.";
       END;
+    END;
+
+    LOCAL PROCEDURE CalcBaseQuantities@13(VAR SalesLine@1000 : Record 37;QtyFactor@1001 : Decimal);
+    BEGIN
+      SalesLine."Quantity (Base)" := ROUND(SalesLine.Quantity * QtyFactor,0.00001);
+      SalesLine."Qty. to Asm. to Order (Base)" := ROUND(SalesLine."Qty. to Assemble to Order" * QtyFactor,0.00001);
+      SalesLine."Outstanding Qty. (Base)" := ROUND(SalesLine."Outstanding Quantity" * QtyFactor,0.00001);
+      SalesLine."Qty. to Ship (Base)" := ROUND(SalesLine."Qty. to Ship" * QtyFactor,0.00001);
+      SalesLine."Qty. Shipped (Base)" := ROUND(SalesLine."Quantity Shipped" * QtyFactor,0.00001);
+      SalesLine."Qty. Shipped Not Invd. (Base)" := ROUND(SalesLine."Qty. Shipped Not Invoiced" * QtyFactor,0.00001);
+      SalesLine."Qty. to Invoice (Base)" := ROUND(SalesLine."Qty. to Invoice" * QtyFactor,0.00001);
+      SalesLine."Qty. Invoiced (Base)" := ROUND(SalesLine."Quantity Invoiced" * QtyFactor,0.00001);
+      SalesLine."Return Qty. to Receive (Base)" := ROUND(SalesLine."Return Qty. to Receive" * QtyFactor,0.00001);
+      SalesLine."Return Qty. Received (Base)" := ROUND(SalesLine."Return Qty. Received" * QtyFactor,0.00001);
+      SalesLine."Ret. Qty. Rcd. Not Invd.(Base)" := ROUND(SalesLine."Return Qty. Rcd. Not Invd." * QtyFactor,0.00001);
     END;
 
     BEGIN

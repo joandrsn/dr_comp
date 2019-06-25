@@ -2,9 +2,9 @@ OBJECT Report 99001043 Exchange Production BOM Item
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -85,7 +85,7 @@ OBJECT Report 99001043 Exchange Production BOM Item
                                           ProdBOMVersionList.SETRANGE("Production BOM No.",ProdBOMLine."Production BOM No.");
 
                                           IF ProdBOMVersionList.FIND('+') THEN
-                                            ProdBOMVersionList."Version Code" := INCSTR(ProdBOMVersionList."Version Code")
+                                            ProdBOMVersionList."Version Code" := IncrementVersionNo(ProdBOMVersionList."Production BOM No.")
                                           ELSE BEGIN
                                             ProdBOMVersionList."Production BOM No." := ProdBOMLine."Production BOM No.";
                                             ProdBOMVersionList."Version Code" := '1';
@@ -420,6 +420,23 @@ OBJECT Report 99001043 Exchange Production BOM Item
         EXIT(FALSE);
 
       EXIT(ProdBOMLine."Version Code" = VersionManagement.GetBOMVersion(ProdBOMLine."Production BOM No.",StartingDate,TRUE));
+    END;
+
+    LOCAL PROCEDURE IncrementVersionNo@5(ProductionBOMNo@1000 : Code[20]) Result : Code[20];
+    VAR
+      ProductionBOMVersion@1001 : Record 99000779;
+    BEGIN
+      ProductionBOMVersion.SETRANGE("Production BOM No.",ProductionBOMNo);
+      IF ProductionBOMVersion.FINDLAST THEN BEGIN
+        Result := INCSTR(ProductionBOMVersion."Version Code");
+        ProductionBOMVersion.SETRANGE("Version Code",Result);
+        WHILE NOT ProductionBOMVersion.ISEMPTY DO BEGIN
+          Result := INCSTR(Result);
+          IF Result = '' THEN
+            EXIT(Result);
+          ProductionBOMVersion.SETRANGE("Version Code",Result);
+        END;
+      END;
     END;
 
     BEGIN

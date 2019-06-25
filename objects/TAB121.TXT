@@ -2,9 +2,9 @@ OBJECT Table 121 Purch. Rcpt. Line
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=26-07-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50528;
   }
   PROPERTIES
   {
@@ -213,6 +213,15 @@ OBJECT Table 121 Purch. Rcpt. Line
                                                    Editable=No;
                                                    AutoFormatType=2;
                                                    AutoFormatExpr=GetCurrencyCodeFromHeader }
+    { 107 ;   ;IC Partner Ref. Type;Option        ;DataClassification=CustomerContent;
+                                                   CaptionML=[DAN=Ref.type for IC-partner;
+                                                              ENU=IC Partner Ref. Type];
+                                                   OptionCaptionML=[DAN=" ,Finanskonto,Vare,,,Gebyr (vare),Varereference,Fælles varenr.";
+                                                                    ENU=" ,G/L Account,Item,,,Charge (Item),Cross reference,Common Item No."];
+                                                   OptionString=[ ,G/L Account,Item,,,Charge (Item),Cross reference,Common Item No.] }
+    { 108 ;   ;IC Partner Reference;Code20        ;DataClassification=CustomerContent;
+                                                   CaptionML=[DAN=Reference for IC-partner;
+                                                              ENU=IC Partner Reference] }
     { 131 ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
                                                               ENU=Posting Date] }
     { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
@@ -461,10 +470,9 @@ OBJECT Table 121 Purch. Rcpt. Line
       PurchOrderHeader@1007 : Record 38;
       PurchOrderLine@1005 : Record 39;
       TempPurchLine@1003 : Record 39;
-      PurchSetup@1009 : Record 312;
       TransferOldExtLines@1002 : Codeunit 379;
       ItemTrackingMgt@1004 : Codeunit 6500;
-      PurchCalcDiscount@1008 : Codeunit 70;
+      CopyDocumentMgt@1008 : Codeunit 6620;
       NextLineNo@1001 : Integer;
       ExtTextLine@1006 : Boolean;
     BEGIN
@@ -484,7 +492,9 @@ OBJECT Table 121 Purch. Rcpt. Line
         PurchLine."Line No." := NextLineNo;
         PurchLine."Document Type" := TempPurchLine."Document Type";
         PurchLine."Document No." := TempPurchLine."Document No.";
+        CopyDocumentMgt.ChangeLanguage(PurchInvHeader."Language Code");
         PurchLine.Description := STRSUBSTNO(Text000,"Document No.");
+        CopyDocumentMgt.RestoreLanguage;
         PurchLine.INSERT;
         NextLineNo := NextLineNo + 10000;
       END;
@@ -495,7 +505,8 @@ OBJECT Table 121 Purch. Rcpt. Line
         ExtTextLine := (TransferOldExtLines.GetNewLineNumber("Attached to Line No.") <> 0);
 
         IF PurchOrderLine.GET(
-             PurchOrderLine."Document Type"::Order,"Order No.","Order Line No.")
+             PurchOrderLine."Document Type"::Order,"Order No.","Order Line No.") AND
+           NOT ExtTextLine
         THEN BEGIN
           IF (PurchOrderHeader."Document Type" <> PurchOrderLine."Document Type"::Order) OR
              (PurchOrderHeader."No." <> PurchOrderLine."Document No.")
@@ -598,9 +609,6 @@ OBJECT Table 121 Purch. Rcpt. Line
           PurchLine."Drop Shipment" := TRUE;
 
         PurchLine.INSERT;
-        PurchSetup.GET;
-        IF PurchSetup."Calc. Inv. Discount" THEN
-          PurchCalcDiscount.CalculateInvoiceDiscountOnLine(PurchLine);
 
         ItemTrackingMgt.CopyHandledItemTrkgToInvLine2(PurchOrderLine,PurchLine);
 
@@ -742,6 +750,8 @@ OBJECT Table 121 Purch. Rcpt. Line
     BEGIN
       INIT;
       TRANSFERFIELDS(PurchLine);
+      IF ("No." = '') AND (Type IN [Type::"G/L Account"..Type::"Charge (Item)"]) THEN
+        Type := Type::" ";
       "Posting Date" := PurchRcptHeader."Posting Date";
       "Document No." := PurchRcptHeader."No.";
       Quantity := PurchLine."Qty. to Receive";

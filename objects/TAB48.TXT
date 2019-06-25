@@ -2,9 +2,9 @@ OBJECT Table 48 Invt. Posting Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,43 +13,59 @@ OBJECT Table 48 Invt. Posting Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Account Type        ;Option        ;CaptionML=[DAN=Kontotype;
+    { 1   ;   ;Account Type        ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontotype;
                                                               ENU=Account Type];
                                                    OptionCaptionML=[DAN=Lager (mellemkto.),Lagerperiod.konto (mellemkto.),Lager,VIA-værdi,Lagerregulering,Tillagte direkte omkostninger,Tillagte indir. prod.omkostninger,Købsafvigelse,Vareforbrug,Vareforbrug (mellemkto.),Mat. omk.afvigelse,Kap.omk.afvigelse,Underlev.kostafvigelse,Indir. kap.kostprisafv.,Indir. prod.omkostningsafv.;
                                                                     ENU=Inventory (Interim),Invt. Accrual (Interim),Inventory,WIP Inventory,Inventory Adjmt.,Direct Cost Applied,Overhead Applied,Purchase Variance,COGS,COGS (Interim),Material Variance,Capacity Variance,Subcontracted Variance,Cap. Overhead Variance,Mfg. Overhead Variance];
                                                    OptionString=Inventory (Interim),Invt. Accrual (Interim),Inventory,WIP Inventory,Inventory Adjmt.,Direct Cost Applied,Overhead Applied,Purchase Variance,COGS,COGS (Interim),Material Variance,Capacity Variance,Subcontracted Variance,Cap. Overhead Variance,Mfg. Overhead Variance }
-    { 2   ;   ;Location Code       ;Code10        ;CaptionML=[DAN=Lokationskode;
+    { 2   ;   ;Location Code       ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Lokationskode;
                                                               ENU=Location Code] }
-    { 3   ;   ;Inventory Posting Group;Code10     ;CaptionML=[DAN=Varebogføringsgruppe;
+    { 3   ;   ;Inventory Posting Group;Code10     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Varebogføringsgruppe;
                                                               ENU=Inventory Posting Group] }
-    { 4   ;   ;Dimension Entry No. ;Integer       ;CaptionML=[DAN=Dimensionsløbenr.;
+    { 4   ;   ;Dimension Entry No. ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dimensionsløbenr.;
                                                               ENU=Dimension Entry No.] }
-    { 5   ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
+    { 5   ;   ;Amount              ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb;
                                                               ENU=Amount] }
-    { 6   ;   ;Amount (ACY)        ;Decimal       ;CaptionML=[DAN=Beløb (EV);
+    { 6   ;   ;Amount (ACY)        ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beløb (EV);
                                                               ENU=Amount (ACY)] }
-    { 7   ;   ;Interim Account     ;Boolean       ;CaptionML=[DAN=Mellemregningskonto;
+    { 7   ;   ;Interim Account     ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Mellemregningskonto;
                                                               ENU=Interim Account] }
-    { 8   ;   ;Account No.         ;Code20        ;CaptionML=[DAN=Kontonr.;
+    { 8   ;   ;Account No.         ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontonr.;
                                                               ENU=Account No.] }
-    { 9   ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+    { 9   ;   ;Posting Date        ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogføringsdato;
                                                               ENU=Posting Date] }
-    { 10  ;   ;Gen. Bus. Posting Group;Code10     ;CaptionML=[DAN=Virksomhedsbogføringsgruppe;
+    { 10  ;   ;Gen. Bus. Posting Group;Code10     ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Virksomhedsbogføringsgruppe;
                                                               ENU=Gen. Bus. Posting Group] }
-    { 11  ;   ;Gen. Prod. Posting Group;Code10    ;CaptionML=[DAN=Produktbogføringsgruppe;
+    { 11  ;   ;Gen. Prod. Posting Group;Code10    ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Produktbogføringsgruppe;
                                                               ENU=Gen. Prod. Posting Group] }
-    { 12  ;   ;Negative            ;Boolean       ;CaptionML=[DAN=Negativ;
+    { 12  ;   ;Negative            ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Negativ;
                                                               ENU=Negative] }
-    { 13  ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+    { 13  ;   ;Entry No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
-    { 14  ;   ;Bal. Account Type   ;Option        ;CaptionML=[DAN=Modkontotype;
+    { 14  ;   ;Bal. Account Type   ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Modkontotype;
                                                               ENU=Bal. Account Type];
                                                    OptionCaptionML=[DAN=Lager (mellemkto.),Lagerperiod.konto (mellemkto.),Lager,VIA-værdi,Lagerregulering,Tillagte direkte omkostninger,Tillagte indir. prod.omkostninger,Købsafvigelse,Vareforbrug,Vareforbrug (mellemkto.),Mat. omk.afvigelse,Kap.omk.afvigelse,Underlev.kostafvigelse,Indir. kap.kostprisafv.,Indir. prod. omkostningsafv.;
                                                                     ENU=Inventory (Interim),Invt. Accrual (Interim),Inventory,WIP Inventory,Inventory Adjmt.,Direct Cost Applied,Overhead Applied,Purchase Variance,COGS,COGS (Interim),Material Variance,Capacity Variance,Subcontracted Variance,Cap. Overhead Variance,Mfg. Overhead Variance];
                                                    OptionString=Inventory (Interim),Invt. Accrual (Interim),Inventory,WIP Inventory,Inventory Adjmt.,Direct Cost Applied,Overhead Applied,Purchase Variance,COGS,COGS (Interim),Material Variance,Capacity Variance,Subcontracted Variance,Cap. Overhead Variance,Mfg. Overhead Variance }
-    { 15  ;   ;Job No.             ;Code20        ;CaptionML=[DAN=Sagsnr.;
+    { 15  ;   ;Job No.             ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Sagsnr.;
                                                               ENU=Job No.] }
     { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Dimensionsgruppe-id;
                                                               ENU=Dimension Set ID];
                                                    Editable=No }

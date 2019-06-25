@@ -2,9 +2,9 @@ OBJECT Table 472 Job Queue Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -33,6 +33,7 @@ OBJECT Table 472 Job Queue Entry
                                                               ENU=ID] }
     { 2   ;   ;User ID             ;Text65        ;TableRelation=User."User Name";
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    Editable=No }
@@ -155,7 +156,8 @@ OBJECT Table 472 Job Queue Entry
     { 14  ;   ;Priority            ;Integer       ;InitValue=1000;
                                                    CaptionML=[DAN=Prioritet;
                                                               ENU=Priority] }
-    { 15  ;   ;Record ID to Process;RecordID      ;CaptionML=[DAN=Record-id, der skal behandles;
+    { 15  ;   ;Record ID to Process;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-id, der skal behandles;
                                                               ENU=Record ID to Process] }
     { 16  ;   ;Parameter String    ;Text250       ;CaptionML=[DAN=Parameterstreng;
                                                               ENU=Parameter String] }
@@ -237,7 +239,8 @@ OBJECT Table 472 Job Queue Entry
     { 31  ;   ;Run in User Session ;Boolean       ;CaptionML=[DAN=Kør i brugersession;
                                                               ENU=Run in User Session];
                                                    Editable=No }
-    { 32  ;   ;User Session ID     ;Integer       ;CaptionML=[DAN=Brugersessions-id;
+    { 32  ;   ;User Session ID     ;Integer       ;DataClassification=EndUserPseudonymousIdentifiers;
+                                                   CaptionML=[DAN=Brugersessions-id;
                                                               ENU=User Session ID] }
     { 33  ;   ;Job Queue Category Code;Code10     ;TableRelation="Job Queue Category";
                                                    CaptionML=[DAN=Opgavekøkategorikode;
@@ -250,7 +253,8 @@ OBJECT Table 472 Job Queue Entry
                                                               ENU=Error Message 3] }
     { 37  ;   ;Error Message 4     ;Text250       ;CaptionML=[DAN=Fejlmeddelelse 4;
                                                               ENU=Error Message 4] }
-    { 40  ;   ;User Service Instance ID;Integer   ;CaptionML=[DAN=Brugertjenesteforekomst-id;
+    { 40  ;   ;User Service Instance ID;Integer   ;DataClassification=EndUserPseudonymousIdentifiers;
+                                                   CaptionML=[DAN=Brugertjenesteforekomst-id;
                                                               ENU=User Service Instance ID] }
     { 41  ;   ;User Session Started;DateTime      ;CaptionML=[DAN=Brugersession startet;
                                                               ENU=User Session Started];
@@ -653,21 +657,11 @@ OBJECT Table 472 Job Queue Entry
       LOCKTABLE;
 
       IF NOT FINDFIRST THEN BEGIN
-        CLEAR(Rec);
-        "Earliest Start Date/Time" := CREATEDATETIME(TODAY,TIME);
+        InitRecurringJob(5);
         "Object Type to Run" := ObjType;
         "Object ID to Run" := ObjID;
-        "Recurring Job" := TRUE;
-        "Run on Mondays" := TRUE;
-        "Run on Tuesdays" := TRUE;
-        "Run on Wednesdays" := TRUE;
-        "Run on Thursdays" := TRUE;
-        "Run on Fridays" := TRUE;
-        "Run on Saturdays" := TRUE;
-        "Run on Sundays" := TRUE;
         "Starting Time" := 080000T;
         "Maximum No. of Attempts to Run" := 3;
-        "No. of Minutes between Runs" := 5;
         SetStatusValue(Status::Ready);
         INSERT(TRUE);
       END;
@@ -676,6 +670,22 @@ OBJECT Table 472 Job Queue Entry
         SetStatusValue(Status::Ready);
         MODIFY;
       END;
+    END;
+
+    PROCEDURE InitRecurringJob@47(NoofMinutesbetweenRuns@1000 : Integer);
+    BEGIN
+      INIT;
+      CLEAR(ID); // "Job Queue - Enqueue" is to define new ID
+      "Recurring Job" := TRUE;
+      "Run on Mondays" := TRUE;
+      "Run on Tuesdays" := TRUE;
+      "Run on Wednesdays" := TRUE;
+      "Run on Thursdays" := TRUE;
+      "Run on Fridays" := TRUE;
+      "Run on Saturdays" := TRUE;
+      "Run on Sundays" := TRUE;
+      "No. of Minutes between Runs" := NoofMinutesbetweenRuns;
+      "Earliest Start Date/Time" := CURRENTDATETIME;
     END;
 
     PROCEDURE FindJobQueueEntry@23(ObjType@1002 : Option;ObjID@1001 : Integer) : Boolean;

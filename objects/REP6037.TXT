@@ -2,9 +2,9 @@ OBJECT Report 6037 Change Customer in Contract
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -264,6 +264,8 @@ OBJECT Report 6037 Change Customer in Contract
     BEGIN
       IF CustNo <> '' THEN BEGIN
         Cust.GET(CustNo);
+        IF Cust."Privacy Blocked" THEN
+          ERROR(Cust.GetPrivacyBlockedGenericErrorText(Cust));
         IF Cust.Blocked = Cust.Blocked::All THEN
           ERROR(Text010);
         IF NOT ShipToAddr.GET(CustNo,ShiptoCode) THEN

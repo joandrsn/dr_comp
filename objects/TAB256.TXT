@@ -2,9 +2,9 @@ OBJECT Table 256 VAT Statement Line
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -104,6 +104,8 @@ OBJECT Table 256 VAT Statement Line
                                                               ENU=Tax Jurisdiction Code] }
     { 19  ;   ;Use Tax             ;Boolean       ;CaptionML=[DAN=Use Tax;
                                                               ENU=Use Tax] }
+    { 20  ;   ;Box No.             ;Text30        ;CaptionML=[DAN=Feltnr.;
+                                                              ENU=Box No.] }
   }
   KEYS
   {

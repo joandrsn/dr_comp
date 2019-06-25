@@ -2,9 +2,9 @@ OBJECT Table 14 Location
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -128,7 +128,8 @@ OBJECT Table 14 Location
                                                                     ERROR(Text008,FIELDCAPTION("Require Put-away"),TRUE,WhseActivHeader.TABLECAPTION);
                                                                   "Use Cross-Docking" := FALSE;
                                                                   "Cross-Dock Bin Code" := '';
-                                                                END;
+                                                                END ELSE
+                                                                  CreateInboundWhseRequest;
                                                               END;
 
                                                    AccessByPermission=TableData 5771=R;
@@ -193,6 +194,8 @@ OBJECT Table 14 Location
                                                                   WhseActivHeader.SETRANGE("Location Code",Code);
                                                                   IF WhseActivHeader.FINDFIRST THEN
                                                                     ERROR(Text008,FIELDCAPTION("Require Receive"),FALSE,WhseActivHeader.TABLECAPTION);
+
+                                                                  CreateInboundWhseRequest;
                                                                 END;
                                                               END;
 
@@ -703,20 +706,26 @@ OBJECT Table 14 Location
       EXIT(FALSE);
     END;
 
-    PROCEDURE GetBinCode@9(UseFlushingMethod@1000 : Boolean;FlushingMethod@1001 : 'Manual,Forward,Backward,Pick + Forward,Pick + Backward') : Code[20];
+    LOCAL PROCEDURE CreateInboundWhseRequest@13();
+    VAR
+      TransferHeader@1002 : Record 5740;
+      TransferLine@1004 : Record 5741;
+      WarehouseRequest@1000 : Record 5765;
+      WhseTransferRelease@1003 : Codeunit 5773;
     BEGIN
-      IF NOT UseFlushingMethod THEN
-        EXIT("From-Production Bin Code");
+      TransferLine.SETRANGE("Transfer-to Code",Code);
+      IF TransferLine.FINDSET THEN
+        REPEAT
+          IF TransferLine."Quantity Received" <> TransferLine."Quantity Shipped" THEN BEGIN
+            TransferHeader.GET(TransferLine."Document No.");
+            WhseTransferRelease.InitializeWhseRequest(WarehouseRequest,TransferHeader,TransferHeader.Status);
+            WhseTransferRelease.CreateInboundWhseRequest(WarehouseRequest,TransferHeader);
 
-      CASE FlushingMethod OF
-        FlushingMethod::Manual,
-        FlushingMethod::"Pick + Forward",
-        FlushingMethod::"Pick + Backward":
-          EXIT("To-Production Bin Code");
-        FlushingMethod::Forward,
-        FlushingMethod::Backward:
-          EXIT("Open Shop Floor Bin Code");
-      END;
+            TransferLine.SETRANGE("Document No.",TransferLine."Document No.");
+            TransferLine.FINDLAST;
+            TransferLine.SETRANGE("Document No.");
+          END;
+        UNTIL TransferLine.NEXT = 0;
     END;
 
     BEGIN

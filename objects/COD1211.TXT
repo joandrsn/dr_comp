@@ -2,9 +2,9 @@ OBJECT Codeunit 1211 Payment Export Gen. Jnl Check
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.46045,NAVDK9.00.00.46045;
   }
   PROPERTIES
   {
@@ -14,27 +14,13 @@ OBJECT Codeunit 1211 Payment Export Gen. Jnl Check
             PaymentMethod@1060000 : Record 289;
             VendBankAcc@1060003 : Record 288;
             PmtExportMgt@1060005 : Codeunit 1210;
-            BankAccount@1000 : Record 270;
             CustomerBankAcc@1060004 : Record 287;
           BEGIN
             DeletePaymentFileErrors;
             GenJnlBatch.GET("Journal Template Name","Journal Batch Name");
 
-            GenJnlBatch.OnCheckGenJournalLineExportRestrictions;
-
-            IF NOT GenJnlBatch."Allow Payment Export" THEN
-              AddBatchEmptyError(Rec,GenJnlBatch.FIELDCAPTION("Allow Payment Export"),'');
-
-            IF GenJnlBatch."Bal. Account Type" <> GenJnlBatch."Bal. Account Type"::"Bank Account" THEN
-              AddBatchEmptyError(Rec,GenJnlBatch.FIELDCAPTION("Bal. Account Type"),GenJnlBatch."Bal. Account Type");
-
-            IF GenJnlBatch."Bal. Account No." = '' THEN
-              AddBatchEmptyError(Rec,GenJnlBatch.FIELDCAPTION("Bal. Account No."),GenJnlBatch."Bal. Account No.");
-
-            IF BankAccount.GET(GenJnlBatch."Bal. Account No.") THEN
-              IF BankAccount."Payment Export Format" = '' THEN
-                InsertPaymentFileError(
-                  STRSUBSTNO(FieldBlankErr,BankAccount.FIELDCAPTION("Payment Export Format"),BankAccount.TABLECAPTION));
+            IF NOT TempGenJournalBatch.GET("Journal Template Name","Journal Batch Name") THEN
+              CheckGenJournalBatch(Rec,GenJnlBatch);
 
             IF NOT ("Account Type" IN ["Account Type"::Customer,"Account Type"::Vendor]) THEN
               InsertPaymentFileError(MustBeVendorOrCustomerErr);
@@ -110,6 +96,7 @@ OBJECT Codeunit 1211 Payment Export Gen. Jnl Check
       PaymentTypeShouldBeErr@1060002 : TextConst 'DAN=%1 skal være %2 i %3.;ENU=%1 should be %2 in %3.';
       PaymentTypeShouldNotBeErr@1060004 : TextConst 'DAN=%1 må ikke være %2 i %3.;ENU=%1 should not be %2 in %3.';
       MustBeVendorPmtErr@1060005 : TextConst 'DAN=Det valgte eksportformat understøtter kun kreditorbetalinger.;ENU=The selected export format only supports vendor payments.';
+      TempGenJournalBatch@1003 : TEMPORARY Record 232;
 
     LOCAL PROCEDURE AddFieldEmptyError@1(VAR GenJnlLine@1000 : Record 81;TableCaption@1001 : Text;FieldCaption@1002 : Text;KeyValue@1003 : Text);
     VAR
@@ -127,6 +114,30 @@ OBJECT Codeunit 1211 Payment Export Gen. Jnl Check
       GenJnlBatch@1001 : Record 232;
     BEGIN
       AddFieldEmptyError(GenJnlLine,GenJnlBatch.TABLECAPTION,FieldCaption,FORMAT(KeyValue));
+    END;
+
+    LOCAL PROCEDURE CheckGenJournalBatch@2(GenJournalLine@1001 : Record 81;GenJournalBatch@1000 : Record 232);
+    VAR
+      BankAccount@1002 : Record 270;
+    BEGIN
+      TempGenJournalBatch := GenJournalBatch;
+      TempGenJournalBatch.INSERT;
+
+      GenJournalBatch.OnCheckGenJournalLineExportRestrictions;
+
+      IF NOT GenJournalBatch."Allow Payment Export" THEN
+        AddBatchEmptyError(GenJournalLine,GenJournalBatch.FIELDCAPTION("Allow Payment Export"),'');
+
+      IF GenJournalBatch."Bal. Account Type" <> GenJournalBatch."Bal. Account Type"::"Bank Account" THEN
+        AddBatchEmptyError(GenJournalLine,GenJournalBatch.FIELDCAPTION("Bal. Account Type"),GenJournalBatch."Bal. Account Type");
+
+      IF GenJournalBatch."Bal. Account No." = '' THEN
+        AddBatchEmptyError(GenJournalLine,GenJournalBatch.FIELDCAPTION("Bal. Account No."),GenJournalBatch."Bal. Account No.");
+
+      IF BankAccount.GET(GenJournalBatch."Bal. Account No.") THEN
+        IF BankAccount."Payment Export Format" = '' THEN
+          GenJournalLine.InsertPaymentFileError(
+            STRSUBSTNO(FieldBlankErr,BankAccount.FIELDCAPTION("Payment Export Format"),BankAccount.TABLECAPTION));
     END;
 
     LOCAL PROCEDURE CheckBankTransferCountryRegion@1060005(GenJournalLine@1060000 : Record 81;RecipientBankAccCountryRegionCode@1060001 : Code[10]);

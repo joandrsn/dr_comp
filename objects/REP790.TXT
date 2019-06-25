@@ -2,9 +2,9 @@ OBJECT Report 790 Calculate Inventory
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-09-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50637;
   }
   PROPERTIES
   {
@@ -69,7 +69,7 @@ OBJECT Report 790 Calculate Inventory
                                 CalcPhysInvQtyAndInsertItemJnlLine;
                               END;
 
-               ReqFilterFields=No.,Location Filter,Bin Filter,Date Filter }
+               ReqFilterFields=No.,Location Filter,Bin Filter }
 
     { 7209;1   ;DataItem;                    ;
                DataItemTable=Table32;
@@ -142,8 +142,7 @@ OBJECT Report 790 Calculate Inventory
                             Variant Code=FIELD(Variant Filter),
                             Location Code=FIELD(Location Filter),
                             Global Dimension 1 Code=FIELD(Global Dimension 1 Filter),
-                            Global Dimension 2 Code=FIELD(Global Dimension 2 Filter),
-                            Posting Date=FIELD(Date Filter) }
+                            Global Dimension 2 Code=FIELD(Global Dimension 2 Filter) }
 
     { 1   ;1   ;DataItem;                    ;
                DataItemTable=Table7312;
@@ -480,6 +479,16 @@ OBJECT Report 790 Calculate Inventory
       END;
     END;
 
+    LOCAL PROCEDURE InsertQuantityOnHandBuffer@10(ItemNo@1000 : Code[20];LocationCode@1001 : Code[10]);
+    BEGIN
+      WITH QuantityOnHandBuffer DO BEGIN
+        INIT;
+        "Item No." := ItemNo;
+        "Location Code" := LocationCode;
+        INSERT(TRUE);
+      END;
+    END;
+
     PROCEDURE InitializeRequest@2(NewPostingDate@1000 : Date;DocNo@1001 : Code[20];ItemsNotOnInvt@1002 : Boolean);
     BEGIN
       PostingDate := NewPostingDate;
@@ -699,13 +708,18 @@ OBJECT Report 790 Calculate Inventory
       SkipDim := NewSkipDim;
     END;
 
-    LOCAL PROCEDURE UpdateQuantityOnHandBuffer@13(No@1000 : Code[20]);
+    LOCAL PROCEDURE UpdateQuantityOnHandBuffer@13(ItemNo@1000 : Code[20]);
     BEGIN
-      QuantityOnHandBuffer.SETRANGE("Item No.",No);
+      QuantityOnHandBuffer.SETRANGE("Item No.",ItemNo);
       IF QuantityOnHandBuffer.ISEMPTY THEN BEGIN
-        QuantityOnHandBuffer.INIT;
-        QuantityOnHandBuffer."Item No." := No;
-        QuantityOnHandBuffer.INSERT;
+        Item.COPYFILTER("Location Filter",Location.Code);
+        Location.SETRANGE("Use As In-Transit",FALSE);
+        IF (Item.GETFILTER("Location Filter") <> '') AND Location.FINDSET THEN
+          REPEAT
+            InsertQuantityOnHandBuffer(ItemNo,Location.Code);
+          UNTIL Location.NEXT = 0
+        ELSE
+          InsertQuantityOnHandBuffer(ItemNo,'');
       END;
     END;
 
@@ -770,6 +784,7 @@ OBJECT Report 790 Calculate Inventory
       WITH DefaultDimension DO BEGIN
         SETRANGE("No.",QuantityOnHandBuffer."Item No.");
         SETRANGE("Table ID",DATABASE::Item);
+        SETFILTER("Dimension Value Code",'<>%1','');
         IF FINDSET THEN
           REPEAT
             InsertDim(DATABASE::Item,0,"Dimension Code","Dimension Value Code");

@@ -2,9 +2,9 @@ OBJECT Table 13 Salesperson/Purchaser
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -35,7 +35,7 @@ OBJECT Table 13 Salesperson/Purchaser
   }
   FIELDS
   {
-    { 1   ;   ;Code                ;Code10        ;OnValidate=BEGIN
+    { 1   ;   ;Code                ;Code20        ;OnValidate=BEGIN
                                                                 TESTFIELD(Code);
                                                               END;
 
@@ -49,6 +49,8 @@ OBJECT Table 13 Salesperson/Purchaser
                                                    DecimalPlaces=2:2;
                                                    MinValue=0;
                                                    MaxValue=100 }
+    { 150 ;   ;Privacy Blocked     ;Boolean       ;CaptionML=[DAN=Beskyttelse af personlige oplysninger spærret;
+                                                              ENU=Privacy Blocked] }
     { 5050;   ;Global Dimension 1 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
                                                    OnValidate=BEGIN
                                                                 ValidateShortcutDimCode(1,"Global Dimension 1 Code");
@@ -304,12 +306,52 @@ OBJECT Table 13 Salesperson/Purchaser
   {
     VAR
       DimMgt@1000 : Codeunit 408;
+      PostActionTxt@1001 : TextConst 'DAN=bogføre;ENU=post';
+      CreateActionTxt@1002 : TextConst 'DAN=oprette;ENU=create';
+      SalespersonTxt@1005 : TextConst 'DAN=Sælger;ENU=Salesperson';
+      PurchaserTxt@1006 : TextConst 'DAN=Indkøber;ENU=Purchaser';
+      BlockedSalesPersonPurchErr@1003 : TextConst '@@@="%1 = post or create, %2 = Salesperson / Purchaser, %3 = salesperson / purchaser code.";DAN=Du kan ikke %1 dette bilag, fordi %2 %3 er blokeret på grund af beskyttelse af personlige oplysninger.;ENU=You cannot %1 this document because %2 %3 is blocked due to privacy.';
+      PrivacyBlockedGenericTxt@1004 : TextConst '@@@="%1 = Salesperson / Purchaser, %2 = salesperson / purchaser code.";DAN=Beskyttelse af personlige oplysninger spærret må ikke være gældende for %1 %2.;ENU=Privacy Blocked must not be true for %1 %2.';
 
     PROCEDURE CreateInteraction@10();
     VAR
       SegmentLine@1000 : TEMPORARY Record 5077;
     BEGIN
       SegmentLine.CreateInteractionFromSalesPurc(Rec);
+    END;
+
+    PROCEDURE GetPrivacyBlockedTransactionText@4(SalespersonPurchaser2@1001 : Record 13;IsPostAction@1000 : Boolean;IsSalesperson@1003 : Boolean) : Text[150];
+    VAR
+      Action@1002 : Text[30];
+      Type@1004 : Text[20];
+    BEGIN
+      IF IsPostAction THEN
+        Action := PostActionTxt
+      ELSE
+        Action := CreateActionTxt;
+      IF IsSalesperson THEN
+        Type := SalespersonTxt
+      ELSE
+        Type := PurchaserTxt;
+      EXIT(STRSUBSTNO(BlockedSalesPersonPurchErr,Action,Type,SalespersonPurchaser2.Code));
+    END;
+
+    PROCEDURE GetPrivacyBlockedGenericText@2(SalespersonPurchaser2@1000 : Record 13;IsSalesperson@1001 : Boolean) : Text[150];
+    VAR
+      Type@1002 : Text[20];
+    BEGIN
+      IF IsSalesperson THEN
+        Type := SalespersonTxt
+      ELSE
+        Type := PurchaserTxt;
+      EXIT(STRSUBSTNO(PrivacyBlockedGenericTxt,Type,SalespersonPurchaser2.Code));
+    END;
+
+    PROCEDURE VerifySalesPersonPurchaserPrivacyBlocked@1(SalespersonPurchaser2@1000 : Record 13) : Boolean;
+    BEGIN
+      IF SalespersonPurchaser2."Privacy Blocked" THEN
+        EXIT(TRUE);
+      EXIT(FALSE);
     END;
 
     LOCAL PROCEDURE ValidateShortcutDimCode@29(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);

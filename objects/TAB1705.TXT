@@ -2,9 +2,9 @@ OBJECT Table 1705 Posted Deferral Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-02-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45243;
   }
   PROPERTIES
   {
@@ -63,6 +63,19 @@ OBJECT Table 1705 Posted Deferral Line
   }
   CODE
   {
+
+    PROCEDURE InitFromDeferralLine@4(DeferralLine@1000 : Record 1702;GenJnlDocNo@1001 : Code[20];AccountNo@1006 : Code[20];NewDocumentType@1005 : Integer;NewDocumentNo@1004 : Code[20];NewLineNo@1003 : Integer;DeferralAccount@1007 : Code[20]);
+    BEGIN
+      INIT;
+      TRANSFERFIELDS(DeferralLine);
+      "Gen. Jnl. Document No." := GenJnlDocNo;
+      "Account No." := AccountNo;
+      "Document Type" := NewDocumentType;
+      "Document No." := NewDocumentNo;
+      "Line No." := NewLineNo;
+      "Deferral Account" := DeferralAccount;
+      INSERT;
+    END;
 
     BEGIN
     END.

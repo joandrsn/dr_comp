@@ -2,9 +2,9 @@ OBJECT Codeunit 7320 Whse. Undo Quantity
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
@@ -21,6 +21,7 @@ OBJECT Codeunit 7320 Whse. Undo Quantity
       WMSMgmt@1001 : Codeunit 7302;
       Text000@1000 : TextConst 'DAN=Programfejl, %1.;ENU=Assertion failed, %1.';
       Text001@1002 : TextConst 'DAN=Der er ikke plads til at indsætte rettelseslinjer.;ENU=There is not enough space to insert correction lines.';
+      WhseJnlRegisterLine@1003 : Codeunit 7301;
 
     PROCEDURE InsertTempWhseJnlLine@7302(ItemJnlLine@1000 : Record 83;SourceType@1001 : Integer;SourceSubType@1002 : Integer;SourceNo@1007 : Code[20];SourceLineNo@1005 : Integer;RefDoc@1006 : Integer;VAR TempWhseJnlLine@1008 : TEMPORARY Record 7311;VAR NextLineNo@1004 : Integer);
     VAR
@@ -45,6 +46,7 @@ OBJECT Codeunit 7320 Whse. Undo Quantity
               "Entry Type" := "Entry Type"::"Positive Adjmt.";
             Quantity := ABS(WhseEntry.Quantity);
             "Quantity (Base)" := ABS(WhseEntry."Qty. (Base)");
+            "Qty. per Unit of Measure" := WhseEntry."Qty. per Unit of Measure";
             WMSMgmt.CreateWhseJnlLine(ItemJnlLine,0,TempWhseJnlLine,FALSE);
             TempWhseJnlLine."Source Type" := SourceType;
             TempWhseJnlLine."Source Subtype" := SourceSubType;
@@ -78,12 +80,15 @@ OBJECT Codeunit 7320 Whse. Undo Quantity
     END;
 
     PROCEDURE PostTempWhseJnlLine@5(VAR TempWhseJnlLine@1000 : TEMPORARY Record 7311);
-    VAR
-      WhseJnlPostLine@1001 : Codeunit 7301;
+    BEGIN
+      PostTempWhseJnlLineCache(TempWhseJnlLine,WhseJnlRegisterLine);
+    END;
+
+    PROCEDURE PostTempWhseJnlLineCache@21(VAR TempWhseJnlLine@1000 : TEMPORARY Record 7311;VAR WhseJnlRegLine@1002 : Codeunit 7301);
     BEGIN
       IF TempWhseJnlLine.FIND('-') THEN
         REPEAT
-          WhseJnlPostLine.RUN(TempWhseJnlLine);
+          WhseJnlRegLine.RUN(TempWhseJnlLine);
         UNTIL TempWhseJnlLine.NEXT = 0;
     END;
 
@@ -377,7 +382,7 @@ OBJECT Codeunit 7320 Whse. Undo Quantity
                 EXIT;
             END;
         END;
-        UpdateWhseRequest("Source Type","Source Subtype","Source No.");
+        UpdateWhseRequest("Source Type","Source Subtype","Source No.","Location Code");
       END;
     END;
 
@@ -401,11 +406,11 @@ OBJECT Codeunit 7320 Whse. Undo Quantity
                 EXIT;
             END;
         END;
-        UpdateWhseRequest("Source Type","Source Subtype","Source No.");
+        UpdateWhseRequest("Source Type","Source Subtype","Source No.","Location Code");
       END;
     END;
 
-    LOCAL PROCEDURE UpdateWhseRequest@26(SourceType@1006 : Integer;SourceSubType@1005 : Integer;SourceNo@1004 : Code[20]);
+    LOCAL PROCEDURE UpdateWhseRequest@26(SourceType@1006 : Integer;SourceSubType@1005 : Integer;SourceNo@1004 : Code[20];LocationCode@1000 : Code[10]);
     VAR
       WhseRequest@1001 : Record 5765;
     BEGIN
@@ -414,6 +419,7 @@ OBJECT Codeunit 7320 Whse. Undo Quantity
         SETRANGE("Source Type",SourceType);
         SETRANGE("Source Subtype",SourceSubType);
         SETRANGE("Source No.",SourceNo);
+        SETRANGE("Location Code",LocationCode);
         IF FINDFIRST AND "Completely Handled" THEN BEGIN
           "Completely Handled" := FALSE;
           MODIFY;

@@ -2,9 +2,9 @@ OBJECT Report 1001 Inventory Valuation
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -8201,7 +8201,7 @@ OBJECT Report 1001 Inventory Valuation
                         <TablixMember>
                           <Visibility>
                             <Hidden>=IIF(Fields!ShowExpected.Value AND ((SUM(Fields!StartingExpectedQty.Value) &lt;&gt; 0 OR SUM(Fields!IncreaseExpectedQty.Value) &lt;&gt; 0 OR SUM(Fields!DecreaseExpectedQty.Value) &lt;&gt; 0 OR SUM(Fields!StartingInvoicedValue.Value) &lt;&gt; 0 OR SUM(Fields!IncreaseInvoicedValue.Value) &lt;&gt; 0 OR SUM(Fields!DecreaseInvoicedValue.Value) &lt;&gt; 0)
-                             OR NOT ((SUM(Fields!StartingExpectedQty.Value) = SUM(Fields!StartingInvoicedQty.Value)) AND (SUM(Fields!IncreaseExpectedQty.Value) = SUM(Fields!IncreaseInvoicedQty.Value)) AND (SUM(Fields!DecreaseExpectedQty.Value) = SUM(Fields!DecreaseInvoicedQty.Value)) AND
+                             AND NOT ((SUM(Fields!StartingExpectedQty.Value) = SUM(Fields!StartingInvoicedQty.Value)) AND (SUM(Fields!IncreaseExpectedQty.Value) = SUM(Fields!IncreaseInvoicedQty.Value)) AND (SUM(Fields!DecreaseExpectedQty.Value) = SUM(Fields!DecreaseInvoicedQty.Value)) AND
                              (SUM(Fields!StartingInvoicedValue.Value) = SUM(Fields!StartingExpectedValue.Value)) AND (SUM(Fields!IncreaseInvoicedValue.Value) = SUM(Fields!IncreaseExpectedValue.Value)) AND (SUM(Fields!DecreaseInvoicedValue.Value) = SUM(Fields!DecreaseExpectedValue.Value)))),FALSE,TRUE)</Hidden>
                           </Visibility>
                         </TablixMember>
@@ -8425,6 +8425,7 @@ OBJECT Report 1001 Inventory Valuation
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

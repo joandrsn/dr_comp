@@ -2,9 +2,9 @@ OBJECT Codeunit 1294 OCR Service Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -137,7 +137,7 @@ OBJECT Codeunit 1294 OCR Service Mgt.
       ResponseStr@1000 : InStream;
     BEGIN
       RsoGetRequest('accounts/rest/currentcustomer',ResponseStr);
-      XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseStr,XMLRootNode);
+      XMLDOMManagement.LoadXMLNodeFromInStream(ResponseStr,XMLRootNode);
       OCRServiceSetup.LOCKTABLE;
       OCRServiceSetup.GET;
       IF XMLDOMManagement.FindNode(XMLRootNode,'Id',XMLNode) THEN
@@ -149,7 +149,7 @@ OBJECT Codeunit 1294 OCR Service Mgt.
       OCRServiceSetup.MODIFY;
 
       RsoGetRequest('users/rest/currentuser',ResponseStr);
-      XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseStr,XMLRootNode);
+      XMLDOMManagement.LoadXMLNodeFromInStream(ResponseStr,XMLRootNode);
 
       IF XMLDOMManagement.FindNode(XMLRootNode,'OrganizationId',XMLNode) THEN
         OCRServiceSetup."Organization ID" := COPYSTR(XMLNode.InnerText,1,MAXSTRLEN(OCRServiceSetup."Organization ID"));
@@ -170,7 +170,7 @@ OBJECT Codeunit 1294 OCR Service Mgt.
       OCRServiceSetup.TESTFIELD("Customer ID");
 
       RsoGetRequest(STRSUBSTNO('accounts/rest/customers/%1/userconfiguration',OCRServiceSetup."Organization ID"),ResponseStr);
-      XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseStr,XMLRootNode);
+      XMLDOMManagement.LoadXMLNodeFromInStream(ResponseStr,XMLRootNode);
 
       OCRServiceDocumentTemplate.LOCKTABLE;
       OCRServiceDocumentTemplate.DELETEALL;
@@ -190,7 +190,7 @@ OBJECT Codeunit 1294 OCR Service Mgt.
     END;
 
     [TryFunction]
-    PROCEDURE RsoGetRequestBinary@26(PathQuery@1015 : Text;VAR ResponseStr@1000 : InStream);
+    PROCEDURE RsoGetRequestBinary@26(PathQuery@1015 : Text;VAR ResponseStr@1000 : InStream;VAR ContentType@1004 : Text);
     VAR
       HttpWebRequestMgt@1001 : Codeunit 1297;
       HttpStatusCode@1003 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpStatusCode";
@@ -205,6 +205,7 @@ OBJECT Codeunit 1294 OCR Service Mgt.
       HttpWebRequestMgt.SetMethod('GET');
       HttpWebRequestMgt.CreateInstream(ResponseStr);
       HttpWebRequestMgt.GetResponse(ResponseStr,HttpStatusCode,ResponseHeaders);
+      ContentType := ResponseHeaders.Item('Content-Type');
     END;
 
     PROCEDURE RsoPutRequest@10(PathQuery@1015 : Text;VAR ResponseStr@1000 : InStream) : Boolean;
@@ -511,7 +512,7 @@ OBJECT Codeunit 1294 OCR Service Mgt.
       TempBlob.INIT;
       TempBlob.Blob := OriginalXMLContentFieldRef.VALUE;
       TempBlob.Blob.CREATEINSTREAM(InStream);
-      XMLDOMManagement.LoadXMLDocumentFromInStream(InStream,OriginalXMLRootNode);
+      XMLDOMManagement.LoadXMLNodeFromInStream(InStream,OriginalXMLRootNode);
     END;
 
     PROCEDURE GetOCRServiceDocumentReference@35(IncomingDocument@1004 : Record 130) : Text[50];
@@ -546,7 +547,7 @@ OBJECT Codeunit 1294 OCR Service Mgt.
 
       RsoGetRequest(STRSUBSTNO('documents/rest/customers/%1/outputdocuments',OCRServiceSetup."Customer ID"),ResponseStr);
 
-      XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseStr,XMLRootNode);
+      XMLDOMManagement.LoadXMLNodeFromInStream(ResponseStr,XMLRootNode);
 
       FOREACH XMLNode IN XMLRootNode.ChildNodes DO BEGIN
         ChildNode := XMLNode.SelectSingleNode('BatchExternalId');
@@ -682,7 +683,7 @@ OBJECT Codeunit 1294 OCR Service Mgt.
               CurrentPage,PageSize);
 
         RsoGetRequest(Path,ResponseStr);
-        XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseStr,XMLRootNode);
+        XMLDOMManagement.LoadXMLNodeFromInStream(ResponseStr,XMLRootNode);
         EVALUATE(TotalPages,XMLDOMManagement.FindNodeText(XMLRootNode,'//PageCount'));
 
         XMLDOMManagement.FindNode(XMLRootNode,'//Batches',XMLRootNode);
@@ -703,15 +704,15 @@ OBJECT Codeunit 1294 OCR Service Mgt.
       IncomingDocument@1000 : Record 130;
       IncomingDocumentAttachment@1009 : Record 133;
       XMLDOMManagement@1006 : Codeunit 6224;
-      FileManagement@1002 : Codeunit 419;
       SendIncomingDocumentToOCR@1007 : Codeunit 133;
       ImageInStr@1011 : InStream;
       ResponseStr@1010 : InStream;
       XMLRootNode@1004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
       AttachmentName@1001 : Text[50];
+      ContentType@1008 : Text[50];
     BEGIN
       RsoGetRequest(STRSUBSTNO('documents/rest/%1',DocId),ResponseStr);
-      IF NOT XMLDOMManagement.LoadXMLDocumentFromInStream(ResponseStr,XMLRootNode) THEN BEGIN
+      IF NOT XMLDOMManagement.LoadXMLNodeFromInStream(ResponseStr,XMLRootNode) THEN BEGIN
         LogActivityFailed(OCRServiceSetup.RECORDID,GetDocumentMsg,'');
         EXIT(0);
       END;
@@ -726,9 +727,9 @@ OBJECT Codeunit 1294 OCR Service Mgt.
         IncomingDocument.INIT;
         IncomingDocument.CreateIncomingDocument(AttachmentName,'');
         IncomingDocumentAttachment.SETRANGE("External Document Reference");
-        IF RsoGetRequestBinary(STRSUBSTNO('documents/rest/file/%1/image',DocId),ImageInStr) THEN
+        IF RsoGetRequestBinary(STRSUBSTNO('documents/rest/file/%1/image',DocId),ImageInStr,ContentType) THEN
           IncomingDocument.AddAttachmentFromStream(
-            IncomingDocumentAttachment,AttachmentName,FileManagement.GetExtension(AttachmentName),ImageInStr);
+            IncomingDocumentAttachment,AttachmentName,GetExtensionFromContentType(AttachmentName,ContentType),ImageInStr);
       END;
       IncomingDocument.CheckNotCreated;
       IncomingDocumentAttachment.SETRANGE("External Document Reference");
@@ -923,6 +924,15 @@ OBJECT Codeunit 1294 OCR Service Mgt.
         TempIncomingDocumentAttachment.SETRANGE("External Document Reference");
         IF TempIncomingDocumentAttachment.FINDSET THEN;
       END;
+    END;
+
+    LOCAL PROCEDURE GetExtensionFromContentType@56(AttachmentName@1001 : Text;ContentType@1000 : Text) : Text;
+    VAR
+      FileManagement@1002 : Codeunit 419;
+    BEGIN
+      IF STRPOS(ContentType,'application/pdf') <> 0 THEN
+        EXIT('pdf');
+      EXIT(FileManagement.GetExtension(AttachmentName));
     END;
 
     BEGIN

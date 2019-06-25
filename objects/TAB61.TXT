@@ -2,9 +2,9 @@ OBJECT Table 61 Electronic Document Format
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -32,7 +32,7 @@ OBJECT Table 61 Electronic Document Format
                                                    OptionString=Sales Invoice,Sales Credit Memo,Sales Validation,Service Invoice,Service Credit Memo,Service Validation }
     { 4   ;   ;Description         ;Text250       ;CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
-    { 5   ;   ;Codeunit ID         ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Codeunit));
+    { 5   ;   ;Codeunit ID         ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Codeunit));
                                                    CaptionML=[DAN=Codeunit-id;
                                                               ENU=Codeunit ID];
                                                    NotBlank=Yes;
@@ -268,9 +268,9 @@ OBJECT Table 61 Electronic Document Format
 
     LOCAL PROCEDURE CheckCodeunitExist@8();
     VAR
-      AllObj@1000 : Record 2000000038;
+      AllObjWithCaption@1000 : Record 2000000058;
     BEGIN
-      AllObj.GET(AllObj."Object Type"::Codeunit,"Codeunit ID");
+      AllObjWithCaption.GET(AllObjWithCaption."Object Type"::Codeunit,"Codeunit ID");
     END;
 
     PROCEDURE ValidateElectronicFormat@5(ElectronicFormat@1001 : Code[20]);
@@ -315,6 +315,21 @@ OBJECT Table 61 Electronic Document Format
               EXIT(FORMAT(DummySalesHeader."Document Type"::Quote));
           END;
       END;
+    END;
+
+    PROCEDURE InsertElectronicFormat@24(InsertElectronicFormatCode@1000 : Code[20];InsertElectronicFormatDescription@1001 : Text[250];CodeunitID@1002 : Integer;InsertElectronicFormatUsage@1004 : Option);
+    VAR
+      ElectronicDocumentFormat@1003 : Record 61;
+    BEGIN
+      IF ElectronicDocumentFormat.GET(InsertElectronicFormatCode,InsertElectronicFormatUsage) THEN
+        EXIT;
+
+      ElectronicDocumentFormat.INIT;
+      ElectronicDocumentFormat.Code := InsertElectronicFormatCode;
+      ElectronicDocumentFormat.Description := InsertElectronicFormatDescription;
+      ElectronicDocumentFormat."Codeunit ID" := CodeunitID;
+      ElectronicDocumentFormat.Usage := InsertElectronicFormatUsage;
+      ElectronicDocumentFormat.INSERT;
     END;
 
     BEGIN

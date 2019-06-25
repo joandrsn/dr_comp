@@ -2,9 +2,9 @@ OBJECT Page 1288 Payment-to-Entry Match
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -91,9 +91,6 @@ OBJECT Page 1288 Payment-to-Entry Match
       NoOfLedgerEntriesWithinAmountTolerance@1001 : Integer;
       NoOfLedgerEntriesOutsideAmountTolerance@1002 : Integer;
       AmountMatchText@1005 : Text;
-      OneAmountInclToleranceMatchedTxt@1006 : TextConst 'DAN=Ja - enkelt;ENU=Yes - Single';
-      MultipleAmountInclToleranceMatchedTxt@1007 : TextConst 'DAN=Ja - flere;ENU=Yes - Multiple';
-      NoMatchOnAmountInclToleranceTxt@1008 : TextConst 'DAN=Nej;ENU=No';
 
     LOCAL PROCEDURE FetchData@1();
     VAR
@@ -154,7 +151,7 @@ OBJECT Page 1288 Payment-to-Entry Match
       BankAccReconciliationLine."Match Confidence" := TypeHelper.GetOptionNo(
           GETFILTER("Match Confidence"),MatchConfidenceFieldRef.OPTIONCAPTION);
 
-      SetAmountInclToleranceMatched(BankPmtApplRule);
+      AmountMatchText := FORMAT(BankPmtApplRule."Amount Incl. Tolerance Matched");
     END;
 
     LOCAL PROCEDURE GetBankAccReconciliationLine@7(StatementType@1007 : Option;BankAccountNo@1006 : Text;StatementNo@1005 : Text;StatementLineNo@1004 : Integer;AccountType@1001 : Option);
@@ -162,18 +159,6 @@ OBJECT Page 1288 Payment-to-Entry Match
       BankAccReconciliationLine.GET(StatementType,BankAccountNo,StatementNo,StatementLineNo);
       BankAccReconciliationLine."Account Type" := AccountType;
       BankAccReconciliationLine."Account No." := COPYSTR(GETFILTER("Account No."),1);
-    END;
-
-    LOCAL PROCEDURE SetAmountInclToleranceMatched@2(BankPmtApplRule@1000 : Record 1252);
-    BEGIN
-      CASE BankPmtApplRule."Amount Incl. Tolerance Matched" OF
-        BankPmtApplRule."Amount Incl. Tolerance Matched"::"One Match":
-          AmountMatchText := OneAmountInclToleranceMatchedTxt;
-        BankPmtApplRule."Amount Incl. Tolerance Matched"::"Multiple Matches":
-          AmountMatchText := MultipleAmountInclToleranceMatchedTxt;
-        BankPmtApplRule."Amount Incl. Tolerance Matched"::"No Matches":
-          AmountMatchText := NoMatchOnAmountInclToleranceTxt;
-      END;
     END;
 
     BEGIN

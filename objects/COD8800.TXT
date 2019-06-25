@@ -2,9 +2,9 @@ OBJECT Codeunit 8800 Custom Layout Reporting
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-05-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46045;
   }
   PROPERTIES
   {
@@ -53,9 +53,8 @@ OBJECT Codeunit 8800 Custom Layout Reporting
 
       // Set the filters on the "* Report Selection" table and iterate through
       CustomReportSelection2.SETRANGE("Custom Report Layout ID",CustomReportLayoutID);
-      CustomReportSelection2.SETFILTER("Source No.",GetKeyFilterFromRecord(FilterRecordRef,FilterRecordKeyFieldRef));
 
-      IF CustomReportSelection2.FIND('-') THEN BEGIN
+      IF CustomReportSelection2.FINDSET THEN BEGIN
         REPEAT
           IF Filter <> '' THEN
             Filter := Filter + '|';
@@ -64,26 +63,13 @@ OBJECT Codeunit 8800 Custom Layout Reporting
       END;
 
       // Set the more restrictive filter
-      FilterRecordKeyFieldRef.SETFILTER(Filter);
-    END;
-
-    PROCEDURE GetKeyFilterFromRecord@16(VAR FilterSourceRecordRef@1000 : RecordRef;VAR KeyFieldRef@1084 : FieldRef) : Text;
-    VAR
-      Filter@1001 : Text;
-    BEGIN
-      IF FilterSourceRecordRef.FINDSET THEN BEGIN
-        REPEAT
-          IF Filter <> '' THEN
-            Filter := Filter + '|';
-          Filter := STRSUBSTNO('%1%2',Filter,KeyFieldRef.VALUE);
-        UNTIL FilterSourceRecordRef.NEXT = 0;
-      END;
-      EXIT(Filter);
+      SetNextGroupFilter(FilterRecordRef,FilterRecordKeyFieldRef,Filter)
     END;
 
     PROCEDURE ProcessReport@43();
     VAR
       RequestPageParamsView@1000 : Text;
+      FilterGroup@1001 : Integer;
     BEGIN
       // If we're not yet initialized, exit - data needs to be set up before reports can be run
       IF NOT Initialized THEN
@@ -97,20 +83,18 @@ OBJECT Codeunit 8800 Custom Layout Reporting
           CustomReportSelection.SETRANGE(Usage,ReportSelections.Usage);
 
           PrintRemaining := FALSE;
-          // Set the iterator view based on if we need to 'join' the iterator and data item records on a field
-          // If we do not need to join (e.g. the report data item and iterator are the same), then we will use the report request page filter as
-          // the iterator
-          IF ReportDataAndIteratorDiffer THEN
-            IteratorJoinFieldRef.SETFILTER(GetKeyFilterFromRecord(ReportDataRecordRef,ReportDataIteratorFieldRef))
-          ELSE BEGIN
+
+          // If our report's data item and the 'join table' are the same, then set its filter from the request page.
+          IF NOT ReportDataAndIteratorDiffer THEN BEGIN
             RequestPageParamsView := GetViewFromParameters(ReportSelections."Report ID",IteratorRecordRef.NUMBER);
-            IteratorRecordRef.SETVIEW(RequestPageParamsView)
+            IteratorRecordRef.SETVIEW(RequestPageParamsView);
           END;
-          // Set the data item filters from the request page
-          // Add the request page filters to the passed-in data record ref filters
-          ReportDataRecordRef.FILTERGROUP(10); // Set the request page filters separately to preserve the existing filters
+
+          FilterGroup := ReportDataRecordRef.FILTERGROUP;
+          ReportDataRecordRef.FILTERGROUP(FindNextEmptyFilterGroup(ReportDataRecordRef)); // Set the request page filters separately to preserve the existing filters
           RequestPageParamsView := GetViewFromParameters(ReportSelections."Report ID",ReportDataRecordRef.NUMBER);
           ReportDataRecordRef.SETVIEW(RequestPageParamsView);
+          ReportDataRecordRef.FILTERGROUP(FilterGroup);
           CASE OutputType OF
             OutputType::Email:
               BEGIN
@@ -161,35 +145,33 @@ OBJECT Codeunit 8800 Custom Layout Reporting
       TempRecordRef@1000 : RecordRef;
       TempRecordKeyFieldRef@1088 : FieldRef;
       CustomReportLayoutID@1089 : Integer;
-      DefaultLayoutIteratorFilter@1090 : Text;
       ReportedRecordKeyVal@1091 : Text;
     BEGIN
       ReportingType := ReportingType::Layout;
       // Prevent early calls to the function
       IF NOT Initialized THEN
         ERROR(NotInitializedErr);
+
       // Temporary lists to keep track of what we've reported over, used to determine what to report on using the default layout
       ReportedLayouts := ReportedLayouts.ArrayList;
       ReportedObjects := ReportedObjects.ArrayList;
-
-      // Get the 'join' values in the iterator record and use it to filter the Custom Report Selection table to find which layouts we should run
-      CustomReportSelection.SETFILTER("Source No.",GetKeyFilterFromRecord(IteratorRecordRef,IteratorJoinFieldRef));
-
-      TempRecordRef := ReportDataRecordRef.DUPLICATE;
-      TempRecordKeyFieldRef := TempRecordRef.FIELD(ReportDataIteratorFieldRef.NUMBER);
 
       // Iterate through the layouts in the Custom Report Selection table
       IF CustomReportSelection.FINDSET THEN BEGIN
         REPEAT
           CustomReportLayoutID := CustomReportSelection."Custom Report Layout ID";
 
+          // Reset the TempRecordRef object
+          TempRecordRef := ReportDataRecordRef.DUPLICATE;
+          TempRecordKeyFieldRef := TempRecordRef.FIELD(ReportDataIteratorFieldRef.NUMBER);
+
           // If we've not already reported on this layout and it truly is a custom layout, then report on it
           IF NOT ReportedLayouts.Contains(CustomReportLayoutID) AND
              (ResolveCustomReportLayoutID(CustomReportSelection) <> 0)
           THEN BEGIN
             ReportedLayouts.Add(CustomReportLayoutID);
-            // Find the intersection of the iterator filter and the report selection filter (the items for which this report selection is valid
-            TempRecordKeyFieldRef.SETFILTER(IteratorJoinFieldRef.GETFILTER);
+
+            // Run the report only for those objects that have this layout
             GetLayoutIteratorKeyFilter(TempRecordRef,TempRecordKeyFieldRef,CustomReportLayoutID); // set view based on intersection of lists
 
             // Run the report on the data record, using the above filter
@@ -211,30 +193,25 @@ OBJECT Codeunit 8800 Custom Layout Reporting
       TempRecordRef := ReportDataRecordRef.DUPLICATE;
       TempRecordKeyFieldRef := TempRecordRef.FIELD(ReportDataIteratorFieldRef.NUMBER);
 
-      // Limit to the iterator values for the joined field
-      TempRecordKeyFieldRef.SETFILTER(IteratorJoinFieldRef.GETFILTER);
-
+      // Set the exclusion filter based on the items we've already reported on and set that filter on top of the filter already applied
       IF TempRecordRef.FINDFIRST THEN
         REPEAT
-          IF NOT ReportedObjects.Contains(FORMAT(TempRecordKeyFieldRef.VALUE)) THEN BEGIN
-            IF DefaultLayoutIteratorFilter <> '' THEN
-              DefaultLayoutIteratorFilter := DefaultLayoutIteratorFilter + '|';
-            DefaultLayoutIteratorFilter := STRSUBSTNO('%1%2',DefaultLayoutIteratorFilter,FORMAT(TempRecordKeyFieldRef.VALUE));
-          END;
+          IF ReportedObjects.Contains(FORMAT(TempRecordKeyFieldRef.VALUE)) THEN
+            SetNextGroupFilter(TempRecordRef,TempRecordKeyFieldRef,STRSUBSTNO('<>%1',FORMAT(TempRecordKeyFieldRef.VALUE)));
         UNTIL TempRecordRef.NEXT = 0;
-      TempRecordKeyFieldRef.SETFILTER(DefaultLayoutIteratorFilter);
 
-      // Only run the report if there is explicitly a filter - an empty filter here implies no records were left to report on.
-      IF (DefaultLayoutIteratorFilter <> '') AND TempRecordRef.FIND('-') THEN
+      // Only run the report if we still have something to report on
+      IF TempRecordRef.FINDFIRST THEN
         RunReport(TempRecordRef,ReportSelections."Report ID",PrintRemaining);
     END;
 
     LOCAL PROCEDURE ProcessReportPerObject@21();
     VAR
-      ObjectRecordRef@1093 : RecordRef;
-      DataFilterFieldRef@1094 : FieldRef;
+      PrevRecordID@1003 : RecordID;
       IteratorJoinFieldValue@1095 : Code[20];
       ReportID@1096 : Integer;
+      IteratorFilterGroup@1000 : Integer;
+      JoinValue@1001 : Code[20];
     BEGIN
       ReportingType := ReportingType::Object;
       IF NOT Initialized THEN
@@ -242,30 +219,36 @@ OBJECT Codeunit 8800 Custom Layout Reporting
 
       ReportID := ReportSelections."Report ID";
 
-      // Make a copy of the RecordRef/FieldRef that we can make filter changes on
-      ObjectRecordRef := ReportDataRecordRef.DUPLICATE;
-      DataFilterFieldRef := ReportDataRecordRef.FIELD(ReportDataIteratorFieldRef.NUMBER);
+      EVALUATE(IteratorJoinFieldValue,FORMAT(IteratorJoinFieldRef.VALUE));
 
-      IF IteratorRecordRef.FINDSET THEN
+      // Set the data filter to be the item we're iterating over:
+
+      IF ReportDataRecordRef.FINDSET THEN BEGIN
         REPEAT
-          EVALUATE(IteratorJoinFieldValue,FORMAT(IteratorJoinFieldRef.VALUE));
-
           // Get and set the report selection for this particular object/report combination
-          CustomReportSelection.SETRANGE("Source No.",IteratorJoinFieldValue);
+          JoinValue := FORMAT(ReportDataIteratorFieldRef.VALUE,20);
+          CustomReportSelection.SETRANGE("Source No.",JoinValue);
+          IteratorFilterGroup := SetNextGroupFilter(ReportDataRecordRef,ReportDataIteratorFieldRef,JoinValue);
+          PrevRecordID := ReportDataRecordRef.RECORDID;
 
-          // Set the data filter to be the item we're iterating over:
-          DataFilterFieldRef.SETRANGE(IteratorJoinFieldValue);
+          // Find the 'join' value in the associated table, this helps us generate the name
+          IteratorJoinFieldRef.SETRANGE(JoinValue);
+          IteratorRecordRef.FINDFIRST;
 
-          IF ReportDataRecordRef.FIND('-') THEN BEGIN
-            // If the object has custom layouts defined - process each one based on the selected output type, otherwise use the default layout
-            IF CustomReportSelection.FIND('-') THEN
-              REPEAT
-                RunReportWithCustomReportSelection(ReportDataRecordRef,ReportID,CustomReportSelection,PrintRemaining);
-              UNTIL CustomReportSelection.NEXT = 0
-            ELSE
-              RunReport(ReportDataRecordRef,ReportID,PrintRemaining);
-          END;
-        UNTIL IteratorRecordRef.NEXT = 0;
+          // If the object has custom layouts defined - process each one based on the selected output type, otherwise use the default layout
+          IF CustomReportSelection.FINDSET THEN
+            REPEAT
+              RunReportWithCustomReportSelection(ReportDataRecordRef,ReportID,CustomReportSelection,PrintRemaining);
+            UNTIL CustomReportSelection.NEXT = 0
+          ELSE
+            RunReport(ReportDataRecordRef,ReportID,PrintRemaining);
+
+          // Clear out the filter and reset:
+          SetGroupFilter(ReportDataRecordRef,ReportDataIteratorFieldRef,'',IteratorFilterGroup);
+          ReportDataRecordRef.GET(PrevRecordID);
+
+        UNTIL ReportDataRecordRef.NEXT = 0;
+      END;
     END;
 
     LOCAL PROCEDURE RunReportWithCustomReportSelection@24(VAR DataRecRef@1000 : RecordRef;ReportID@1001 : Integer;VAR CustomReportSelection@1002 : Record 9657;EmailPrintRemaining@1003 : Boolean);
@@ -641,8 +624,8 @@ OBJECT Codeunit 8800 Custom Layout Reporting
       FilterGroup@1003 : Integer;
     BEGIN
       ReportSelections.SETFILTER("Report ID",'<>0');
-      ReportSelections.FIND('-');
-      FilterGroup := 10;
+      ReportSelections.FINDFIRST;
+
       IF ReportSelections.FINDSET THEN
         REPEAT
           // If we're at this point, and we're set in test mode with XML output - run the report directly from here
@@ -657,10 +640,14 @@ OBJECT Codeunit 8800 Custom Layout Reporting
           TempReqParams := REPORT.RUNREQUESTPAGE(ReportSelections."Report ID");
           // If the user cancelled out of the request page - exclude this report ID from processing:
           IF TempReqParams = '' THEN BEGIN
-            ReportSelections.FILTERGROUP(FilterGroup);
+            // Advance to the next open filtergroup outside of the system range
+            FilterGroup := ReportSelections.FILTERGROUP;
+            IF ReportSelections.HASFILTER OR (ReportSelections.FILTERGROUP < 10) THEN
+              REPEAT
+                ReportSelections.FILTERGROUP(ReportSelections.FILTERGROUP + 1)
+              UNTIL NOT ReportSelections.HASFILTER AND (ReportSelections.FILTERGROUP >= 10);
             ReportSelections.SETFILTER("Report ID",STRSUBSTNO('<>%1',ReportSelections."Report ID"));
-            ReportSelections.FILTERGROUP(0); // Set back to default
-            FilterGroup := FilterGroup + 1; // Increment group to make sure each excluded report filter applies
+            ReportSelections.FILTERGROUP(FilterGroup);
             BREAK;
           END;
 
@@ -790,9 +777,11 @@ OBJECT Codeunit 8800 Custom Layout Reporting
             ReportDataIteratorFieldRef := ReportDataRecordRef.FIELD(i);
             BREAK;
           END;
+      // If the tables are different, 'join' using the filter of the data item passed in.
       IF DataItemTableSameAsIterator THEN BEGIN
         IteratorRecordRef.OPEN(ReportDataRecordRef.NUMBER);
         IteratorJoinFieldRef := IteratorRecordRef.FIELD(ReportDataIteratorFieldRef.NUMBER);
+        SetNextGroupFilter(IteratorRecordRef,IteratorJoinFieldRef,ReportDataIteratorFieldRef.GETFILTER);
         ReportDataAndIteratorDiffer := FALSE;
       END ELSE BEGIN
         ConfigValidateManagement.GetRelationInfoByIDs(
@@ -807,9 +796,6 @@ OBJECT Codeunit 8800 Custom Layout Reporting
       END;
 
       CustomReportSelection.SETRANGE("Source Type",IteratorRecordRef.NUMBER);
-
-      // Set the iterator record to the items that exist in the join field from the data record (given existing filters in the data record)
-      IteratorJoinFieldRef.SETFILTER(GetKeyFilterFromRecord(ReportDataRecordRef,ReportDataIteratorFieldRef));
     END;
 
     LOCAL PROCEDURE RemoveEmptyFile@1050(FileName@1060 : Text) : Boolean;
@@ -901,7 +887,6 @@ OBJECT Codeunit 8800 Custom Layout Reporting
     PROCEDURE InitializeData@49(ReportSelectionUsage@1005 : Integer;VAR DataRecordRef@1004 : RecordRef;SourceJoinFieldName@1003 : Text;DataRecordJoinTable@1002 : Integer;IteratorTableFieldName@1001 : Text;DataItemTableSameAsIterator@1000 : Boolean);
     BEGIN
       // Initialize parameters and request pages, but do not run the reports yet
-      Initialized := TRUE;
       IF NOT SetReportUsage(ReportSelectionUsage) THEN
         Initialized := FALSE;
       IF NOT SetReportDataItem(DataRecordRef,SourceJoinFieldName,DataRecordJoinTable,IteratorTableFieldName,DataItemTableSameAsIterator) THEN
@@ -915,6 +900,51 @@ OBJECT Codeunit 8800 Custom Layout Reporting
       // Allows the caller to determine if valid request parameters XML is stored for the given report ID.
       // This is mostly useful to determine if a given report's request page has been canceled or not.
       EXIT(TempBlobReqParamStore.GET(ReportID));
+    END;
+
+    LOCAL PROCEDURE FindNextEmptyFilterGroup@41(VAR RecordRef@1000 : RecordRef) : Integer;
+    VAR
+      FilterGroup@1001 : Integer;
+      StartingGroup@1002 : Integer;
+    BEGIN
+      // Finds the next empty filter group, with a minimum of group 10 to ensure we're in a non-system group.
+      StartingGroup := RecordRef.FILTERGROUP;
+      FilterGroup := StartingGroup;
+
+      IF FilterGroup < 10 THEN
+        FilterGroup := 10;
+
+      // Find the next empty group
+      RecordRef.FILTERGROUP(FilterGroup);
+      IF RecordRef.HASFILTER THEN
+        REPEAT
+          FilterGroup += 1;
+          RecordRef.FILTERGROUP(FilterGroup);
+        UNTIL NOT RecordRef.HASFILTER;
+
+      // Reset the group back to the original value
+      RecordRef.FILTERGROUP(StartingGroup);
+
+      EXIT(FilterGroup);
+    END;
+
+    LOCAL PROCEDURE SetNextGroupFilter@56(VAR RecordRef@1000 : RecordRef;VAR FieldRef@1004 : FieldRef;Filter@1001 : Text) : Integer;
+    VAR
+      NextGroup@1002 : Integer;
+    BEGIN
+      NextGroup := FindNextEmptyFilterGroup(RecordRef);
+      SetGroupFilter(RecordRef,FieldRef,Filter,NextGroup);
+      EXIT(NextGroup);
+    END;
+
+    LOCAL PROCEDURE SetGroupFilter@87(VAR RecordRef@1000 : RecordRef;VAR FieldRef@1001 : FieldRef;Filter@1002 : Text;GroupNumber@1003 : Integer);
+    VAR
+      FilterGroup@1004 : Integer;
+    BEGIN
+      FilterGroup := RecordRef.FILTERGROUP;
+      RecordRef.FILTERGROUP(GroupNumber);
+      FieldRef.SETFILTER(Filter);
+      RecordRef.FILTERGROUP(FilterGroup);
     END;
 
     BEGIN

@@ -2,9 +2,9 @@ OBJECT Page 9252 MyDim Value Combinations
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -26,6 +26,7 @@ OBJECT Page 9252 MyDim Value Combinations
       { 1900000004;0 ;ActionContainer;
                       ActionContainerType=ActionItems }
       { 1102601002;1 ;Action    ;
+                      Name=PreviousSet;
                       CaptionML=[DAN=Forrige sæt;
                                  ENU=Previous Set];
                       ToolTipML=[DAN=Forrige sæt;
@@ -42,6 +43,7 @@ OBJECT Page 9252 MyDim Value Combinations
                                END;
                                 }
       { 1102601003;1 ;Action    ;
+                      Name=PreviousColumn;
                       CaptionML=[DAN=Forrige kolonne;
                                  ENU=Previous Column];
                       ToolTipML=[DAN=Forrige;
@@ -58,6 +60,7 @@ OBJECT Page 9252 MyDim Value Combinations
                                END;
                                 }
       { 1102601004;1 ;Action    ;
+                      Name=NextColumn;
                       CaptionML=[DAN=Næste kolonne;
                                  ENU=Next Column];
                       ToolTipML=[DAN=Næste;
@@ -75,6 +78,7 @@ OBJECT Page 9252 MyDim Value Combinations
                                END;
                                 }
       { 1102601001;1 ;Action    ;
+                      Name=NextSet;
                       CaptionML=[DAN=Næste sæt;
                                  ENU=Next Set];
                       ToolTipML=[DAN=Næste sæt;
@@ -156,10 +160,9 @@ OBJECT Page 9252 MyDim Value Combinations
         MATRIX_CaptionSet,MATRIX_ColumnSet,MATRIX_CurrSetLength);
       CLEAR(MatrixRecords);
       MatrixRecord.SETPOSITION(PrimaryKeyFirstCaptionInCurrSe);
-      CurrentMatrixRecordOrdinal := 1;
       REPEAT
+        CurrentMatrixRecordOrdinal += 1;
         MatrixRecords[CurrentMatrixRecordOrdinal].COPY(MatrixRecord);
-        CurrentMatrixRecordOrdinal := CurrentMatrixRecordOrdinal + 1;
       UNTIL (CurrentMatrixRecordOrdinal = ARRAYLEN(MatrixRecords)) OR (MatrixRecord.NEXT <> 1);
     END;
 

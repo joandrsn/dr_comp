@@ -2,9 +2,9 @@ OBJECT Codeunit 134 Import Attachment - Inc. Doc.
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -95,34 +95,62 @@ OBJECT Codeunit 134 Import Attachment - Inc. Doc.
       CreateIncomingDocument(IncomingDocumentAttachment,IncomingDocument,PostingDate,DocNo);
     END;
 
-    LOCAL PROCEDURE FindUsingIncomingDocNoFilter@9(VAR IncomingDocumentAttachment@1000 : Record 133;VAR IncomingDocument@1005 : Record 130) : Boolean;
+    LOCAL PROCEDURE FindInIncomingDocAttachmentUsingIncomingDocNoFilter@25(VAR IncomingDocumentAttachment@1000 : Record 133;VAR IncomingDocument@1005 : Record 130) : Boolean;
     VAR
       IncomingDocNo@1004 : Integer;
-      FilterGroupID@1003 : Integer;
     BEGIN
-      WITH IncomingDocumentAttachment DO BEGIN
-        FOR FilterGroupID := 0 TO 2 DO BEGIN
-          FILTERGROUP(FilterGroupID * 2);
-
-          IF GETFILTER("Incoming Document Entry No.") <> '' THEN BEGIN
-            IncomingDocNo := GETRANGEMIN("Incoming Document Entry No.");
-            IF IncomingDocNo = 0 THEN // Sales/Purchase document or Gen.Jnl.Line with no Incoming Doc. No.
-              IF GETFILTER("Document Table No. Filter") <> '' THEN
-                IncomingDocNo := CreateNewSalesPurchIncomingDoc(IncomingDocumentAttachment)
-              ELSE
-                IF GETFILTER("Journal Batch Name Filter") <> '' THEN
-                  IncomingDocNo := CreateNewJournalLineIncomingDoc(IncomingDocumentAttachment);
-            IF IncomingDocNo <> 0 THEN
-              BREAK;
-          END;
-        END;
-        FILTERGROUP(0);
+      IF IncomingDocumentAttachment.GETFILTER("Incoming Document Entry No.") <> '' THEN BEGIN
+        IncomingDocNo := IncomingDocumentAttachment.GETRANGEMIN("Incoming Document Entry No.");
+        IF IncomingDocNo <> 0 THEN
+          EXIT(IncomingDocument.GET(IncomingDocNo));
       END;
+      EXIT(FALSE);
+    END;
 
-      IF IncomingDocNo = 0 THEN
-        EXIT(FALSE);
+    LOCAL PROCEDURE FindInGenJournalLineUsingIncomingDocNoFilter@22(VAR IncomingDocumentAttachment@1000 : Record 133;VAR IncomingDocument@1005 : Record 130) : Boolean;
+    VAR
+      IncomingDocNo@1004 : Integer;
+    BEGIN
+      IF IncomingDocumentAttachment.GETFILTER("Journal Batch Name Filter") <> '' THEN BEGIN
+        IncomingDocNo := CreateNewJournalLineIncomingDoc(IncomingDocumentAttachment);
+        IF IncomingDocNo <> 0 THEN
+          EXIT(IncomingDocument.GET(IncomingDocNo));
+      END;
+      EXIT(FALSE);
+    END;
 
-      EXIT(IncomingDocument.GET(IncomingDocNo));
+    LOCAL PROCEDURE FindInSalesPurchUsingIncomingDocNoFilter@26(VAR IncomingDocumentAttachment@1000 : Record 133;VAR IncomingDocument@1005 : Record 130) : Boolean;
+    VAR
+      IncomingDocNo@1004 : Integer;
+    BEGIN
+      IF IncomingDocumentAttachment.GETFILTER("Document Table No. Filter") <> '' THEN BEGIN
+        IncomingDocNo := CreateNewSalesPurchIncomingDoc(IncomingDocumentAttachment);
+        IF IncomingDocNo <> 0 THEN
+          EXIT(IncomingDocument.GET(IncomingDocNo));
+      END;
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE FindUsingIncomingDocNoFilter@9(VAR IncomingDocumentAttachment@1000 : Record 133;VAR IncomingDocument@1005 : Record 130) : Boolean;
+    VAR
+      FilterGroupID@1003 : Integer;
+      Found@1001 : Boolean;
+    BEGIN
+      FOR FilterGroupID := 0 TO 2 DO BEGIN
+        IncomingDocumentAttachment.FILTERGROUP(FilterGroupID * 2);
+        CASE TRUE OF
+          FindInIncomingDocAttachmentUsingIncomingDocNoFilter(IncomingDocumentAttachment,IncomingDocument):
+            Found := TRUE;
+          FindInGenJournalLineUsingIncomingDocNoFilter(IncomingDocumentAttachment,IncomingDocument):
+            Found := TRUE;
+          FindInSalesPurchUsingIncomingDocNoFilter(IncomingDocumentAttachment,IncomingDocument):
+            Found := TRUE;
+        END;
+        IF Found THEN
+          BREAK;
+      END;
+      IncomingDocumentAttachment.FILTERGROUP(0);
+      EXIT(Found);
     END;
 
     LOCAL PROCEDURE FindUsingDocNoFilter@10(VAR IncomingDocumentAttachment@1000 : Record 133;VAR IncomingDocument@1004 : Record 130;VAR PostingDate@1001 : Date;VAR DocNo@1006 : Code[20]) : Boolean;

@@ -2,9 +2,9 @@ OBJECT Page 951 Time Sheet List
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -33,6 +33,7 @@ OBJECT Page 951 Time Sheet List
                       Image=NewTimesheet;
                       PromotedCategory=Process }
       { 5       ;1   ;Action    ;
+                      Name=EditTimeSheet;
                       ShortCutKey=Return;
                       CaptionML=[DAN=&Rediger timeseddel;
                                  ENU=&Edit Time Sheet];

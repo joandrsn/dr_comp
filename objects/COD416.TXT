@@ -2,9 +2,9 @@ OBJECT Codeunit 416 Release Service Document
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -56,27 +56,11 @@ OBJECT Codeunit 416 Release Service Document
       WhseServiceRelease@1007 : Codeunit 5770;
 
     PROCEDURE Reopen@3(VAR ServHeader@1000 : Record 5900);
-    VAR
-      ServLine@1001 : Record 5902;
     BEGIN
       WITH ServHeader DO BEGIN
         IF "Release Status" = "Release Status"::Open THEN
           EXIT;
         VALIDATE("Release Status","Release Status"::Open);
-        ServLine.SETRANGE("Document Type","Document Type");
-        ServLine.SETRANGE("Document No.","No.");
-        ServLine.SETFILTER(Type,'<>%1',ServLine.Type::" ");
-        ServLine.SETFILTER(Quantity,'<>0');
-        ServLine.LOCKTABLE;
-        IF ServLine.FINDSET THEN
-          REPEAT
-            ServLine.Amount := 0;
-            ServLine."Amount Including VAT" := 0;
-            ServLine."VAT Base Amount" := 0;
-            ServLine.InitOutstandingAmount;
-            ServLine.MODIFY;
-          UNTIL ServLine.NEXT = 0;
-        ServLine.RESET;
         MODIFY(TRUE);
         IF "Document Type" IN ["Document Type"::Order] THEN
           WhseServiceRelease.Reopen(ServHeader);

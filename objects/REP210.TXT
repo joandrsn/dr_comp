@@ -2,9 +2,9 @@ OBJECT Report 210 Blanket Sales Order
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=30-05-17;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.48628;
   }
   PROPERTIES
   {
@@ -10639,10 +10639,10 @@ Cstr(Fields!DocumentDateCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo1Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>5.98417cm</Left>
-              <Height>40pt</Height>
-              <Width>6.16114cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>6cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>53</ZIndex>
               <Visibility>
                 <Hidden>=IIF(IsNothing(Fields!CompanyInfo1Picture.Value) = true,true,false)</Hidden>
@@ -10656,10 +10656,10 @@ Cstr(Fields!DocumentDateCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo2Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Left>12.18684cm</Left>
-              <Height>40pt</Height>
-              <Width>5.99265cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Left>12cm</Left>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>54</ZIndex>
               <Visibility>
                 <Hidden>=IIF(IsNothing(Fields!CompanyInfo2Picture.Value) = true,true,false)</Hidden>
@@ -10673,9 +10673,9 @@ Cstr(Fields!DocumentDateCaption.Value)
               <Source>Database</Source>
               <Value>=Convert.ToBase64String(Fields!CompanyInfo3Picture.Value)</Value>
               <MIMEType>image/bmp</MIMEType>
-              <Sizing>Fit</Sizing>
-              <Height>40pt</Height>
-              <Width>5.88186cm</Width>
+              <Sizing>FitProportional</Sizing>
+              <Height>14mm</Height>
+              <Width>60mm</Width>
               <ZIndex>55</ZIndex>
               <Visibility>
                 <Hidden>=IIF(IsNothing(Fields!CompanyInfo3Picture.Value) = true,true,false)</Hidden>

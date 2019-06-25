@@ -2,9 +2,9 @@ OBJECT Report 29 Export Acc. Sched. to Excel
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -171,7 +171,7 @@ OBJECT Report 29 Export Acc. Sched. to Excel
                                         AccSchedLine.Underline,
                                         AccSchedLine."Double Underline",
                                         '0',
-                                        TempExcelBuffer."Cell Type"::Number);
+                                        TempExcelBuffer."Cell Type"::Text);
                                       ColumnNo := 2;
                                       EnterCell(
                                         RowNo,
@@ -214,11 +214,7 @@ OBJECT Report 29 Export Acc. Sched. to Excel
                                     TempExcelBuffer.UpdateBook(ServerFileName,SheetName);
                                     TempExcelBuffer.WriteSheet('',COMPANYNAME,USERID);
                                     TempExcelBuffer.CloseBook;
-                                    IF NOT TestMode THEN
-                                      IF FileMgt.IsWebClient THEN
-                                        TempExcelBuffer.DownloadAndOpenExcel
-                                      ELSE
-                                        TempExcelBuffer.OverwriteAndOpenExistingExcel(ClientFileName);
+                                    SaveFile(ClientFileName);
                                   END ELSE BEGIN
                                     TempExcelBuffer.CreateBook(ServerFileName,AccSchedName.Name);
                                     TempExcelBuffer.WriteSheet(AccSchedName.Description,COMPANYNAME,USERID);
@@ -267,6 +263,7 @@ OBJECT Report 29 Export Acc. Sched. to Excel
       DoUpdateExistingWorksheet@1010 : Boolean;
       ExcelFileExtensionTok@1012 : TextConst '@@@={Locked};DAN=.xlsx;ENU=.xlsx';
       TestMode@1019 : Boolean;
+      OverwriteFileQst@1020 : TextConst 'DAN=Vil du overskrive den eksisterende fil?;ENU=Do you want to overwrite the existing file?';
 
     PROCEDURE SetOptions@3(VAR AccSchedLine2@1000 : Record 85;ColumnLayoutName2@1001 : Code[10];UseAmtsInAddCurr2@1002 : Boolean);
     BEGIN
@@ -363,6 +360,20 @@ OBJECT Report 29 Export Acc. Sched. to Excel
         EXIT(FALSE);
 
       EXIT(TRUE);
+    END;
+
+    LOCAL PROCEDURE SaveFile@8(ClientFileName@1000 : Text);
+    BEGIN
+      IF TestMode THEN
+        EXIT;
+
+      IF NOT FileMgt.IsWebClient THEN BEGIN
+        IF NOT CONFIRM(OverwriteFileQst,FALSE) THEN
+          TempExcelBuffer.DownloadAndOpenExcel
+        ELSE
+          TempExcelBuffer.OverwriteAndOpenExistingExcel(ClientFileName);
+      END ELSE
+        TempExcelBuffer.DownloadAndOpenExcel
     END;
 
     BEGIN

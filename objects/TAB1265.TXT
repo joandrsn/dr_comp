@@ -2,9 +2,9 @@ OBJECT Table 1265 Data Exch. Field Mapping Buf.
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -40,20 +40,26 @@ OBJECT Table 1265 Data Exch. Field Mapping Buf.
   }
   FIELDS
   {
-    { 1   ;   ;Data Exchange Def Code;Code20      ;CaptionML=[DAN=Dataudvekslingsdefinitionskode;
+    { 1   ;   ;Data Exchange Def Code;Code20      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dataudvekslingsdefinitionskode;
                                                               ENU=Data Exchange Def Code] }
-    { 2   ;   ;Data Exchange Line Def Code;Code20 ;CaptionML=[DAN=Definitionskode for dataudvekslingslinje;
+    { 2   ;   ;Data Exchange Line Def Code;Code20 ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Definitionskode for dataudvekslingslinje;
                                                               ENU=Data Exchange Line Def Code] }
-    { 3   ;   ;Table ID            ;Integer       ;CaptionML=[DAN=Tabel-id;
+    { 3   ;   ;Table ID            ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Tabel-id;
                                                               ENU=Table ID] }
-    { 4   ;   ;Column No.          ;Integer       ;CaptionML=[DAN=Kolonnenr.;
+    { 4   ;   ;Column No.          ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kolonnenr.;
                                                               ENU=Column No.] }
-    { 5   ;   ;Type                ;Option        ;CaptionML=[DAN=Type;
+    { 5   ;   ;Type                ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Type;
                                                               ENU=Type];
                                                    OptionCaptionML=[DAN=Felt,Tabel;
                                                                     ENU=Field,Table];
                                                    OptionString=Field,Table }
-    { 10  ;   ;Field ID            ;Integer       ;CaptionML=[DAN=Felt-id;
+    { 10  ;   ;Field ID            ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Felt-id;
                                                               ENU=Field ID] }
     { 11  ;   ;Default Value       ;Text250       ;OnValidate=VAR
                                                                 DataExchFieldMapping@1000 : Record 1225;
@@ -64,6 +70,7 @@ OBJECT Table 1265 Data Exch. Field Mapping Buf.
                                                                 DataExchFieldMapping.MODIFY(TRUE);
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Standardværdi;
                                                               ENU=Default Value] }
     { 13  ;   ;Source              ;Text250       ;OnValidate=VAR
@@ -87,12 +94,15 @@ OBJECT Table 1265 Data Exch. Field Mapping Buf.
                                                                 END;
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Kilde;
                                                               ENU=Source] }
-    { 20  ;   ;Caption             ;Text250       ;CaptionML=[DAN=Titel;
+    { 20  ;   ;Caption             ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Titel;
                                                               ENU=Caption];
                                                    Editable=No }
-    { 22  ;   ;Depth               ;Integer       ;CaptionML=[DAN=Dybde;
+    { 22  ;   ;Depth               ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dybde;
                                                               ENU=Depth] }
     { 23  ;   ;Transformation Rule ;Code20        ;TableRelation="Transformation Rule";
                                                    OnValidate=VAR
@@ -104,6 +114,7 @@ OBJECT Table 1265 Data Exch. Field Mapping Buf.
                                                                 DataExchFieldMapping.MODIFY(TRUE);
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Transformationsregel;
                                                               ENU=Transformation Rule] }
   }

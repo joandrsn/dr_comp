@@ -2,9 +2,9 @@ OBJECT Codeunit 13617 OIOUBL Export Service Cr. Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVDK8.00;
+    Version List=NAVDK9.00.00.51014;
   }
   PROPERTIES
   {
@@ -16,6 +16,7 @@ OBJECT Codeunit 13617 OIOUBL Export Service Cr. Memo
             SalespersonPurchaser@1060000 : Record 13;
             OIOUBLProfile@1060014 : Record 13600;
             RBMgt@1060005 : Codeunit 419;
+            XMLDOMManagement@1060018 : Codeunit 6224;
             XMLCurrNode@1060004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
             XMLNewChild@1060002 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";
             XMLdocOut@1060001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
@@ -49,8 +50,6 @@ OBJECT Codeunit 13617 OIOUBL Export Service Cr. Memo
             IF NOT ServCrMemoLine.FINDSET THEN
               EXIT;
 
-            XMLdocOut := XMLdocOut.XmlDocument;
-
             FromFile := RBMgt.ServerTempFileName('');
 
             // Credit Memo
@@ -63,7 +62,7 @@ OBJECT Codeunit 13617 OIOUBL Export Service Cr. Memo
               'xmlns:sdt="urn:oasis:names:specification:ubl:schema:xsd:SpecializedDatatypes-2" ' +
               'xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2"/> ';
 
-            XMLdocOut.LoadXml := Header;
+            XMLDOMManagement.LoadXMLDocumentFromText(Header,XMLdocOut);
             XMLCurrNode := XMLdocOut.DocumentElement;
 
             WITH OIOUBLDOMManagement DO BEGIN
@@ -678,7 +677,7 @@ OBJECT Codeunit 13617 OIOUBL Export Service Cr. Memo
                 AddAttribute(XMLCurrNode,'currencyID',CurrencyCode);
                 XMLCurrNode := XMLCurrNode.ParentNode;
 
-                AddElement(XMLCurrNode,'BaseQuantity',OIOUBLDocumentEncode.DecimalToText(ABS(ServCrMemoLine.Quantity)),
+                AddElement(XMLCurrNode,'BaseQuantity','1',
                   DocNameSpace,XMLNewChild,Prefix);
                 XMLCurrNode := XMLNewChild;
                 AddAttribute(XMLNewChild,'unitCode',OIOUBLDocumentEncode.GetUoMCode(ServCrMemoLine."Unit of Measure Code"));

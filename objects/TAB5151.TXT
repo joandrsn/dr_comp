@@ -2,9 +2,9 @@ OBJECT Table 5151 Integration Record
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -17,7 +17,8 @@ OBJECT Table 5151 Integration Record
                                                               ENU=Table ID] }
     { 2   ;   ;Page ID             ;Integer       ;CaptionML=[DAN=Side-id;
                                                               ENU=Page ID] }
-    { 3   ;   ;Record ID           ;RecordID      ;CaptionML=[DAN=Record-id;
+    { 3   ;   ;Record ID           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Record-id;
                                                               ENU=Record ID] }
     { 5150;   ;Integration ID      ;GUID          ;CaptionML=[DAN=Integrations-id;
                                                               ENU=Integration ID] }

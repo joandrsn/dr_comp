@@ -2,9 +2,9 @@ OBJECT Codeunit 5807 Item Charge Assgnt. (Sales)
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-06-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.46290;
   }
   PROPERTIES
   {
@@ -176,9 +176,6 @@ OBJECT Codeunit 5807 Item Charge Assgnt. (Sales)
                   ROUND(
                     ItemChargeAssgntSales2."Qty. to Assign" / TotalQtyToAssign * TotalAmtToAssign,
                     Currency."Amount Rounding Precision");
-                ItemChargeAssgntSales2."Unit Cost" :=
-                  ROUND(ItemChargeAssgntSales2."Amount to Assign" / ItemChargeAssgntSales2."Qty. to Assign",
-                    Currency."Unit-Amount Rounding Precision");
                 TotalQtyToAssign -= ItemChargeAssgntSales2."Qty. to Assign";
                 TotalAmtToAssign -= ItemChargeAssgntSales2."Amount to Assign";
                 RemainingNumOfLines := RemainingNumOfLines - 1;
@@ -262,10 +259,6 @@ OBJECT Codeunit 5807 Item Charge Assgnt. (Sales)
                     ROUND(
                       ItemChargeAssgntSales2."Qty. to Assign" / TotalQtyToAssign * TotalAmtToAssign,
                       Currency."Amount Rounding Precision");
-                  IF ItemChargeAssgntSales2."Qty. to Assign" <> 0 THEN
-                    ItemChargeAssgntSales2."Unit Cost" :=
-                      ROUND(ItemChargeAssgntSales2."Amount to Assign" / ItemChargeAssgntSales2."Qty. to Assign",
-                        Currency."Unit-Amount Rounding Precision");
                   TotalQtyToAssign -= ItemChargeAssgntSales2."Qty. to Assign";
                   TotalAmtToAssign -= ItemChargeAssgntSales2."Amount to Assign";
                   TotalAppliesToDocLineAmount -= TempItemChargeAssgntSales."Applies-to Doc. Line Amount";
@@ -275,6 +268,118 @@ OBJECT Codeunit 5807 Item Charge Assgnt. (Sales)
           END;
           TempItemChargeAssgntSales.DELETEALL;
         END;
+      END;
+    END;
+
+    PROCEDURE SuggestAssignmentFromLine@11(VAR FromItemChargeAssignmentSales@1000 : Record 5809);
+    VAR
+      Currency@1014 : Record 4;
+      SalesHeader@1003 : Record 36;
+      ItemChargeAssignmentSales@1007 : Record 5809;
+      TempItemChargeAssgntSales@1008 : TEMPORARY Record 5809;
+      TotalAmountToAssign@1013 : Decimal;
+      TotalQtyToAssign@1012 : Decimal;
+      ItemChargeAssgntLineAmt@1001 : Decimal;
+      ItemChargeAssgntLineQty@1011 : Decimal;
+    BEGIN
+      WITH FromItemChargeAssignmentSales DO BEGIN
+        SalesHeader.GET("Document Type","Document No.");
+        IF NOT Currency.GET(SalesHeader."Currency Code") THEN
+          Currency.InitRoundingPrecision;
+
+        GetItemChargeAssgntLineAmounts(
+          "Document Type","Document No.","Document Line No.",
+          ItemChargeAssgntLineQty,ItemChargeAssgntLineAmt);
+
+        IF NOT ItemChargeAssignmentSales.GET("Document Type","Document No.","Document Line No.","Line No.") THEN
+          EXIT;
+
+        ItemChargeAssignmentSales."Qty. to Assign" := "Qty. to Assign";
+        ItemChargeAssignmentSales."Amount to Assign" := "Amount to Assign";
+        ItemChargeAssignmentSales.MODIFY;
+
+        ItemChargeAssignmentSales.SETRANGE("Document Type","Document Type");
+        ItemChargeAssignmentSales.SETRANGE("Document No.","Document No.");
+        ItemChargeAssignmentSales.SETRANGE("Document Line No.","Document Line No.");
+        ItemChargeAssignmentSales.CALCSUMS("Qty. to Assign","Amount to Assign");
+        TotalQtyToAssign := ItemChargeAssignmentSales."Qty. to Assign";
+        TotalAmountToAssign := ItemChargeAssignmentSales."Amount to Assign";
+
+        IF TotalAmountToAssign = ItemChargeAssgntLineAmt THEN
+          EXIT;
+
+        IF TotalQtyToAssign = ItemChargeAssgntLineQty THEN BEGIN
+          TotalAmountToAssign := ItemChargeAssgntLineAmt;
+          ItemChargeAssignmentSales.FINDSET;
+          REPEAT
+            IF NOT ItemChargeAssignmentSales.SalesLineInvoiced THEN BEGIN
+              TempItemChargeAssgntSales := ItemChargeAssignmentSales;
+              TempItemChargeAssgntSales.INSERT;
+            END;
+          UNTIL ItemChargeAssignmentSales.NEXT = 0;
+
+          IF TempItemChargeAssgntSales.FINDSET THEN BEGIN
+            REPEAT
+              ItemChargeAssignmentSales.GET(
+                TempItemChargeAssgntSales."Document Type",
+                TempItemChargeAssgntSales."Document No.",
+                TempItemChargeAssgntSales."Document Line No.",
+                TempItemChargeAssgntSales."Line No.");
+              IF TotalQtyToAssign <> 0 THEN BEGIN
+                ItemChargeAssignmentSales."Amount to Assign" :=
+                  ROUND(
+                    ItemChargeAssignmentSales."Qty. to Assign" / TotalQtyToAssign * TotalAmountToAssign,
+                    Currency."Amount Rounding Precision");
+                TotalQtyToAssign -= ItemChargeAssignmentSales."Qty. to Assign";
+                TotalAmountToAssign -= ItemChargeAssignmentSales."Amount to Assign";
+                ItemChargeAssignmentSales.MODIFY;
+              END;
+            UNTIL TempItemChargeAssgntSales.NEXT = 0;
+          END;
+        END;
+
+        ItemChargeAssignmentSales.GET("Document Type","Document No.","Document Line No.","Line No.");
+      END;
+
+      FromItemChargeAssignmentSales := ItemChargeAssignmentSales;
+    END;
+
+    LOCAL PROCEDURE GetItemChargeAssgntLineAmounts@14(DocumentType@1000 : Option;DocumentNo@1001 : Code[20];DocumentLineNo@1002 : Integer;VAR ItemChargeAssgntLineQty@1003 : Decimal;VAR ItemChargeAssgntLineAmt@1004 : Decimal);
+    VAR
+      SalesLine@1005 : Record 37;
+      SalesHeader@1006 : Record 36;
+      Currency@1007 : Record 4;
+    BEGIN
+      SalesHeader.GET(DocumentType,DocumentNo);
+      IF SalesHeader."Currency Code" = '' THEN
+        Currency.InitRoundingPrecision
+      ELSE
+        Currency.GET(SalesHeader."Currency Code");
+
+      WITH SalesLine DO BEGIN
+        GET(DocumentType,DocumentNo,DocumentLineNo);
+        TESTFIELD(Type,Type::"Charge (Item)");
+        TESTFIELD("No.");
+        TESTFIELD(Quantity);
+
+        IF ("Inv. Discount Amount" = 0) AND
+           ("Line Discount Amount" = 0) AND
+           (NOT SalesHeader."Prices Including VAT")
+        THEN
+          ItemChargeAssgntLineAmt := "Line Amount"
+        ELSE
+          IF SalesHeader."Prices Including VAT" THEN
+            ItemChargeAssgntLineAmt :=
+              ROUND(("Line Amount" - "Inv. Discount Amount") / (1 + "VAT %" / 100),
+                Currency."Amount Rounding Precision")
+          ELSE
+            ItemChargeAssgntLineAmt := "Line Amount" - "Inv. Discount Amount";
+
+        ItemChargeAssgntLineAmt :=
+          ROUND(
+            ItemChargeAssgntLineAmt * ("Qty. to Invoice" / Quantity),
+            Currency."Amount Rounding Precision");
+        ItemChargeAssgntLineQty := "Qty. to Invoice";
       END;
     END;
 

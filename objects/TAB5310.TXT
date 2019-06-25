@@ -2,9 +2,9 @@ OBJECT Table 5310 Outlook Synch. Setup Detail
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -26,6 +26,7 @@ OBJECT Table 5310 Outlook Synch. Setup Detail
   FIELDS
   {
     { 1   ;   ;User ID             ;Code50        ;TableRelation="Outlook Synch. User Setup"."User ID";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    NotBlank=Yes;

@@ -2,9 +2,9 @@ OBJECT Page 20 General Ledger Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -47,8 +47,14 @@ OBJECT Page 20 General Ledger Entries
                       CaptionML=[DAN=Finansdimensionsoversigt;
                                  ENU=G/L Dimension Overview];
                       Image=Dimensions;
-                      OnAction=BEGIN
-                                 PAGE.RUN(PAGE::"G/L Entries Dimension Overview",Rec);
+                      OnAction=VAR
+                                 GLEntriesDimensionOverview@1000 : Page 563;
+                               BEGIN
+                                 IF ISTEMPORARY THEN BEGIN
+                                   GLEntriesDimensionOverview.SetTempGLEntry(Rec);
+                                   GLEntriesDimensionOverview.RUN;
+                                 END ELSE
+                                   PAGE.RUN(PAGE::"G/L Entries Dimension Overview",Rec);
                                END;
                                 }
       { 65      ;2   ;Action    ;

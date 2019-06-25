@@ -2,9 +2,9 @@ OBJECT Table 847 Cash Flow Forecast Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -32,6 +32,7 @@ OBJECT Table 847 Cash Flow Forecast Entry
 
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 10  ;   ;Cash Flow Forecast No.;Code20      ;TableRelation="Cash Flow Forecast";

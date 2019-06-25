@@ -2,16 +2,16 @@ OBJECT Table 5343 CRM Opportunity
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=opportunity;
-    CaptionML=[DAN=Opportunity;
-               ENU=Opportunity];
+    CaptionML=[DAN=CRM Opportunity;
+               ENU=CRM Opportunity];
     Description=Potential revenue-generating event, or sale to an account, which needs to be tracked through a sales process to completion.;
   }
   FIELDS

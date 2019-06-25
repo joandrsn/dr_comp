@@ -2,9 +2,9 @@ OBJECT Codeunit 5981 Service-Post (Yes/No)
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -22,6 +22,7 @@ OBJECT Codeunit 5981 Service-Post (Yes/No)
       Selection@1005 : Integer;
       PreviewMode@1002 : Boolean;
       CancelErr@1006 : TextConst 'DAN=Visningen er annulleret.;ENU=The preview has been canceled.';
+      NothingToPostErr@1007 : TextConst 'DAN=Der er intet at bogføre.;ENU=There is nothing to post.';
 
     [TryFunction]
     LOCAL PROCEDURE Code@1(VAR PassedServLine@1003 : Record 5902);
@@ -30,6 +31,9 @@ OBJECT Codeunit 5981 Service-Post (Yes/No)
       Consume@1001 : Boolean;
       Invoice@1002 : Boolean;
     BEGIN
+      IF NOT ServiceHeader.FIND THEN
+        ERROR(NothingToPostErr);
+
       WITH ServiceHeader DO BEGIN
         CASE "Document Type" OF
           "Document Type"::Order:

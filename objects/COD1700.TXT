@@ -2,9 +2,9 @@ OBJECT Codeunit 1700 Exp. Launcher Pos. Pay
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -36,6 +36,7 @@ OBJECT Codeunit 1700 Exp. Launcher Pos. Pay
       HeaderArray@1002 : ARRAY [100] OF Integer;
       DetailArray@1001 : ARRAY [100] OF Integer;
       FooterArray@1000 : ARRAY [100] OF Integer;
+      FileIsNotEmpty@1017 : Boolean;
     BEGIN
       CheckLedgerEntry2.COPYFILTERS(CheckLedgerEntry);
       CheckLedgerEntry2.FINDFIRST;
@@ -46,10 +47,12 @@ OBJECT Codeunit 1700 Exp. Launcher Pos. Pay
       IF BankExportImportSetup.FINDFIRST THEN BEGIN
         DataExchDefCode := BankExportImportSetup."Data Exch. Def. Code";
         Filename := FileManagement.ServerTempFileName('txt');
+        FileIsNotEmpty := FALSE;
 
-        ProcessHeaders(BankAccount,DataExchDefCode,HeaderArray,Filename);
-        ProcessDetails(CheckLedgerEntry2,DataExchDefCode,DataExchEntryCodeDetail,DetailArray,Filename);
-        ProcessFooters(BankAccount,DataExchDefCode,FooterArray,Filename,DataExchEntryCodeDetail,DataExchEntryCodeFooter);
+        ProcessHeaders(BankAccount,DataExchDefCode,HeaderArray,Filename,FileIsNotEmpty);
+        ProcessDetails(CheckLedgerEntry2,DataExchDefCode,DataExchEntryCodeDetail,DetailArray,Filename,FileIsNotEmpty);
+        ProcessFooters(
+          BankAccount,DataExchDefCode,FooterArray,Filename,DataExchEntryCodeDetail,DataExchEntryCodeFooter,FileIsNotEmpty);
 
         ExpWritingPosPay.ExportPositivePay(DataExchEntryCodeDetail,DataExchEntryCodeFooter,Filename,FooterArray);
 
@@ -96,7 +99,7 @@ OBJECT Codeunit 1700 Exp. Launcher Pos. Pay
       CheckLedgerEntry2.MODIFYALL("Data Exch. Voided Entry No.",DataExchEntryCodeDetail,TRUE);
     END;
 
-    LOCAL PROCEDURE ProcessHeaders@3(VAR BankAccount@1006 : Record 270;DataExchDefCode@1001 : Code[20];VAR HeaderArray@1009 : ARRAY [100] OF Integer;Filename@1008 : Text);
+    LOCAL PROCEDURE ProcessHeaders@3(VAR BankAccount@1006 : Record 270;DataExchDefCode@1001 : Code[20];VAR HeaderArray@1009 : ARRAY [100] OF Integer;Filename@1008 : Text;VAR FileIsNotEmpty@1011 : Boolean);
     VAR
       DataExch@1002 : Record 1220;
       DataExchDef@1007 : Record 1222;
@@ -137,12 +140,13 @@ OBJECT Codeunit 1700 Exp. Launcher Pos. Pay
 
           DataExchDef.GET(DataExchDefCode);
           IF DataExchDef."Reading/Writing Codeunit" = CODEUNIT::"Exp. Writing Pos. Pay" THEN
-            PositivePayExportMgt.ExportDataExchToFlatFile(DataExch."Entry No.",Filename,DataExchLineDef."Line Type",HdrCount);
-        UNTIL  DataExchLineDef.NEXT = 0;
+            PositivePayExportMgt.ExportDataExchToFlatFile(
+              DataExch."Entry No.",Filename,DataExchLineDef."Line Type",HdrCount,FileIsNotEmpty);
+        UNTIL DataExchLineDef.NEXT = 0;
       END;
     END;
 
-    LOCAL PROCEDURE ProcessDetails@4(VAR CheckLedgerEntry@1012 : Record 272;DataExchDefCode@1008 : Code[20];VAR DataExchEntryCodeDetail@1009 : Integer;VAR DetailArray@1010 : ARRAY [100] OF Integer;Filename@1007 : Text);
+    LOCAL PROCEDURE ProcessDetails@4(VAR CheckLedgerEntry@1012 : Record 272;DataExchDefCode@1008 : Code[20];VAR DataExchEntryCodeDetail@1009 : Integer;VAR DetailArray@1010 : ARRAY [100] OF Integer;Filename@1007 : Text;VAR FileIsNotEmpty@1011 : Boolean);
     VAR
       DataExch@1006 : Record 1220;
       DataExchDef@1005 : Record 1222;
@@ -190,7 +194,8 @@ OBJECT Codeunit 1700 Exp. Launcher Pos. Pay
           DataExchDef.GET(DataExchDefCode);
           IF DataExchDef."Reading/Writing Codeunit" > 0 THEN
             IF DataExchDef."Reading/Writing Codeunit" = CODEUNIT::"Exp. Writing Pos. Pay" THEN
-              PositivePayExportMgt.ExportDataExchToFlatFile(DataExch."Entry No.",Filename,DataExchLineDef."Line Type",0)
+              PositivePayExportMgt.ExportDataExchToFlatFile(
+                DataExch."Entry No.",Filename,DataExchLineDef."Line Type",0,FileIsNotEmpty)
             ELSE
               CODEUNIT.RUN(DataExchDef."Reading/Writing Codeunit",DataExch);
 
@@ -201,7 +206,7 @@ OBJECT Codeunit 1700 Exp. Launcher Pos. Pay
       END;
     END;
 
-    LOCAL PROCEDURE ProcessFooters@5(VAR BankAccount@1002 : Record 270;DataExchDefCode@1001 : Code[20];VAR FooterArray@1012 : ARRAY [100] OF Integer;Filename@1000 : Text;DataExchEntryCodeDetail@1010 : Integer;VAR DataExchEntryCodeFooter@1011 : Integer);
+    LOCAL PROCEDURE ProcessFooters@5(VAR BankAccount@1002 : Record 270;DataExchDefCode@1001 : Code[20];VAR FooterArray@1012 : ARRAY [100] OF Integer;Filename@1000 : Text;DataExchEntryCodeDetail@1010 : Integer;VAR DataExchEntryCodeFooter@1011 : Integer;VAR FileIsNotEmpty@1004 : Boolean);
     VAR
       DataExch@1009 : Record 1220;
       DataExchDef@1008 : Record 1222;
@@ -242,7 +247,8 @@ OBJECT Codeunit 1700 Exp. Launcher Pos. Pay
 
           DataExchDef.GET(DataExchDefCode);
           IF DataExchDef."Reading/Writing Codeunit" = CODEUNIT::"Exp. Writing Pos. Pay" THEN
-            PositivePayExportMgt.ExportDataExchToFlatFile(DataExch."Entry No.",Filename,DataExchLineDef."Line Type",0);
+            PositivePayExportMgt.ExportDataExchToFlatFile(
+              DataExch."Entry No.",Filename,DataExchLineDef."Line Type",0,FileIsNotEmpty);
           DataExchEntryCodeFooter := DataExch."Entry No.";
         UNTIL DataExchLineDef.NEXT = 0;
       END;

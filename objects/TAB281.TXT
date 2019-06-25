@@ -2,9 +2,9 @@ OBJECT Table 281 Phys. Inventory Ledger Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -49,7 +49,7 @@ OBJECT Table 281 Phys. Inventory Ledger Entry
     { 17  ;   ;Amount              ;Decimal       ;CaptionML=[DAN=Beløb;
                                                               ENU=Amount];
                                                    AutoFormatType=1 }
-    { 22  ;   ;Salespers./Purch. Code;Code10      ;TableRelation=Salesperson/Purchaser;
+    { 22  ;   ;Salespers./Purch. Code;Code20      ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælger/indkøberkode;
                                                               ENU=Salespers./Purch. Code] }
     { 24  ;   ;User ID             ;Code50        ;TableRelation=User."User Name";
@@ -60,6 +60,7 @@ OBJECT Table 281 Phys. Inventory Ledger Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 25  ;   ;Source Code         ;Code10        ;TableRelation="Source Code";

@@ -2,9 +2,9 @@ OBJECT Report 202 Sales Document - Test
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -58,8 +58,6 @@ OBJECT Report 202 Sales Document - Test
                OnAfterGetRecord=VAR
                                   TableID@1000 : ARRAY [10] OF Integer;
                                   No@1001 : ARRAY [10] OF Code[20];
-                                  ShipQtyExist@1002 : Boolean;
-                                  InvtPeriodEndDate@1003 : Date;
                                 BEGIN
                                   DimSetEntry1.SETRANGE("Dimension Set ID","Dimension Set ID");
 
@@ -81,88 +79,12 @@ OBJECT Report 202 Sales Document - Test
                                   Ship := ShipReceiveOnNextPostReq;
                                   Receive := ShipReceiveOnNextPostReq;
 
-                                  IF "Sell-to Customer No." = '' THEN
-                                    AddError(STRSUBSTNO(Text006,FIELDCAPTION("Sell-to Customer No.")))
-                                  ELSE BEGIN
-                                    IF Cust.GET("Sell-to Customer No.") THEN BEGIN
-                                      IF (Cust.Blocked = Cust.Blocked::Ship) AND Ship THEN BEGIN
-                                        SalesLine2.SETRANGE("Document Type",SalesHeader."Document Type");
-                                        SalesLine2.SETRANGE("Document No.",SalesHeader."No.");
-                                        SalesLine2.SETFILTER("Qty. to Ship",'>0');
-                                        IF SalesLine2.FINDFIRST THEN
-                                          ShipQtyExist := TRUE;
-                                      END;
-                                      IF (Cust.Blocked = Cust.Blocked::All) OR
-                                         ((Cust.Blocked = Cust.Blocked::Invoice) AND
-                                          (NOT ("Document Type" IN
-                                                ["Document Type"::"Credit Memo","Document Type"::"Return Order"]))) OR
-                                         ShipQtyExist
-                                      THEN
-                                        AddError(
-                                          STRSUBSTNO(
-                                            Text045,
-                                            Cust.FIELDCAPTION(Blocked),Cust.Blocked,Cust.TABLECAPTION,"Sell-to Customer No."));
-                                    END ELSE
-                                      AddError(
-                                        STRSUBSTNO(
-                                          Text008,
-                                          Cust.TABLECAPTION,"Sell-to Customer No."));
-                                  END;
-
-                                  IF "Bill-to Customer No." = '' THEN
-                                    AddError(STRSUBSTNO(Text006,FIELDCAPTION("Bill-to Customer No.")))
-                                  ELSE BEGIN
-                                    IF "Bill-to Customer No." <> "Sell-to Customer No." THEN
-                                      IF Cust.GET("Bill-to Customer No.") THEN BEGIN
-                                        IF (Cust.Blocked = Cust.Blocked::All) OR
-                                           ((Cust.Blocked = Cust.Blocked::Invoice) AND
-                                            ("Document Type" IN
-                                             ["Document Type"::"Credit Memo","Document Type"::"Return Order"]))
-                                        THEN
-                                          AddError(
-                                            STRSUBSTNO(
-                                              Text045,
-                                              Cust.FIELDCAPTION(Blocked),FALSE,Cust.TABLECAPTION,"Bill-to Customer No."));
-                                      END ELSE
-                                        AddError(
-                                          STRSUBSTNO(
-                                            Text008,
-                                            Cust.TABLECAPTION,"Bill-to Customer No."));
-                                  END;
+                                  VerifySellToCust("Sales Header");
+                                  VerifyBillToCust("Sales Header");
 
                                   SalesSetup.GET;
 
-                                  IF "Posting Date" = 0D THEN
-                                    AddError(STRSUBSTNO(Text006,FIELDCAPTION("Posting Date")))
-                                  ELSE
-                                    IF "Posting Date" <> NORMALDATE("Posting Date") THEN
-                                      AddError(STRSUBSTNO(Text009,FIELDCAPTION("Posting Date")))
-                                    ELSE BEGIN
-                                      IF (AllowPostingFrom = 0D) AND (AllowPostingTo = 0D) THEN BEGIN
-                                        IF USERID <> '' THEN
-                                          IF UserSetup.GET(USERID) THEN BEGIN
-                                            AllowPostingFrom := UserSetup."Allow Posting From";
-                                            AllowPostingTo := UserSetup."Allow Posting To";
-                                          END;
-                                        IF (AllowPostingFrom = 0D) AND (AllowPostingTo = 0D) THEN BEGIN
-                                          AllowPostingFrom := GLSetup."Allow Posting From";
-                                          AllowPostingTo := GLSetup."Allow Posting To";
-                                        END;
-                                        IF AllowPostingTo = 0D THEN
-                                          AllowPostingTo := 31129999D;
-                                      END;
-                                      IF ("Posting Date" < AllowPostingFrom) OR ("Posting Date" > AllowPostingTo) THEN
-                                        AddError(
-                                          STRSUBSTNO(
-                                            Text010,FIELDCAPTION("Posting Date")))
-                                      ELSE
-                                        IF IsInvtPosting THEN BEGIN
-                                          InvtPeriodEndDate := "Posting Date";
-                                          IF NOT InvtPeriod.IsValidDate(InvtPeriodEndDate) THEN
-                                            AddError(
-                                              STRSUBSTNO(Text010,FORMAT("Posting Date")))
-                                        END;
-                                    END;
+                                  VerifyPostingDate("Sales Header");
 
                                   IF "Document Date" <> 0D THEN
                                     IF "Document Date" <> NORMALDATE("Document Date") THEN
@@ -1024,112 +946,7 @@ OBJECT Report 202 Sales Document - Test
                                       IF "Prepmt. Line Amount" > "Prepmt. Amt. Inv." THEN
                                         AddError(STRSUBSTNO(Text046,FIELDCAPTION("Prepmt. Line Amount")));
 
-                                    CASE Type OF
-                                      Type::"G/L Account":
-                                        BEGIN
-                                          IF ("No." = '') AND (Amount = 0) THEN
-                                            EXIT;
-
-                                          IF "No." <> '' THEN
-                                            IF GLAcc.GET("No.") THEN BEGIN
-                                              IF GLAcc.Blocked THEN
-                                                AddError(
-                                                  STRSUBSTNO(
-                                                    Text007,
-                                                    GLAcc.FIELDCAPTION(Blocked),FALSE,GLAcc.TABLECAPTION,"No."));
-                                              IF NOT GLAcc."Direct Posting" AND ("Line No." <= OrigMaxLineNo) THEN
-                                                AddError(
-                                                  STRSUBSTNO(
-                                                    Text007,
-                                                    GLAcc.FIELDCAPTION("Direct Posting"),TRUE,GLAcc.TABLECAPTION,"No."));
-                                            END ELSE
-                                              AddError(
-                                                STRSUBSTNO(
-                                                  Text008,
-                                                  GLAcc.TABLECAPTION,"No."));
-                                        END;
-                                      Type::Item:
-                                        BEGIN
-                                          IF ("No." = '') AND (Quantity = 0) THEN
-                                            EXIT;
-
-                                          IF "No." <> '' THEN
-                                            IF Item.GET("No.") THEN BEGIN
-                                              IF Item.Blocked THEN
-                                                AddError(
-                                                  STRSUBSTNO(
-                                                    Text007,
-                                                    Item.FIELDCAPTION(Blocked),FALSE,Item.TABLECAPTION,"No."));
-                                              IF Item.Reserve = Item.Reserve::Always THEN BEGIN
-                                                CALCFIELDS("Reserved Quantity");
-                                                IF "Document Type" IN ["Document Type"::"Return Order","Document Type"::"Credit Memo"] THEN BEGIN
-                                                  IF (SignedXX(Quantity) < 0) AND (ABS("Reserved Quantity") < ABS("Return Qty. to Receive")) THEN
-                                                    AddError(
-                                                      STRSUBSTNO(
-                                                        Text015,
-                                                        FIELDCAPTION("Reserved Quantity"),SignedXX("Return Qty. to Receive")));
-                                                END ELSE
-                                                  IF (SignedXX(Quantity) < 0) AND (ABS("Reserved Quantity") < ABS("Qty. to Ship")) THEN
-                                                    AddError(
-                                                      STRSUBSTNO(
-                                                        Text015,
-                                                        FIELDCAPTION("Reserved Quantity"),SignedXX("Qty. to Ship")));
-                                              END
-                                            END ELSE
-                                              AddError(
-                                                STRSUBSTNO(
-                                                  Text008,
-                                                  Item.TABLECAPTION,"No."));
-                                        END;
-                                      Type::Resource:
-                                        BEGIN
-                                          IF ("No." = '') AND (Quantity = 0) THEN
-                                            EXIT;
-
-                                          IF "No." <> '' THEN
-                                            IF Res.GET("No.") THEN BEGIN
-                                              IF Res.Blocked THEN
-                                                AddError(
-                                                  STRSUBSTNO(
-                                                    Text007,
-                                                    Res.FIELDCAPTION(Blocked),FALSE,Res.TABLECAPTION,"No."));
-                                            END ELSE
-                                              AddError(
-                                                STRSUBSTNO(
-                                                  Text008,
-                                                  Res.TABLECAPTION,"No."));
-                                        END;
-                                      Type::"Fixed Asset":
-                                        BEGIN
-                                          IF ("No." = '') AND (Quantity = 0) THEN
-                                            EXIT;
-                                          IF "No." <> '' THEN
-                                            IF FA.GET("No.") THEN BEGIN
-                                              IF FA.Blocked THEN
-                                                AddError(
-                                                  STRSUBSTNO(
-                                                    Text007,
-                                                    FA.FIELDCAPTION(Blocked),FALSE,FA.TABLECAPTION,"No."));
-                                              IF FA.Inactive THEN
-                                                AddError(
-                                                  STRSUBSTNO(
-                                                    Text007,
-                                                    FA.FIELDCAPTION(Inactive),FALSE,FA.TABLECAPTION,"No."));
-                                              IF "Depreciation Book Code" = '' THEN
-                                                AddError(STRSUBSTNO(Text006,FIELDCAPTION("Depreciation Book Code")))
-                                              ELSE
-                                                IF NOT FADeprBook.GET("No.","Depreciation Book Code") THEN
-                                                  AddError(
-                                                    STRSUBSTNO(
-                                                      Text017,
-                                                      FADeprBook.TABLECAPTION,"No.","Depreciation Book Code"));
-                                            END ELSE
-                                              AddError(
-                                                STRSUBSTNO(
-                                                  Text008,
-                                                  FA.TABLECAPTION,"No."));
-                                        END;
-                                    END;
+                                    CheckType("Sales Line");
 
                                     IF "Line No." > OrigMaxLineNo THEN BEGIN
                                       AddDimToTempLine("Sales Line");
@@ -1554,7 +1371,9 @@ OBJECT Report 202 Sales Document - Test
     { 2038;3   ;DataItem;VATCounterLCY       ;
                DataItemTable=Table2000000026;
                DataItemTableView=SORTING(Number);
-               OnPreDataItem=BEGIN
+               OnPreDataItem=VAR
+                               CurrExchRate@1000 : Record 330;
+                             BEGIN
                                IF (NOT GLSetup."Print VAT specification in LCY") OR
                                   ("Sales Header"."Currency Code" = '')
                                THEN
@@ -1569,6 +1388,7 @@ OBJECT Report 202 Sales Document - Test
                                  VALSpecLCYHeader := Text050 + FORMAT(GLSetup."LCY Code");
 
                                CurrExchRate.FindCurrency("Sales Header"."Posting Date","Sales Header"."Currency Code",1);
+                               CurrExchRate."Relational Exch. Rate Amount" := CurrExchRate."Exchange Rate Amount" / "Sales Header"."Currency Factor";
                                VALExchRate := STRSUBSTNO(Text052,CurrExchRate."Relational Exch. Rate Amount",CurrExchRate."Exchange Rate Amount");
                              END;
 
@@ -1879,7 +1699,6 @@ OBJECT Report 202 Sales Document - Test
       TempDimSetEntry@1056 : TEMPORARY Record 480;
       FA@1057 : Record 5600;
       FADeprBook@1058 : Record 5612;
-      CurrExchRate@1106 : Record 330;
       InvtPeriod@1110 : Record 5814;
       FormatAddr@1059 : Codeunit 365;
       DimMgt@1060 : Codeunit 408;
@@ -2232,6 +2051,222 @@ OBJECT Report 202 Sales Document - Test
           DimMgt.GetDefaultDimID(TableID,No,SourceCodeSetup.Sales,"Shortcut Dimension 1 Code","Shortcut Dimension 2 Code",
             "Dimension Set ID",DATABASE::Customer);
       END;
+    END;
+
+    LOCAL PROCEDURE CheckType@5(SalesLine2@1000 : Record 37);
+    BEGIN
+      WITH SalesLine2 DO
+        CASE Type OF
+          Type::"G/L Account":
+            BEGIN
+              IF ("No." = '') AND (Amount = 0) THEN
+                EXIT;
+
+              IF "No." <> '' THEN
+                IF GLAcc.GET("No.") THEN BEGIN
+                  IF GLAcc.Blocked THEN
+                    AddError(
+                      STRSUBSTNO(
+                        Text007,
+                        GLAcc.FIELDCAPTION(Blocked),FALSE,GLAcc.TABLECAPTION,"No."));
+                  IF NOT GLAcc."Direct Posting" AND ("Line No." <= OrigMaxLineNo) THEN
+                    AddError(
+                      STRSUBSTNO(
+                        Text007,
+                        GLAcc.FIELDCAPTION("Direct Posting"),TRUE,GLAcc.TABLECAPTION,"No."));
+                END ELSE
+                  AddError(
+                    STRSUBSTNO(
+                      Text008,
+                      GLAcc.TABLECAPTION,"No."));
+            END;
+          Type::Item:
+            BEGIN
+              IF ("No." = '') AND (Quantity = 0) THEN
+                EXIT;
+
+              IF "No." <> '' THEN
+                IF Item.GET("No.") THEN BEGIN
+                  IF Item.Blocked THEN
+                    AddError(
+                      STRSUBSTNO(
+                        Text007,
+                        Item.FIELDCAPTION(Blocked),FALSE,Item.TABLECAPTION,"No."));
+                  IF Item.Reserve = Item.Reserve::Always THEN BEGIN
+                    CALCFIELDS("Reserved Quantity");
+                    IF "Document Type" IN ["Document Type"::"Return Order","Document Type"::"Credit Memo"] THEN BEGIN
+                      IF (SignedXX(Quantity) < 0) AND (ABS("Reserved Quantity") < ABS("Return Qty. to Receive")) THEN
+                        AddError(
+                          STRSUBSTNO(
+                            Text015,
+                            FIELDCAPTION("Reserved Quantity"),SignedXX("Return Qty. to Receive")));
+                    END ELSE
+                      IF (SignedXX(Quantity) < 0) AND (ABS("Reserved Quantity") < ABS("Qty. to Ship")) THEN
+                        AddError(
+                          STRSUBSTNO(
+                            Text015,
+                            FIELDCAPTION("Reserved Quantity"),SignedXX("Qty. to Ship")));
+                  END
+                END ELSE
+                  AddError(
+                    STRSUBSTNO(
+                      Text008,
+                      Item.TABLECAPTION,"No."));
+            END;
+          Type::Resource:
+            BEGIN
+              IF ("No." = '') AND (Quantity = 0) THEN
+                EXIT;
+
+              IF Res.GET("No.") THEN BEGIN
+                IF Res."Privacy Blocked" THEN
+                  AddError(
+                    STRSUBSTNO(
+                      Text007,
+                      Res.FIELDCAPTION("Privacy Blocked"),FALSE,Res.TABLECAPTION,"No."));
+                IF Res.Blocked THEN
+                  AddError(
+                    STRSUBSTNO(
+                      Text007,
+                      Res.FIELDCAPTION(Blocked),FALSE,Res.TABLECAPTION,"No."));
+              END ELSE
+                AddError(
+                  STRSUBSTNO(
+                    Text008,
+                    Res.TABLECAPTION,"No."));
+            END;
+          Type::"Fixed Asset":
+            BEGIN
+              IF ("No." = '') AND (Quantity = 0) THEN
+                EXIT;
+              IF "No." <> '' THEN
+                IF FA.GET("No.") THEN BEGIN
+                  IF FA.Blocked THEN
+                    AddError(
+                      STRSUBSTNO(
+                        Text007,
+                        FA.FIELDCAPTION(Blocked),FALSE,FA.TABLECAPTION,"No."));
+                  IF FA.Inactive THEN
+                    AddError(
+                      STRSUBSTNO(
+                        Text007,
+                        FA.FIELDCAPTION(Inactive),FALSE,FA.TABLECAPTION,"No."));
+                  IF "Depreciation Book Code" = '' THEN
+                    AddError(STRSUBSTNO(Text006,FIELDCAPTION("Depreciation Book Code")))
+                  ELSE
+                    IF NOT FADeprBook.GET("No.","Depreciation Book Code") THEN
+                      AddError(
+                        STRSUBSTNO(
+                          Text017,
+                          FADeprBook.TABLECAPTION,"No.","Depreciation Book Code"));
+                END ELSE
+                  AddError(
+                    STRSUBSTNO(
+                      Text008,
+                      FA.TABLECAPTION,"No."));
+            END;
+        END;
+    END;
+
+    LOCAL PROCEDURE VerifySellToCust@50(SalesHeader@1000 : Record 36);
+    VAR
+      ShipQtyExist@1001 : Boolean;
+    BEGIN
+      WITH SalesHeader DO BEGIN
+        IF "Sell-to Customer No." = '' THEN
+          AddError(STRSUBSTNO(Text006,FIELDCAPTION("Sell-to Customer No.")))
+        ELSE
+          IF Cust.GET("Sell-to Customer No.") THEN BEGIN
+            IF (Cust.Blocked = Cust.Blocked::Ship) AND Ship THEN BEGIN
+              SalesLine2.SETRANGE("Document Type","Document Type");
+              SalesLine2.SETRANGE("Document No.","No.");
+              SalesLine2.SETFILTER("Qty. to Ship",'>0');
+              IF SalesLine2.FINDFIRST THEN
+                ShipQtyExist := TRUE;
+            END;
+            IF Cust."Privacy Blocked" THEN
+              AddError(Cust.GetPrivacyBlockedGenericErrorText(Cust));
+            IF (Cust.Blocked = Cust.Blocked::All) OR
+               ((Cust.Blocked = Cust.Blocked::Invoice) AND
+                (NOT ("Document Type" IN
+                      ["Document Type"::"Credit Memo","Document Type"::"Return Order"]))) OR
+               ShipQtyExist
+            THEN
+              AddError(
+                STRSUBSTNO(
+                  Text045,
+                  Cust.FIELDCAPTION(Blocked),Cust.Blocked,Cust.TABLECAPTION,"Sell-to Customer No."))
+          END ELSE
+            AddError(
+              STRSUBSTNO(
+                Text008,
+                Cust.TABLECAPTION,"Sell-to Customer No."));
+      END;
+    END;
+
+    LOCAL PROCEDURE VerifyBillToCust@51(SalesHeader@1000 : Record 36);
+    BEGIN
+      WITH SalesHeader DO
+        IF "Bill-to Customer No." = '' THEN
+          AddError(STRSUBSTNO(Text006,FIELDCAPTION("Bill-to Customer No.")))
+        ELSE BEGIN
+          IF "Bill-to Customer No." <> "Sell-to Customer No." THEN
+            IF Cust.GET("Bill-to Customer No.") THEN BEGIN
+              IF Cust."Privacy Blocked" THEN
+                AddError(Cust.GetPrivacyBlockedGenericErrorText(Cust));
+              IF (Cust.Blocked = Cust.Blocked::All) OR
+                 ((Cust.Blocked = Cust.Blocked::Invoice) AND
+                  ("Document Type" IN
+                   ["Document Type"::"Credit Memo","Document Type"::"Return Order"]))
+              THEN
+                AddError(
+                  STRSUBSTNO(
+                    Text045,
+                    Cust.FIELDCAPTION(Blocked),FALSE,Cust.TABLECAPTION,"Bill-to Customer No."));
+            END ELSE
+              AddError(
+                STRSUBSTNO(
+                  Text008,
+                  Cust.TABLECAPTION,"Bill-to Customer No."));
+        END;
+    END;
+
+    LOCAL PROCEDURE VerifyPostingDate@52(SalesHeader@1000 : Record 36);
+    VAR
+      InvtPeriodEndDate@1001 : Date;
+    BEGIN
+      WITH SalesHeader DO
+        IF "Posting Date" = 0D THEN
+          AddError(STRSUBSTNO(Text006,FIELDCAPTION("Posting Date")))
+        ELSE
+          IF "Posting Date" <> NORMALDATE("Posting Date") THEN
+            AddError(STRSUBSTNO(Text009,FIELDCAPTION("Posting Date")))
+          ELSE BEGIN
+            IF (AllowPostingFrom = 0D) AND (AllowPostingTo = 0D) THEN BEGIN
+              IF USERID <> '' THEN
+                IF UserSetup.GET(USERID) THEN BEGIN
+                  AllowPostingFrom := UserSetup."Allow Posting From";
+                  AllowPostingTo := UserSetup."Allow Posting To";
+                END;
+              IF (AllowPostingFrom = 0D) AND (AllowPostingTo = 0D) THEN BEGIN
+                AllowPostingFrom := GLSetup."Allow Posting From";
+                AllowPostingTo := GLSetup."Allow Posting To";
+              END;
+              IF AllowPostingTo = 0D THEN
+                AllowPostingTo := DMY2DATE(31,12,9999);
+            END;
+            IF ("Posting Date" < AllowPostingFrom) OR ("Posting Date" > AllowPostingTo) THEN
+              AddError(
+                STRSUBSTNO(
+                  Text010,FIELDCAPTION("Posting Date")))
+            ELSE
+              IF IsInvtPosting THEN BEGIN
+                InvtPeriodEndDate := "Posting Date";
+                IF NOT InvtPeriod.IsValidDate(InvtPeriodEndDate) THEN
+                  AddError(
+                    STRSUBSTNO(Text010,FORMAT("Posting Date")))
+              END;
+          END;
     END;
 
     PROCEDURE InitializeRequest@4(NewShipReceiveOnNextPostReq@1000 : Boolean;NewInvOnNextPostReq@1001 : Boolean;NewShowDim@1002 : Boolean;NewShowCostAssignment@1003 : Boolean);
@@ -18953,6 +18988,7 @@ OBJECT Report 202 Sales Document - Test
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

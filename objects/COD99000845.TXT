@@ -2,9 +2,9 @@ OBJECT Codeunit 99000845 Reservation Management
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=29-06-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.48822;
   }
   PROPERTIES
   {
@@ -3705,11 +3705,12 @@ OBJECT Codeunit 99000845 Reservation Management
     LOCAL PROCEDURE CalcReservedQtyOnPick@63(VAR AvailQty@1004 : Decimal;VAR AllocQty@1001 : Decimal);
     VAR
       WhseActivLine@1003 : Record 5767;
-      WhseActivLine2@1000 : Record 5767;
+      TempWhseActivLine2@1000 : TEMPORARY Record 5767;
       WhseAvailMgt@1009 : Codeunit 7314;
       PickQty@1007 : Decimal;
       QtyOnOutboundBins@1002 : Decimal;
       QtyOnInvtMovement@1005 : Decimal;
+      QtyOnAssemblyBin@1006 : Decimal;
     BEGIN
       WITH CalcReservEntry DO BEGIN
         GetItemSetup(CalcReservEntry);
@@ -3749,17 +3750,20 @@ OBJECT Codeunit 99000845 Reservation Management
 
           QtyReservedOnPickShip :=
             WhseAvailMgt.CalcReservQtyOnPicksShips(
-              "Location Code","Item No.","Variant Code",WhseActivLine2);
+              "Location Code","Item No.","Variant Code",TempWhseActivLine2);
 
           QtyOnInvtMovement := CalcQtyOnInvtMovement(WhseActivLine);
+
+          QtyOnAssemblyBin :=
+            WhseAvailMgt.CalcQtyOnAssemblyBin("Location Code","Item No.","Variant Code","Lot No.","Serial No.");
         END;
 
         AllocQty :=
-          WhseActivLine."Qty. Outstanding (Base)" + QtyOnInvtMovement + QtyOnOutboundBins;
+          WhseActivLine."Qty. Outstanding (Base)" + QtyOnInvtMovement + QtyOnOutboundBins + QtyOnAssemblyBin;
         PickQty := WhseActivLine."Qty. Outstanding (Base)" + QtyOnInvtMovement;
 
         AvailQty :=
-          Item.Inventory - PickQty - QtyOnOutboundBins -
+          Item.Inventory - PickQty - QtyOnOutboundBins - QtyOnAssemblyBin -
           Item."Reserved Qty. on Inventory" + QtyReservedOnPickShip;
       END;
     END;

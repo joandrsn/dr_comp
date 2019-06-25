@@ -2,9 +2,9 @@ OBJECT Table 955 Time Sheet Line Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -54,6 +54,7 @@ OBJECT Table 955 Time Sheet Line Archive
                                                    CaptionML=[DAN=Arbejdstypekode;
                                                               ENU=Work Type Code] }
     { 12  ;   ;Approver ID         ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Godkender-id;
                                                               ENU=Approver ID];
                                                    Editable=No }
@@ -83,6 +84,7 @@ OBJECT Table 955 Time Sheet Line Archive
                                                    OptionString=Open,Submitted,Rejected,Approved;
                                                    Editable=No }
     { 21  ;   ;Approved By         ;Code50        ;TableRelation="User Setup";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Godkendt af;
                                                               ENU=Approved By];
                                                    Editable=No }

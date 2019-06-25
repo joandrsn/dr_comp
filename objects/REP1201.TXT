@@ -2,9 +2,9 @@ OBJECT Report 1201 Post Direct Debit Collection
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=25-11-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.47444;
   }
   PROPERTIES
   {
@@ -228,6 +228,7 @@ OBJECT Report 1201 Post Direct Debit Collection
     LOCAL PROCEDURE CreateJnlLine@3(VAR DirectDebitCollectionEntry@1000 : Record 1208) : Boolean;
     VAR
       CustLedgEntry@1001 : Record 21;
+      GenJournalTemplate@1004 : Record 80;
       NoSeriesMgt@1003 : Codeunit 396;
       DimensionSetIDArr@1002 : ARRAY [10] OF Integer;
     BEGIN
@@ -241,7 +242,14 @@ OBJECT Report 1201 Post Direct Debit Collection
       GenJnlLine."Journal Batch Name" := GeneralJournalBatchName;
       GenJnlLine."Line No." := LastLineNo;
       IF GenJnlBatch."No. Series" <> '' THEN
-        GenJnlLine."Document No." := NoSeriesMgt.GetNextNo(GenJnlBatch."No. Series",GenJnlLine."Posting Date",TRUE);
+        IF CreateJnlOnly THEN
+          GenJnlLine.SetUpNewLine(GenJnlLine,GenJnlLine."Balance (LCY)",TRUE)
+        ELSE BEGIN
+          GenJnlLine."Document No." := NoSeriesMgt.GetNextNo(GenJnlBatch."No. Series",GenJnlLine."Posting Date",TRUE);
+          GenJournalTemplate.GET(GeneralJournalTemplateName);
+          GenJnlLine."Source Code" := GenJournalTemplate."Source Code";
+        END;
+
       GenJnlLine.VALIDATE("Document Type",GenJnlLine."Document Type"::Payment);
       GenJnlLine.VALIDATE("Account Type",GenJnlLine."Account Type"::Customer);
       GenJnlLine.VALIDATE("Account No.",DirectDebitCollectionEntry."Customer No.");

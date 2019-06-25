@@ -2,9 +2,9 @@ OBJECT Table 9050 Warehouse Basic Cue
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -15,15 +15,15 @@ OBJECT Table 9050 Warehouse Basic Cue
   {
     { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[DAN=Primærnøgle;
                                                               ENU=Primary Key] }
-    { 2   ;   ;Released Sales Orders - Today;Integer;
+    { 2   ;   ;Rlsd. Sales Orders Until Today;Integer;
                                                    FieldClass=FlowField;
                                                    CalcFormula=Count("Sales Header" WHERE (Document Type=FILTER(Order),
                                                                                            Status=FILTER(Released),
                                                                                            Shipment Date=FIELD(Date Filter),
                                                                                            Location Code=FIELD(Location Filter)));
                                                    AccessByPermission=TableData 110=R;
-                                                   CaptionML=[DAN=Frigivne salgsordrer - i dag;
-                                                              ENU=Released Sales Orders - Today];
+                                                   CaptionML=[DAN=Frigivne salgsordrer indtil i dag;
+                                                              ENU=Rlsd. Sales Orders Until Today];
                                                    Editable=No }
     { 3   ;   ;Posted Sales Shipments - Today;Integer;
                                                    FieldClass=FlowField;
@@ -32,15 +32,15 @@ OBJECT Table 9050 Warehouse Basic Cue
                                                    CaptionML=[DAN=Bogførte salgsleverancer - i dag;
                                                               ENU=Posted Sales Shipments - Today];
                                                    Editable=No }
-    { 4   ;   ;Expected Purch. Orders - Today;Integer;
+    { 4   ;   ;Exp. Purch. Orders Until Today;Integer;
                                                    FieldClass=FlowField;
                                                    CalcFormula=Count("Purchase Header" WHERE (Document Type=FILTER(Order),
                                                                                               Status=FILTER(Released),
                                                                                               Expected Receipt Date=FIELD(Date Filter),
                                                                                               Location Code=FIELD(Location Filter)));
                                                    AccessByPermission=TableData 120=R;
-                                                   CaptionML=[DAN=Forventede købsordrer - i dag;
-                                                              ENU=Expected Purch. Orders - Today];
+                                                   CaptionML=[DAN=Forventede købsordrer indtil i dag;
+                                                              ENU=Exp. Purch. Orders Until Today];
                                                    Editable=No }
     { 5   ;   ;Posted Purch. Receipts - Today;Integer;
                                                    FieldClass=FlowField;
@@ -49,19 +49,19 @@ OBJECT Table 9050 Warehouse Basic Cue
                                                    CaptionML=[DAN=Bogførte købsmodtagelser - i dag;
                                                               ENU=Posted Purch. Receipts - Today];
                                                    Editable=No }
-    { 6   ;   ;Inventory Picks - Today;Integer    ;FieldClass=FlowField;
+    { 6   ;   ;Invt. Picks Until Today;Integer    ;FieldClass=FlowField;
                                                    CalcFormula=Count("Warehouse Activity Header" WHERE (Type=FILTER(Invt. Pick),
                                                                                                         Shipment Date=FIELD(Date Filter),
                                                                                                         Location Code=FIELD(Location Filter)));
-                                                   CaptionML=[DAN=Pluk (lager) - i dag;
-                                                              ENU=Inventory Picks - Today];
+                                                   CaptionML=[DAN=Pluk (lager) indtil i dag;
+                                                              ENU=Invt. Picks Until Today];
                                                    Editable=No }
-    { 7   ;   ;Inventory Put-aways - Today;Integer;FieldClass=FlowField;
+    { 7   ;   ;Invt. Put-aways Until Today;Integer;FieldClass=FlowField;
                                                    CalcFormula=Count("Warehouse Activity Header" WHERE (Type=FILTER(Invt. Put-away),
                                                                                                         Shipment Date=FIELD(Date Filter),
                                                                                                         Location Code=FIELD(Location Filter)));
-                                                   CaptionML=[DAN=Læg-på-lager - i dag;
-                                                              ENU=Inventory Put-aways - Today];
+                                                   CaptionML=[DAN=Læg-på-lager indtil i dag;
+                                                              ENU=Invt. Put-aways Until Today];
                                                    Editable=No }
     { 20  ;   ;Date Filter         ;Date          ;FieldClass=FlowFilter;
                                                    CaptionML=[DAN=Datofilter;

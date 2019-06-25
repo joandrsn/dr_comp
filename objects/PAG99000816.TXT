@@ -2,9 +2,9 @@ OBJECT Page 99000816 Production Order Statistics
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -164,6 +164,7 @@ OBJECT Page 99000816 Production Order Statistics
                 Editable=FALSE }
 
     { 44  ;4   ;Field     ;
+                Name=MfgOverhead_ExpectedCost;
                 SourceExpr=ExpCost[5];
                 Editable=FALSE }
 

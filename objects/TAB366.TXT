@@ -2,9 +2,9 @@ OBJECT Table 366 Analysis View Budget Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -20,7 +20,7 @@ OBJECT Table 366 Analysis View Budget Entry
     { 2   ;   ;Budget Name         ;Code10        ;TableRelation="G/L Budget Name";
                                                    CaptionML=[DAN=Budgetnavn;
                                                               ENU=Budget Name] }
-    { 3   ;   ;Business Unit Code  ;Code10        ;TableRelation="Business Unit";
+    { 3   ;   ;Business Unit Code  ;Code20        ;TableRelation="Business Unit";
                                                    CaptionML=[DAN=Konc.virksomhedskode;
                                                               ENU=Business Unit Code] }
     { 4   ;   ;G/L Account No.     ;Code20        ;TableRelation="G/L Account";

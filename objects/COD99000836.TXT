@@ -2,9 +2,9 @@ OBJECT Codeunit 99000836 Transfer Line-Reserve
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49968;
   }
   PROPERTIES
   {
@@ -73,6 +73,7 @@ OBJECT Codeunit 99000836 Transfer Line-Reserve
                 Text001,
                 ABS(TransLine."Outstanding Qty. (Base)") - ABS(TransLine."Reserved Qty. Inbnd. (Base)"));
             ExpectedReceiptDate := TransLine."Receipt Date";
+            ShipmentDate := GetInboundReservEntryShipmentDate;
           END;
       END;
       CreateReservEntry.CreateReservEntryFor(
@@ -361,6 +362,70 @@ OBJECT Codeunit 99000836 Transfer Line-Reserve
         UNTIL (ReservEngineMgt.NEXTRecord(OldReservEntry) = 0) OR (TransferQty = 0);
     END;
 
+    PROCEDURE TransferWhseShipmentToItemJnlLine@10(VAR TransLine@1000 : Record 5741;VAR ItemJnlLine@1001 : Record 83;VAR WhseShptHeader@1010 : Record 7320;TransferQty@1002 : Decimal);
+    VAR
+      OldReservEntry@1004 : Record 337;
+      WhseShptLine@1009 : Record 7321;
+      WarehouseEntry@1003 : Record 7312;
+      ItemTrackingMgt@1005 : Codeunit 6500;
+      WhseSNRequired@1006 : Boolean;
+      WhseLNRequired@1007 : Boolean;
+      QtyToHandleBase@1011 : Decimal;
+    BEGIN
+      IF TransferQty = 0 THEN
+        EXIT;
+      IF NOT FindReservEntry(TransLine,OldReservEntry,0) THEN
+        EXIT;
+
+      ItemJnlLine.TESTFIELD("Location Code",TransLine."Transfer-from Code");
+      ItemJnlLine.TESTFIELD("Item No.",TransLine."Item No.");
+      ItemJnlLine.TESTFIELD("Variant Code",TransLine."Variant Code");
+
+      WhseShptLine.GetWhseShptLine(
+        WhseShptLine,
+        WhseShptHeader."No.",DATABASE::"Transfer Line",0,TransLine."Document No.",TransLine."Line No.");
+
+      OldReservEntry.Lock;
+      IF ReservEngineMgt.InitRecordSet(OldReservEntry) THEN
+        REPEAT
+          OldReservEntry.TESTFIELD("Item No.",TransLine."Item No.");
+          OldReservEntry.TESTFIELD("Variant Code",TransLine."Variant Code");
+          OldReservEntry.TESTFIELD("Location Code",TransLine."Transfer-from Code");
+          ItemTrackingMgt.CheckWhseItemTrkgSetup(TransLine."Item No.",WhseSNRequired,WhseLNRequired,FALSE);
+
+          WarehouseEntry.SETRANGE("Source Type",OldReservEntry."Source Type");
+          WarehouseEntry.SETRANGE("Source Subtype",OldReservEntry."Source Subtype");
+          WarehouseEntry.SETRANGE("Source No.",OldReservEntry."Source ID");
+          WarehouseEntry.SETRANGE("Source Line No.",OldReservEntry."Source Ref. No.");
+          WarehouseEntry.SETRANGE("Whse. Document Type",WarehouseEntry."Whse. Document Type"::Shipment);
+          WarehouseEntry.SETRANGE("Whse. Document No.",WhseShptLine."No.");
+          WarehouseEntry.SETRANGE("Whse. Document Line No.",WhseShptLine."Line No.");
+          WarehouseEntry.SETRANGE("Bin Code",WhseShptHeader."Bin Code");
+          IF WhseSNRequired THEN
+            WarehouseEntry.SETRANGE("Serial No.",OldReservEntry."Serial No.");
+          IF WhseLNRequired THEN
+            WarehouseEntry.SETRANGE("Lot No.",OldReservEntry."Lot No.");
+          WarehouseEntry.CALCSUMS("Qty. (Base)");
+          QtyToHandleBase := -WarehouseEntry."Qty. (Base)";
+          IF ABS(QtyToHandleBase) > ABS(OldReservEntry."Qty. to Handle (Base)") THEN
+            QtyToHandleBase := OldReservEntry."Qty. to Handle (Base)";
+
+          IF QtyToHandleBase < 0 THEN BEGIN
+            OldReservEntry."New Serial No." := OldReservEntry."Serial No.";
+            OldReservEntry."New Lot No." := OldReservEntry."Lot No.";
+            OldReservEntry."Qty. to Handle (Base)" := QtyToHandleBase;
+            OldReservEntry."Qty. to Invoice (Base)" := QtyToHandleBase;
+
+            TransferQty :=
+              CreateReservEntry.TransferReservEntry(
+                DATABASE::"Item Journal Line",
+                ItemJnlLine."Entry Type",ItemJnlLine."Journal Template Name",
+                ItemJnlLine."Journal Batch Name",0,ItemJnlLine."Line No.",
+                ItemJnlLine."Qty. per Unit of Measure",OldReservEntry,TransferQty);
+          END;
+        UNTIL (ReservEngineMgt.NEXTRecord(OldReservEntry) = 0) OR (TransferQty = 0);
+    END;
+
     PROCEDURE TransferTransferToTransfer@31(VAR OldTransLine@1000 : Record 5741;VAR NewTransLine@1001 : Record 5741;TransferQty@1002 : Decimal;Direction@1003 : 'Outbound,Inbound';VAR TrackingSpecification@1007 : Record 336);
     VAR
       OldReservEntry@1004 : Record 337;
@@ -588,6 +653,65 @@ OBJECT Codeunit 99000836 Transfer Line-Reserve
       ItemTrackingForm.SetSource(SourceTrackingSpecification,TransferLine."Shipment Date");
       ItemTrackingForm.RegisterItemTrackingLines(
         SourceTrackingSpecification,TransferLine."Shipment Date",TempTrackingSpecification);
+    END;
+
+    LOCAL PROCEDURE GetInboundReservEntryShipmentDate@123() InboundReservEntryShipmentDate : Date;
+    BEGIN
+      CASE SetFromType OF
+        DATABASE::"Sales Line":
+          InboundReservEntryShipmentDate := GetInboundReservEntryShipmentDateBySalesLine;
+        DATABASE::"Purchase Line":
+          InboundReservEntryShipmentDate := GetInboundReservEntryShipmentDateByPurchaseLine;
+        DATABASE::"Transfer Line":
+          InboundReservEntryShipmentDate := GetInboundReservEntryShipmentDateByTransferLine;
+        DATABASE::"Service Line":
+          InboundReservEntryShipmentDate := GetInboundReservEntryShipmentDateByServiceLine;
+        DATABASE::"Job Planning Line":
+          InboundReservEntryShipmentDate := GetInboundReservEntryShipmentDateByJobPlanningLine;
+      END;
+    END;
+
+    LOCAL PROCEDURE GetInboundReservEntryShipmentDateBySalesLine@130() : Date;
+    VAR
+      SalesLine@1000 : Record 37;
+    BEGIN
+      SalesLine.GET(SetFromSubtype,SetFromID,SetFromRefNo);
+      EXIT(SalesLine."Shipment Date");
+    END;
+
+    LOCAL PROCEDURE GetInboundReservEntryShipmentDateByPurchaseLine@134() : Date;
+    VAR
+      PurchaseLine@1000 : Record 39;
+    BEGIN
+      PurchaseLine.GET(SetFromSubtype,SetFromID,SetFromRefNo);
+      EXIT(PurchaseLine."Expected Receipt Date");
+    END;
+
+    LOCAL PROCEDURE GetInboundReservEntryShipmentDateByTransferLine@141() : Date;
+    VAR
+      TransferLine@1000 : Record 5741;
+    BEGIN
+      TransferLine.GET(SetFromID,SetFromRefNo);
+      EXIT(TransferLine."Shipment Date");
+    END;
+
+    LOCAL PROCEDURE GetInboundReservEntryShipmentDateByServiceLine@140() : Date;
+    VAR
+      ServiceLine@1000 : Record 5902;
+    BEGIN
+      ServiceLine.GET(SetFromSubtype,SetFromID,SetFromRefNo);
+      EXIT(ServiceLine."Needed by Date");
+    END;
+
+    LOCAL PROCEDURE GetInboundReservEntryShipmentDateByJobPlanningLine@171() : Date;
+    VAR
+      JobPlanningLine@1000 : Record 1003;
+    BEGIN
+      JobPlanningLine.SETRANGE(Status,SetFromSubtype);
+      JobPlanningLine.SETRANGE("Job No.",SetFromID);
+      JobPlanningLine.SETRANGE("Job Contract Entry No.",SetFromRefNo);
+      JobPlanningLine.FINDFIRST;
+      EXIT(JobPlanningLine."Planning Date");
     END;
 
     BEGIN

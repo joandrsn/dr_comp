@@ -2,9 +2,9 @@ OBJECT Table 5767 Warehouse Activity Line
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=26-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.50293;
   }
   PROPERTIES
   {
@@ -19,7 +19,6 @@ OBJECT Table 5767 Warehouse Activity Line
 
     CaptionML=[DAN=Lageraktivitetslinje;
                ENU=Warehouse Activity Line];
-    PasteIsValid=No;
     LookupPageID=Page5785;
     DrillDownPageID=Page5785;
   }
@@ -206,12 +205,12 @@ OBJECT Table 5767 Warehouse Activity Line
                                                                   IF ("Breakbulk No." <> 0) OR "Original Breakbulk" THEN
                                                                     UpdateBreakbulkQtytoHandle;
 
-                                                                IF ("Activity Type" IN ["Activity Type"::Pick,"Activity Type"::"Invt. Pick","Activity Type"::"Invt. Movement"]) AND
+                                                                IF ("Activity Type" IN ["Activity Type"::Pick,"Activity Type"::"Invt. Pick"]) AND
                                                                    ("Action Type" <> "Action Type"::Place) AND ("Lot No." <> '') AND (CurrFieldNo <> 0)
                                                                 THEN
                                                                   CheckReservedItemTrkg(1,"Lot No.");
 
-                                                                IF "Qty. to Handle" = 0 THEN
+                                                                IF ("Qty. to Handle" = 0) AND RegisteredWhseActLineIsEmpty THEN
                                                                   UpdateReservation(Rec,FALSE)
                                                               END;
 
@@ -286,7 +285,7 @@ OBJECT Table 5767 Warehouse Activity Line
                                                                   ItemTrackingMgt.CheckWhseItemTrkgSetup("Item No.",SNRequired,LNRequired,TRUE);
                                                                   TESTFIELD("Qty. per Unit of Measure",1);
 
-                                                                  IF "Activity Type" IN ["Activity Type"::Pick,"Activity Type"::"Invt. Pick","Activity Type"::"Invt. Movement"] THEN
+                                                                  IF "Activity Type" IN ["Activity Type"::Pick,"Activity Type"::"Invt. Pick"] THEN
                                                                     CheckReservedItemTrkg(0,"Serial No.");
 
                                                                   CheckSNSpecificationExists;
@@ -312,7 +311,7 @@ OBJECT Table 5767 Warehouse Activity Line
                                                                 IF "Lot No." <> '' THEN BEGIN
                                                                   ItemTrackingMgt.CheckWhseItemTrkgSetup("Item No.",SNRequired,LNRequired,TRUE);
 
-                                                                  IF "Activity Type" IN ["Activity Type"::Pick,"Activity Type"::"Invt. Pick","Activity Type"::"Invt. Movement"] THEN
+                                                                  IF "Activity Type" IN ["Activity Type"::Pick,"Activity Type"::"Invt. Pick"] THEN
                                                                     CheckReservedItemTrkg(1,"Lot No.");
                                                                 END;
 
@@ -374,9 +373,8 @@ OBJECT Table 5767 Warehouse Activity Line
                                                    OnValidate=VAR
                                                                 BinContent@1000 : Record 7302;
                                                                 BinType@1002 : Record 7303;
-                                                                QtyAvail@1001 : Decimal;
-                                                                QtyOutstanding@1004 : Decimal;
-                                                                AvailableQty@1006 : Decimal;
+                                                                QtyAvailBase@1001 : Decimal;
+                                                                AvailableQtyBase@1006 : Decimal;
                                                                 UOMCode@1003 : Code[10];
                                                                 NewBinCode@1005 : Code[20];
                                                               BEGIN
@@ -404,62 +402,45 @@ OBJECT Table 5767 Warehouse Activity Line
                                                                           IF BinType.GET(Bin."Bin Type Code") THEN
                                                                             BinType.TESTFIELD(Receive,FALSE);
                                                                         GetLocation("Location Code");
-                                                                        IF Location."Directed Put-away and Pick" THEN BEGIN
-                                                                          UOMCode := "Unit of Measure Code";
-                                                                          QtyOutstanding := "Qty. Outstanding";
-                                                                        END ELSE BEGIN
+                                                                        IF Location."Directed Put-away and Pick" THEN
+                                                                          UOMCode := "Unit of Measure Code"
+                                                                        ELSE
                                                                           UOMCode := WMSMgt.GetBaseUOM("Item No.");
-                                                                          QtyOutstanding := "Qty. Outstanding (Base)";
-                                                                        END;
                                                                         NewBinCode := "Bin Code";
                                                                         IF BinContent.GET("Location Code","Bin Code","Item No.","Variant Code",UOMCode) THEN BEGIN
                                                                           IF "Activity Type" IN ["Activity Type"::Pick,"Activity Type"::"Invt. Pick","Activity Type"::"Invt. Movement"] THEN
-                                                                            QtyAvail := BinContent.CalcQtyAvailToPick(0)
+                                                                            QtyAvailBase := BinContent.CalcQtyAvailToPick(0)
                                                                           ELSE
-                                                                            QtyAvail := BinContent.CalcQtyAvailToTake(0);
+                                                                            QtyAvailBase := BinContent.CalcQtyAvailToTake(0);
                                                                           IF Location."Directed Put-away and Pick" THEN BEGIN
                                                                             CreatePick.SetCrossDock(Bin."Cross-Dock Bin");
-                                                                            AvailableQty :=
+                                                                            AvailableQtyBase :=
                                                                               CreatePick.CalcTotalAvailQtyToPick(
                                                                                 "Location Code","Item No.","Variant Code","Lot No.","Serial No.",
                                                                                 "Source Type","Source Subtype","Source No.","Source Line No.","Source Subline No.",0,FALSE);
-                                                                            AvailableQty := AvailableQty + "Qty. Outstanding (Base)";
-                                                                            IF AvailableQty < 0 THEN
-                                                                              AvailableQty := 0;
+                                                                            AvailableQtyBase += "Qty. Outstanding (Base)";
+                                                                            IF AvailableQtyBase < 0 THEN
+                                                                              AvailableQtyBase := 0;
 
-                                                                            IF AvailableQty = 0 THEN
+                                                                            IF AvailableQtyBase = 0 THEN
                                                                               ERROR(Text015);
                                                                           END ELSE
-                                                                            AvailableQty := QtyAvail;
+                                                                            AvailableQtyBase := QtyAvailBase;
 
-                                                                          IF AvailableQty < QtyAvail THEN
-                                                                            QtyAvail := AvailableQty;
+                                                                          IF AvailableQtyBase < QtyAvailBase THEN
+                                                                            QtyAvailBase := AvailableQtyBase;
+                                                                        END;
 
-                                                                          IF (QtyAvail < QtyOutstanding) AND NOT "Assemble to Order" THEN BEGIN
-                                                                            IF NOT
-                                                                               CONFIRM(
-                                                                                 STRSUBSTNO(
-                                                                                   Text012,
-                                                                                   FIELDCAPTION("Qty. Outstanding"),QtyOutstanding,
-                                                                                   QtyAvail,BinContent.TABLECAPTION,FIELDCAPTION("Bin Code")),
-                                                                                 FALSE)
-                                                                            THEN
-                                                                              ERROR(Text006);
-
-                                                                            "Bin Code" := NewBinCode;
-                                                                            MODIFY;
-                                                                          END;
-                                                                        END ELSE BEGIN
-                                                                          IF NOT "Assemble to Order" THEN
-                                                                            IF NOT
-                                                                               CONFIRM(
-                                                                                 STRSUBSTNO(
-                                                                                   Text012,
-                                                                                   FIELDCAPTION("Qty. Outstanding"),QtyOutstanding,
-                                                                                   QtyAvail,BinContent.TABLECAPTION,FIELDCAPTION("Bin Code")),
-                                                                                 FALSE)
-                                                                            THEN
-                                                                              ERROR(Text006);
+                                                                        IF (QtyAvailBase < "Qty. Outstanding (Base)") AND NOT "Assemble to Order" THEN BEGIN
+                                                                          IF NOT
+                                                                             CONFIRM(
+                                                                               STRSUBSTNO(
+                                                                                 Text012,
+                                                                                 FIELDCAPTION("Qty. Outstanding (Base)"),"Qty. Outstanding (Base)",
+                                                                                 QtyAvailBase,BinContent.TABLECAPTION,FIELDCAPTION("Bin Code")),
+                                                                               FALSE)
+                                                                          THEN
+                                                                            ERROR(Text006);
 
                                                                           "Bin Code" := NewBinCode;
                                                                           MODIFY;
@@ -467,7 +448,7 @@ OBJECT Table 5767 Warehouse Activity Line
                                                                       END ELSE BEGIN
                                                                         IF "Qty. to Handle" > 0 THEN
                                                                           CheckIncreaseCapacity(FALSE);
-                                                                        DeleteBinContent(xRec);
+                                                                        xRec.DeleteBinContent(xRec."Action Type"::Place);
                                                                       END;
                                                                     END;
                                                                     Dedicated := Bin.Dedicated;
@@ -477,6 +458,7 @@ OBJECT Table 5767 Warehouse Activity Line
                                                                       "Zone Code" := Bin."Zone Code";
                                                                     END;
                                                                   END ELSE BEGIN
+                                                                    xRec.DeleteBinContent(xRec."Action Type"::Place);
                                                                     Dedicated := FALSE;
                                                                     "Bin Ranking" := 0;
                                                                     "Bin Type Code" := '';
@@ -506,8 +488,7 @@ OBJECT Table 5767 Warehouse Activity Line
                                                                 IF xRec."Zone Code" <> "Zone Code" THEN BEGIN
                                                                   GetLocation("Location Code");
                                                                   Location.TESTFIELD("Directed Put-away and Pick");
-                                                                  IF "Action Type" = "Action Type"::Place THEN
-                                                                    DeleteBinContent(xRec);
+                                                                  xRec.DeleteBinContent(xRec."Action Type"::Place);
                                                                   "Bin Code" := '';
                                                                   "Bin Ranking" := 0;
                                                                   "Bin Type Code" := '';
@@ -796,7 +777,7 @@ OBJECT Table 5767 Warehouse Activity Line
         IF WhseActivLine2.FIND('-') THEN
           REPEAT
             WhseActivLine2.DELETE; // to ensure correct item tracking update
-            DeleteBinContent(WhseActivLine2);
+            WhseActivLine2.DeleteBinContent(WhseActivLine2."Action Type"::Place);
             UpdateRelatedItemTrkg(WhseActivLine2);
           UNTIL WhseActivLine2.NEXT = 0;
         IF (NOT CalledFromHeader) AND
@@ -983,6 +964,7 @@ OBJECT Table 5767 Warehouse Activity Line
     VAR
       NewWhseActivLine@1002 : Record 5767;
       LineSpacing@1001 : Integer;
+      NewLineNo@1005 : Integer;
     BEGIN
       WhseActivLine.TESTFIELD("Qty. to Handle");
       IF WhseActivLine."Activity Type" = WhseActivLine."Activity Type"::"Put-away" THEN BEGIN
@@ -1000,6 +982,12 @@ OBJECT Table 5767 Warehouse Activity Line
           (NewWhseActivLine."Line No." - WhseActivLine."Line No.") DIV 2
       ELSE
         LineSpacing := 10000;
+
+      IF LineSpacing = 0 THEN BEGIN
+        ReNumberAllLines(NewWhseActivLine,WhseActivLine."Line No.",NewLineNo);
+        WhseActivLine.GET(WhseActivLine."Activity Type",WhseActivLine."No.",NewLineNo);
+        LineSpacing := 5000;
+      END;
 
       NewWhseActivLine.RESET;
       NewWhseActivLine.INIT;
@@ -1374,7 +1362,7 @@ OBJECT Table 5767 Warehouse Activity Line
       Item@1006 : Record 27;
       ReservEntry@1002 : Record 337;
       ReservEntry2@1003 : Record 337;
-      WhseActivLine@1005 : Record 5767;
+      TempWhseActivLine@1005 : TEMPORARY Record 5767;
       WhseAvailMgt@1004 : Codeunit 7314;
       LineReservedQty@1007 : Decimal;
       AvailQtyFromOtherResvLines@1008 : Decimal;
@@ -1412,7 +1400,8 @@ OBJECT Table 5767 Warehouse Activity Line
             Item.CALCFIELDS(Inventory,"Reserved Qty. on Inventory");
             LineReservedQty :=
               WhseAvailMgt.CalcLineReservedQtyOnInvt(
-                "Source Type","Source Subtype","Source No.","Source Line No.","Source Subline No.",TRUE,'',ItemTrkgCode,WhseActivLine);
+                "Source Type","Source Subtype","Source No.","Source Line No.","Source Subline No.",TRUE,'',
+                ItemTrkgCode,TempWhseActivLine);
             ReservEntry.SETCURRENTKEY("Item No.","Variant Code","Location Code","Reservation Status");
             ReservEntry.SETRANGE("Item No.","Item No.");
             ReservEntry.SETRANGE("Variant Code","Variant Code");
@@ -1438,7 +1427,7 @@ OBJECT Table 5767 Warehouse Activity Line
 
             IF (Item.Inventory - ABS(Item."Reserved Qty. on Inventory") +
                 LineReservedQty + AvailQtyFromOtherResvLines +
-                WhseAvailMgt.CalcReservQtyOnPicksShips("Location Code","Item No.","Variant Code",WhseActivLine)) <
+                WhseAvailMgt.CalcReservQtyOnPicksShips("Location Code","Item No.","Variant Code",TempWhseActivLine)) <
                "Qty. to Handle (Base)"
             THEN
               ERROR(Text017,FIELDCAPTION("Lot No."),ItemTrkgCode);
@@ -1491,24 +1480,24 @@ OBJECT Table 5767 Warehouse Activity Line
       EXIT(TrackingSpecification.FIND('-'));
     END;
 
-    LOCAL PROCEDURE DeleteBinContent@21(WhseActivLine@1001 : Record 5767);
+    PROCEDURE DeleteBinContent@21(ActionType@1002 : Option);
     VAR
       BinContent@1000 : Record 7302;
     BEGIN
-      WITH WhseActivLine DO BEGIN
-        IF "Action Type" <> "Action Type"::Place THEN
-          EXIT;
+      IF "Action Type" <> ActionType THEN
+        EXIT;
 
-        IF BinContent.GET("Location Code","Bin Code","Item No.","Variant Code","Unit of Measure Code") THEN
-          IF NOT BinContent.Fixed THEN BEGIN
-            BinContent.CALCFIELDS("Quantity (Base)","Positive Adjmt. Qty. (Base)","Put-away Quantity (Base)");
-            IF (BinContent."Quantity (Base)" = 0) AND
-               (BinContent."Positive Adjmt. Qty. (Base)" = 0) AND
-               (BinContent."Put-away Quantity (Base)" - "Qty. Outstanding (Base)" <= 0)
-            THEN
-              BinContent.DELETE;
-          END;
-      END;
+      IF BinContent.GET("Location Code","Bin Code","Item No.","Variant Code","Unit of Measure Code") THEN
+        IF NOT BinContent.Fixed AND
+           (BinContent."Min. Qty." = 0) AND (BinContent."Max. Qty." = 0)
+        THEN BEGIN
+          BinContent.CALCFIELDS("Quantity (Base)","Positive Adjmt. Qty. (Base)","Put-away Quantity (Base)");
+          IF (BinContent."Quantity (Base)" = 0) AND
+             (BinContent."Positive Adjmt. Qty. (Base)" = 0) AND
+             (BinContent."Put-away Quantity (Base)" - "Qty. Outstanding (Base)" <= 0)
+          THEN
+            BinContent.DELETE;
+        END;
     END;
 
     LOCAL PROCEDURE UpdateReservation@90(TempWhseActivLine2@1000 : TEMPORARY Record 5767;Deletion@1002 : Boolean);
@@ -1764,6 +1753,20 @@ OBJECT Table 5767 Warehouse Activity Line
       END;
     END;
 
+    LOCAL PROCEDURE RegisteredWhseActLineIsEmpty@45() : Boolean;
+    VAR
+      RegisteredWhseActivityLine@1000 : Record 5773;
+    BEGIN
+      RegisteredWhseActivityLine.SETRANGE("Activity Type","Activity Type"::Pick);
+      RegisteredWhseActivityLine.SETRANGE("Source No.","Source No.");
+      RegisteredWhseActivityLine.SETRANGE("Source Line No.","Source Line No.");
+      RegisteredWhseActivityLine.SETRANGE("Source Type","Source Type");
+      RegisteredWhseActivityLine.SETRANGE("Source Subtype","Source Subtype");
+      RegisteredWhseActivityLine.SETRANGE("Lot No.","Lot No.");
+      RegisteredWhseActivityLine.SETRANGE("Serial No.","Serial No.");
+      EXIT(RegisteredWhseActivityLine.ISEMPTY);
+    END;
+
     PROCEDURE ShowItemAvailabilityByPeriod@36();
     VAR
       ItemAvailFormsMgt@1000 : Codeunit 353;
@@ -1795,6 +1798,26 @@ OBJECT Table 5767 Warehouse Activity Line
     PROCEDURE TrackingExists@39() : Boolean;
     BEGIN
       EXIT(("Lot No." <> '') OR ("Serial No." <> ''));
+    END;
+
+    LOCAL PROCEDURE ReNumberAllLines@51(VAR NewWhseActivityLine@1000 : Record 5767;OldLineNo@1004 : Integer;VAR NewLineNo@1001 : Integer);
+    VAR
+      WarehouseActivityLine@1002 : Record 5767;
+      LineNo@1003 : Integer;
+    BEGIN
+      LineNo := 10000 * NewWhseActivityLine.COUNT;
+      NewWhseActivityLine.FIND('+');
+      REPEAT
+        WarehouseActivityLine := NewWhseActivityLine;
+        NewWhseActivityLine.DELETE;
+        NewWhseActivityLine := WarehouseActivityLine;
+        NewWhseActivityLine."Line No." := LineNo;
+        NewWhseActivityLine.INSERT;
+
+        IF WarehouseActivityLine."Line No." = OldLineNo THEN
+          NewLineNo := LineNo;
+        LineNo -= 10000;
+      UNTIL NewWhseActivityLine.NEXT(-1) = 0;
     END;
 
     BEGIN

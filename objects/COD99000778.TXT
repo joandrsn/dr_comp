@@ -2,9 +2,9 @@ OBJECT Codeunit 99000778 OrderTrackingManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=31-03-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48316;
   }
   PROPERTIES
   {
@@ -603,7 +603,7 @@ OBJECT Codeunit 99000778 OrderTrackingManagement
         ELSE
           ItemLedgEntry6.SETRANGE("Entry Type",ItemLedgEntry4."Entry Type"::Consumption);
         ItemLedgEntry6.SETRANGE("Order Type",ItemLedgEntry6."Order Type"::Production);
-        ItemLedgEntry6.SETRANGE("Order No.",ItemLedgEntry4."Order No.");
+        ItemLedgEntry6.SETRANGE("Order No.",ItemLedgEntry5."Order No.");
         IF NOT SearchUp THEN
           ItemLedgEntry6.SETRANGE("Item No.",ItemLedgEntry5."Source No.")
         ELSE
@@ -869,7 +869,8 @@ OBJECT Codeunit 99000778 OrderTrackingManagement
           EVALUATE(FilterPlanningComponent."Line No.",FromReservEntry.GETFILTER("Source Ref. No."));
           EVALUATE(FilterPlanningComponent."Worksheet Line No.",FromReservEntry.GETFILTER("Source Prod. Order Line"));
 
-          IF NOT FilterPlanningComponent.GET(FromReservEntry.GETFILTER("Source ID"),FromReservEntry.GETFILTER("Source Batch Name"),
+          IF NOT FilterPlanningComponent.GET(
+               FromReservEntry.GETRANGEMIN("Source ID"),FromReservEntry.GETRANGEMIN("Source Batch Name"),
                FilterPlanningComponent."Worksheet Line No.",FilterPlanningComponent."Line No.")
           THEN
             EXIT(FALSE);
@@ -893,8 +894,8 @@ OBJECT Codeunit 99000778 OrderTrackingManagement
           SETRANGE("Source Type",DATABASE::"Requisition Line");
           IF FromReservEntry.GETFILTER("Source Type") = GETFILTER("Source Type") THEN BEGIN
             EVALUATE(FilterReqLine."Line No.",FromReservEntry.GETFILTER("Source Ref. No."));
-            IF NOT FilterReqLine.GET(FromReservEntry.GETFILTER("Source ID"),
-                 FromReservEntry.GETFILTER("Source Batch Name"),FilterReqLine."Line No.")
+            IF NOT FilterReqLine.GET(FromReservEntry.GETRANGEMIN("Source ID"),
+                 FromReservEntry.GETRANGEMIN("Source Batch Name"),FilterReqLine."Line No.")
             THEN
               EXIT(FALSE);
             IF FilterReqLine."Action Message" > FilterReqLine."Action Message"::New THEN BEGIN

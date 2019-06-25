@@ -2,9 +2,9 @@ OBJECT Report 298 Batch Post Sales Credit Memos
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -36,6 +36,8 @@ OBJECT Report 298 Batch Post Sales Credit Memos
 
                                   IF CalcInvDisc THEN
                                     CalculateInvoiceDiscount;
+
+                                  BatchConfirmUpdateDeferralDate(BatchConfirm,ReplacePostingDate,PostingDateReq);
 
                                   Counter := Counter + 1;
                                   Window.UPDATE(1,"No.");
@@ -135,6 +137,7 @@ OBJECT Report 298 Batch Post Sales Credit Memos
       ReplacePostingDate@1016 : Boolean;
       ReplaceDocumentDate@1017 : Boolean;
       CalcInvDisc@1018 : Boolean;
+      BatchConfirm@1004 : ' ,Skip,Update';
 
     LOCAL PROCEDURE CalculateInvoiceDiscount@1();
     BEGIN

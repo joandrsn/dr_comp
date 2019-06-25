@@ -2,9 +2,9 @@ OBJECT Table 487 Business Chart User Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,14 +13,15 @@ OBJECT Table 487 Business Chart User Setup
   }
   FIELDS
   {
-    { 1   ;   ;User ID             ;Text132       ;CaptionML=[DAN=Bruger-id;
+    { 1   ;   ;User ID             ;Text132       ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 2   ;   ;Object Type         ;Option        ;CaptionML=[DAN=Objekttype;
                                                               ENU=Object Type];
                                                    OptionCaptionML=[DAN=" ,Tabel,,Rapport,,Codeunit,XMLport,,Side";
                                                                     ENU=" ,Table,,Report,,Codeunit,XMLport,,Page"];
                                                    OptionString=[ ,Table,,Report,,Codeunit,XMLport,,Page] }
-    { 3   ;   ;Object ID           ;Integer       ;TableRelation=IF (Object Type=FILTER(>' ')) AllObj."Object ID" WHERE (Object Type=FIELD(Object Type));
+    { 3   ;   ;Object ID           ;Integer       ;TableRelation=IF (Object Type=FILTER(>' ')) AllObjWithCaption."Object ID" WHERE (Object Type=FIELD(Object Type));
                                                    CaptionML=[DAN=Objekt-id;
                                                               ENU=Object ID] }
     { 4   ;   ;Period Length       ;Option        ;CaptionML=[DAN=Periodelængde;

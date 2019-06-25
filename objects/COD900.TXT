@@ -2,9 +2,9 @@ OBJECT Codeunit 900 Assembly-Post
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.51418;
   }
   PROPERTIES
   {
@@ -14,6 +14,7 @@ OBJECT Codeunit 900 Assembly-Post
                 TableData 6507=i;
     OnRun=VAR
             AssemblyHeader@1007 : Record 900;
+            WhseJnlRegisterLine@1000 : Codeunit 7301;
           BEGIN
             // Replace posting date if called from batch posting
             IF PostingDateExists AND (ReplacePostingDate OR ("Posting Date" = 0D)) THEN
@@ -29,7 +30,7 @@ OBJECT Codeunit 900 Assembly-Post
             Window.UPDATE(1,STRSUBSTNO('%1 %2',"Document Type","No."));
 
             InitPost(AssemblyHeader);
-            Post(AssemblyHeader,ItemJnlPostLine,ResJnlPostLine,WhseJnlRegisterLine);
+            Post(AssemblyHeader,ItemJnlPostLine,ResJnlPostLine,WhseJnlRegisterLine,FALSE);
             FinalizePost(AssemblyHeader);
             COMMIT;
 
@@ -48,7 +49,6 @@ OBJECT Codeunit 900 Assembly-Post
       DimMgt@1008 : Codeunit 408;
       ItemJnlPostLine@1022 : Codeunit 22;
       ResJnlPostLine@1018 : Codeunit 212;
-      WhseJnlRegisterLine@1017 : Codeunit 7301;
       UndoPostingMgt@1026 : Codeunit 5817;
       Window@1015 : Dialog;
       PostingDate@1016 : Date;
@@ -73,6 +73,7 @@ OBJECT Codeunit 900 Assembly-Post
     VAR
       GenJnlCheckLine@1002 : Codeunit 11;
       NoSeriesMgt@1001 : Codeunit 396;
+      GenJnlPostPreview@1003 : Codeunit 19;
     BEGIN
       WITH AssemblyHeader DO BEGIN
         TESTFIELD("Document Type");
@@ -90,15 +91,18 @@ OBJECT Codeunit 900 Assembly-Post
             TESTFIELD("Posting No. Series");
             "Posting No." := NoSeriesMgt.GetNextNo("Posting No. Series","Posting Date",TRUE);
             MODIFY;
-            COMMIT;
+            IF NOT GenJnlPostPreview.IsStarted THEN
+              COMMIT;
           END;
 
         IF Status = Status::Open THEN BEGIN
           CODEUNIT.RUN(CODEUNIT::"Release Assembly Document",AssemblyHeader);
           TESTFIELD(Status,Status::Released);
           Status := Status::Open;
-          MODIFY;
-          COMMIT;
+          IF NOT GenJnlPostPreview.IsStarted THEN BEGIN
+            MODIFY;
+            COMMIT;
+          END;
           Status := Status::Released;
         END;
 
@@ -106,7 +110,7 @@ OBJECT Codeunit 900 Assembly-Post
       END;
     END;
 
-    LOCAL PROCEDURE Post@18(VAR AssemblyHeader@1000 : Record 900;VAR ItemJnlPostLine@1001 : Codeunit 22;VAR ResJnlPostLine@1002 : Codeunit 212;VAR WhseJnlRegisterLine@1003 : Codeunit 7301);
+    LOCAL PROCEDURE Post@18(VAR AssemblyHeader@1000 : Record 900;VAR ItemJnlPostLine@1001 : Codeunit 22;VAR ResJnlPostLine@1002 : Codeunit 212;VAR WhseJnlRegisterLine@1003 : Codeunit 7301;NeedUpdateUnitCost@1005 : Boolean);
     VAR
       AssemblyLine@1011 : Record 901;
       PostedAssemblyHeader@1010 : Record 910;
@@ -142,7 +146,7 @@ OBJECT Codeunit 900 Assembly-Post
         AssembledItem.GET("Item No.");
         TESTFIELD("Document Type","Document Type"::Order);
         PostLines(AssemblyHeader,AssemblyLine,PostedAssemblyHeader,ItemJnlPostLine,ResJnlPostLine,WhseJnlRegisterLine);
-        PostHeader(AssemblyHeader,PostedAssemblyHeader,ItemJnlPostLine,WhseJnlRegisterLine);
+        PostHeader(AssemblyHeader,PostedAssemblyHeader,ItemJnlPostLine,WhseJnlRegisterLine,NeedUpdateUnitCost);
       END;
     END;
 
@@ -163,6 +167,7 @@ OBJECT Codeunit 900 Assembly-Post
           IF HASLINKS THEN
             DELETELINKS;
           DeleteWhseRequest(AssemblyHeader);
+          DeleteWhsePickRequest(AssemblyHeader);
           DELETE;
           IF AssemblyLine.FIND('-') THEN
             REPEAT
@@ -422,7 +427,7 @@ OBJECT Codeunit 900 Assembly-Post
       END;
     END;
 
-    LOCAL PROCEDURE PostHeader@25(VAR AssemblyHeader@1000 : Record 900;VAR PostedAssemblyHeader@1001 : Record 910;VAR ItemJnlPostLine@1006 : Codeunit 22;VAR WhseJnlRegisterLine@1005 : Codeunit 7301);
+    LOCAL PROCEDURE PostHeader@25(VAR AssemblyHeader@1000 : Record 900;VAR PostedAssemblyHeader@1001 : Record 910;VAR ItemJnlPostLine@1006 : Codeunit 22;VAR WhseJnlRegisterLine@1005 : Codeunit 7301;NeedUpdateUnitCost@1007 : Boolean);
     VAR
       WhseAssemblyRelease@1004 : Codeunit 904;
       ItemLedgEntryNo@1008 : Integer;
@@ -431,6 +436,10 @@ OBJECT Codeunit 900 Assembly-Post
     BEGIN
       WITH AssemblyHeader DO BEGIN
         GetHeaderQtys(QtyToOutput,QtyToOutputBase,AssemblyHeader);
+        IF NeedUpdateUnitCost THEN
+          IF NOT IsStandardCostItem THEN
+            UpdateUnitCost;
+
         ItemLedgEntryNo :=
           PostItemOutput(
             AssemblyHeader,"Posting No. Series",
@@ -504,7 +513,8 @@ OBJECT Codeunit 900 Assembly-Post
       END;
 
       IF IsCorrection THEN
-        PostCorrectionItemJnLine(ItemJnlLine,AssemblyHeader,ItemJnlPostLine,DATABASE::"Posted Assembly Line",ApplyToEntryNo)
+        PostCorrectionItemJnLine(
+          ItemJnlLine,AssemblyHeader,ItemJnlPostLine,WhseJnlRegisterLine,DATABASE::"Posted Assembly Line",ApplyToEntryNo)
       ELSE BEGIN
         AssemblyLineReserve.TransferAsmLineToItemJnlLine(AssemblyLine,ItemJnlLine,ItemJnlLine."Quantity (Base)",FALSE);
         PostItemJnlLine(ItemJnlLine,ItemJnlPostLine);
@@ -554,7 +564,7 @@ OBJECT Codeunit 900 Assembly-Post
         ItemJnlLine.VALIDATE("Location Code","Location Code");
         ItemJnlLine."Bin Code" := "Bin Code";
         ItemJnlLine."Indirect Cost %" := "Indirect Cost %";
-        ItemJnlLine."Overhead Rate" := "Overhead Rate" / "Qty. per Unit of Measure";
+        ItemJnlLine."Overhead Rate" := "Overhead Rate";
         ItemJnlLine."Unit Cost" := "Unit Cost";
         ItemJnlLine.VALIDATE("Unit Amount",
           ROUND(("Unit Cost" - "Overhead Rate") / (1 + "Indirect Cost %" / 100),
@@ -564,7 +574,8 @@ OBJECT Codeunit 900 Assembly-Post
       END;
 
       IF IsCorrection THEN
-        PostCorrectionItemJnLine(ItemJnlLine,AssemblyHeader,ItemJnlPostLine,DATABASE::"Posted Assembly Header",ApplyToEntryNo)
+        PostCorrectionItemJnLine(
+          ItemJnlLine,AssemblyHeader,ItemJnlPostLine,WhseJnlRegisterLine,DATABASE::"Posted Assembly Header",ApplyToEntryNo)
       ELSE BEGIN
         AssemblyHeaderReserve.TransferAsmHeaderToItemJnlLine(AssemblyHeader,ItemJnlLine,ItemJnlLine."Quantity (Base)",FALSE);
         PostItemJnlLine(ItemJnlLine,ItemJnlPostLine);
@@ -586,7 +597,7 @@ OBJECT Codeunit 900 Assembly-Post
       ItemJnlLine."Item Shpt. Entry No." := ItemShptEntry;
     END;
 
-    LOCAL PROCEDURE PostCorrectionItemJnLine@37(VAR ItemJnlLine@1001 : Record 83;AssemblyHeader@1007 : Record 900;VAR ItemJnlPostLine@1008 : Codeunit 22;SourceType@1002 : Integer;ApplyToEntry@1005 : Integer);
+    LOCAL PROCEDURE PostCorrectionItemJnLine@37(VAR ItemJnlLine@1001 : Record 83;AssemblyHeader@1007 : Record 900;VAR ItemJnlPostLine@1008 : Codeunit 22;VAR WhseJnlRegisterLine@1010 : Codeunit 7301;SourceType@1002 : Integer;ApplyToEntry@1005 : Integer);
     VAR
       TempItemLedgEntry2@1000 : TEMPORARY Record 32;
       ATOLink@1003 : Record 904;
@@ -853,6 +864,8 @@ OBJECT Codeunit 900 Assembly-Post
     END;
 
     PROCEDURE Undo@21(VAR PostedAsmHeader@1000 : Record 910;RecreateAsmOrder@1001 : Boolean);
+    VAR
+      WhseJnlRegisterLine@1002 : Codeunit 7301;
     BEGIN
       CLEARALL;
 
@@ -1097,6 +1110,10 @@ OBJECT Codeunit 900 Assembly-Post
               "Consumed Quantity" := ROUND("Consumed Quantity (Base)" / "Qty. per Unit of Measure",0.00001);
               Quantity := PostedAsmLine.Quantity + "Consumed Quantity";
               "Quantity (Base)" := PostedAsmLine."Quantity (Base)" + "Consumed Quantity (Base)";
+              IF Type = Type::Item THEN BEGIN
+                "Qty. Picked" := "Consumed Quantity";
+                "Qty. Picked (Base)" := "Consumed Quantity (Base)";
+              END;
               InitRemainingQty;
               InitQtyToConsume;
             END;
@@ -1253,7 +1270,7 @@ OBJECT Codeunit 900 Assembly-Post
     PROCEDURE PostATO@15(VAR AssemblyHeader@1000 : Record 900;VAR ItemJnlPostLine@1001 : Codeunit 22;VAR ResJnlPostLine@1002 : Codeunit 212;VAR WhseJnlRegisterLine@1003 : Codeunit 7301);
     BEGIN
       IF AssemblyHeader.IsAsmToOrder THEN
-        Post(AssemblyHeader,ItemJnlPostLine,ResJnlPostLine,WhseJnlRegisterLine);
+        Post(AssemblyHeader,ItemJnlPostLine,ResJnlPostLine,WhseJnlRegisterLine,TRUE);
     END;
 
     PROCEDURE FinalizePostATO@16(VAR AssemblyHeader@1000 : Record 900);
@@ -1304,6 +1321,19 @@ OBJECT Codeunit 900 Assembly-Post
         SETRANGE("Source Subtype",AssemblyHeader."Document Type");
         SETRANGE("Source No.",AssemblyHeader."No.");
         DELETEALL(TRUE);
+      END;
+    END;
+
+    LOCAL PROCEDURE DeleteWhsePickRequest@49(AssemblyHeader@1000 : Record 900);
+    VAR
+      WhsePickRequest@1001 : Record 7325;
+    BEGIN
+      WITH WhsePickRequest DO BEGIN
+        SETRANGE("Document Type","Document Type"::Assembly);
+        SETRANGE("Document Subtype",AssemblyHeader."Document Type");
+        SETRANGE("Document No.",AssemblyHeader."No.");
+        IF NOT ISEMPTY THEN
+          DELETEALL(TRUE);
       END;
     END;
 

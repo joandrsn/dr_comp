@@ -2,9 +2,9 @@ OBJECT Codeunit 378 Transfer Extended Text
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -31,7 +31,7 @@ OBJECT Codeunit 378 Transfer Extended Text
       ExtTextHeader@1003 : Record 279;
     BEGIN
       MakeUpdateRequired := FALSE;
-      IF (SalesLine."Line No." <> 0) AND (SalesLine.Type <> SalesLine.Type::" ") THEN
+      IF IsDeleteAttachedLines(SalesLine."Line No.",SalesLine."No.",SalesLine."Attached to Line No.") THEN
         MakeUpdateRequired := DeleteSalesLines(SalesLine);
 
       AutoText := FALSE;
@@ -88,7 +88,7 @@ OBJECT Codeunit 378 Transfer Extended Text
       ExtTextHeader@1003 : Record 279;
     BEGIN
       MakeUpdateRequired := FALSE;
-      IF ReminderLine."Line No." <> 0 THEN
+      IF IsDeleteAttachedLines(ReminderLine."Line No.",ReminderLine."No.",ReminderLine."Attached to Line No.") THEN
         MakeUpdateRequired := DeleteReminderLines(ReminderLine);
 
       IF Unconditionally THEN
@@ -118,7 +118,7 @@ OBJECT Codeunit 378 Transfer Extended Text
       ExtTextHeader@1003 : Record 279;
     BEGIN
       MakeUpdateRequired := FALSE;
-      IF FinChrgMemoLine."Line No." <> 0 THEN
+      IF IsDeleteAttachedLines(FinChrgMemoLine."Line No.",FinChrgMemoLine."No.",FinChrgMemoLine."Attached to Line No.") THEN
         MakeUpdateRequired := DeleteFinChrgMemoLines(FinChrgMemoLine);
 
       IF Unconditionally THEN
@@ -148,7 +148,7 @@ OBJECT Codeunit 378 Transfer Extended Text
       ExtTextHeader@1003 : Record 279;
     BEGIN
       MakeUpdateRequired := FALSE;
-      IF PurchLine."Line No." <> 0 THEN
+      IF IsDeleteAttachedLines(PurchLine."Line No.",PurchLine."No.",PurchLine."Attached to Line No.") THEN
         MakeUpdateRequired := DeletePurchLines(PurchLine);
 
       AutoText := FALSE;
@@ -437,7 +437,7 @@ OBJECT Codeunit 378 Transfer Extended Text
       EXIT(MakeUpdateRequired);
     END;
 
-    LOCAL PROCEDURE ReadLines@10(VAR ExtTextHeader@1000 : Record 279;DocDate@1001 : Date;LanguageCode@1002 : Code[10]) : Boolean;
+    LOCAL PROCEDURE ReadLines@10(VAR ExtTextHeader@1000 : Record 279;DocDate@1001 : Date;LanguageCode@1002 : Code[10]) Result : Boolean;
     VAR
       ExtTextLine@1003 : Record 280;
     BEGIN
@@ -447,30 +447,31 @@ OBJECT Codeunit 378 Transfer Extended Text
       ExtTextHeader.SETFILTER("Ending Date",'%1..|%2',DocDate,0D);
       IF LanguageCode = '' THEN BEGIN
         ExtTextHeader.SETRANGE("Language Code",'');
-        IF NOT ExtTextHeader.FIND('+') THEN
+        IF NOT ExtTextHeader.FINDSET THEN
           EXIT;
       END ELSE BEGIN
         ExtTextHeader.SETRANGE("Language Code",LanguageCode);
-        IF NOT ExtTextHeader.FIND('+') THEN BEGIN
+        IF NOT ExtTextHeader.FINDSET THEN BEGIN
           ExtTextHeader.SETRANGE("All Language Codes",TRUE);
           ExtTextHeader.SETRANGE("Language Code",'');
-          IF NOT ExtTextHeader.FIND('+') THEN
+          IF NOT ExtTextHeader.FINDSET THEN
             EXIT;
         END;
       END;
-
-      ExtTextLine.SETRANGE("Table Name",ExtTextHeader."Table Name");
-      ExtTextLine.SETRANGE("No.",ExtTextHeader."No.");
-      ExtTextLine.SETRANGE("Language Code",ExtTextHeader."Language Code");
-      ExtTextLine.SETRANGE("Text No.",ExtTextHeader."Text No.");
-      IF ExtTextLine.FIND('-') THEN BEGIN
-        TmpExtTextLine.DELETEALL;
-        REPEAT
-          TmpExtTextLine := ExtTextLine;
-          TmpExtTextLine.INSERT;
-        UNTIL ExtTextLine.NEXT = 0;
-        EXIT(TRUE);
-      END;
+      TmpExtTextLine.DELETEALL;
+      REPEAT
+        ExtTextLine.SETRANGE("Table Name",ExtTextHeader."Table Name");
+        ExtTextLine.SETRANGE("No.",ExtTextHeader."No.");
+        ExtTextLine.SETRANGE("Language Code",ExtTextHeader."Language Code");
+        ExtTextLine.SETRANGE("Text No.",ExtTextHeader."Text No.");
+        IF ExtTextLine.FINDSET THEN BEGIN
+          REPEAT
+            TmpExtTextLine := ExtTextLine;
+            TmpExtTextLine.INSERT;
+          UNTIL ExtTextLine.NEXT = 0;
+          Result := TRUE;
+        END;
+      UNTIL ExtTextHeader.NEXT = 0;
     END;
 
     PROCEDURE ServCheckIfAnyExtText@9(VAR ServiceLine@1000 : Record 5902;Unconditionally@1001 : Boolean) : Boolean;
@@ -480,8 +481,9 @@ OBJECT Codeunit 378 Transfer Extended Text
       ServCost@1004 : Record 5905;
     BEGIN
       MakeUpdateRequired := FALSE;
-      IF ServiceLine."Line No." <> 0 THEN
+      IF IsDeleteAttachedLines(ServiceLine."Line No.",ServiceLine."No.",ServiceLine."Attached to Line No.") THEN
         MakeUpdateRequired := DeleteServiceLines(ServiceLine);
+
       AutoText := FALSE;
       IF Unconditionally THEN
         AutoText := TRUE
@@ -610,6 +612,11 @@ OBJECT Codeunit 378 Transfer Extended Text
         MakeUpdateRequired := TRUE;
       END;
       TmpExtTextLine.DELETEALL;
+    END;
+
+    LOCAL PROCEDURE IsDeleteAttachedLines@19(LineNo@1000 : Integer;No@1002 : Code[20];AttachedToLineNo@1001 : Integer) : Boolean;
+    BEGIN
+      EXIT((LineNo <> 0) AND (AttachedToLineNo = 0) AND (No <> ''));
     END;
 
     BEGIN

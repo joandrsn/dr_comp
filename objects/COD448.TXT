@@ -2,9 +2,9 @@ OBJECT Codeunit 448 Job Queue Dispatcher
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -47,9 +47,11 @@ OBJECT Codeunit 448 Job Queue Dispatcher
   {
     VAR
       JobQueue@1000 : Record 470;
+      TypeHelper@1010 : Codeunit 10;
       Text001@1001 : TextConst 'DAN=Sagen blev annulleret.;ENU=The job has been canceled.';
       Text002@1002 : TextConst 'DAN=Brugerprocessen blev afbrudt uventet. Du kan finde flere oplysninger i Windows Logbog eller i tabellen Sessionshændelse.;ENU=The user process has terminated unexpectedly. Check the Windows Event Viewer or the Session Event table for more information.';
       Text003@1003 : TextConst 'DAN=Sagen fik timeout.;ENU=The job has timed out.';
+      RunInUserSessionJobIsTerminatedErr@1004 : TextConst '@@@=%1 - Job Queue Description, %2 - Object Type to Run, %3 - Object Caption to Run, %4 - last error text.;DAN=Den tilbagevendende opgave %1 kunne ikke køre objektet %2 %3 med følgende fejl: %4. \\Hvis opgaven er konfigureret til at køre under NAS, skal du kontrollere, at Kør i brugersession er indstillet til FALSK for at undgå denne fejl.;ENU=Recurring job %1 failed to run object %2 %3 with the following error: %4. \\If this job is configured to run under NAS, then ensure that Run in User Session is set to FALSE to avoid this error.';
 
     [TryFunction]
     LOCAL PROCEDURE TryFindFirstJobQueue@14(VAR JobQueue@1000 : Record 470);
@@ -80,13 +82,15 @@ OBJECT Codeunit 448 Job Queue Dispatcher
       JobQueueEntry@1000 : Record 472;
       JobLogEntryNo@1002 : Integer;
       MoreRequests@1006 : Boolean;
+      WasSuccess@1001 : Boolean;
     BEGIN
       MoreRequests := GetNextRequest(JobQueueEntry);  // locks table
 
       WHILE JobQueue.Started AND MoreRequests DO BEGIN
         JobLogEntryNo := InsertLogEntry(JobQueueEntry);
 
-        IF RunRequest(JobQueueEntry) THEN
+        WasSuccess := RunRequest(JobQueueEntry);
+        IF WasSuccess THEN
           JobQueueEntry.CleanupAfterExecution
         ELSE
           JobQueueEntry.HandleExecutionError;
@@ -96,6 +100,8 @@ OBJECT Codeunit 448 Job Queue Dispatcher
 
         JobQueue.UpdateHeartbeat;
         COMMIT;
+
+        OnAfterHandleRequest(JobQueueEntry,WasSuccess);
         MoreRequests := GetNextRequest(JobQueueEntry);  // locks table
       END;
       COMMIT;
@@ -175,7 +181,15 @@ OBJECT Codeunit 448 Job Queue Dispatcher
           IF NOT EntryExists THEN
             JobQueueEntry.SetErrorMessage(Text001)
           ELSE
-            JobQueueEntry.SetErrorMessage(Text002);
+            IF JobQueueEntry."Recurring Job" AND JobQueueEntry."Run in User Session" THEN BEGIN
+              JobQueueEntry.CALCFIELDS("Object Caption to Run");
+              JobQueueEntry.SetErrorMessage(
+                STRSUBSTNO(
+                  RunInUserSessionJobIsTerminatedErr,
+                  JobQueueEntry.Description,JobQueueEntry."Object Type to Run",JobQueueEntry."Object Caption to Run",
+                  GETLASTERRORTEXT));
+            END ELSE
+              JobQueueEntry.SetErrorMessage(Text002);
       END;
       EXIT(WasSuccess);
     END;
@@ -223,9 +237,12 @@ OBJECT Codeunit 448 Job Queue Dispatcher
       NewRunDateTime@1002 : DateTime;
     BEGIN
       IF JobQueueEntry."No. of Minutes between Runs" > 0 THEN
-        NewRunDateTime := StartingDateTime + 60000 * JobQueueEntry."No. of Minutes between Runs"
-      ELSE
+        NewRunDateTime := TypeHelper.AddMinutesToDateTime(StartingDateTime,JobQueueEntry."No. of Minutes between Runs")
+      ELSE BEGIN
+        IF JobQueueEntry."Earliest Start Date/Time" <> 0DT THEN
+          StartingDateTime := JobQueueEntry."Earliest Start Date/Time";
         NewRunDateTime := CREATEDATETIME(DT2DATE(StartingDateTime) + 1,0T);
+      END;
 
       EXIT(CalcRunTimeForRecurringJob(JobQueueEntry,NewRunDateTime));
     END;
@@ -308,6 +325,7 @@ OBJECT Codeunit 448 Job Queue Dispatcher
     VAR
       JobQueueEntry@1000 : Record 472;
     BEGIN
+      // Adjust start time on recurring jobs
       WITH JobQueueEntry DO BEGIN
         SETFILTER("Expiration Date/Time",'>%1|%2',CURRENTDATETIME,CREATEDATETIME(0D,0T));
         SETFILTER("Earliest Start Date/Time",'<=%1',CURRENTDATETIME);
@@ -319,6 +337,25 @@ OBJECT Codeunit 448 Job Queue Dispatcher
             MODIFY;
           UNTIL NEXT = 0;
       END;
+
+      // Reactivate dead jobs
+      WITH JobQueueEntry DO BEGIN
+        RESET;
+        SETRANGE(Status,Status::"In Process");
+        SETRANGE("Run in User Session",FALSE);
+        IF FINDSET(TRUE) THEN
+          REPEAT
+            IF NOT SessionExists THEN BEGIN
+              SetStatus(Status::Ready);
+              MODIFY(TRUE);
+            END;
+          UNTIL NEXT = 0;
+      END;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterHandleRequest@12(VAR JobQueueEntry@1000 : Record 472;WasSuccess@1001 : Boolean);
+    BEGIN
     END;
 
     BEGIN

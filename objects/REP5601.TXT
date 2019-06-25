@@ -2,9 +2,9 @@ OBJECT Report 5601 Fixed Asset - List
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -6604,11 +6604,7 @@ OBJECT Report 5601 Fixed Asset - List
                                 <Hidden>=IIF(Fields!FADeprBookStraightLine.Value &gt; 0,FALSE,TRUE)</Hidden>
                               </Visibility>
                             </TablixMember>
-                            <TablixMember>
-                              <Visibility>
-                                <Hidden>=IIF(Fields!FADeprBookNoofDeprYrs.Value &gt; 0,FALSE,TRUE)</Hidden>
-                              </Visibility>
-                            </TablixMember>
+                            <TablixMember />
                             <TablixMember>
                               <Visibility>
                                 <Hidden>=IIF(Fields!FADeprBookNoofDeprYrs.Value &gt; 0,FALSE,TRUE)</Hidden>
@@ -6895,6 +6891,7 @@ OBJECT Report 5601 Fixed Asset - List
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

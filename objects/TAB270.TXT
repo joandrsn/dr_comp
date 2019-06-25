@@ -2,9 +2,9 @@ OBJECT Table 270 Bank Account
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897,NAVDK9.00.00.43897;
+    Version List=NAVW19.00.00.50583,NAVDK9.00.00.50583;
   }
   PROPERTIES
   {
@@ -28,26 +28,7 @@ OBJECT Table 270 Bank Account
     OnModify=BEGIN
                "Last Date Modified" := TODAY;
 
-               IF (Name <> xRec.Name) OR
-                  ("Search Name" <> xRec."Search Name") OR
-                  ("Name 2" <> xRec."Name 2") OR
-                  (Address <> xRec.Address) OR
-                  ("Address 2" <> xRec."Address 2") OR
-                  (City <> xRec.City) OR
-                  ("Phone No." <> xRec."Phone No.") OR
-                  ("Telex No." <> xRec."Telex No.") OR
-                  ("Territory Code" <> xRec."Territory Code") OR
-                  ("Currency Code" <> xRec."Currency Code") OR
-                  ("Language Code" <> xRec."Language Code") OR
-                  ("Our Contact Code" <> xRec."Our Contact Code") OR
-                  ("Country/Region Code" <> xRec."Country/Region Code") OR
-                  ("Fax No." <> xRec."Fax No.") OR
-                  ("Telex Answer Back" <> xRec."Telex Answer Back") OR
-                  ("Post Code" <> xRec."Post Code") OR
-                  (County <> xRec.County) OR
-                  ("E-Mail" <> xRec."E-Mail") OR
-                  ("Home Page" <> xRec."Home Page")
-               THEN BEGIN
+               IF IsContactUpdateNeeded THEN BEGIN
                  MODIFY;
                  UpdateContFromBank.OnModify(Rec);
                  IF NOT FIND THEN BEGIN
@@ -80,8 +61,7 @@ OBJECT Table 270 Bank Account
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Name;
-                                                   OnValidate=BEGIN
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   GLSetup.GET;
                                                                   NoSeriesMgt.TestManual(GLSetup."Bank Account Nos.");
@@ -89,6 +69,7 @@ OBJECT Table 270 Bank Account
                                                                 END;
                                                               END;
 
+                                                   AltSearchField=Search Name;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 2   ;   ;Name                ;Text50        ;OnValidate=BEGIN
@@ -188,7 +169,7 @@ OBJECT Table 270 Bank Account
                                                               ENU=Language Code] }
     { 26  ;   ;Statistics Group    ;Integer       ;CaptionML=[DAN=Statistikgruppe;
                                                               ENU=Statistics Group] }
-    { 29  ;   ;Our Contact Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 29  ;   ;Our Contact Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Vores attentionkode;
                                                               ENU=Our Contact Code] }
     { 35  ;   ;Country/Region Code ;Code10        ;TableRelation=Country/Region;
@@ -381,7 +362,7 @@ OBJECT Table 270 Bank Account
                                                    CaptionML=[DAN=Nummerserie;
                                                               ENU=No. Series];
                                                    Editable=No }
-    { 108 ;   ;Check Report ID     ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Report));
+    { 108 ;   ;Check Report ID     ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Report));
                                                    CaptionML=[DAN=Tjek rapport-id;
                                                               ENU=Check Report ID] }
     { 109 ;   ;Check Report Name   ;Text250       ;FieldClass=FlowField;
@@ -658,6 +639,38 @@ OBJECT Table 270 Bank Account
       TESTFIELD("Positive Pay Export Code");
       BankExportImportSetup.GET("Positive Pay Export Code");
       EXIT(BankExportImportSetup."Processing Codeunit ID");
+    END;
+
+    LOCAL PROCEDURE IsContactUpdateNeeded@49() : Boolean;
+    VAR
+      BankContUpdate@1001 : Codeunit 5058;
+      UpdateNeeded@1000 : Boolean;
+    BEGIN
+      UpdateNeeded :=
+        (Name <> xRec.Name) OR
+        ("Search Name" <> xRec."Search Name") OR
+        ("Name 2" <> xRec."Name 2") OR
+        (Address <> xRec.Address) OR
+        ("Address 2" <> xRec."Address 2") OR
+        (City <> xRec.City) OR
+        ("Phone No." <> xRec."Phone No.") OR
+        ("Telex No." <> xRec."Telex No.") OR
+        ("Territory Code" <> xRec."Territory Code") OR
+        ("Currency Code" <> xRec."Currency Code") OR
+        ("Language Code" <> xRec."Language Code") OR
+        ("Our Contact Code" <> xRec."Our Contact Code") OR
+        ("Country/Region Code" <> xRec."Country/Region Code") OR
+        ("Fax No." <> xRec."Fax No.") OR
+        ("Telex Answer Back" <> xRec."Telex Answer Back") OR
+        ("Post Code" <> xRec."Post Code") OR
+        (County <> xRec.County) OR
+        ("E-Mail" <> xRec."E-Mail") OR
+        ("Home Page" <> xRec."Home Page");
+
+      IF NOT UpdateNeeded AND NOT ISTEMPORARY THEN
+        UpdateNeeded := BankContUpdate.ContactNameIsBlank("No.");
+
+      EXIT(UpdateNeeded);
     END;
 
     BEGIN

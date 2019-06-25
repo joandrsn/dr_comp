@@ -2,9 +2,9 @@ OBJECT Page 9803 Permissions
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -468,18 +468,20 @@ OBJECT Page 9803 Permissions
                 StyleExpr=ZeroObjStyleExpr;
                 OnValidate=BEGIN
                              ActivateControls;
+                             SetObjectZeroName(Rec);
                            END;
                             }
 
     { 10  ;2   ;Field     ;
                 SourceExpr="Object ID";
                 Enabled=AllowChangePrimaryKey;
-                LookupPageID=All Objects;
+                LookupPageID=All Objects with Caption;
                 Style=Strong;
                 StyleExpr=ZeroObjStyleExpr;
                 OnValidate=BEGIN
                              IsValidatedObjectID := FALSE;
                              ActivateControls;
+                             SetObjectZeroName(Rec);
                            END;
                             }
 
@@ -791,9 +793,11 @@ OBJECT Page 9803 Permissions
 
     LOCAL PROCEDURE SetObjectZeroName@9(VAR Permission@1000 : Record 2000000005);
     BEGIN
-      IF Permission."Object ID" <> 0 THEN
-        EXIT;
-      Permission."Object Name" := COPYSTR(STRSUBSTNO(AllObjTxt,Permission."Object Type"),1,MAXSTRLEN(Permission."Object Name"));
+      IF Permission."Object ID" <> 0 THEN BEGIN
+        Permission.CALCFIELDS("Object Name");
+        "Object Name" := Permission."Object Name";
+      END ELSE
+        "Object Name" := COPYSTR(STRSUBSTNO(AllObjTxt,Permission."Object Type"),1,MAXSTRLEN(Permission."Object Name"));
     END;
 
     BEGIN

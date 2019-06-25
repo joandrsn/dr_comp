@@ -2,9 +2,9 @@ OBJECT Codeunit 46 SelectionFilterManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-04-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48466;
   }
   PROPERTIES
   {
@@ -34,6 +34,7 @@ OBJECT Codeunit 46 SelectionFilterManagement
 
       TempRecRefCount := TempRecRef.COUNT;
       IF TempRecRefCount > 0 THEN BEGIN
+        TempRecRef.ASCENDING(TRUE);
         TempRecRef.FIND('-');
         WHILE TempRecRefCount > 0 DO BEGIN
           TempRecRefCount := TempRecRefCount - 1;
@@ -75,6 +76,8 @@ OBJECT Codeunit 46 SelectionFilterManagement
 
     PROCEDURE AddQuotes@11(inString@1000 : Text[1024]) : Text;
     BEGIN
+      IF DELCHR(inString,'=',' &|()*') = inString THEN
+        EXIT(inString);
       EXIT('''' + inString + '''');
     END;
 

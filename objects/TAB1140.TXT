@@ -1,0 +1,195 @@
+OBJECT Table 1140 OAuth 2.0 Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26-01-19;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.51014;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 1261=rimd;
+    OnDelete=BEGIN
+               DeleteToken("Client ID");
+               DeleteToken("Client Secret");
+               DeleteToken("Access Token");
+               DeleteToken("Refresh Token");
+             END;
+
+    CaptionML=[DAN=OAuth 2.0-konfiguration;
+               ENU=OAuth 2.0 Setup];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;CaptionML=[DAN=Kode;
+                                                              ENU=Code];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text250       ;CaptionML=[DAN=Beskrivelse;
+                                                              ENU=Description] }
+    { 3   ;   ;Service URL         ;Text250       ;OnValidate=VAR
+                                                                WebRequestHelper@1000 : Codeunit 1299;
+                                                              BEGIN
+                                                                IF "Service URL" <> '' THEN
+                                                                  WebRequestHelper.IsSecureHttpUrl("Service URL");
+                                                              END;
+
+                                                   CaptionML=[DAN=URL-adresse for tjeneste;
+                                                              ENU=Service URL] }
+    { 4   ;   ;Redirect URL        ;Text250       ;CaptionML=[DAN=URL-adresse til omdirigering;
+                                                              ENU=Redirect URL] }
+    { 5   ;   ;Client ID           ;GUID          ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Klient-id;
+                                                              ENU=Client ID] }
+    { 6   ;   ;Client Secret       ;GUID          ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Klienthemmelighed;
+                                                              ENU=Client Secret] }
+    { 7   ;   ;Access Token        ;GUID          ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Adgangstoken;
+                                                              ENU=Access Token] }
+    { 8   ;   ;Refresh Token       ;GUID          ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Opdater token;
+                                                              ENU=Refresh Token] }
+    { 9   ;   ;Authorization URL Path;Text250     ;OnValidate=BEGIN
+                                                                CheckAndAppendURLPath("Authorization URL Path");
+                                                              END;
+
+                                                   CaptionML=[DAN=Sti til godkendelses-URL-adresse;
+                                                              ENU=Authorization URL Path] }
+    { 10  ;   ;Access Token URL Path;Text250      ;OnValidate=BEGIN
+                                                                CheckAndAppendURLPath("Access Token URL Path");
+                                                              END;
+
+                                                   CaptionML=[DAN=Adgangstoken til sti til URL-adresse;
+                                                              ENU=Access Token URL Path] }
+    { 11  ;   ;Refresh Token URL Path;Text250     ;OnValidate=BEGIN
+                                                                CheckAndAppendURLPath("Refresh Token URL Path");
+                                                              END;
+
+                                                   CaptionML=[DAN=Opdater token til sti til URL-adresse;
+                                                              ENU=Refresh Token URL Path] }
+    { 12  ;   ;Scope               ;Text250       ;CaptionML=[DAN=Område;
+                                                              ENU=Scope] }
+    { 13  ;   ;Authorization Response Type;Text250;CaptionML=[DAN=Godkendelsessvartype;
+                                                              ENU=Authorization Response Type] }
+    { 14  ;   ;Status              ;Option        ;CaptionML=[DAN=Status;
+                                                              ENU=Status];
+                                                   OptionCaptionML=[DAN=" ,Aktiveret,Deaktiveret,Forbindelse,Fejl";
+                                                                    ENU=" ,Enabled,Disabled,Connected,Error"];
+                                                   OptionString=[ ,Enabled,Disabled,Connected,Error] }
+    { 16  ;   ;Activity Log ID     ;Integer       ;CaptionML=[DAN=Aktivitetslog-id;
+                                                              ENU=Activity Log ID] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      OAuth20Mgt@1000 : Codeunit 1140;
+
+    LOCAL PROCEDURE CheckAndAppendURLPath@1(VAR value@1000 : Text);
+    BEGIN
+      IF value <> '' THEN
+        IF value[1] <> '/' THEN
+          value := '/' + value;
+    END;
+
+    PROCEDURE SetToken@22(VAR TokenKey@1001 : GUID;TokenValue@1000 : Text);
+    VAR
+      ServicePassword@1002 : Record 1261;
+    BEGIN
+      IF ISNULLGUID(TokenKey) OR NOT ServicePassword.GET(TokenKey) THEN BEGIN
+        ServicePassword.SavePassword(TokenValue);
+        ServicePassword.INSERT(TRUE);
+        TokenKey := ServicePassword.Key;
+      END ELSE BEGIN
+        ServicePassword.SavePassword(TokenValue);
+        ServicePassword.MODIFY;
+      END;
+    END;
+
+    PROCEDURE GetToken@21(TokenKey@1001 : GUID) : Text;
+    VAR
+      ServicePassword@1000 : Record 1261;
+    BEGIN
+      IF ServicePassword.GET(TokenKey) THEN
+        EXIT(ServicePassword.GetPassword);
+    END;
+
+    LOCAL PROCEDURE DeleteToken@20(TokenKey@1000 : GUID);
+    VAR
+      ServicePassword@1001 : Record 1261;
+    BEGIN
+      IF ServicePassword.GET(TokenKey) THEN
+        ServicePassword.DELETE;
+    END;
+
+    LOCAL PROCEDURE SaveTokens@18(AccessToken@1001 : Text;RefreshToken@1000 : Text);
+    BEGIN
+      SetToken("Access Token",AccessToken);
+      SetToken("Refresh Token",RefreshToken);
+      MODIFY;
+      COMMIT; // need to prevent rollback to save new keys
+    END;
+
+    PROCEDURE RequestAuthorizationCode@2();
+    VAR
+      OAuth20Mgt@1001 : Codeunit 1140;
+    BEGIN
+      OAuth20Mgt.CheckEncryption;
+      HYPERLINK(OAuth20Mgt.GetAuthorizationURL(Rec,GetToken("Client ID")));
+    END;
+
+    PROCEDURE RequestAccessToken@8(VAR MessageText@1006 : Text;AuthorizationCode@1000 : Text) Result : Boolean;
+    VAR
+      AccessToken@1001 : Text;
+      RefreshToken@1002 : Text;
+    BEGIN
+      Result :=
+        OAuth20Mgt.RequestAccessToken(
+          Rec,MessageText,AuthorizationCode,
+          GetToken("Client ID"),GetToken("Client Secret"),
+          AccessToken,RefreshToken);
+
+      IF Result THEN
+        SaveTokens(AccessToken,RefreshToken);
+
+      OnAfterRequestAccessToken(Rec,Result,MessageText);
+    END;
+
+    PROCEDURE RefreshAccessToken@4(VAR MessageText@1000 : Text) Result : Boolean;
+    VAR
+      AccessToken@1003 : Text;
+      RefreshToken@1002 : Text;
+    BEGIN
+      RefreshToken := GetToken("Refresh Token");
+      Result :=
+        OAuth20Mgt.RefreshAccessToken(
+          Rec,MessageText,
+          GetToken("Client ID"),GetToken("Client Secret"),AccessToken,RefreshToken);
+
+      IF Result THEN
+        SaveTokens(AccessToken,RefreshToken);
+    END;
+
+    PROCEDURE InvokeRequest@3(RequestJSON@1007 : Text;VAR ResponseJSON@1005 : Text;VAR HttpError@1006 : Text;RetryOnCredentialsFailure@1001 : Boolean) : Boolean;
+    BEGIN
+      EXIT(
+        OAuth20Mgt.InvokeRequest(
+          Rec,RequestJSON,ResponseJSON,HttpError,GetToken("Access Token"),RetryOnCredentialsFailure));
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterRequestAccessToken@100(OAuth20Setup@1000 : Record 1140;Result@1002 : Boolean;VAR MessageText@1001 : Text);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

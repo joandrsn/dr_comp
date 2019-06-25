@@ -2,9 +2,9 @@ OBJECT Codeunit 40 LogInManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=26-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402,NAVDK9.00.00.43402;
+    Version List=NAVW19.00.00.50293,NAVDK9.00.00.50293;
   }
   PROPERTIES
   {
@@ -51,7 +51,7 @@ OBJECT Codeunit 40 LogInManagement
 
     PROCEDURE CompanyClose@2();
     BEGIN
-      IF GUIALLOWED THEN
+      IF GUIALLOWED OR (CURRENTCLIENTTYPE = CLIENTTYPE::Web) THEN
         LogInEnd;
     END;
 
@@ -142,6 +142,9 @@ OBJECT Codeunit 40 LogInManagement
       UserSetupFound@1005 : Boolean;
       RegisterTime@1006 : Boolean;
     BEGIN
+      IF LogInDate = 0D THEN
+        EXIT;
+
       IF LogInWorkDate <> 0D THEN
         IF LogInWorkDate = LogInDate THEN
           WORKDATE := TODAY
@@ -177,7 +180,7 @@ OBJECT Codeunit 40 LogInManagement
       END;
     END;
 
-    LOCAL PROCEDURE IsDemoCompany@11() : Boolean;
+    PROCEDURE IsDemoCompany@11() : Boolean;
     BEGIN
       EXIT(STRPOS(COMPANYNAME,CronusTxt) = 1)
     END;

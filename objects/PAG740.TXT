@@ -2,16 +2,35 @@ OBJECT Page 740 VAT Report
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=30-05-19;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.51418;
   }
   PROPERTIES
   {
-    CaptionML=[DAN=Momsrapport;
-               ENU=VAT Report];
+    CaptionML=[DAN=Momsangivelse;
+               ENU=VAT Return];
+    LinksAllowed=No;
     SourceTable=Table740;
+    DataCaptionExpr="No.";
+    SourceTableView=WHERE(VAT Report Config. Code=CONST(VAT Return));
     PageType=Document;
+    PromotedActionCategoriesML=[DAN=Ny,Behandl,Rapport,Momsafregning;
+                                ENU=New,Process,Report,VAT Settlement];
+    OnOpenPage=BEGIN
+                 IF "No." <> '' THEN
+                   InitPageControllers;
+                 IsEditable := Status = Status::Open;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       InitPageControllers;
+                     END;
+
+    OnInsertRecord=BEGIN
+                     InitPageControllers;
+                   END;
+
     ActionList=ACTIONS
     {
       { 1900000004;0 ;ActionContainer;
@@ -22,66 +41,182 @@ OBJECT Page 740 VAT Report
                       Image=Action }
       { 22      ;2   ;Action    ;
                       Name=SuggestLines;
-                      CaptionML=[DAN=&Foreslå linjer;
-                                 ENU=&Suggest Lines];
+                      CaptionML=[DAN=Foreslå linjer;
+                                 ENU=Suggest Lines];
+                      ToolTipML=[DAN="Opret momsrapportposter ud fra oplysninger fra salgs- og købsrelaterede bilag. ";
+                                 ENU="Create VAT Report entries based on information gathered from documents related to sales and purchases. "];
                       Promoted=Yes;
+                      Enabled=SuggestLinesControllerStatus;
                       Image=SuggestLines;
                       PromotedCategory=Process;
                       OnAction=BEGIN
                                  VATReportMediator.GetLines(Rec);
+                                 CurrPage.VATReportLines.PAGE.SelectFirst;
+                                 CheckForErrors;
                                END;
                                 }
-      { 23      ;2   ;Separator  }
-      { 24      ;2   ;Action    ;
+      { 50      ;2   ;Action    ;
+                      Name=Release;
                       ShortCutKey=Ctrl+F9;
-                      CaptionML=[DAN=F&rigiv;
-                                 ENU=&Release];
+                      CaptionML=[DAN=Frigiv;
+                                 ENU=Release];
+                      ToolTipML=[DAN=Kontrollér, at rapporten omfatter alle de nødvendige oplysninger, og klargør den til afsendelse.;
+                                 ENU=Verify that the report includes all of the required information, and prepare it for submission.];
                       Promoted=Yes;
+                      Enabled=ReleaseControllerStatus;
                       Image=ReleaseDoc;
                       PromotedCategory=Process;
                       OnAction=BEGIN
                                  VATReportMediator.Release(Rec);
+                                 CheckForErrors;
+                               END;
+                                }
+      { 27      ;2   ;Action    ;
+                      Name=Submit;
+                      CaptionML=[DAN=Send;
+                                 ENU=Submit];
+                      ToolTipML=[DAN=Sender momsrapporten til skattemyndighedernes indberetningstjeneste.;
+                                 ENU=Submits the VAT report to the tax authority's reporting service.];
+                      Promoted=Yes;
+                      Enabled=SubmitControllerStatus;
+                      Image=SendElectronicDocument;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 VATReportMediator.Export(Rec);
+                                 IF NOT CheckForErrors THEN
+                                   MESSAGE(ReportSubmittedMsg);
                                END;
                                 }
       { 19      ;2   ;Action    ;
-                      CaptionML=[DAN=Markér som &sendt;
-                                 ENU=Mark as Su&bmitted];
+                      Name=Mark as Submitted;
+                      CaptionML=[DAN=Markér som sendt;
+                                 ENU=Mark as Submitted];
+                      ToolTipML=[DAN=Angiv, at du har sendt rapporten til skattemyndighederne manuelt.;
+                                 ENU=Indicate that you submitted the report to the tax authority manually.];
                       Promoted=Yes;
+                      Enabled=MarkAsSubmitControllerStatus;
                       Image=Approve;
                       PromotedCategory=Process;
                       OnAction=BEGIN
                                  VATReportMediator.Submit(Rec);
+                                 IF NOT CheckForErrors THEN
+                                   MESSAGE(MarkAsSubmittedMsg);
+                               END;
+                                }
+      { 17      ;2   ;Action    ;
+                      Name=Cancel Submission;
+                      CaptionML=[DAN=Annuller afsendelse;
+                                 ENU=Cancel Submission];
+                      ToolTipML=[DAN=Annullerer en tidligere sendt rapport.;
+                                 ENU=Cancels previously submitted report.];
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      Image=Cancel;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 VATReportMediator.Reopen(Rec);
+                                 MESSAGE(CancelReportSentMsg);
                                END;
                                 }
       { 25      ;2   ;Action    ;
-                      CaptionML=[DAN=&Åbn igen;
-                                 ENU=Re&open];
+                      Name=Reopen;
+                      CaptionML=[DAN=Åbn igen;
+                                 ENU=Reopen];
+                      ToolTipML=[DAN=Åbn rapporten igen for at foretage ændringer.;
+                                 ENU=Open the report again to make changes.];
                       Promoted=Yes;
+                      Enabled=ReopenControllerStatus;
                       Image=ReOpen;
                       PromotedCategory=Process;
                       OnAction=BEGIN
                                  VATReportMediator.Reopen(Rec);
                                END;
                                 }
-      { 26      ;2   ;Separator  }
-      { 27      ;2   ;Action    ;
-                      CaptionML=[DAN=&Udlæs;
-                                 ENU=&Export];
+      { 20      ;2   ;Action    ;
+                      Name=Download Submission Message;
+                      CaptionML=[DAN=Download afsendelsesmeddelelse;
+                                 ENU=Download Submission Message];
+                      ToolTipML=[DAN=Åbn rapporten igen for at foretage ændringer.;
+                                 ENU=Open the report again to make changes.];
+                      Visible=FALSE;
+                      Enabled=DownloadSubmissionControllerStatus;
+                      Image=MoveDown;
+                      OnAction=VAR
+                                 VATReportArchive@1000 : Record 747;
+                               BEGIN
+                                 VATReportArchive.DownloadSubmissionMessage("VAT Report Config. Code","No.");
+                               END;
+                                }
+      { 21      ;2   ;Action    ;
+                      Name=Download Response Message;
+                      CaptionML=[DAN=Download svarmeddelelse;
+                                 ENU=Download Response Message];
+                      ToolTipML=[DAN=Åbn rapporten igen for at foretage ændringer.;
+                                 ENU=Open the report again to make changes.];
+                      Visible=FALSE;
+                      Enabled=DownloadResponseControllerStatus;
+                      Image=MoveDown;
+                      OnAction=VAR
+                                 VATReportArchive@1000 : Record 747;
+                               BEGIN
+                                 VATReportArchive.DownloadResponseMessage("VAT Report Config. Code","No.");
+                               END;
+                                }
+      { 3       ;2   ;Action    ;
+                      Name=Calc. and Post VAT Settlement;
+                      CaptionML=[DAN=Afregn moms;
+                                 ENU=Calculate and Post VAT Settlement];
+                      ToolTipML=[DAN=Luk åbne momsposter og overfører købs- og salgsmomsbeløb til momsafregningskontoen. For hver momsbogføringsgruppe finder kørslen alle momsposter i den momsposttabel, der er inkluderet i filtrene i definitionsvinduet.;
+                                 ENU=Close open VAT entries and transfers purchase and sales VAT amounts to the VAT settlement account. For every VAT posting group, the batch job finds all the VAT entries in the VAT Entry table that are included in the filters in the definition window.];
                       Promoted=Yes;
-                      Image=Export;
-                      PromotedCategory=Process;
-                      OnAction=BEGIN
-                                 VATReportMediator.Export(Rec);
+                      Enabled=CalcAndPostVATStatus;
+                      PromotedIsBig=Yes;
+                      Image=Report;
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 CalcAndPostVATSettlement@1000 : Report 20;
+                               BEGIN
+                                 CalcAndPostVATSettlement.InitializeRequest("Start Date","End Date",WORKDATE,"No.",'',FALSE,FALSE);
+                                 CalcAndPostVATSettlement.RUN;
                                END;
                                 }
       { 33      ;1   ;Action    ;
-                      CaptionML=[DAN=U&dskriv;
-                                 ENU=&Print];
+                      Name=Print;
+                      CaptionML=[DAN=Udskriv;
+                                 ENU=Print];
+                      ToolTipML=[DAN=Udskriv oplysningerne i vinduet. Du får vist et anmodningsvindue for udskrivningen, hvor du kan angive, hvad der skal udskrives.;
+                                 ENU=Print the information in the window. A print request window opens where you can specify what to include on the print-out.];
                       Promoted=Yes;
+                      Visible=FALSE;
                       Image=Print;
                       PromotedCategory=Process;
                       OnAction=BEGIN
                                  VATReportMediator.Print(Rec);
+                               END;
+                                }
+      { 12      ;1   ;Action    ;
+                      Name=Report Setup;
+                      CaptionML=[DAN=Rapportopsætning;
+                                 ENU=Report Setup];
+                      ToolTipML=[DAN=Angiver den opsætning, der skal bruges til afsendelse af momsrapporter.;
+                                 ENU=Specifies the setup that will be used for the VAT reports submission.];
+                      RunObject=Page 743;
+                      Visible=FALSE;
+                      Image=Setup }
+      { 18      ;    ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 24      ;1   ;Action    ;
+                      Name=Open VAT Return Period Card;
+                      CaptionML=[DAN=Åbn momsangivelsesperiodekort;
+                                 ENU=Open VAT Return Period Card];
+                      ToolTipML=[DAN=Åbn momsangivelsesperiodekortet for denne momsangivelsesperiode.;
+                                 ENU=Open the VAT return period card for this VAT return.];
+                      Visible=ReturnPeriodEnabled;
+                      Image=ShowList;
+                      OnAction=VAR
+                                 VATReportMgt@1000 : Codeunit 737;
+                               BEGIN
+                                 VATReportMgt.OpenVATPeriodCardFromVATReturn(Rec);
                                END;
                                 }
     }
@@ -93,9 +228,12 @@ OBJECT Page 740 VAT Report
 
     { 1   ;1   ;Group     ;
                 CaptionML=[DAN=Generelt;
-                           ENU=General] }
+                           ENU=General];
+                Editable=IsEditable }
 
     { 2   ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver rapportens entydige id.;
+                           ENU=Specifies the unique identifier for the report.];
                 SourceExpr="No.";
                 OnAssistEdit=BEGIN
                                IF AssistEdit(xRec) THEN
@@ -104,33 +242,175 @@ OBJECT Page 740 VAT Report
                               }
 
     { 4   ;2   ;Field     ;
-                SourceExpr="VAT Report Config. Code" }
-
-    { 6   ;2   ;Field     ;
-                SourceExpr="VAT Report Type" }
-
-    { 18  ;2   ;Field     ;
-                SourceExpr="Original Report No." }
-
-    { 8   ;2   ;Field     ;
-                SourceExpr="Start Date" }
-
-    { 10  ;2   ;Field     ;
-                SourceExpr="End Date" }
+                CaptionML=[DAN=Version;
+                           ENU=Version];
+                ToolTipML=[DAN=Angiver rapportens version.;
+                           ENU=Specifies version of the report.];
+                NotBlank=Yes;
+                SourceExpr="VAT Report Version";
+                Editable=NOT ReturnPeriodEnabled;
+                OnValidate=BEGIN
+                             CurrPage.UPDATE(TRUE);
+                           END;
+                            }
 
     { 14  ;2   ;Field     ;
-                SourceExpr=Status }
+                ToolTipML=[DAN=Angiver, om rapporten er i gang, er afsluttet eller indeholder fejl.;
+                           ENU=Specifies whether the report is in progress, is completed, or contains errors.];
+                SourceExpr=Status;
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             InitPageControllers;
+                           END;
+                            }
+
+    { 100 ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om beløbene er i den ekstra rapporteringsvaluta.;
+                           ENU=Specifies whether the amounts are in the additional reporting currency.];
+                SourceExpr="Amounts in Add. Rep. Currency";
+                Importance=Additional }
+
+    { 23  ;2   ;Group     ;
+                Editable=False;
+                GroupType=Group }
+
+    { 35  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver året for rapporteringsperioden.;
+                           ENU=Specifies the year of the reporting period.];
+                SourceExpr="Period Year";
+                LookupPageID=Date Lookup }
+
+    { 34  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver rapporteringsperiodens længde.;
+                           ENU=Specifies the length of the reporting period.];
+                SourceExpr="Period Type" }
+
+    { 15  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver den specifikke rapporteringsperiode, som skal bruges.;
+                           ENU=Specifies the specific reporting period to use.];
+                SourceExpr="Period No." }
+
+    { 8   ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver rapporteringsperiodens første dato.;
+                           ENU=Specifies the first date of the reporting period.];
+                SourceExpr="Start Date";
+                Importance=Additional }
+
+    { 10  ;3   ;Field     ;
+                ToolTipML=[DAN=Angiver rapporteringsperiodens sidste dato.;
+                           ENU=Specifies the last date of the reporting period.];
+                SourceExpr="End Date";
+                Importance=Additional }
+
+    { 5   ;1   ;Group     ;
+                Name=Return Period;
+                CaptionML=[DAN=Angivelsesperiode;
+                           ENU=Return Period];
+                Visible=ReturnPeriodEnabled;
+                Editable=FALSE;
+                GroupType=Group }
+
+    { 6   ;2   ;Field     ;
+                Name=ReturnPeriodDueDate;
+                CaptionML=[DAN=Forfaldsdato;
+                           ENU=Due Date];
+                ToolTipML=[DAN=Angiver forfaldsdatoen for momsangivelsesperioden.;
+                           ENU=Specifies the due date for the VAT return period.];
+                SourceExpr=ReturnPeriodDueDate }
+
+    { 9   ;2   ;Field     ;
+                Name=ReturnPeriodStatus;
+                CaptionML=[DAN=Status;
+                           ENU=Status];
+                ToolTipML=[DAN=Angiver statussen for momsangivelsesperioden.;
+                           ENU=Specifies the status of the VAT return period.];
+                SourceExpr=ReturnPeriodStatus }
 
     { 13  ;1   ;Part      ;
                 Name=VATReportLines;
-                SubPageLink=VAT Report No.=FIELD(No.);
-                PagePartID=Page741 }
+                CaptionML=[DAN=Rapportlinjer;
+                           ENU=Report Lines];
+                SubPageLink=VAT Report No.=FIELD(No.),
+                            VAT Report Config. Code=FIELD(VAT Report Config. Code);
+                PagePartID=Page742;
+                PartType=Page }
+
+    { 7   ;1   ;Part      ;
+                Name=ErrorMessagesPart;
+                CaptionML=[DAN=Meddelelser;
+                           ENU=Messages];
+                PagePartID=Page701;
+                Visible=ErrorsExist;
+                PartType=Page }
 
   }
   CODE
   {
     VAR
       VATReportMediator@1000 : Codeunit 740;
+      ErrorsExist@1001 : Boolean;
+      ReportSubmittedMsg@1006 : TextConst 'DAN=Rapporten er sendt.;ENU=The report has been successfully submitted.';
+      CancelReportSentMsg@1005 : TextConst 'DAN=Anmodningen om annullering er blevet sendt.;ENU=The cancellation request has been sent.';
+      MarkAsSubmittedMsg@1004 : TextConst 'DAN=Rapporten er markeret som sendt.;ENU=The report has been marked as submitted.';
+      SuggestLinesControllerStatus@1015 : Boolean;
+      SubmitControllerStatus@1014 : Boolean;
+      MarkAsSubmitControllerStatus@1013 : Boolean;
+      ReleaseControllerStatus@1012 : Boolean;
+      ReopenControllerStatus@1011 : Boolean;
+      IsEditable@1009 : Boolean;
+      DownloadSubmissionControllerStatus@1008 : Boolean;
+      DownloadResponseControllerStatus@1007 : Boolean;
+      CalcAndPostVATStatus@1010 : Boolean;
+      ReturnPeriodDueDate@1002 : Date;
+      ReturnPeriodStatus@1003 : 'Open,Closed';
+      ReturnPeriodEnabled@1016 : Boolean;
+
+    LOCAL PROCEDURE InitPageControllers@5();
+    BEGIN
+      SuggestLinesControllerStatus := Status = Status::Open;
+      ReleaseControllerStatus := Status = Status::Open;
+      SubmitControllerStatus := Status = Status::Released;
+      MarkAsSubmitControllerStatus := Status = Status::Released;
+      DownloadSubmissionControllerStatus := (Status = Status::Submitted) OR
+        (Status = Status::Rejected) OR
+        (Status = Status::Accepted) OR
+        (Status = Status::Closed);
+      DownloadResponseControllerStatus := (Status = Status::Rejected) OR
+        (Status = Status::Accepted) OR
+        (Status = Status::Closed);
+      CalcAndPostVATStatus := Status = Status::Accepted;
+      ReopenControllerStatus := Status = Status::Released;
+      InitReturnPeriodGroup;
+      OnAfterInitPageControllers(Rec,SubmitControllerStatus,MarkAsSubmitControllerStatus);
+    END;
+
+    LOCAL PROCEDURE InitReturnPeriodGroup@2();
+    VAR
+      VATReturnPeriod@1000 : Record 737;
+    BEGIN
+      ReturnPeriodEnabled := VATReturnPeriod.GET("Return Period No.");
+      IF ReturnPeriodEnabled THEN BEGIN
+        ReturnPeriodDueDate := VATReturnPeriod."Due Date";
+        ReturnPeriodStatus := VATReturnPeriod.Status;
+      END;
+    END;
+
+    LOCAL PROCEDURE CheckForErrors@1096() : Boolean;
+    VAR
+      TempErrorMessage@1000 : TEMPORARY Record 700;
+    BEGIN
+      TempErrorMessage.CopyFromContext(Rec);
+      CurrPage.ErrorMessagesPart.PAGE.SetRecords(TempErrorMessage);
+      CurrPage.ErrorMessagesPart.PAGE.UPDATE;
+      ErrorsExist := NOT TempErrorMessage.ISEMPTY;
+
+      EXIT(ErrorsExist);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterInitPageControllers@1(VATReportHeader@1002 : Record 740;VAR SubmitControllerStatus@1000 : Boolean;VAR MarkAsSubmitControllerStatus@1001 : Boolean);
+    BEGIN
+    END;
 
     BEGIN
     END.

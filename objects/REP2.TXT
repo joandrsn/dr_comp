@@ -2,20 +2,14 @@ OBJECT Report 2 General Journal - Test
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
     CaptionML=[DAN=Finanskladde - kontrol;
                ENU=General Journal - Test];
-    OnPreReport=BEGIN
-                  "Gen. Journal Line".COPYFILTER("Journal Template Name","Gen. Journal Batch"."Journal Template Name");
-                  "Gen. Journal Line".COPYFILTER("Journal Batch Name","Gen. Journal Batch".Name);
-                  GenJnlLineFilter := "Gen. Journal Line".GETFILTERS;
-                END;
-
   }
   DATASET
   {
@@ -116,7 +110,6 @@ OBJECT Report 2 General Journal - Test
                DataItemTable=Table81;
                DataItemTableView=SORTING(Journal Template Name,Journal Batch Name,Line No.);
                OnPreDataItem=BEGIN
-                               COPYFILTER("Journal Template Name","Gen. Journal Batch"."Journal Template Name");
                                COPYFILTER("Journal Batch Name","Gen. Journal Batch".Name);
                                GenJnlLineFilter := GETFILTERS;
 
@@ -142,7 +135,8 @@ OBJECT Report 2 General Journal - Test
                                  LastEntrdDate := 0D;
                                END;
 
-                               CurrentCustomerVendors := 0;
+                               TempGenJournalLineCustVendIC.RESET;
+                               TempGenJournalLineCustVendIC.DELETEALL;
                                VATEntryCreated := FALSE;
 
                                GenJnlLine2.RESET;
@@ -413,7 +407,7 @@ OBJECT Report 2 General Journal - Test
                                           AllowPostingTo := GLSetup."Allow Posting To";
                                         END;
                                         IF AllowPostingTo = 0D THEN
-                                          AllowPostingTo := 31129999D;
+                                          AllowPostingTo := DMY2DATE(31,12,9999);
                                       END;
                                       IF ("Posting Date" < AllowPostingFrom) OR ("Posting Date" > AllowPostingTo) THEN
                                         AddError(
@@ -505,36 +499,10 @@ OBJECT Report 2 General Journal - Test
                                       SalesPostingType := FALSE;
                                     END;
                                     IF "Account No." <> '' THEN
-                                      CASE "Account Type" OF
-                                        "Account Type"::"G/L Account":
-                                          CheckGLAcc("Gen. Journal Line",AccName);
-                                        "Account Type"::Customer:
-                                          CheckCust("Gen. Journal Line",AccName);
-                                        "Account Type"::Vendor:
-                                          CheckVend("Gen. Journal Line",AccName);
-                                        "Account Type"::"Bank Account":
-                                          CheckBankAcc("Gen. Journal Line",AccName);
-                                        "Account Type"::"Fixed Asset":
-                                          CheckFixedAsset("Gen. Journal Line",AccName);
-                                        "Account Type"::"IC Partner":
-                                          CheckICPartner("Gen. Journal Line",AccName);
-                                      END;
+                                      CheckAccountTypes("Account Type",AccName);
                                     IF "Bal. Account No." <> '' THEN BEGIN
                                       ExchAccGLJnlLine.RUN("Gen. Journal Line");
-                                      CASE "Account Type" OF
-                                        "Account Type"::"G/L Account":
-                                          CheckGLAcc("Gen. Journal Line",BalAccName);
-                                        "Account Type"::Customer:
-                                          CheckCust("Gen. Journal Line",BalAccName);
-                                        "Account Type"::Vendor:
-                                          CheckVend("Gen. Journal Line",BalAccName);
-                                        "Account Type"::"Bank Account":
-                                          CheckBankAcc("Gen. Journal Line",BalAccName);
-                                        "Account Type"::"Fixed Asset":
-                                          CheckFixedAsset("Gen. Journal Line",BalAccName);
-                                        "Account Type"::"IC Partner":
-                                          CheckICPartner("Gen. Journal Line",AccName);
-                                      END;
+                                      CheckAccountTypes("Account Type",BalAccName);
                                       ExchAccGLJnlLine.RUN("Gen. Journal Line");
                                     END;
 
@@ -908,6 +876,7 @@ OBJECT Report 2 General Journal - Test
       GenJnlTemplate@1071 : Record 80;
       GenJnlLine2@1072 : Record 81;
       TempGenJnlLine@1125 : TEMPORARY Record 81;
+      TempGenJournalLineCustVendIC@1045 : TEMPORARY Record 81;
       GenJnlAlloc@1073 : Record 221;
       OldCustLedgEntry@1074 : Record 21;
       OldVendLedgEntry@1075 : Record 25;
@@ -951,7 +920,6 @@ OBJECT Report 2 General Journal - Test
       ErrorText@1110 : ARRAY [50] OF Text[250];
       TempErrorText@1111 : Text[250];
       BalAccName@1112 : Text[50];
-      CurrentCustomerVendors@1113 : Integer;
       VATEntryCreated@1114 : Boolean;
       CustPosting@1115 : Boolean;
       VendPosting@1116 : Boolean;
@@ -1119,10 +1087,8 @@ OBJECT Report 2 General Journal - Test
           LastDocType := "Document Type";
           LastDocNo := "Document No.";
           LastDate := "Posting Date";
-          IF TotalBalance = 0 THEN BEGIN
-            CurrentCustomerVendors := 0;
+          IF TotalBalance = 0 THEN
             VATEntryCreated := FALSE;
-          END;
           IF GenJnlTemplate."Force Doc. Balance" THEN BEGIN
             VATEntryCreated :=
               VATEntryCreated OR
@@ -1130,13 +1096,8 @@ OBJECT Report 2 General Journal - Test
                ("Gen. Posting Type" IN ["Gen. Posting Type"::Purchase,"Gen. Posting Type"::Sale])) OR
               (("Bal. Account Type" = "Bal. Account Type"::"G/L Account") AND ("Bal. Account No." <> '') AND
                ("Bal. Gen. Posting Type" IN ["Bal. Gen. Posting Type"::Purchase,"Bal. Gen. Posting Type"::Sale]));
-            IF (("Account Type" IN ["Account Type"::Customer,"Account Type"::Vendor]) AND
-                ("Account No." <> '')) OR
-               (("Bal. Account Type" IN ["Bal. Account Type"::Customer,"Bal. Account Type"::Vendor]) AND
-                ("Bal. Account No." <> ''))
-            THEN
-              CurrentCustomerVendors := CurrentCustomerVendors + 1;
-            IF (CurrentCustomerVendors > 1) AND VATEntryCreated THEN
+            TempGenJournalLineCustVendIC.IsCustVendICAdded(GenJnlLine);
+            IF (TempGenJournalLineCustVendIC.COUNT > 1) AND VATEntryCreated THEN
               AddError(
                 STRSUBSTNO(
                   Text024,
@@ -1170,7 +1131,8 @@ OBJECT Report 2 General Journal - Test
           IF ("Posting Date" <> LastDate) OR
              ("Document Type" <> LastDocType) OR ("Document No." <> LastDocNo)
           THEN BEGIN
-            CurrentCustomerVendors := 0;
+            TempGenJournalLineCustVendIC.RESET;
+            TempGenJournalLineCustVendIC.DELETEALL;
             VATEntryCreated := FALSE;
             CustPosting := FALSE;
             VendPosting := FALSE;
@@ -1314,8 +1276,10 @@ OBJECT Report 2 General Journal - Test
               Cust.TABLECAPTION,"Account No."))
         ELSE BEGIN
           AccName := Cust.Name;
+          IF Cust."Privacy Blocked" THEN
+            AddError(Cust.GetPrivacyBlockedGenericErrorText(Cust));
           IF ((Cust.Blocked = Cust.Blocked::All) OR
-              ((Cust.Blocked IN [Cust.Blocked::Invoice,Cust.Blocked::Ship]) AND
+              ((Cust.Blocked = Cust.Blocked::Invoice) AND
                ("Document Type" IN ["Document Type"::Invoice,"Document Type"::" "]))
               )
           THEN
@@ -1393,6 +1357,8 @@ OBJECT Report 2 General Journal - Test
     END;
 
     LOCAL PROCEDURE CheckVend@10(VAR GenJnlLine@1000 : Record 81;VAR AccName@1001 : Text[50]);
+    VAR
+      MiniVendorMgt@1002 : Codeunit 1312;
     BEGIN
       WITH GenJnlLine DO
         IF NOT Vend.GET("Account No.") THEN
@@ -1402,7 +1368,8 @@ OBJECT Report 2 General Journal - Test
               Vend.TABLECAPTION,"Account No."))
         ELSE BEGIN
           AccName := Vend.Name;
-
+          IF Vend."Privacy Blocked" THEN
+            AddError(Vend.GetPrivacyBlockedGenericErrorText(Vend));
           IF ((Vend.Blocked = Vend.Blocked::All) OR
               ((Vend.Blocked = Vend.Blocked::Payment) AND ("Document Type" = "Document Type"::Payment))
               )
@@ -1468,9 +1435,8 @@ OBJECT Report 2 General Journal - Test
 
                 OldVendLedgEntry.RESET;
                 OldVendLedgEntry.SETCURRENTKEY("External Document No.");
-                OldVendLedgEntry.SETRANGE("Document Type","Document Type");
-                OldVendLedgEntry.SETRANGE("Vendor No.","Account No.");
-                OldVendLedgEntry.SETRANGE("External Document No.","External Document No.");
+                MiniVendorMgt.SetFilterForExternalDocNo(
+                  OldVendLedgEntry,"Document Type","External Document No.","Account No.","Document Date");
                 IF OldVendLedgEntry.FINDFIRST THEN
                   AddError(
                     STRSUBSTNO(
@@ -2091,6 +2057,24 @@ OBJECT Report 2 General Journal - Test
         Separator := '; ';
       UNTIL DimSetEntry.NEXT = 0;
       EXIT(DimensionText);
+    END;
+
+    LOCAL PROCEDURE CheckAccountTypes@299(AccountType@1000 : 'G/L Account,Customer,Vendor,Bank Account,Fixed Asset,IC Partner';VAR Name@1001 : Text[50]);
+    BEGIN
+      CASE AccountType OF
+        AccountType::"G/L Account":
+          CheckGLAcc("Gen. Journal Line",Name);
+        AccountType::Customer:
+          CheckCust("Gen. Journal Line",Name);
+        AccountType::Vendor:
+          CheckVend("Gen. Journal Line",Name);
+        AccountType::"Bank Account":
+          CheckBankAcc("Gen. Journal Line",Name);
+        AccountType::"Fixed Asset":
+          CheckFixedAsset("Gen. Journal Line",Name);
+        AccountType::"IC Partner":
+          CheckICPartner("Gen. Journal Line",Name);
+      END;
     END;
 
     BEGIN
@@ -7756,6 +7740,7 @@ OBJECT Report 2 General Journal - Test
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
@@ -7773,9 +7758,9 @@ OBJECT Report 2 General Journal - Test
                 </Paragraph>
               </Paragraphs>
               <Top>0.846cm</Top>
-              <Left>15.07752cm</Left>
+              <Left>13.07752cm</Left>
               <Height>0.42384cm</Height>
-              <Width>3.25cm</Width>
+              <Width>5.25cm</Width>
               <ZIndex>3</ZIndex>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>

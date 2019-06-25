@@ -2,9 +2,9 @@ OBJECT Report 304 Vendor - Detail Trial Balance
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=21-12-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50868;
   }
   PROPERTIES
   {
@@ -62,17 +62,6 @@ OBJECT Report 304 Vendor - Detail Trial Balance
                                         VendorLedgerEntry.SETFILTER("Date Filter",VendDateFilter);
                                         VendorLedgerEntry.CALCFIELDS("Amount (LCY)");
                                         StartBalAdjLCY := StartBalAdjLCY - VendorLedgerEntry."Amount (LCY)";
-                                        "Detailed Vendor Ledg. Entry".SETCURRENTKEY("Vendor Ledger Entry No.","Entry Type","Posting Date");
-                                        "Detailed Vendor Ledg. Entry".SETRANGE("Vendor Ledger Entry No.",VendorLedgerEntry."Entry No.");
-                                        "Detailed Vendor Ledg. Entry".SETFILTER("Entry Type",'%1|%2',
-                                          "Detailed Vendor Ledg. Entry"."Entry Type"::"Correction of Remaining Amount",
-                                          "Detailed Vendor Ledg. Entry"."Entry Type"::"Appln. Rounding");
-                                        "Detailed Vendor Ledg. Entry".SETFILTER("Posting Date",VendDateFilter);
-                                        IF "Detailed Vendor Ledg. Entry".FIND('-') THEN
-                                          REPEAT
-                                            StartBalAdjLCY := StartBalAdjLCY - "Detailed Vendor Ledg. Entry"."Amount (LCY)";
-                                          UNTIL "Detailed Vendor Ledg. Entry".NEXT = 0;
-                                        "Detailed Vendor Ledg. Entry".RESET;
                                       UNTIL VendorLedgerEntry.NEXT = 0;
                                   END;
                                   CurrReport.PRINTONLYIFDETAIL := ExcludeBalanceOnly OR (StartBalanceLCY = 0);
@@ -258,7 +247,6 @@ OBJECT Report 304 Vendor - Detail Trial Balance
 
                OnAfterGetRecord=BEGIN
                                   Correction := Correction + "Amount (LCY)";
-                                  VendBalanceLCY := VendBalanceLCY + "Amount (LCY)";
                                 END;
 
                OnPostDataItem=BEGIN
@@ -349,11 +337,13 @@ OBJECT Report 304 Vendor - Detail Trial Balance
                   SourceExpr=PrintAmountsInLCY }
 
       { 2   ;2   ;Field     ;
+                  Name=NewPageperVendor;
                   CaptionML=[DAN=Skift side pr. kreditor;
                              ENU=New Page per Vendor];
                   SourceExpr=PrintOnlyOnePerPage }
 
       { 3   ;2   ;Field     ;
+                  Name=ExcludeCustHaveaBalanceOnly;
                   CaptionML=[DAN=Udelad kreditorer, der kun har saldo;
                              ENU=Exclude Vendors That Have A Balance Only];
                   SourceExpr=ExcludeBalanceOnly;
@@ -6800,6 +6790,7 @@ OBJECT Report 304 Vendor - Detail Trial Balance
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

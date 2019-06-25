@@ -2,9 +2,9 @@ OBJECT Table 91 User Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=28-06-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50458;
   }
   PROPERTIES
   {
@@ -36,20 +36,30 @@ OBJECT Table 91 User Setup
                                                             END;
 
                                                    ValidateTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID];
                                                    NotBlank=Yes }
-    { 2   ;   ;Allow Posting From  ;Date          ;CaptionML=[DAN=Bogf. tilladt fra;
+    { 2   ;   ;Allow Posting From  ;Date          ;OnValidate=BEGIN
+                                                                UserSetupManagement.CheckAllowedPostingDates("Allow Posting From","Allow Posting To");
+                                                              END;
+
+                                                   CaptionML=[DAN=Bogf. tilladt fra;
                                                               ENU=Allow Posting From] }
-    { 3   ;   ;Allow Posting To    ;Date          ;CaptionML=[DAN=Bogf. tilladt til;
+    { 3   ;   ;Allow Posting To    ;Date          ;OnValidate=BEGIN
+                                                                UserSetupManagement.CheckAllowedPostingDates("Allow Posting From","Allow Posting To");
+                                                              END;
+
+                                                   CaptionML=[DAN=Bogf. tilladt til;
                                                               ENU=Allow Posting To] }
     { 4   ;   ;Register Time       ;Boolean       ;CaptionML=[DAN=Registrer tid;
                                                               ENU=Register Time] }
-    { 10  ;   ;Salespers./Purch. Code;Code10      ;TableRelation=Salesperson/Purchaser.Code;
+    { 10  ;   ;Salespers./Purch. Code;Code20      ;TableRelation=Salesperson/Purchaser.Code;
                                                    OnValidate=VAR
                                                                 UserSetup@1000 : Record 91;
                                                               BEGIN
                                                                 IF "Salespers./Purch. Code" <> '' THEN BEGIN
+                                                                  ValidateSalesPersonPurchOnUserSetup(Rec);
                                                                   UserSetup.SETCURRENTKEY("Salespers./Purch. Code");
                                                                   UserSetup.SETRANGE("Salespers./Purch. Code","Salespers./Purch. Code");
                                                                   IF UserSetup.FINDFIRST THEN
@@ -75,6 +85,7 @@ OBJECT Table 91 User Setup
                                                                 VALIDATE("Approver ID",UserSetup."User ID");
                                                             END;
 
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Godkender-id;
                                                               ENU=Approver ID] }
     { 12  ;   ;Sales Amount Approval Limit;Integer;OnValidate=BEGIN
@@ -126,6 +137,7 @@ OBJECT Table 91 User Setup
                                                                 VALIDATE(Substitute,UserSetup."User ID");
                                                             END;
 
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Erstatning;
                                                               ENU=Substitute] }
     { 17  ;   ;E-Mail              ;Text100       ;ExtendedDatatype=E-Mail;
@@ -191,6 +203,18 @@ OBJECT Table 91 User Setup
       Text001@1000 : TextConst 'DAN=Sælger-/indkøberkoden %1 er allerede tildelt til bruger-id''et %2.;ENU=The %1 Salesperson/Purchaser code is already assigned to another User ID %2.';
       Text003@1002 : TextConst 'DAN="Du kan ikke have både %1 og %2. ";ENU="You cannot have both a %1 and %2. "';
       Text005@1004 : TextConst 'DAN=Du kan ikke have godkendelsesgrænser, der er mindre end nul.;ENU=You cannot have approval limits less than zero.';
+      PrivacyBlockedGenericErr@1013 : TextConst '@@@="%1 = salesperson / purchaser code.";DAN=Beskyttelse af personlige oplysninger spærret må ikke være gældende for sælgeren/indkøberen %1.;ENU=Privacy Blocked must not be true for Salesperson / Purchaser %1.';
+      UserSetupManagement@1001 : Codeunit 5700;
+
+    LOCAL PROCEDURE ValidateSalesPersonPurchOnUserSetup@298(UserSetup2@1000 : Record 91);
+    VAR
+      SalesPersonPurchaser@1001 : Record 13;
+    BEGIN
+      IF UserSetup2."Salespers./Purch. Code" <> '' THEN
+        IF SalesPersonPurchaser.GET(UserSetup2."Salespers./Purch. Code") THEN
+          IF SalesPersonPurchaser.VerifySalesPersonPurchaserPrivacyBlocked(SalesPersonPurchaser) THEN
+            ERROR(PrivacyBlockedGenericErr,UserSetup2."Salespers./Purch. Code")
+    END;
 
     BEGIN
     END.

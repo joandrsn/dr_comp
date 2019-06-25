@@ -2,9 +2,9 @@ OBJECT Page 1300 Mini Customer Card
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.47838,NAVDK9.00.00.47838;
   }
   PROPERTIES
   {
@@ -419,11 +419,8 @@ OBJECT Page 1300 Mini Customer Card
                       ToolTipML=[DAN=Vis, udskriv, eller gem en liste over debitors transaktioner i en bestemt periode, f.eks. for at sende udskriften til debitor i slutningen af en regnskabsperiode. Du kan vælge at få vist samtlige forfaldne saldi, uafhængigt af den angivne periode, eller du kan vælge at inkludere et aldersfordelingsinterval.;
                                  ENU=View, print, or save a list of a customer's transactions for a selected period, for example, to send to the customer at the close of an accounting period. You can choose to have all overdue balances displayed regardless of the period specified, or you can choose to include an aging band.];
                       Image=Report;
-                      OnAction=VAR
-                                 Customer@1000 : Record 18;
-                               BEGIN
-                                 Customer.SETRANGE("No.","No.");
-                                 REPORT.RUNMODAL(REPORT::Statement,TRUE,TRUE,Customer);
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"Customer Layout - Statement",Rec);
                                END;
                                 }
     }

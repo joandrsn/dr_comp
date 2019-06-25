@@ -2,9 +2,9 @@ OBJECT Table 368 Dimension Selection Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,9 +13,11 @@ OBJECT Table 368 Dimension Selection Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Code                ;Text30        ;CaptionML=[DAN=Kode;
+    { 1   ;   ;Code                ;Text30        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kode;
                                                               ENU=Code] }
-    { 2   ;   ;Description         ;Text30        ;CaptionML=[DAN=Beskrivelse;
+    { 2   ;   ;Description         ;Text30        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Beskrivelse;
                                                               ENU=Description] }
     { 3   ;   ;Selected            ;Boolean       ;OnValidate=BEGIN
                                                                 "New Dimension Value Code" := '';
@@ -23,6 +25,7 @@ OBJECT Table 368 Dimension Selection Buffer
                                                                 Level := Level::" ";
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Markeret;
                                                               ENU=Selected] }
     { 4   ;   ;New Dimension Value Code;Code20    ;TableRelation=IF (Code=CONST(G/L Account)) "G/L Account".No.
@@ -32,6 +35,7 @@ OBJECT Table 368 Dimension Selection Buffer
                                                                 Selected := TRUE;
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Ny dimensionsværdikode;
                                                               ENU=New Dimension Value Code] }
     { 5   ;   ;Dimension Value Filter;Code250     ;TableRelation=IF (Filter Lookup Table No.=CONST(15)) "G/L Account".No.
@@ -47,6 +51,7 @@ OBJECT Table 368 Dimension Selection Buffer
                                                               END;
 
                                                    ValidateTableRelation=No;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Dimensionsværdifilter;
                                                               ENU=Dimension Value Filter] }
     { 6   ;   ;Level               ;Option        ;OnValidate=BEGIN
@@ -56,12 +61,14 @@ OBJECT Table 368 Dimension Selection Buffer
                                                                   Selected := TRUE;
                                                               END;
 
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Niveau;
                                                               ENU=Level];
                                                    OptionCaptionML=[DAN=" ,Niveau 1,Niveau 2,Niveau 3,Niveau 4";
                                                                     ENU=" ,Level 1,Level 2,Level 3,Level 4"];
                                                    OptionString=[ ,Level 1,Level 2,Level 3,Level 4] }
     { 7   ;   ;Filter Lookup Table No.;Integer    ;InitValue=349;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Filteropslagstabelnr.;
                                                               ENU=Filter Lookup Table No.];
                                                    Editable=No }

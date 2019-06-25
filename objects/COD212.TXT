@@ -2,9 +2,9 @@ OBJECT Codeunit 212 Res. Jnl.-Post Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -81,6 +81,7 @@ OBJECT Codeunit 212 Res. Jnl.-Post Line
         ResReg.MODIFY;
 
         Res.GET("Resource No.");
+        Res.CheckResourcePrivacyBlocked(TRUE);
         Res.TESTFIELD(Blocked,FALSE);
 
         IF (GenPostingSetup."Gen. Bus. Posting Group" <> "Gen. Bus. Posting Group") OR
@@ -141,9 +142,10 @@ OBJECT Codeunit 212 Res. Jnl.-Post Line
             "Quantity (Base)" := Quantity * "Qty. per Unit of Measure";
         END;
 
-        IF "Entry Type" = "Entry Type"::Usage THEN
+        IF "Entry Type" = "Entry Type"::Usage THEN BEGIN
           PostTimeSheetDetail(ResJnlLine,ResLedgEntry."Quantity (Base)");
-
+          ResLedgEntry.Chargeable := IsChargable(ResJnlLine,ResLedgEntry.Chargeable);
+        END;
         ResLedgEntry.INSERT(TRUE);
 
         NextEntryNo := NextEntryNo + 1;
@@ -163,7 +165,7 @@ OBJECT Codeunit 212 Res. Jnl.-Post Line
       TimeSheetDetail@1000 : Record 952;
       TimeSheetMgt@1004 : Codeunit 950;
     BEGIN
-      WITH ResJnlLine2 DO BEGIN
+      WITH ResJnlLine2 DO
         IF "Time Sheet No." <> '' THEN BEGIN
           TimeSheetDetail.GET("Time Sheet No.","Time Sheet Line No.","Time Sheet Date");
           TimeSheetDetail."Posted Quantity" += QtyToPost;
@@ -180,7 +182,17 @@ OBJECT Codeunit 212 Res. Jnl.-Post Line
             TimeSheetLine.MODIFY;
           END;
         END;
+    END;
+
+    LOCAL PROCEDURE IsChargable@6(ResJournalLine@1000 : Record 207;Chargeable@1002 : Boolean) : Boolean;
+    VAR
+      TimeSheetLine@1001 : Record 951;
+    BEGIN
+      IF ResJournalLine."Time Sheet No." <> '' THEN BEGIN
+        TimeSheetLine.GET(ResJournalLine."Time Sheet No.",ResJournalLine."Time Sheet Line No.");
+        EXIT(TimeSheetLine.Chargeable);
       END;
+      EXIT(Chargeable);
     END;
 
     BEGIN

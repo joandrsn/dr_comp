@@ -1,0 +1,196 @@
+OBJECT Codeunit 737 VAT Report Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26-01-19;
+    Time=12:00:00;
+    Version List=NAVW19.00.00.51014;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      CreateVATReturnQst@1000 : TextConst '@@@=1 - VAT Return No.;DAN=Momsangivelsen %1 er blevet oprettet. Vil du åbne momsangivelseskortet?;ENU=VAT Return %1 has been created. Do you want to open the VAT return card?';
+      AlreadyExistVATReturnQst@1002 : TextConst '@@@=1 - VAT Return No.;DAN=Momsangivelsen %1, der er knyttet til denne momsangivelsesperiode, findes allerede. Vil du åbne momsangivelseskortet?;ENU=VAT Return %1 associated with this VAT return period already exists. Do you want to open the VAT return card?';
+      NoVATReturnQst@1003 : TextConst 'DAN=Der er ingen momsangivelse for denne periode. Vil du oprette en ny?;ENU=There is no VAT return for this period. Do you want to create a new one?';
+
+    PROCEDURE GetVATReturnPeriods@4();
+    VAR
+      VATReportSetup@1000 : Record 743;
+    BEGIN
+      VATReportSetup.GET;
+      VATReportSetup.TESTFIELD("Manual Receive Period CU ID");
+      CODEUNIT.RUN(VATReportSetup."Manual Receive Period CU ID");
+    END;
+
+    PROCEDURE GetSubmittedVATReturns@5(VATReturnPeriod@1000 : Record 737);
+    VAR
+      VATReportSetup@1001 : Record 743;
+    BEGIN
+      VATReportSetup.GET;
+      VATReportSetup.TESTFIELD("Receive Submitted Return CU ID");
+      CODEUNIT.RUN(VATReportSetup."Receive Submitted Return CU ID",VATReturnPeriod);
+    END;
+
+    PROCEDURE CreateVATReturnFromVATPeriod@1(VATReturnPeriod@1003 : Record 737);
+    VAR
+      VATReportHeader@1002 : Record 740;
+    BEGIN
+      IF NOT VATReportHeader.GET(VATReportHeader."VAT Report Config. Code"::"VAT Return",VATReturnPeriod."VAT Return No.") THEN BEGIN
+        CreateVATReturn(VATReportHeader,VATReturnPeriod);
+        IF CONFIRM(STRSUBSTNO(CreateVATReturnQst,VATReportHeader."No.")) THEN
+          OpenVATReturnCardFromVATPeriod(VATReturnPeriod);
+      END ELSE
+        IF CONFIRM(STRSUBSTNO(AlreadyExistVATReturnQst,VATReportHeader."No.")) THEN
+          OpenVATReturnCard(VATReportHeader);
+    END;
+
+    PROCEDURE OpenVATReturnCardFromVATPeriod@6(VATReturnPeriod@1001 : Record 737);
+    VAR
+      VATReportHeader@1002 : Record 740;
+    BEGIN
+      IF VATReportHeader.GET(VATReportHeader."VAT Report Config. Code"::"VAT Return",VATReturnPeriod."VAT Return No.") THEN
+        OpenVATReturnCard(VATReportHeader)
+      ELSE
+        IF CONFIRM(NoVATReturnQst) THEN BEGIN
+          CreateVATReturn(VATReportHeader,VATReturnPeriod);
+          OpenVATReturnCard(VATReportHeader);
+        END;
+    END;
+
+    LOCAL PROCEDURE OpenVATReturnCard@9(VATReportHeader@1000 : Record 740);
+    BEGIN
+      COMMIT;
+      PAGE.RUNMODAL(PAGE::"VAT Report",VATReportHeader);
+    END;
+
+    PROCEDURE OpenVATPeriodCardFromVATReturn@7(VATReportHeader@1001 : Record 740);
+    VAR
+      VATReturnPeriod@1000 : Record 737;
+    BEGIN
+      COMMIT;
+      IF VATReturnPeriod.GET(VATReportHeader."Return Period No.") THEN
+        PAGE.RUNMODAL(PAGE::"VAT Return Period Card",VATReturnPeriod);
+    END;
+
+    LOCAL PROCEDURE CreateVATReturn@8(VAR VATReportHeader@1000 : Record 740;VAR VATReturnPeriod@1002 : Record 737);
+    BEGIN
+      InsertNewVATReturn(VATReportHeader);
+      UpdateVATReturn(VATReportHeader,VATReturnPeriod);
+    END;
+
+    LOCAL PROCEDURE InsertNewVATReturn@2(VAR VATReportHeader@1000 : Record 740);
+    VAR
+      VATReportSetup@1002 : Record 743;
+    BEGIN
+      VATReportSetup.GET;
+      VATReportSetup.TESTFIELD("Report Version");
+      WITH VATReportHeader DO BEGIN
+        "VAT Report Config. Code" := "VAT Report Config. Code"::"VAT Return";
+        "VAT Report Version" := VATReportSetup."Report Version";
+        INSERT(TRUE);
+      END;
+    END;
+
+    LOCAL PROCEDURE UpdateVATReturn@18(VAR VATReportHeader@1001 : Record 740;VAR VATReturnPeriod@1000 : Record 737);
+    BEGIN
+      VATReturnPeriod.CopyToVATReturn(VATReportHeader);
+      VATReportHeader.MODIFY;
+
+      VATReturnPeriod."VAT Return No." := VATReportHeader."No.";
+      VATReturnPeriod.MODIFY;
+    END;
+
+    PROCEDURE CreateAndStartAutoUpdateVATReturnPeriodJob@3(VATReportSetup@1000 : Record 743);
+    VAR
+      JobQueueEntry@1001 : Record 472;
+      JobQueueMgt@1002 : Codeunit 456;
+    BEGIN
+      IF VATReportSetup."Update Period Job Frequency" <> VATReportSetup."Update Period Job Frequency"::Never THEN
+        VATReportSetup.TESTFIELD("Auto Receive Period CU ID");
+      JobQueueMgt.DeleteJobQueueEntries(JobQueueEntry."Object Type to Run"::Codeunit,VATReportSetup."Auto Receive Period CU ID");
+      IF VATReportSetup."Update Period Job Frequency" = VATReportSetup."Update Period Job Frequency"::Never THEN
+        EXIT;
+
+      JobQueueEntry."No. of Minutes between Runs" := GetJobNoOfMinutes(VATReportSetup);
+      JobQueueEntry."Object Type to Run" := JobQueueEntry."Object Type to Run"::Codeunit;
+      JobQueueEntry."Object ID to Run" := VATReportSetup."Auto Receive Period CU ID";
+      JobQueueMgt.CreateJobQueueEntry(JobQueueEntry);
+
+      CODEUNIT.RUN(CODEUNIT::"Job Queue - Enqueue",JobQueueEntry);
+    END;
+
+    LOCAL PROCEDURE GetJobNoOfMinutes@10(VATReportSetup@1000 : Record 743) : Integer;
+    BEGIN
+      WITH VATReportSetup DO
+        CASE "Update Period Job Frequency" OF
+          "Update Period Job Frequency"::Never:
+            EXIT(0);
+          "Update Period Job Frequency"::Daily:
+            EXIT(60 * 24);
+          "Update Period Job Frequency"::Weekly:
+            EXIT(60 * 24 * 7);
+        END;
+    END;
+
+    [EventSubscriber(Codeunit,448,OnAfterHandleRequest)]
+    LOCAL PROCEDURE OnAfterHandleVATReturnPeriodJobRequest@13(VAR JobQueueEntry@1000 : Record 472;WasSuccess@1001 : Boolean);
+    BEGIN
+      IF NOT WasSuccess THEN
+        CheckAndRestartVATReturnPeriodJob(JobQueueEntry);
+    END;
+
+    LOCAL PROCEDURE CheckAndRestartVATReturnPeriodJob@14(JobQueueEntry@1000 : Record 472);
+    VAR
+      VATReportSetup@1001 : Record 743;
+      JobQueueDispatcher@1002 : Codeunit 448;
+    BEGIN
+      IF NOT VATReportSetup.READPERMISSION THEN
+        EXIT;
+
+      IF NOT VATReportSetup.GET THEN
+        EXIT;
+
+      IF VATReportSetup."Auto Receive Period CU ID" = 0 THEN
+        EXIT;
+
+      WITH JobQueueEntry DO BEGIN
+        IF NOT FIND THEN
+          EXIT;
+
+        IF ("Object Type to Run" <> "Object Type to Run"::Codeunit) OR
+           ("Object ID to Run" <> VATReportSetup."Auto Receive Period CU ID") OR
+           (Status <> Status::Error)
+        THEN
+          EXIT;
+
+        "User Session Started" := 0DT;
+        "User Service Instance ID" := 0;
+        "User Session ID" := 0;
+        "Earliest Start Date/Time" := JobQueueDispatcher.CalcNextRunTimeForRecurringJob(JobQueueEntry,CURRENTDATETIME);
+        CODEUNIT.RUN(CODEUNIT::"Job Queue - Enqueue",JobQueueEntry);
+      END;
+    END;
+
+    [EventSubscriber(Page,740,OnBeforeValidateEvent,"VAT Report Version")]
+    LOCAL PROCEDURE OnBeforeValidateVATReportVersion@15(VAR Rec@1000 : Record 740);
+    VAR
+      VATReportSetup@1001 : Record 743;
+      VATReturnPeriod@1002 : Record 737;
+    BEGIN
+      IF VATReportSetup.GET THEN
+        IF (Rec."VAT Report Version" <> '') AND (Rec."VAT Report Version" = VATReportSetup."Report Version") THEN
+          IF PAGE.RUNMODAL(0,VATReturnPeriod) = ACTION::LookupOK THEN
+            UpdateVATReturn(Rec,VATReturnPeriod);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

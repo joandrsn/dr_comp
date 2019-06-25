@@ -2,9 +2,9 @@ OBJECT Table 5409 Prod. Order Routing Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=26-07-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50528;
   }
   PROPERTIES
   {
@@ -147,7 +147,7 @@ OBJECT Table 5409 Prod. Order Routing Line
                                                                 ModifyCapNeedEntries;
 
                                                                 GetLine;
-                                                                IF ProdOrderLine."Routing Type" = ProdOrderLine."Routing Type"::Serial THEN
+                                                                IF (ProdOrderLine."Routing Type" = ProdOrderLine."Routing Type"::Serial) OR (xRec."No." <> '') THEN
                                                                   CalcStartingEndingDates(Direction::Forward);
                                                               END;
 
@@ -684,6 +684,8 @@ OBJECT Table 5409 Prod. Order Routing Line
       "Minimum Process Time" := MachineCenter."Minimum Process Time";
       "Maximum Process Time" := MachineCenter."Maximum Process Time";
       "Concurrent Capacities" := MachineCenter."Concurrent Capacities";
+      IF "Concurrent Capacities" = 0 THEN
+        "Concurrent Capacities" := 1;
       "Send-Ahead Quantity" := MachineCenter."Send-Ahead Quantity";
       "Setup Time Unit of Meas. Code" := MachineCenter."Setup Time Unit of Meas. Code";
       "Wait Time Unit of Meas. Code" := MachineCenter."Wait Time Unit of Meas. Code";

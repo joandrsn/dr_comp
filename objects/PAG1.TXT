@@ -2,9 +2,9 @@ OBJECT Page 1 Company Information
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.50221,NAVDK9.00.00.50221;
   }
   PROPERTIES
   {
@@ -114,6 +114,8 @@ OBJECT Page 1 Company Information
 
     { 50  ;2   ;Field     ;
                 Name=Phone No.2;
+                CaptionML=[DAN=Telefonnr.2;
+                           ENU=Phone No.2];
                 SourceExpr="Phone No." }
 
     { 54  ;2   ;Field     ;
@@ -268,6 +270,23 @@ OBJECT Page 1 Company Information
                              SystemIndicatorTextOnAfterVali;
                            END;
                             }
+
+    { 65  ;1   ;Group     ;
+                CaptionML=[DAN=Intrastat;
+                           ENU=Intrastat];
+                GroupType=Group }
+
+    { 68  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver Intrastat-kontakttypen.;
+                           ENU=Specifies the Intrastat contact type.];
+                OptionCaptionML=[DAN=" ,Kontakt,Kreditor";
+                                 ENU=" ,Contact,Vendor"];
+                SourceExpr="Intrastat Contact Type" }
+
+    { 71  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver Intrastat-kontakten.;
+                           ENU=Specifies the Intrastat contact.];
+                SourceExpr="Intrastat Contact No." }
 
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }

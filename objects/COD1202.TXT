@@ -2,9 +2,9 @@ OBJECT Codeunit 1202 Import Payroll Transaction
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -20,29 +20,31 @@ OBJECT Codeunit 1202 Import Payroll Transaction
       ImportPayrollTransCap@1002 : TextConst 'DAN=Vælg løntransaktion;ENU=Select Payroll Transaction';
       FileFilterTxt@1001 : TextConst 'DAN="Tekstfiler(*.txt;*.csv)|*.txt;*.csv";ENU="Text Files(*.txt;*.csv)|*.txt;*.csv"';
       FileFilterExtensionTxt@1004 : TextConst '@@@={Locked};DAN=txt,csv;ENU=txt,csv';
+      ProcessingSetupErr@1003 : TextConst 'DAN=Du skal angive en XMLport til læsning/skrivning eller en Codeunit til læsning/skrivning.;ENU=You must specify either a reading/writing XMLport or a reading/writing codeunit.';
 
     PROCEDURE SelectAndImportPayrollDataToGL@2(VAR GenJournalLine@1000 : Record 81;DataExchDefCode@1001 : Code[20]);
     VAR
-      DataExchDef@1004 : Record 1222;
       TempBlob@1002 : Record 99008535;
       FileName@1003 : Text;
     BEGIN
       FileName := FileMgt.BLOBImportWithFilter(TempBlob,ImportPayrollTransCap,'',FileFilterTxt,FileFilterExtensionTxt);
-      IF FileName <> '' THEN BEGIN
-        DataExchDef.GET(DataExchDefCode);
-        DataExchDef.TESTFIELD("Reading/Writing XMLport");
+      IF FileName <> '' THEN
         ImportPayrollDataToGL(GenJournalLine,FileName,TempBlob,DataExchDefCode);
-      END;
     END;
 
     PROCEDURE ImportPayrollDataToGL@18(GenJournalLine@1000 : Record 81;FileName@1005 : Text;TempBlob@1001 : Record 99008535;DataExchDefCode@1002 : Code[20]);
     VAR
       GenJournalLineTemplate@1060 : Record 81;
       DataExch@1003 : Record 1220;
+      DataExchDef@1004 : Record 1222;
     BEGIN
+      DataExchDef.GET(DataExchDefCode);
+      IF (DataExchDef."Reading/Writing XMLport" <> 0) = (DataExchDef."Reading/Writing Codeunit" <> 0) THEN
+        ERROR(ProcessingSetupErr);
+
       PrepareGenJournalLine(GenJournalLineTemplate,GenJournalLine);
       CreateDataExch(DataExch,FileName,TempBlob,DataExchDefCode);
-      ImportCSV(DataExch);
+      ImportPayrollFile(DataExch);
       MapDataToGenJournalLine(DataExch,GenJournalLineTemplate);
     END;
 
@@ -54,18 +56,19 @@ OBJECT Codeunit 1202 Import Payroll Transaction
       DataExch.InsertRec(COPYSTR(FileName,1,MAXSTRLEN(DataExch."File Name")),Source,DataExchDefCode);
     END;
 
-    LOCAL PROCEDURE ImportCSV@11(DataExch@1000 : Record 1220);
+    LOCAL PROCEDURE ImportPayrollFile@11(DataExch@1000 : Record 1220);
     VAR
       DataExchDef@1006 : Record 1222;
       Source@1002 : InStream;
     BEGIN
       DataExch."File Content".CREATEINSTREAM(Source);
-
       DataExch.SETRANGE("Entry No.",DataExch."Entry No.");
-
       DataExchDef.GET(DataExch."Data Exch. Def Code");
-
-      XMLPORT.IMPORT(DataExchDef."Reading/Writing XMLport",Source,DataExch);
+      IF DataExchDef."Reading/Writing XMLport" <> 0 THEN
+        XMLPORT.IMPORT(DataExchDef."Reading/Writing XMLport",Source,DataExch)
+      ELSE
+        IF DataExchDef."Reading/Writing Codeunit" <> 0 THEN
+          CODEUNIT.RUN(DataExchDef."Reading/Writing Codeunit",DataExch);
     END;
 
     LOCAL PROCEDURE MapDataToGenJournalLine@14(DataExch@1000 : Record 1220;GenJournalLineTemplate@1001 : Record 81);

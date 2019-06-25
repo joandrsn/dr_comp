@@ -2,9 +2,9 @@ OBJECT Table 27 Item
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -161,8 +161,7 @@ OBJECT Table 27 Item
   }
   FIELDS
   {
-    { 1   ;   ;No.                 ;Code20        ;AltSearchField=Search Description;
-                                                   OnValidate=BEGIN
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
                                                                 IF "No." <> xRec."No." THEN BEGIN
                                                                   GetInvtSetup;
                                                                   NoSeriesMgt.TestManual(InvtSetup."Item Nos.");
@@ -170,6 +169,7 @@ OBJECT Table 27 Item
                                                                 END;
                                                               END;
 
+                                                   AltSearchField=Search Description;
                                                    CaptionML=[DAN=Nummer;
                                                               ENU=No.] }
     { 2   ;   ;No. 2               ;Code20        ;CaptionML=[DAN=Nr. 2;
@@ -432,7 +432,11 @@ OBJECT Table 27 Item
                                                               ENU=Vendor No.] }
     { 32  ;   ;Vendor Item No.     ;Text20        ;CaptionML=[DAN=Leverandørs varenr.;
                                                               ENU=Vendor Item No.] }
-    { 33  ;   ;Lead Time Calculation;DateFormula  ;AccessByPermission=TableData 120=R;
+    { 33  ;   ;Lead Time Calculation;DateFormula  ;OnValidate=BEGIN
+                                                                LeadTimeMgt.CheckLeadTimeIsNotNegative("Lead Time Calculation");
+                                                              END;
+
+                                                   AccessByPermission=TableData 120=R;
                                                    CaptionML=[DAN=Leveringstid;
                                                               ENU=Lead Time Calculation] }
     { 34  ;   ;Reorder Point       ;Decimal       ;AccessByPermission=TableData 244=R;
@@ -966,7 +970,8 @@ OBJECT Table 27 Item
                                                                                                            Item No.=FIELD(No.)));
                                                    CaptionML=[DAN=Kostpris for åbne produktionsordrer;
                                                               ENU=Cost of Open Production Orders] }
-    { 521 ;   ;Application Wksh. User ID;Code128  ;CaptionML=[DAN=Programworkshopbruger-id;
+    { 521 ;   ;Application Wksh. User ID;Code128  ;DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=[DAN=Programworkshopbruger-id;
                                                               ENU=Application Wksh. User ID] }
     { 910 ;   ;Assembly Policy     ;Option        ;OnValidate=BEGIN
                                                                 IF "Assembly Policy" = "Assembly Policy"::"Assemble-to-Order" THEN
@@ -1599,11 +1604,12 @@ OBJECT Table 27 Item
                                                                       THEN
                                                                         ERROR(Text7381);
 
-                                                                    PhysInvtCountPeriodMgt.CalcPeriod(
-                                                                      "Last Counting Period Update","Next Counting Start Date","Next Counting End Date",
-                                                                      PhysInvtCountPeriod."Count Frequency per Year",
-                                                                      ("Last Counting Period Update" = 0D) OR
-                                                                      ("Phys Invt Counting Period Code" <> xRec."Phys Invt Counting Period Code"));
+                                                                    IF ("Last Counting Period Update" = 0D) OR
+                                                                       ("Phys Invt Counting Period Code" <> xRec."Phys Invt Counting Period Code")
+                                                                    THEN
+                                                                      PhysInvtCountPeriodMgt.CalcPeriod(
+                                                                        "Last Counting Period Update","Next Counting Start Date","Next Counting End Date",
+                                                                        PhysInvtCountPeriod."Count Frequency per Year");
                                                                   END;
                                                                 END ELSE BEGIN
                                                                   IF CurrFieldNo <> 0 THEN
@@ -1958,6 +1964,7 @@ OBJECT Table 27 Item
       Text002@1002 : TextConst 'DAN=Du kan ikke slette %1 %2, fordi der er en eller flere produktionsordrer, der indeholder denne vare.;ENU=You cannot delete %1 %2 because there are one or more outstanding production orders that include this item.';
       Text003@1057 : TextConst 'DAN=Skal %1 ændres?;ENU=Do you want to change %1?';
       Text004@1064 : TextConst 'DAN=Du kan ikke slette %1 %2, fordi der findes én eller flere godkendte produktionsstyklister, der indeholder denne vare.;ENU=You cannot delete %1 %2 because there are one or more certified Production BOM that include this item.';
+      CannotDeleteItemIfProdBOMVersionExistsErr@1083 : TextConst '@@@=%1 - Tablecaption, %2 - No.;DAN=Du kan ikke slette %1 %2, fordi der findes én eller flere godkendte udgaver af produktionsstyklister, der indeholder denne vare.;ENU=You cannot delete %1 %2 because there are one or more certified production BOM version that include this item.';
       Text006@1003 : TextConst 'DAN=Priser inkl. moms kan ikke beregnes, når %1 er %2.;ENU=Prices including VAT cannot be calculated when %1 is %2.';
       Text007@1004 : TextConst 'DAN=Du kan ikke ændre %1, fordi der er en eller flere poster på varen.;ENU=You cannot change %1 because there are one or more ledger entries for this item.';
       Text008@1005 : TextConst 'DAN=Du kan ikke ændre %1, fordi der findes mindst én udestående købs%2, som indeholder denne vare.;ENU=You cannot change %1 because there is at least one outstanding Purchase %2 that include this item.';
@@ -1990,8 +1997,6 @@ OBJECT Table 27 Item
       PurchPrepmtPct@1076 : Record 460;
       ItemTranslation@1023 : Record 30;
       BOMComp@1024 : Record 90;
-      PurchOrderLine@1025 : Record 39;
-      SalesOrderLine@1026 : Record 37;
       VATPostingSetup@1027 : Record 325;
       ExtTextHeader@1028 : Record 279;
       GenProdPostingGrp@1029 : Record 251;
@@ -2029,6 +2034,7 @@ OBJECT Table 27 Item
       ItemCostMgt@1047 : Codeunit 5804;
       ResSkillMgt@1071 : Codeunit 5931;
       CalendarMgt@1054 : Codeunit 7600;
+      LeadTimeMgt@1025 : Codeunit 5404;
       HasInvtSetup@1049 : Boolean;
       GLSetupRead@1052 : Boolean;
       Text027@1078 : TextConst '@@@=starts with "Rounding Precision";DAN=skal være større end 0.;ENU=must be greater than 0.';
@@ -2063,7 +2069,7 @@ OBJECT Table 27 Item
         GetPlanningParameters.AtSKU(SKU,"No.",ItemVend."Variant Code",LocationCode);
         IF ItemVend."Vendor No." = '' THEN
           ItemVend."Vendor No." := SKU."Vendor No.";
-        IF (ItemVend."Vendor Item No." = '') AND (ItemVend."Vendor No." = SKU."Vendor No.") THEN
+        IF ItemVend."Vendor Item No." = '' THEN
           ItemVend."Vendor Item No." := SKU."Vendor Item No.";
         ItemVend."Lead Time Calculation" := SKU."Lead Time Calculation";
       END;
@@ -2083,7 +2089,11 @@ OBJECT Table 27 Item
     LOCAL PROCEDURE TestNoEntriesExist@1006(CurrentFieldName@1000 : Text[100]);
     VAR
       ItemLedgEntry@1001 : Record 32;
+      PurchaseLine@1002 : Record 39;
     BEGIN
+      IF "No." = '' THEN
+        EXIT;
+
       ItemLedgEntry.SETCURRENTKEY("Item No.");
       ItemLedgEntry.SETRANGE("Item No.","No.");
       IF NOT ItemLedgEntry.ISEMPTY THEN
@@ -2091,18 +2101,18 @@ OBJECT Table 27 Item
           Text007,
           CurrentFieldName);
 
-      PurchOrderLine.SETCURRENTKEY("Document Type",Type,"No.");
-      PurchOrderLine.SETFILTER(
+      PurchaseLine.SETCURRENTKEY("Document Type",Type,"No.");
+      PurchaseLine.SETFILTER(
         "Document Type",'%1|%2',
-        PurchOrderLine."Document Type"::Order,
-        PurchOrderLine."Document Type"::"Return Order");
-      PurchOrderLine.SETRANGE(Type,PurchOrderLine.Type::Item);
-      PurchOrderLine.SETRANGE("No.","No.");
-      IF PurchOrderLine.FINDFIRST THEN
+        PurchaseLine."Document Type"::Order,
+        PurchaseLine."Document Type"::"Return Order");
+      PurchaseLine.SETRANGE(Type,PurchaseLine.Type::Item);
+      PurchaseLine.SETRANGE("No.","No.");
+      IF PurchaseLine.FINDFIRST THEN
         ERROR(
           Text008,
           CurrentFieldName,
-          PurchOrderLine."Document Type");
+          PurchaseLine."Document Type");
     END;
 
     LOCAL PROCEDURE TestNoOpenEntriesExist@4(CurrentFieldName@1000 : Text[100]);
@@ -2336,28 +2346,35 @@ OBJECT Table 27 Item
     END;
 
     LOCAL PROCEDURE CheckPurchLine@26(CurrFieldNo@1000 : Integer);
+    VAR
+      PurchaseLine@1001 : Record 39;
     BEGIN
-      PurchOrderLine.SETCURRENTKEY(Type,"No.");
-      PurchOrderLine.SETRANGE(Type,PurchOrderLine.Type::Item);
-      PurchOrderLine.SETRANGE("No.","No.");
-      IF NOT PurchOrderLine.ISEMPTY THEN BEGIN
+      IF "No." = '' THEN
+        EXIT;
+
+      PurchaseLine.SETCURRENTKEY(Type,"No.");
+      PurchaseLine.SETRANGE(Type,PurchaseLine.Type::Item);
+      PurchaseLine.SETRANGE("No.","No.");
+      IF PurchaseLine.FINDFIRST THEN BEGIN
         IF CurrFieldNo = 0 THEN
-          ERROR(Text000,TABLECAPTION,"No.",PurchOrderLine."Document Type");
+          ERROR(Text000,TABLECAPTION,"No.",PurchaseLine."Document Type");
         IF CurrFieldNo = FIELDNO(Type) THEN
-          ERROR(CannotChangeFieldErr,FIELDCAPTION(Type),TABLECAPTION,"No.",PurchOrderLine.TABLECAPTION);
+          ERROR(CannotChangeFieldErr,FIELDCAPTION(Type),TABLECAPTION,"No.",PurchaseLine.TABLECAPTION);
       END;
     END;
 
     LOCAL PROCEDURE CheckSalesLine@28(CurrFieldNo@1000 : Integer);
+    VAR
+      SalesLine@1001 : Record 37;
     BEGIN
-      SalesOrderLine.SETCURRENTKEY(Type,"No.");
-      SalesOrderLine.SETRANGE(Type,SalesOrderLine.Type::Item);
-      SalesOrderLine.SETRANGE("No.","No.");
-      IF NOT SalesOrderLine.ISEMPTY THEN BEGIN
+      SalesLine.SETCURRENTKEY(Type,"No.");
+      SalesLine.SETRANGE(Type,SalesLine.Type::Item);
+      SalesLine.SETRANGE("No.","No.");
+      IF SalesLine.FINDFIRST THEN BEGIN
         IF CurrFieldNo = 0 THEN
-          ERROR(Text001,TABLECAPTION,"No.",SalesOrderLine."Document Type");
+          ERROR(Text001,TABLECAPTION,"No.",SalesLine."Document Type");
         IF CurrFieldNo = FIELDNO(Type) THEN
-          ERROR(CannotChangeFieldErr,FIELDCAPTION(Type),TABLECAPTION,"No.",SalesOrderLine.TABLECAPTION);
+          ERROR(CannotChangeFieldErr,FIELDCAPTION(Type),TABLECAPTION,"No.",SalesLine.TABLECAPTION);
       END;
     END;
 
@@ -2425,6 +2442,8 @@ OBJECT Table 27 Item
     END;
 
     LOCAL PROCEDURE CheckProdBOMLine@30(CurrFieldNo@1000 : Integer);
+    VAR
+      ProductionBOMVersion@1001 : Record 99000779;
     BEGIN
       ProdBOMLine.RESET;
       ProdBOMLine.SETCURRENTKEY(Type,"No.");
@@ -2439,6 +2458,10 @@ OBJECT Table 27 Item
                (ProdBOMHeader.Status = ProdBOMHeader.Status::Certified)
             THEN
               ERROR(Text004,TABLECAPTION,"No.");
+            IF ProductionBOMVersion.GET(ProdBOMLine."Production BOM No.",ProdBOMLine."Version Code") AND
+               (ProductionBOMVersion.Status = ProductionBOMVersion.Status::Certified)
+            THEN
+              ERROR(CannotDeleteItemIfProdBOMVersionExistsErr,TABLECAPTION,"No.");
           UNTIL ProdBOMLine.NEXT = 0;
       END;
     END;

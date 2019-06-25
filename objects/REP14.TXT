@@ -2,9 +2,9 @@ OBJECT Report 14 Consolidation - Test Database
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -330,22 +330,20 @@ OBJECT Report 14 Consolidation - Test Database
                                             TABLECAPTION,"Entry No.",
                                             DimMgt.GetDimCombErr));
 
-                                      TableID[1] := DATABASE::"G/L Entry";
+                                      TableID[1] := DATABASE::"G/L Account";
                                       No[1] := "G/L Account No.";
-                                      TableID[2] := DATABASE::"G/L Entry";
+                                      TableID[2] := DATABASE::"G/L Account";
                                       No[2] := "Bal. Account No.";
                                       TableID[3] := DATABASE::Job;
                                       No[3] := "Job No.";
-                                      REPEAT
-                                        CheckFinished := DimMgt.CheckDimBufferValuePosting(TempDimBufIn,TableID,No);
-                                        IF NOT CheckFinished THEN BEGIN
-                                          AddError(STRSUBSTNO(
-                                              '%1 %2: %3',
-                                              TABLECAPTION,"Entry No.",
-                                              DimMgt.GetDimValuePostingErr));
-                                          TempDimBufIn.DELETE;
-                                        END;
-                                      UNTIL CheckFinished;
+                                      CheckFinished := DimMgt.CheckDimBufferValuePosting(TempDimBufIn,TableID,No);
+                                      IF NOT CheckFinished THEN BEGIN
+                                        AddError(STRSUBSTNO(
+                                            '%1 %2: %3',
+                                            TABLECAPTION,"Entry No.",
+                                            DimMgt.GetDimValuePostingErr));
+                                        TempDimBufIn.DELETE;
+                                      END;
                                     END;
                                   END;
                                   IF GLEntryAddedToDataset THEN
@@ -415,6 +413,7 @@ OBJECT Report 14 Consolidation - Test Database
                              ENU=Copy Field Contents] }
 
       { 5   ;3   ;Field     ;
+                  Name=CopyDimensions;
                   CaptionML=[DAN=Kopier dimensioner;
                              ENU=Copy Dimensions];
                   SourceExpr=ColumnDim;

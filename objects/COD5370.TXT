@@ -2,9 +2,9 @@ OBJECT Codeunit 5370 Excel Buffer Dialog Management
 {
   OBJECT-PROPERTIES
   {
-    Date=07-09-12;
+    Date=30-08-18;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Version List=NAVW19.00.00.50583;
   }
   PROPERTIES
   {
@@ -22,6 +22,9 @@ OBJECT Codeunit 5370 Excel Buffer Dialog Management
 
     PROCEDURE Open@1(Text@1000 : Text);
     BEGIN
+      IF NOT GUIALLOWED THEN
+        EXIT;
+
       Window.OPEN(Text + '@1@@@@@@@@@@@@@@@@@@@@@@@@@\');
       Window.UPDATE(1,0);
       WindowOpen := TRUE;

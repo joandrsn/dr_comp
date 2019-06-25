@@ -2,9 +2,9 @@ OBJECT Page 1307 Mini Posted Sales Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW19.00,NAVDK9.00;
+    Version List=NAVW19.00.00.46621,NAVDK9.00.00.46621;
   }
   PROPERTIES
   {
@@ -168,6 +168,7 @@ OBJECT Page 1307 Mini Posted Sales Invoice
                                BEGIN
                                  SalesInvoiceHeader := Rec;
                                  CurrPage.SETSELECTIONFILTER(SalesInvoiceHeader);
+                                 // Call SendRecords to open sending profile dialog
                                  SalesInvoiceHeader.SendRecords;
                                END;
                                 }

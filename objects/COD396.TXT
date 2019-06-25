@@ -2,9 +2,9 @@ OBJECT Codeunit 396 NoSeriesManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-03-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.45480;
   }
   PROPERTIES
   {
@@ -254,7 +254,7 @@ OBJECT Codeunit 396 NoSeriesManagement
       END;
     END;
 
-    LOCAL PROCEDURE IncrementNoText@20(VAR No@1000 : Code[20];IncrementByNo@1001 : Decimal);
+    PROCEDURE IncrementNoText@20(VAR No@1000 : Code[20];IncrementByNo@1001 : Decimal);
     VAR
       DecimalNo@1002 : Decimal;
       StartPos@1003 : Integer;

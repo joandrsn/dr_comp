@@ -2,9 +2,9 @@ OBJECT Page 99000833 Check Prod. Order Status
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=29-04-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.45834;
   }
   PROPERTIES
   {
@@ -17,8 +17,8 @@ OBJECT Page 99000833 Check Prod. Order Status
     SourceTable=Table27;
     DataCaptionExpr='';
     PageType=ConfirmationDialog;
-    InstructionalTextML=[DAN=Denne salgslinje har status planlagt. Dine ændringer vil ikke medføre fornyet planlægning. Vil du stadig registrere ændringerne?;
-                         ENU=This sales line is currently planned. Your changes will not cause any replanning. Do you still want to record the changes?];
+    InstructionalTextML=[DAN=Denne salgslinje er planlagt. Dine ændringer udløser ingen omplanlægning, så du skal opdatere produktionsordren manuelt, hvis det er nødvendigt. Vil du stadig registrere ændringerne?;
+                         ENU=This sales line is currently planned. Your changes will not cause any replanning, so you must manually update the production order if necessary. Do you still want to record the changes?];
   }
   CONTROLS
   {

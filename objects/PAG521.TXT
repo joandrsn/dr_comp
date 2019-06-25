@@ -2,9 +2,9 @@ OBJECT Page 521 Application Worksheet
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=26-01-19;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.51014;
   }
   PROPERTIES
   {
@@ -17,6 +17,9 @@ OBJECT Page 521 Application Worksheet
     SourceTable=Table32;
     PageType=Worksheet;
     OnOpenPage=BEGIN
+                 Apply.SetCalledFromApplicationWorksheet(TRUE);
+                 ReapplyTouchedEntries; // in case OnQueryClosePage trigger was not executed due to a sudden crash
+
                  InventoryPeriod.IsValidDate(InventoryOpenedFrom);
                  IF InventoryOpenedFrom <> 0D THEN
                    IF GETFILTER("Posting Date") = '' THEN
@@ -43,8 +46,8 @@ OBJECT Page 521 Application Worksheet
                          IF NOT CONFIRM(Text003) THEN
                            EXIT(FALSE);
 
-                         Reapplyall;
                          UnblockItems;
+                         Reapplyall;
                        END;
 
                        EXIT(TRUE);
@@ -132,10 +135,12 @@ OBJECT Page 521 Application Worksheet
                                  ENU=F&unctions];
                       Image=Action }
       { 42      ;2   ;Action    ;
+                      Name=Reapply;
                       CaptionML=[DAN=Udl&ign igen;
                                  ENU=Rea&pply];
                       Image=Action;
                       OnAction=BEGIN
+                                 UnblockItems;
                                  Reapplyall;
                                END;
                                 }
@@ -365,6 +370,16 @@ OBJECT Page 521 Application Worksheet
       Apply.RedoApplications;
       Apply.CostAdjust;
       Apply.ClearApplicationLog;
+    END;
+
+    LOCAL PROCEDURE ReapplyTouchedEntries@2();
+    BEGIN
+      Apply.RestoreTouchedEntries(TempUnapplyItem);
+
+      IF Apply.AnyTouchedEntries THEN BEGIN
+        UnblockItems;
+        Reapplyall;
+      END;
     END;
 
     PROCEDURE SetRecordToShow@7(RecordToSet@1000 : Record 32);

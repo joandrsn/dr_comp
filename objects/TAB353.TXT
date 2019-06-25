@@ -2,9 +2,9 @@ OBJECT Table 353 Dimension ID Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=05-11-08;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW16.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,13 +13,17 @@ OBJECT Table 353 Dimension ID Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Parent ID           ;Integer       ;CaptionML=[DAN=Id for overordnet;
+    { 1   ;   ;Parent ID           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Id for overordnet;
                                                               ENU=Parent ID] }
-    { 2   ;   ;Dimension Code      ;Code20        ;CaptionML=[DAN=Dimensionskode;
+    { 2   ;   ;Dimension Code      ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dimensionskode;
                                                               ENU=Dimension Code] }
-    { 3   ;   ;Dimension Value     ;Code20        ;CaptionML=[DAN=Dimensionsværdi;
+    { 3   ;   ;Dimension Value     ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Dimensionsværdi;
                                                               ENU=Dimension Value] }
-    { 4   ;   ;ID                  ;Integer       ;CaptionML=[DAN=Id;
+    { 4   ;   ;ID                  ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Id;
                                                               ENU=ID] }
   }
   KEYS

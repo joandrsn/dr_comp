@@ -2,9 +2,9 @@ OBJECT Codeunit 452 Report Distribution Management
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -19,7 +19,7 @@ OBJECT Codeunit 452 Report Distribution Management
       ServerSaveAsPdfFailedErr@1004 : TextConst 'DAN=Der opstod en uventet fejl. Forsøg igen, eller kontakt din systemadministrator.;ENU=An unexpected error occurred. Try the operation again or contact your system administrator.';
       ServerSaveAsPdfAbortedErr@1006 : TextConst 'DAN=Du skal vælge en salgsfaktura.;ENU=You must select a sales invoice.';
       HideDialog@1008 : Boolean;
-      SuppresSendDialogQst@1000 : TextConst 'DAN=Do you want to suppress send dialog?;ENU=Do you want to suppress send dialog?';
+      SuppresSendDialogQst@1000 : TextConst 'DAN=Vil du skjule dialogboksen Send?;ENU=Do you want to suppress send dialog?';
 
     PROCEDURE SendDocumentReport@2(VAR TempDocumentSendingProfile@1006 : TEMPORARY Record 60;PostedDocumentVariant@1000 : Variant);
     BEGIN
@@ -401,6 +401,7 @@ OBJECT Codeunit 452 Report Distribution Management
       CustomReportSelection.INIT;
 
       ElectronicDocumentFormat.SendElectronically(XMLPath,ClientFileName,DocumentVariant,DocumentFormat);
+      COMMIT;
       SendAttachment(
         ElectronicDocumentFormat.GetDocumentNo(DocumentVariant),
         Customer."No.",

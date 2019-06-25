@@ -2,17 +2,24 @@ OBJECT Codeunit 1512 Workflow Create Payment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
     TableNo=472;
     OnRun=VAR
             WorkflowStepArgument@1000 : Record 1523;
+            WorkflowStepArgumentArchive@1001 : Record 1531;
           BEGIN
-            WorkflowStepArgument.GET("Record ID to Process");
+            IF NOT WorkflowStepArgument.GET("Record ID to Process") THEN BEGIN
+              WorkflowStepArgumentArchive.SETRANGE("Original Record ID","Record ID to Process");
+              IF NOT WorkflowStepArgumentArchive.FINDFIRST THEN
+                EXIT;
+
+              WorkflowStepArgument.TRANSFERFIELDS(WorkflowStepArgumentArchive);
+            END;
             CreatePmtLine(WorkflowStepArgument);
           END;
 

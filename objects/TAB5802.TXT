@@ -2,9 +2,9 @@ OBJECT Table 5802 Value Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -71,7 +71,7 @@ OBJECT Table 5802 Value Entry
     { 17  ;   ;Sales Amount (Actual);Decimal      ;CaptionML=[DAN=Salgsbeløb (faktisk);
                                                               ENU=Sales Amount (Actual)];
                                                    AutoFormatType=1 }
-    { 22  ;   ;Salespers./Purch. Code;Code10      ;TableRelation=Salesperson/Purchaser;
+    { 22  ;   ;Salespers./Purch. Code;Code20      ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælger/indkøberkode;
                                                               ENU=Salespers./Purch. Code] }
     { 23  ;   ;Discount Amount     ;Decimal       ;CaptionML=[DAN=Rabatbeløb;
@@ -85,6 +85,7 @@ OBJECT Table 5802 Value Entry
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 25  ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
@@ -284,8 +285,7 @@ OBJECT Table 5802 Value Entry
     {    ;Source Type,Source No.,Item No.,Posting Date,Entry Type,Adjustment,Item Ledger Entry Type;
                                                    SumIndexFields=Discount Amount,Cost Amount (Non-Invtbl.),Cost Amount (Actual),Cost Amount (Expected),Sales Amount (Actual),Sales Amount (Expected),Invoiced Quantity }
     {    ;Item Charge No.,Inventory Posting Group,Item No. }
-    {    ;Capacity Ledger Entry No.,Entry Type    ;SumIndexFields=Cost Amount (Actual),Cost Amount (Actual) (ACY);
-                                                   MaintainSIFTIndex=No }
+    {    ;Capacity Ledger Entry No.,Entry Type    ;SumIndexFields=Cost Amount (Actual),Cost Amount (Actual) (ACY) }
     {    ;Order Type,Order No.,Order Line No.      }
     {    ;Source Type,Source No.,Global Dimension 1 Code,Global Dimension 2 Code,Item No.,Posting Date,Entry Type,Adjustment;
                                                    SumIndexFields=Discount Amount,Cost Amount (Non-Invtbl.),Cost Amount (Actual),Cost Amount (Expected),Sales Amount (Actual),Sales Amount (Expected),Invoiced Quantity }
@@ -366,12 +366,14 @@ OBJECT Table 5802 Value Entry
             QtyFactor := ValueEntry.CalcQtyFactor(FromDate,ToDate);
 
         CALCSUMS(
-          "Item Ledger Entry Quantity",
+          "Item Ledger Entry Quantity","Invoiced Quantity",
           "Cost Amount (Actual)","Cost Amount (Actual) (ACY)",
           "Cost Amount (Expected)","Cost Amount (Expected) (ACY)");
 
         "Item Ledger Entry Quantity" :=
           ROUND("Item Ledger Entry Quantity" * QtyFactor,0.00001) + PrevValueEntrySum."Item Ledger Entry Quantity";
+        "Invoiced Quantity" :=
+          ROUND("Invoiced Quantity" * QtyFactor,0.00001) + PrevValueEntrySum."Invoiced Quantity";
         "Cost Amount (Actual)" :=
           "Cost Amount (Actual)" * QtyFactor + PrevValueEntrySum."Cost Amount (Actual)";
         "Cost Amount (Expected)" :=
@@ -539,6 +541,14 @@ OBJECT Table 5802 Value Entry
         END;
       END;
       AccountingPeriod := PrevAccountingPeriod;
+    END;
+
+    PROCEDURE FindFirstValueEntryByItemLedgerEntryNo@12(ItemLedgerEntryNo@1000 : Integer);
+    BEGIN
+      RESET;
+      SETCURRENTKEY("Item Ledger Entry No.");
+      SETRANGE("Item Ledger Entry No.",ItemLedgerEntryNo);
+      FINDFIRST;
     END;
 
     BEGIN

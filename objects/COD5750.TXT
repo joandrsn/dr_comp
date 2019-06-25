@@ -2,9 +2,9 @@ OBJECT Codeunit 5750 Whse.-Create Source Document
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=25-08-16;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.46773;
   }
   PROPERTIES
   {
@@ -390,33 +390,13 @@ OBJECT Codeunit 5750 Whse.-Create Source Document
     LOCAL PROCEDURE CreateShptLine@3(VAR WhseShptLine@1001 : Record 7321);
     VAR
       Item@1002 : Record 27;
-      WhseWkshLine@1000 : Record 7326;
-      ATOSalesLine@1004 : Record 37;
-      AsmHeader@1008 : Record 900;
-      AsmLineMgt@1009 : Codeunit 905;
-      ItemTrackingMgt@1005 : Codeunit 6500;
-      WhseSNRequired@1006 : Boolean;
-      WhseLNRequired@1007 : Boolean;
     BEGIN
       WITH WhseShptLine DO BEGIN
         Item."No." := "Item No.";
         Item.ItemSKUGet(Item,"Location Code","Variant Code");
         "Shelf No." := Item."Shelf No.";
         INSERT;
-        IF "Assemble to Order" THEN BEGIN
-          TESTFIELD("Source Type",DATABASE::"Sales Line");
-          ATOSalesLine.GET("Source Subtype","Source No.","Source Line No.");
-          ATOSalesLine.AsmToOrderExists(AsmHeader);
-          AsmLineMgt.CreateWhseItemTrkgForAsmLines(AsmHeader);
-        END ELSE BEGIN
-          ItemTrackingMgt.CheckWhseItemTrkgSetup("Item No.",WhseSNRequired,WhseLNRequired,FALSE);
-          IF WhseSNRequired OR WhseLNRequired THEN
-            ItemTrackingMgt.InitItemTrkgForTempWkshLine(
-              WhseWkshLine."Whse. Document Type"::Shipment,"No.",
-              "Line No.","Source Type",
-              "Source Subtype","Source No.",
-              "Source Line No.",0);
-        END;
+        CreateWhseItemTrackingLines;
       END;
     END;
 
@@ -492,7 +472,9 @@ OBJECT Codeunit 5750 Whse.-Create Source Document
     PROCEDURE CheckIfFromServiceLine2ShptLin@20(ServiceLine@1000 : Record 5902) : Boolean;
     BEGIN
       ServiceLine.CALCFIELDS("Whse. Outstanding Qty. (Base)");
-      EXIT(ABS(ServiceLine."Outstanding Qty. (Base)") > ABS(ServiceLine."Whse. Outstanding Qty. (Base)"));
+      EXIT(
+        (ABS(ServiceLine."Outstanding Qty. (Base)") > ABS(ServiceLine."Whse. Outstanding Qty. (Base)")) AND
+        (ServiceLine."Qty. to Consume (Base)" = 0));
     END;
 
     PROCEDURE CheckIfSalesLine2ReceiptLine@18(SalesLine@1001 : Record 37) : Boolean;

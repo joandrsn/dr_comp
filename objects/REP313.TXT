@@ -2,9 +2,9 @@ OBJECT Report 313 Vendor/Item Purchases
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -125,6 +125,7 @@ OBJECT Report 313 Vendor/Item Purchases
                SourceExpr=Item.Description }
 
     { 28  ;2   ;Column  ;Value_Entry__Invoiced_Quantity_;
+               DecimalPlaces=0:5;
                SourceExpr=InvoicedQuantity }
 
     { 29  ;2   ;Column  ;Item__Base_Unit_of_Measure_;
@@ -2586,6 +2587,7 @@ OBJECT Report 313 Vendor/Item Purchases
                                   <Value>=Sum(Fields!Value_Entry__Invoiced_Quantity_.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
+                                    <Format>=Fields!Value_Entry__Invoiced_Quantity_Format.Value</Format>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -2594,6 +2596,9 @@ OBJECT Report 313 Vendor/Item Purchases
                           </Paragraphs>
                           <ZIndex>8</ZIndex>
                           <Style>
+                            <Border>
+                              <Style>None</Style>
+                            </Border>
                             <VerticalAlign>Middle</VerticalAlign>
                             <PaddingLeft>2pt</PaddingLeft>
                             <PaddingRight>2pt</PaddingRight>
@@ -2601,6 +2606,7 @@ OBJECT Report 313 Vendor/Item Purchases
                             <PaddingBottom>2pt</PaddingBottom>
                           </Style>
                         </Textbox>
+                        <rd:Selected>true</rd:Selected>
                       </CellContents>
                     </TablixCell>
                     <TablixCell>
@@ -4811,6 +4817,7 @@ OBJECT Report 313 Vendor/Item Purchases
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>

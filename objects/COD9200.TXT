@@ -2,9 +2,9 @@ OBJECT Codeunit 9200 Matrix Management
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -524,6 +524,10 @@ OBJECT Codeunit 9200 Matrix Management
     END;
 
     PROCEDURE GetPKRange@11(VAR RecRef@1001 : RecordRef;PkFieldNo@1002 : Integer;MATRIX_PKFirstRecInCurrSet@1003 : Text[1024];MATRIX_CurrSetLength@1004 : Integer) PKRange : Text[100];
+    VAR
+      FieldRef@1000 : FieldRef;
+      CurFilter@1006 : Text;
+      RecCount@1005 : Integer;
     BEGIN
       RecRef.SETPOSITION(MATRIX_PKFirstRecInCurrSet);
       RecRef.GET(RecRef.RECORDID);
@@ -532,7 +536,16 @@ OBJECT Codeunit 9200 Matrix Management
         EXIT(PKRange);
       RecRef.NEXT(MATRIX_CurrSetLength);
       PKRange := PKRange + '..' + FORMAT(RecRef.FIELD(PkFieldNo).VALUE);
-      EXIT(PKRange);
+      FieldRef := RecRef.FIELD(PkFieldNo);
+      CurFilter := FieldRef.GETFILTER;
+      IF CurFilter = '' THEN
+        EXIT(PKRange);
+      FieldRef.SETFILTER(PKRange);
+      RecCount := RecRef.COUNT;
+      FieldRef.SETFILTER(CurFilter);
+      IF MATRIX_CurrSetLength = RecCount THEN
+        EXIT(PKRange);
+      EXIT('');
     END;
 
     PROCEDURE GenerateDimColumnCaption@12(DimensionCode@1006 : Code[20];DimFilter@1005 : Text[1024];SetWanted@1004 : 'Initial,Previous,Same,Next,PreviousColumn,NextColumn';VAR PKFirstRecInCurrSet@1003 : Text[1024];FirstColumn@1002 : Text;LastColumn@1001 : Text;VAR CaptionSet@1016 : ARRAY [32] OF Text[1024];VAR DimensionCodeBuffer@1015 : ARRAY [32] OF Record 367;VAR NumberOfColumns@1011 : Integer;ShowColumnName@1010 : Boolean;VAR CaptionRange@1009 : Text[1024]);

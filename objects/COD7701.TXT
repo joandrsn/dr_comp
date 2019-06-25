@@ -2,9 +2,9 @@ OBJECT Codeunit 7701 ADCS Communication
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -55,7 +55,7 @@ OBJECT Codeunit 7701 ADCS Communication
       XMLDOMMgt.FindNode(XMLDOM.DocumentElement ,'Header',ReturnedNode);
 
       // Now create an empty root node... this must always be done before we use this object!!
-      XMLDOM.LoadXml('<ADCS/>');
+      XMLDOMMgt.LoadXMLDocumentFromText('<ADCS/>',XMLDOM);
 
       // Set the current node to the root node
       CurrNode := XMLDOM.DocumentElement;
@@ -632,11 +632,13 @@ OBJECT Codeunit 7701 ADCS Communication
       EXIT(PreviousElement);
     END;
 
-    PROCEDURE GetFunctionKey@45(MiniformCode@1001 : Code[20];InputValue@1002 : Text[30]) : Integer;
+    PROCEDURE GetFunctionKey@45(MiniformCode@1001 : Code[20];InputValue@1002 : Text[250]) : Integer;
     VAR
       MiniformFunction@1003 : Record 7703;
       MiniformFunctionGroup@1004 : Record 7702;
     BEGIN
+      IF STRLEN(InputValue) > MAXSTRLEN(MiniformFunctionGroup.Code) THEN
+        EXIT(0);
       IF MiniformFunctionGroup.GET(InputValue) THEN BEGIN
         IF NOT MiniformFunction.GET(MiniformCode,InputValue) THEN
           ERROR(Text007,InputValue);

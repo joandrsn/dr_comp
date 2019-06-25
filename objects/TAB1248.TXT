@@ -2,9 +2,9 @@ OBJECT Table 1248 Ledger Entry Matching Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -13,29 +13,39 @@ OBJECT Table 1248 Ledger Entry Matching Buffer
   }
   FIELDS
   {
-    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[DAN=Løbenr.;
+    { 1   ;   ;Entry No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Løbenr.;
                                                               ENU=Entry No.] }
-    { 2   ;   ;Account Type        ;Option        ;CaptionML=[DAN=Kontotype;
+    { 2   ;   ;Account Type        ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontotype;
                                                               ENU=Account Type];
                                                    OptionCaptionML=[DAN=Debitor,Kreditor;
                                                                     ENU=Customer,Vendor];
                                                    OptionString=Customer,Vendor }
-    { 3   ;   ;Account No.         ;Code20        ;CaptionML=[DAN=Kontonr.;
+    { 3   ;   ;Account No.         ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kontonr.;
                                                               ENU=Account No.] }
-    { 9   ;   ;Due Date            ;Date          ;CaptionML=[DAN=Forfaldsdato;
+    { 9   ;   ;Due Date            ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Forfaldsdato;
                                                               ENU=Due Date] }
-    { 10  ;   ;Posting Date        ;Date          ;CaptionML=[DAN=Bogføringsdato;
+    { 10  ;   ;Posting Date        ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bogføringsdato;
                                                               ENU=Posting Date] }
-    { 11  ;   ;Document No.        ;Code20        ;CaptionML=[DAN=Bilagsnr.;
+    { 11  ;   ;Document No.        ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Bilagsnr.;
                                                               ENU=Document No.] }
-    { 12  ;   ;External Document No.;Code35       ;CaptionML=[DAN=Eksternt bilagsnr.;
+    { 12  ;   ;External Document No.;Code35       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Eksternt bilagsnr.;
                                                               ENU=External Document No.] }
-    { 20  ;   ;Remaining Amount    ;Decimal       ;CaptionML=[DAN=Restbeløb;
+    { 20  ;   ;Remaining Amount    ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Restbeløb;
                                                               ENU=Remaining Amount] }
     { 21  ;   ;Remaining Amt. Incl. Discount;Decimal;
+                                                   DataClassification=SystemMetadata;
                                                    CaptionML=[DAN=Restbeløb inkl. rabat;
                                                               ENU=Remaining Amt. Incl. Discount] }
-    { 22  ;   ;Pmt. Discount Due Date;Date        ;CaptionML=[DAN=Forfaldsdato for kontantrabat;
+    { 22  ;   ;Pmt. Discount Due Date;Date        ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Forfaldsdato for kontantrabat;
                                                               ENU=Pmt. Discount Due Date] }
   }
   KEYS

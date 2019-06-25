@@ -2,9 +2,9 @@ OBJECT Codeunit 5763 Whse.-Post Shipment
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -99,9 +99,11 @@ OBJECT Codeunit 5763 Whse.-Post Shipment
             NoSeriesMgt.GetNextNo(
               WhseShptHeader."Shipping No. Series",WhseShptHeader."Posting Date",TRUE);
         END;
+
+        COMMIT;
+
         WhseShptHeader."Create Posted Header" := TRUE;
         WhseShptHeader.MODIFY;
-        COMMIT;
 
         SETCURRENTKEY("No.","Source Type","Source Subtype","Source No.","Source Line No.");
         FINDSET(TRUE,TRUE);
@@ -194,6 +196,7 @@ OBJECT Codeunit 5763 Whse.-Post Shipment
                  (WhseShptHeader."Shipping Agent Code" <> SalesHeader."Shipping Agent Code")
               THEN BEGIN
                 SalesHeader."Shipping Agent Code" := WhseShptHeader."Shipping Agent Code";
+                SalesHeader."Shipping Agent Service Code" := WhseShptHeader."Shipping Agent Service Code";
                 ModifyHeader := TRUE;
               END;
               IF (WhseShptHeader."Shipping Agent Service Code" <> '') AND
@@ -498,9 +501,12 @@ OBJECT Codeunit 5763 Whse.-Post Shipment
         IF FIND('-') THEN BEGIN
           REPEAT
             WhseShptLine2.GET("No.","Line No.");
-            IF "Qty. Outstanding" = "Qty. to Ship" THEN
-              WhseShptLine2.DELETE
-            ELSE BEGIN
+            IF "Qty. Outstanding" = "Qty. to Ship" THEN BEGIN
+              ItemTrackingMgt.SetDeleteReservationEntries(TRUE);
+              ItemTrackingMgt.DeleteWhseItemTrkgLines(
+                DATABASE::"Warehouse Shipment Line",0,"No.",'',0,"Line No.","Location Code",TRUE);
+              WhseShptLine2.DELETE;
+            END ELSE BEGIN
               WhseShptLine2."Qty. Shipped" := "Qty. Shipped" + "Qty. to Ship";
               WhseShptLine2.VALIDATE("Qty. Outstanding","Qty. Outstanding" - "Qty. to Ship");
               WhseShptLine2."Qty. Shipped (Base)" := "Qty. Shipped (Base)" + "Qty. to Ship (Base)";

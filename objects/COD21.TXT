@@ -2,9 +2,9 @@ OBJECT Codeunit 21 Item Jnl.-Check Line
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.50221;
   }
   PROPERTIES
   {
@@ -90,7 +90,9 @@ OBJECT Codeunit 21 Item Jnl.-Check Line
             TESTFIELD("New Location Code",'');
         END;
 
-        IF ("Entry Type" <> "Entry Type"::Transfer) OR ("Order Type" <> "Order Type"::Transfer) THEN BEGIN
+        IF (("Entry Type" <> "Entry Type"::Transfer) OR ("Order Type" <> "Order Type"::Transfer)) AND
+           NOT Adjustment
+        THEN BEGIN
           CheckInTransitLocation("Location Code");
           CheckInTransitLocation("New Location Code");
         END;
@@ -154,10 +156,9 @@ OBJECT Codeunit 21 Item Jnl.-Check Line
         THEN BEGIN
           TESTFIELD("Source No.");
           TESTFIELD("Order Type","Order Type"::Production);
-          IF ("Entry Type" = "Entry Type"::Output) AND
-             CheckFindProdOrderLine(ProdOrderLine,"Order No.","Order Line No.")
-          THEN
-            TESTFIELD("Item No.",ProdOrderLine."Item No.");
+          IF NOT CalledFromAdjustment AND ("Entry Type" = "Entry Type"::Output) THEN
+            IF CheckFindProdOrderLine(ProdOrderLine,"Order No.","Order Line No.") THEN
+              TESTFIELD("Item No.",ProdOrderLine."Item No.");
           IF Subcontracting THEN BEGIN
             WorkCenter.GET("Work Center No.");
             WorkCenter.TESTFIELD("Subcontractor No.");
@@ -389,9 +390,13 @@ OBJECT Codeunit 21 Item Jnl.-Check Line
         IF NOT IsValueEntryForDeletedItem AND NOT Correction AND NOT CalledFromAdjustment THEN BEGIN
           IF NOT DimMgt.CheckDimIDComb("Dimension Set ID") THEN
             ERROR(DimCombBlockedErr,"Journal Template Name","Journal Batch Name","Line No.",DimMgt.GetDimCombErr);
-
-          TableID[1] := DATABASE::Item;
-          No[1] := "Item No.";
+          IF "Item Charge No." = '' THEN BEGIN
+            TableID[1] := DATABASE::Item;
+            No[1] := "Item No.";
+          END ELSE BEGIN
+            TableID[1] := DATABASE::"Item Charge";
+            No[1] := "Item Charge No.";
+          END;
           TableID[2] := DATABASE::"Salesperson/Purchaser";
           No[2] := "Salespers./Purch. Code";
           TableID[3] := DATABASE::"Work Center";

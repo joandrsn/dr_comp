@@ -2,9 +2,9 @@ OBJECT Codeunit 73 Purch.-Explode BOM
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-01-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.47838;
   }
   PROPERTIES
   {
@@ -68,21 +68,32 @@ OBJECT Codeunit 73 Purch.-Explode BOM
     LOCAL PROCEDURE ExplodeBOMCompLines@1(PurchLine@1000 : Record 39);
     VAR
       PreviousPurchLine@1001 : Record 39;
+      InsertLinesBetween@1002 : Boolean;
     BEGIN
       WITH PurchLine DO BEGIN
         ToPurchLine.RESET;
         ToPurchLine.SETRANGE("Document Type","Document Type");
         ToPurchLine.SETRANGE("Document No.","Document No.");
         ToPurchLine := PurchLine;
-        IF ToPurchLine.FIND('>') THEN BEGIN
-          LineSpacing := (ToPurchLine."Line No." - "Line No.") DIV (1 + NoOfBOMComp);
-          IF LineSpacing = 0 THEN
-            ERROR(Text003);
-        END ELSE
+        NextLineNo := "Line No.";
+        InsertLinesBetween := FALSE;
+        IF ToPurchLine.FIND('>') THEN
+          IF ToPurchLine."Attached to Line No." = "Line No." THEN BEGIN
+            ToPurchLine.SETRANGE("Attached to Line No.","Line No.");
+            ToPurchLine.FINDLAST;
+            ToPurchLine.SETRANGE("Attached to Line No.");
+            NextLineNo := ToPurchLine."Line No.";
+            InsertLinesBetween := ToPurchLine.FIND('>');
+          END ELSE
+            InsertLinesBetween := TRUE;
+        IF InsertLinesBetween THEN
+          LineSpacing := (ToPurchLine."Line No." - NextLineNo) DIV (1 + NoOfBOMComp)
+        ELSE
           LineSpacing := 10000;
+        IF LineSpacing = 0 THEN
+          ERROR(Text003);
 
         FromBOMComp.FIND('-');
-        NextLineNo := "Line No.";
         REPEAT
           ToPurchLine.INIT;
           NextLineNo := NextLineNo + LineSpacing;

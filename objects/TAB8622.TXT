@@ -2,9 +2,9 @@ OBJECT Table 8622 Config. Line
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -136,7 +136,7 @@ OBJECT Table 8622 Config. Line
     { 13  ;   ;Copying Available   ;Boolean       ;CaptionML=[DAN=Kopiering disponibel;
                                                               ENU=Copying Available];
                                                    Editable=No }
-    { 14  ;   ;Page ID             ;Integer       ;TableRelation=AllObj."Object ID" WHERE (Object Type=CONST(Page));
+    { 14  ;   ;Page ID             ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE (Object Type=CONST(Page));
                                                    OnLookup=VAR
                                                               ConfigValidateMgt@1000 : Codeunit 8617;
                                                             BEGIN
@@ -176,6 +176,7 @@ OBJECT Table 8622 Config. Line
 
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Ansvarlig bruger-id;
                                                               ENU=Responsible ID] }
     { 21  ;   ;Status              ;Option        ;CaptionML=[DAN=Status;

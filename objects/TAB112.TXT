@@ -2,17 +2,19 @@ OBJECT Table 112 Sales Invoice Header
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=06-04-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897,NAVDK9.00.00.43897;
+    Version List=NAVW19.00.00.50221,NAVDK9.00.00.50221;
   }
   PROPERTIES
   {
     DataCaptionFields=No.,Sell-to Customer Name;
     OnDelete=VAR
                PostedDeferralHeader@1002 : Record 1704;
+               PostSalesLinesDelete@1003 : Codeunit 363;
                DeferralUtilities@1001 : Codeunit 1720;
              BEGIN
+               PostSalesLinesDelete.IsDocumentDeletionAllowed("Posting Date");
                TESTFIELD("No. Printed");
                LOCKTABLE;
                PostSalesLinesDelete.DeleteSalesInvLines(Rec);
@@ -137,7 +139,7 @@ OBJECT Table 112 Sales Invoice Header
     { 41  ;   ;Language Code       ;Code10        ;TableRelation=Language;
                                                    CaptionML=[DAN=Sprogkode;
                                                               ENU=Language Code] }
-    { 43  ;   ;Salesperson Code    ;Code10        ;TableRelation=Salesperson/Purchaser;
+    { 43  ;   ;Salesperson Code    ;Code20        ;TableRelation=Salesperson/Purchaser;
                                                    CaptionML=[DAN=Sælgerkode;
                                                               ENU=Salesperson Code] }
     { 44  ;   ;Order No.           ;Code20        ;AccessByPermission=TableData 110=R;
@@ -300,6 +302,7 @@ OBJECT Table 112 Sales Invoice Header
                                                             END;
 
                                                    TestTableRelation=No;
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Bruger-id;
                                                               ENU=User ID] }
     { 113 ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
@@ -355,6 +358,7 @@ OBJECT Table 112 Sales Invoice Header
                                                    CaptionML=[DAN=Id for Direct Debit-betalingsaftale;
                                                               ENU=Direct Debit Mandate ID] }
     { 1300;   ;Canceled By         ;Code20        ;TableRelation="Sales Cr.Memo Header";
+                                                   DataClassification=EndUserIdentifiableInformation;
                                                    CaptionML=[DAN=Annulleret af;
                                                               ENU=Canceled By];
                                                    Editable=No }
@@ -457,33 +461,20 @@ OBJECT Table 112 Sales Invoice Header
       SalesCommentLine@1001 : Record 44;
       SalesSetup@1007 : Record 311;
       CustLedgEntry@1003 : Record 21;
-      PostSalesLinesDelete@1004 : Codeunit 363;
       DimMgt@1005 : Codeunit 408;
       ApprovalsMgmt@1008 : Codeunit 1535;
       UserSetupMgt@1002 : Codeunit 5700;
       PaymentReferenceLbl@1060000 : TextConst '@@@=Translate to FIK-kode (FIK is danish abbreviation );DAN=FIK-kode;ENU=FIK Code';
       CheckLatestQst@1006 : TextConst '@@@=%1 is Document Exchange Status;DAN=Vil du kontrollere den seneste status for det elektroniske dokument?;ENU=Do you want to check the latest status of the electronic document?';
 
-    PROCEDURE SendRecords@1();
+    PROCEDURE SendRecords@12();
     VAR
       DocumentSendingProfile@1001 : Record 60;
-      TempDocumentSendingProfile@1000 : TEMPORARY Record 60;
-      ReportDistributionManagement@1002 : Codeunit 452;
     BEGIN
-      DocumentSendingProfile.GetDefaultForCustomer("Bill-to Customer No.",DocumentSendingProfile);
-      COMMIT;
-
-      TempDocumentSendingProfile.INIT;
-      TempDocumentSendingProfile.Code := DocumentSendingProfile.Code;
-      TempDocumentSendingProfile.VALIDATE("One Related Party Selected",IsSingleCustomerSelected);
-      TempDocumentSendingProfile.SetDocumentUsage(Rec);
-      TempDocumentSendingProfile.INSERT;
-
-      IF PAGE.RUNMODAL(PAGE::"Select Sending Options",TempDocumentSendingProfile) = ACTION::LookupOK THEN
-        ReportDistributionManagement.SendDocumentReport(TempDocumentSendingProfile,Rec);
+      DocumentSendingProfile.SendCustomerRecords(Rec,"Bill-to Customer No.",FIELDNO("Bill-to Customer No."));
     END;
 
-    PROCEDURE PrintRecords@6(ShowRequestForm@1000 : Boolean);
+    PROCEDURE PrintRecords@1(ShowRequestForm@1000 : Boolean);
     VAR
       TempDocumentSendingProfile@1001 : TEMPORARY Record 60;
       ReportDistributionManagement@1002 : Codeunit 452;
@@ -647,28 +638,6 @@ OBJECT Table 112 Sales Invoice Header
       FikManagement.CreateFIKCheckSum(String,Weight,Total,CheckSum);
 
       EXIT('+71<' + String + FORMAT(CheckSum) + '+' + CompanyInformation."Bank Creditor No.");
-    END;
-
-    LOCAL PROCEDURE IsSingleCustomerSelected@7() : Boolean;
-    VAR
-      SelectedCount@1001 : Integer;
-      CustomerCount@1000 : Integer;
-      BillToCustomerNoFilter@1002 : Text;
-    BEGIN
-      SelectedCount := COUNT;
-
-      IF SelectedCount < 1 THEN
-        EXIT(FALSE);
-
-      IF SelectedCount = 1 THEN
-        EXIT(TRUE);
-
-      BillToCustomerNoFilter := GETFILTER("Bill-to Customer No.");
-      SETRANGE("Bill-to Customer No.","Bill-to Customer No.");
-      CustomerCount := COUNT;
-      SETFILTER("Bill-to Customer No.",BillToCustomerNoFilter);
-
-      EXIT(SelectedCount = CustomerCount);
     END;
 
     PROCEDURE GetDocExchStatusStyle@13() : Text;

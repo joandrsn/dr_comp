@@ -2,9 +2,9 @@ OBJECT Report 6520 Item Tracing Specification
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
@@ -513,48 +513,48 @@ OBJECT Report 6520 Item Tracing Specification
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1.68307in</Width>
+                  <Width>4.275cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.70866in</Width>
+                  <Width>1.8cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.23622in</Width>
+                  <Width>0.6cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.47244in</Width>
+                  <Width>1.2cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.47244in</Width>
+                  <Width>1.2cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.23622in</Width>
+                  <Width>0.6cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.70866in</Width>
+                  <Width>1.8cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.70866in</Width>
+                  <Width>1.8cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.23622in</Width>
+                  <Width>0.6cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.47244in</Width>
+                  <Width>1.2cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.47244in</Width>
+                  <Width>1.2cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.23622in</Width>
+                  <Width>0.6cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>0.70866in</Width>
+                  <Width>1.8cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
                 <TablixRow>
-                  <Height>0.19779in</Height>
+                  <Height>0.50239cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -564,7 +564,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value />
+                                  <Value EvaluationMode="Auto" />
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -599,7 +599,7 @@ OBJECT Report 6520 Item Tracing Specification
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.33307in</Height>
+                  <Height>0.846cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -609,7 +609,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Parameters!DescriptionCaption.Value</Value>
+                                  <Value EvaluationMode="Auto">=Parameters!DescriptionCaption.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -635,7 +635,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText1.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText1.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -662,7 +662,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText2.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText2.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -691,7 +691,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText3.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText3.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -720,7 +720,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText4.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText4.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -747,7 +747,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText5.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText5.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -774,7 +774,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText6.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText6.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -803,7 +803,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText7.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText7.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -832,7 +832,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText8.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText8.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -853,7 +853,7 @@ OBJECT Report 6520 Item Tracing Specification
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.16654in</Height>
+                  <Height>0.42301cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -864,7 +864,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Parameters!EmptyStringCaption.Value</Value>
+                                  <Value EvaluationMode="Auto">=Parameters!EmptyStringCaption.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -896,7 +896,7 @@ OBJECT Report 6520 Item Tracing Specification
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.33307in</Height>
+                  <Height>0.846cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -906,7 +906,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Parameters!DescriptionCaption.Value</Value>
+                                  <Value EvaluationMode="Auto">=Parameters!DescriptionCaption.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -932,7 +932,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText1.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText1.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -961,7 +961,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText2.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText2.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -990,7 +990,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText3.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText3.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -1019,7 +1019,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText4.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText4.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -1048,7 +1048,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText5.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText5.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -1077,7 +1077,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=First(Fields!HeaderText6.Value)</Value>
+                                  <Value EvaluationMode="Auto">=First(Fields!HeaderText6.Value)</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
@@ -1101,7 +1101,7 @@ OBJECT Report 6520 Item Tracing Specification
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.16654in</Height>
+                  <Height>0.42301cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -1112,7 +1112,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Parameters!EmptyStringCaption.Value</Value>
+                                  <Value EvaluationMode="Auto">=Parameters!EmptyStringCaption.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1144,7 +1144,7 @@ OBJECT Report 6520 Item Tracing Specification
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.16654in</Height>
+                  <Height>0.42301cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -1154,7 +1154,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!TransactionDescription.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!TransactionDescription.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1175,12 +1175,13 @@ OBJECT Report 6520 Item Tracing Specification
                     <TablixCell>
                       <CellContents>
                         <Textbox Name="BodyText1">
+                          <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText1.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText1.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1207,7 +1208,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText2.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText2.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1236,7 +1237,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText3.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText3.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1260,12 +1261,13 @@ OBJECT Report 6520 Item Tracing Specification
                     <TablixCell>
                       <CellContents>
                         <Textbox Name="BodyText4">
+                          <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText4.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText4.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1292,7 +1294,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText5.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText5.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1314,12 +1316,13 @@ OBJECT Report 6520 Item Tracing Specification
                     <TablixCell>
                       <CellContents>
                         <Textbox Name="BodyText6">
+                          <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText6.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText6.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1348,7 +1351,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText7.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText7.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1377,7 +1380,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText8.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText8.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1398,7 +1401,7 @@ OBJECT Report 6520 Item Tracing Specification
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.16654in</Height>
+                  <Height>0.42301cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -1408,7 +1411,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!TransactionDescription.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!TransactionDescription.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1434,7 +1437,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText1.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText1.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1464,7 +1467,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText2.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText2.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1494,7 +1497,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText3.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText3.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1524,7 +1527,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText4.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText4.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1554,7 +1557,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText5.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText5.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1584,7 +1587,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!BodyText6.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!BodyText6.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1609,7 +1612,7 @@ OBJECT Report 6520 Item Tracing Specification
                   </TablixCells>
                 </TablixRow>
                 <TablixRow>
-                  <Height>0.16654in</Height>
+                  <Height>0.42301cm</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -1619,7 +1622,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value />
+                                  <Value EvaluationMode="Auto" />
                                   <Style />
                                 </TextRun>
                               </TextRuns>
@@ -1641,7 +1644,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!TempTrackEntrySourceType.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!TempTrackEntrySourceType.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1670,7 +1673,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!TempTrackEntrySourceNo.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!TempTrackEntrySourceNo.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1699,7 +1702,7 @@ OBJECT Report 6520 Item Tracing Specification
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!TempTrackEntrySourceName.Value</Value>
+                                  <Value EvaluationMode="Auto">=Fields!TempTrackEntrySourceName.Value</Value>
                                   <Style>
                                     <FontSize>7pt</FontSize>
                                   </Style>
@@ -1815,14 +1818,14 @@ OBJECT Report 6520 Item Tracing Specification
             </TablixRowHierarchy>
             <DataSetName>DataSet_Result</DataSetName>
             <Height>4.30944cm</Height>
-            <Width>18.67497cm</Width>
+            <Width>18.675cm</Width>
             <Style />
           </Tablix>
         </ReportItems>
         <Height>4.30944cm</Height>
         <Style />
       </Body>
-      <Width>18.67497cm</Width>
+      <Width>18.675cm</Width>
       <Page>
         <PageHeader>
           <Height>1.32158cm</Height>
@@ -1835,7 +1838,7 @@ OBJECT Report 6520 Item Tracing Specification
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=First(Fields!PageCaption.Value, "DataSet_Result")</Value>
+                      <Value EvaluationMode="Auto">=First(Fields!PageCaption.Value, "DataSet_Result")</Value>
                       <Style>
                         <FontSize>7pt</FontSize>
                       </Style>
@@ -1858,7 +1861,7 @@ OBJECT Report 6520 Item Tracing Specification
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=First(Fields!ItemTracingSpecificationCaption.Value, "DataSet_Result")</Value>
+                      <Value EvaluationMode="Auto">=First(Fields!ItemTracingSpecificationCaption.Value, "DataSet_Result")</Value>
                       <Style>
                         <FontSize>8pt</FontSize>
                         <FontWeight>Bold</FontWeight>
@@ -1881,7 +1884,7 @@ OBJECT Report 6520 Item Tracing Specification
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=First(Fields!CompanyName.Value, "DataSet_Result")</Value>
+                      <Value EvaluationMode="Auto">=First(Fields!CompanyName.Value, "DataSet_Result")</Value>
                       <Style>
                         <FontSize>7pt</FontSize>
                       </Style>
@@ -1904,7 +1907,7 @@ OBJECT Report 6520 Item Tracing Specification
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=First(Fields!FormatToday.Value, "DataSet_Result")</Value>
+                      <Value EvaluationMode="Auto">=First(Fields!FormatToday.Value, "DataSet_Result")</Value>
                       <Style>
                         <FontSize>7pt</FontSize>
                         <Format>g</Format>
@@ -1925,12 +1928,13 @@ OBJECT Report 6520 Item Tracing Specification
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=User!UserID</Value>
+                      <Value EvaluationMode="Auto">=User!UserID</Value>
                       <Style>
                         <FontSize>7pt</FontSize>
                       </Style>
@@ -1960,7 +1964,7 @@ OBJECT Report 6520 Item Tracing Specification
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=Globals!PageNumber</Value>
+                      <Value EvaluationMode="Auto">=Globals!PageNumber</Value>
                       <Style>
                         <FontSize>7pt</FontSize>
                       </Style>

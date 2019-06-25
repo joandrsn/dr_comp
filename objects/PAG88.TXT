@@ -2,9 +2,9 @@ OBJECT Page 88 Job Card
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=24-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49146;
   }
   PROPERTIES
   {
@@ -15,15 +15,6 @@ OBJECT Page 88 Job Card
     RefreshOnActivate=Yes;
     PromotedActionCategoriesML=[DAN=Ny,Proces,Rapport,Priser;
                                 ENU=New,Process,Report,Prices];
-    OnInit=BEGIN
-             CurrencyCodeEditable := TRUE;
-             InvoiceCurrencyCodeEditable := TRUE;
-           END;
-
-    OnAfterGetRecord=BEGIN
-                       CurrencyCheck;
-                     END;
-
     ActionList=ACTIONS
     {
       { 1900000003;0 ;ActionContainer;
@@ -43,6 +34,7 @@ OBJECT Page 88 Job Card
                       Image=TaskList;
                       PromotedCategory=Process }
       { 88      ;2   ;Action    ;
+                      Name=JobPlanningLines;
                       ShortCutKey=Shift+Ctrl+P;
                       CaptionML=[DAN=Sags&planlægningslinjer;
                                  ENU=Job &Planning Lines];
@@ -52,8 +44,10 @@ OBJECT Page 88 Job Card
                                  JobPlanningLines@1000 : Page 1007;
                                BEGIN
                                  TESTFIELD("No.");
+                                 JobPlanningLine.FILTERGROUP(2);
                                  JobPlanningLine.SETRANGE("Job No.","No.");
-                                 JobPlanningLines.SetJobNoVisible(FALSE);
+                                 JobPlanningLine.FILTERGROUP(0);
+                                 JobPlanningLines.SetJobTaskNoVisible(TRUE);
                                  JobPlanningLines.SETTABLEVIEW(JobPlanningLine);
                                  JobPlanningLines.EDITABLE := FALSE;
                                  JobPlanningLines.RUN;
@@ -407,20 +401,10 @@ OBJECT Page 88 Job Card
 
     { 98  ;2   ;Field     ;
                 SourceExpr="Currency Code";
-                Importance=Promoted;
-                Editable=CurrencyCodeEditable;
-                OnValidate=BEGIN
-                             CurrencyCheck;
-                           END;
-                            }
+                Importance=Promoted }
 
     { 100 ;2   ;Field     ;
-                SourceExpr="Invoice Currency Code";
-                Editable=InvoiceCurrencyCodeEditable;
-                OnValidate=BEGIN
-                             CurrencyCheck;
-                           END;
-                            }
+                SourceExpr="Invoice Currency Code" }
 
     { 102 ;2   ;Field     ;
                 SourceExpr="Exch. Calculation (Cost)" }
@@ -576,22 +560,6 @@ OBJECT Page 88 Job Card
   }
   CODE
   {
-    VAR
-      InvoiceCurrencyCodeEditable@19003397 : Boolean INDATASET;
-      CurrencyCodeEditable@19053147 : Boolean INDATASET;
-
-    LOCAL PROCEDURE CurrencyCheck@3();
-    BEGIN
-      IF "Currency Code" <> ''THEN
-        InvoiceCurrencyCodeEditable := FALSE
-      ELSE
-        InvoiceCurrencyCodeEditable := TRUE;
-
-      IF "Invoice Currency Code" <> ''THEN
-        CurrencyCodeEditable := FALSE
-      ELSE
-        CurrencyCodeEditable := TRUE;
-    END;
 
     LOCAL PROCEDURE BilltoCustomerNoOnAfterValidat@19044114();
     BEGIN

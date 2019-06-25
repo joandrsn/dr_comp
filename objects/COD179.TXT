@@ -2,9 +2,9 @@ OBJECT Codeunit 179 Reversal-Post
 {
   OBJECT-PROPERTIES
   {
-    Date=23-09-13;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW17.10;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -12,6 +12,8 @@ OBJECT Codeunit 179 Reversal-Post
     OnRun=VAR
             GLReg@1003 : Record 45;
             GenJnlTemplate@1002 : Record 80;
+            PostedDeferralHeader@1007 : Record 1704;
+            DeferralUtilities@1006 : Codeunit 1720;
             GenJnlPostReverse@1001 : Codeunit 17;
             Txt@1004 : Text[1024];
             WarningText@1000 : Text[250];
@@ -52,6 +54,7 @@ OBJECT Codeunit 179 Reversal-Post
                   END;
               END;
               DELETEALL;
+              PostedDeferralHeader.DeleteForDoc(DeferralUtilities.GetGLDeferralDocType,ReversalEntry."Document No.",'',0,'');
               MESSAGE(Text003);
             END;
           END;

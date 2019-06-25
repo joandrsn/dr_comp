@@ -2,9 +2,9 @@ OBJECT Table 7700 Miniform Header
 {
   OBJECT-PROPERTIES
   {
-    Date=29-01-16;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44974;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -92,10 +92,11 @@ OBJECT Table 7700 Miniform Header
 
     PROCEDURE LoadXMLin@2(VAR DOMxmlin@1001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");
     VAR
+      XMLDOMManagement@1002 : Codeunit 6224;
       OutStrm@1000 : OutStream;
     BEGIN
       XMLin.CREATEOUTSTREAM(OutStrm);
-      DOMxmlin.Load(OutStrm);
+      XMLDOMManagement.LoadXMLDocumentFromOutStream(OutStrm,DOMxmlin);
     END;
 
     BEGIN

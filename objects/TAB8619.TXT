@@ -2,9 +2,9 @@ OBJECT Table 8619 Config. Template Line
 {
   OBJECT-PROPERTIES
   {
-    Date=09-09-14;
+    Date=03-08-16;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Version List=NAVW19.00.00.46621;
   }
   PROPERTIES
   {
@@ -64,31 +64,6 @@ OBJECT Table 8619 Config. Template Line
 
                                                                 ConfigTemplateMgt.TestHierarchy(Rec);
                                                               END;
-
-                                                   OnLookup=VAR
-                                                              ConfigTemplateHeader@1000 : Record 8618;
-                                                              Field@1002 : Record 2000000041;
-                                                              FieldList@1001 : Page 6218;
-                                                            BEGIN
-                                                              IF Type = Type::Template THEN
-                                                                EXIT;
-
-                                                              ConfigTemplateHeader.GET("Data Template Code");
-
-                                                              IF ConfigTemplateHeader."Table ID" = 0 THEN
-                                                                EXIT;
-
-                                                              CLEAR(FieldList);
-                                                              Field.SETRANGE(TableNo,ConfigTemplateHeader."Table ID");
-                                                              FieldList.SETTABLEVIEW(Field);
-                                                              FieldList.LOOKUPMODE := TRUE;
-                                                              IF FieldList.RUNMODAL = ACTION::LookupOK THEN BEGIN
-                                                                FieldList.GETRECORD(Field);
-                                                                "Table ID" := Field.TableNo;
-                                                                VALIDATE("Field ID",Field."No.");
-                                                                VALIDATE("Field Name",Field.FieldName);
-                                                              END;
-                                                            END;
 
                                                    CaptionML=[DAN=Feltnavn;
                                                               ENU=Field Name];
@@ -228,6 +203,32 @@ OBJECT Table 8619 Config. Template Line
       Text003@1003 : TextConst 'DAN=Skabelonen %1 findes allerede i dette hierarki.;ENU=The template %1 is already in this hierarchy.';
       Text004@1004 : TextConst 'DAN=Feltet %1 findes allerede i skabelonen.;ENU=Field %1 is already in the template.';
       Text005@1005 : TextConst 'DAN=Skabelonen kan ikke redigeres, hvis typen er Felt.;ENU=The template line cannot be edited if type is Field.';
+
+    PROCEDURE DrilldownFieldName@1();
+    VAR
+      ConfigTemplateHeader@1002 : Record 8618;
+      Field@1001 : Record 2000000041;
+      FieldList@1000 : Page 6218;
+    BEGIN
+      IF Type = Type::Template THEN
+        EXIT;
+
+      ConfigTemplateHeader.GET("Data Template Code");
+
+      IF ConfigTemplateHeader."Table ID" = 0 THEN
+        EXIT;
+
+      CLEAR(FieldList);
+      Field.SETRANGE(TableNo,ConfigTemplateHeader."Table ID");
+      FieldList.SETTABLEVIEW(Field);
+      FieldList.LOOKUPMODE := TRUE;
+      IF FieldList.RUNMODAL = ACTION::LookupOK THEN BEGIN
+        FieldList.GETRECORD(Field);
+        "Table ID" := Field.TableNo;
+        VALIDATE("Field ID",Field."No.");
+        VALIDATE("Field Name",Field.FieldName);
+      END;
+    END;
 
     BEGIN
     END.

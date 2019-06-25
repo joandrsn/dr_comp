@@ -2,16 +2,16 @@ OBJECT Table 5364 CRM Businessunit
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=businessunit;
-    CaptionML=[DAN=Business Unit;
-               ENU=Business Unit];
+    CaptionML=[DAN=CRM Businessunit;
+               ENU=CRM Businessunit];
     Description=Business, division, or department in the Microsoft Dynamics CRM database.;
   }
   FIELDS

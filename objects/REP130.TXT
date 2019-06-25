@@ -2,9 +2,9 @@ OBJECT Report 130 EC Sales List
 {
   OBJECT-PROPERTIES
   {
-    Date=26-11-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43897;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -4969,7 +4969,7 @@ OBJECT Report 130 EC Sales List
               <TablixMembers>
                 <TablixMember>
                   <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value)</Hidden>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value)</Hidden>
                   </Visibility>
                   <KeepWithGroup>After</KeepWithGroup>
                   <RepeatOnNewPage>true</RepeatOnNewPage>
@@ -4977,7 +4977,7 @@ OBJECT Report 130 EC Sales List
                 </TablixMember>
                 <TablixMember>
                   <Visibility>
-                    <Hidden>=Fields!ThirdPartyTrade.Value</Hidden>
+                    <Hidden>=CBool(Fields!ThirdPartyTrade.Value)</Hidden>
                   </Visibility>
                   <KeepWithGroup>After</KeepWithGroup>
                   <RepeatOnNewPage>true</RepeatOnNewPage>
@@ -5004,27 +5004,27 @@ OBJECT Report 130 EC Sales List
                   <TablixMembers>
                     <TablixMember>
                       <Visibility>
-                        <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmt.Value)=0)</Hidden>
+                        <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmt.Value)=0)</Hidden>
                       </Visibility>
                     </TablixMember>
                     <TablixMember>
                       <Visibility>
-                        <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmtService.Value)=0)</Hidden>
+                        <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmtService.Value)=0)</Hidden>
                       </Visibility>
                     </TablixMember>
                     <TablixMember>
                       <Visibility>
-                        <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmt.Value)=0)</Hidden>
+                        <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmt.Value)=0)</Hidden>
                       </Visibility>
                     </TablixMember>
                     <TablixMember>
                       <Visibility>
-                        <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmtService.Value)=0)</Hidden>
+                        <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmtService.Value)=0)</Hidden>
                       </Visibility>
                     </TablixMember>
                     <TablixMember>
                       <Visibility>
-                        <Hidden>=Fields!ThirdPartyTrade.Value</Hidden>
+                        <Hidden>=CBool(Fields!ThirdPartyTrade.Value)</Hidden>
                       </Visibility>
                     </TablixMember>
                     <TablixMember />
@@ -5039,65 +5039,65 @@ OBJECT Report 130 EC Sales List
                 </TablixMember>
                 <TablixMember>
                   <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmt.Value)=0)</Hidden>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmt.Value)=0)</Hidden>
                   </Visibility>
                   <KeepWithGroup>Before</KeepWithGroup>
                 </TablixMember>
                 <TablixMember>
                   <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmt.Value)=0)</Hidden>
-                  </Visibility>
-                  <KeepWithGroup>Before</KeepWithGroup>
-                  <KeepTogether>true</KeepTogether>
-                </TablixMember>
-                <TablixMember>
-                  <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmtService.Value)=0)</Hidden>
-                  </Visibility>
-                  <KeepWithGroup>Before</KeepWithGroup>
-                </TablixMember>
-                <TablixMember>
-                  <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmtService.Value)=0)</Hidden>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmt.Value)=0)</Hidden>
                   </Visibility>
                   <KeepWithGroup>Before</KeepWithGroup>
                   <KeepTogether>true</KeepTogether>
                 </TablixMember>
                 <TablixMember>
                   <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmt.Value)=0)</Hidden>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmtService.Value)=0)</Hidden>
                   </Visibility>
                   <KeepWithGroup>Before</KeepWithGroup>
                 </TablixMember>
                 <TablixMember>
                   <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmt.Value)=0)</Hidden>
-                  </Visibility>
-                  <KeepWithGroup>Before</KeepWithGroup>
-                  <KeepTogether>true</KeepTogether>
-                </TablixMember>
-                <TablixMember>
-                  <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmtService.Value)=0)</Hidden>
-                  </Visibility>
-                  <KeepWithGroup>Before</KeepWithGroup>
-                </TablixMember>
-                <TablixMember>
-                  <Visibility>
-                    <Hidden>=NOT(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmtService.Value)=0)</Hidden>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!NotEUTrdPartyAmtService.Value)=0)</Hidden>
                   </Visibility>
                   <KeepWithGroup>Before</KeepWithGroup>
                   <KeepTogether>true</KeepTogether>
                 </TablixMember>
                 <TablixMember>
                   <Visibility>
-                    <Hidden>=Fields!ThirdPartyTrade.Value</Hidden>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmt.Value)=0)</Hidden>
                   </Visibility>
                   <KeepWithGroup>Before</KeepWithGroup>
                 </TablixMember>
                 <TablixMember>
                   <Visibility>
-                    <Hidden>=Fields!ThirdPartyTrade.Value</Hidden>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmt.Value)=0)</Hidden>
+                  </Visibility>
+                  <KeepWithGroup>Before</KeepWithGroup>
+                  <KeepTogether>true</KeepTogether>
+                </TablixMember>
+                <TablixMember>
+                  <Visibility>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmtService.Value)=0)</Hidden>
+                  </Visibility>
+                  <KeepWithGroup>Before</KeepWithGroup>
+                </TablixMember>
+                <TablixMember>
+                  <Visibility>
+                    <Hidden>=NOT CBool(Fields!ThirdPartyTrade.Value) OR (SUM(Fields!EUTrdPartyAmtService.Value)=0)</Hidden>
+                  </Visibility>
+                  <KeepWithGroup>Before</KeepWithGroup>
+                  <KeepTogether>true</KeepTogether>
+                </TablixMember>
+                <TablixMember>
+                  <Visibility>
+                    <Hidden>=CBool(Fields!ThirdPartyTrade.Value)</Hidden>
+                  </Visibility>
+                  <KeepWithGroup>Before</KeepWithGroup>
+                </TablixMember>
+                <TablixMember>
+                  <Visibility>
+                    <Hidden>=CBool(Fields!ThirdPartyTrade.Value)</Hidden>
                   </Visibility>
                   <KeepWithGroup>Before</KeepWithGroup>
                   <KeepTogether>true</KeepTogether>

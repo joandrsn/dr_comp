@@ -2,9 +2,9 @@ OBJECT Page 460 Purchases & Payables Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -81,6 +81,11 @@ OBJECT Page 460 Purchases & Payables Setup
     { 55  ;2   ;Field     ;
                 SourceExpr="Check Prepmt. when Posting" }
 
+    { 62  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, hvor ofte jobbet, der automatisk opdaterer status for ordrer, der afventer forudbetaling, skal køre.;
+                           ENU=Specifies how often the job must run that automatically updates the status of orders that are pending prepayment.];
+                SourceExpr="Prepmt. Auto Update Frequency" }
+
     { 57  ;2   ;Field     ;
                 SourceExpr="Archive Quotes and Orders" }
 
@@ -89,6 +94,12 @@ OBJECT Page 460 Purchases & Payables Setup
 
     { 61  ;2   ;Field     ;
                 SourceExpr="Default Qty. to Receive" }
+
+    { 35  ;2   ;Field     ;
+                ToolTipML=[DAN=Angiver, om og hvornår bogførte købsdokumenter kan slettes. Hvis du angiver en dato, kan de bogførte købsdokumenter med en bogføringsdato på eller efter denne dato ikke slettes.;
+                           ENU=Specifies if and when posted purchase documents can be deleted. If you enter a date, posted purchase documents with a posting date on or after this date cannot be deleted.];
+                SourceExpr="Allow Document Deletion Before";
+                Importance=Additional }
 
     { 1904569201;1;Group  ;
                 CaptionML=[DAN=Nummerering;

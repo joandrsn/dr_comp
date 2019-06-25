@@ -2,9 +2,9 @@ OBJECT Table 99000772 Production BOM Line
 {
   OBJECT-PROPERTIES
   {
-    Date=22-12-15;
+    Date=01-08-17;
     Time=12:00:00;
-    Version List=NAVW19.00.00.44365;
+    Version List=NAVW19.00.00.48992;
   }
   PROPERTIES
   {
@@ -78,6 +78,7 @@ OBJECT Table 99000772 Production BOM Line
                                                                       Description := Item.Description;
                                                                       Item.TESTFIELD("Base Unit of Measure");
                                                                       "Unit of Measure Code" := Item."Base Unit of Measure";
+                                                                      "Scrap %" := Item."Scrap %";
                                                                       IF "No." <> xRec."No." THEN
                                                                         "Variant Code" := '';
                                                                     END;

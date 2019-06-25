@@ -2,16 +2,16 @@ OBJECT Table 5344 CRM Post
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=post;
-    CaptionML=[DAN=Post;
-               ENU=Post];
+    CaptionML=[DAN=CRM Post;
+               ENU=CRM Post];
     Description=An activity feed post.;
   }
   FIELDS

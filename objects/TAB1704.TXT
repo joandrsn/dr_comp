@@ -2,9 +2,9 @@ OBJECT Table 1704 Posted Deferral Header
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-11-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.49575;
   }
   PROPERTIES
   {
@@ -108,10 +108,28 @@ OBJECT Table 1704 Posted Deferral Header
     BEGIN
       SETRANGE("Deferral Doc. Type",DeferralDocType);
       SETRANGE("Gen. Jnl. Document No.",GenJnlDocNo);
-      SETRANGE("Account No.",AccountNo);
-      SETRANGE("Document Type",DocumentType);
-      SETRANGE("Document No.",DocumentNo);
+      IF AccountNo <> '' THEN
+        SETRANGE("Account No.",AccountNo);
+      IF DocumentNo <> '' THEN BEGIN
+        SETRANGE("Document Type",DocumentType);
+        SETRANGE("Document No.",DocumentNo);
+      END;
       DELETEALL(TRUE);
+    END;
+
+    PROCEDURE InitFromDeferralHeader@4(DeferralHeader@1000 : Record 1701;GenJnlDocNo@1001 : Code[20];AccountNo@1006 : Code[20];NewDocumentType@1005 : Integer;NewDocumentNo@1004 : Code[20];NewLineNo@1003 : Integer;DeferralAccount@1007 : Code[20];CustVendNo@1008 : Code[20];PostingDate@1002 : Date);
+    BEGIN
+      INIT;
+      TRANSFERFIELDS(DeferralHeader);
+      "Gen. Jnl. Document No." := GenJnlDocNo;
+      "Account No." := AccountNo;
+      "Document Type" := NewDocumentType;
+      "Document No." := NewDocumentNo;
+      "Line No." := NewLineNo;
+      "Deferral Account" := DeferralAccount;
+      CustVendorNo := CustVendNo;
+      "Posting Date" := PostingDate;
+      INSERT;
     END;
 
     BEGIN

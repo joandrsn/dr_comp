@@ -2,9 +2,9 @@ OBJECT Table 5540 Timeline Event
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=22-02-18;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.50087;
   }
   PROPERTIES
   {
@@ -26,10 +26,12 @@ OBJECT Table 5540 Timeline Event
                                                               ENU=New Date] }
     { 6   ;   ;ChangeRefNo         ;Text250       ;CaptionML=[DAN=Ændr.ref.nr.;
                                                               ENU=ChangeRefNo] }
-    { 9   ;   ;Source Line ID      ;RecordID      ;CaptionML=[DAN=Kildelinje-id;
+    { 9   ;   ;Source Line ID      ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildelinje-id;
                                                               ENU=Source Line ID];
                                                    Editable=No }
-    { 10  ;   ;Source Document ID  ;RecordID      ;CaptionML=[DAN=Kildebilags-id;
+    { 10  ;   ;Source Document ID  ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=[DAN=Kildebilags-id;
                                                               ENU=Source Document ID];
                                                    Editable=No }
     { 20  ;   ;Original Quantity   ;Decimal       ;CaptionML=[DAN=Oprindeligt antal;

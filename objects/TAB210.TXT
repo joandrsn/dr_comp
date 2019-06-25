@@ -2,9 +2,9 @@ OBJECT Table 210 Job Journal Line
 {
   OBJECT-PROPERTIES
   {
-    Date=23-10-15;
+    Date=29-11-18;
     Time=12:00:00;
-    Version List=NAVW19.00.00.43402;
+    Version List=NAVW19.00.00.50785;
   }
   PROPERTIES
   {
@@ -67,7 +67,7 @@ OBJECT Table 210 Job Journal Line
                                                                   DATABASE::Job,"Job No.",
                                                                   DimMgt.TypeToTableID2(Type),"No.",
                                                                   DATABASE::"Resource Group","Resource Group No.");
-                                                                VALIDATE("Country/Region Code",Cust."Country/Region Code");
+                                                                VALIDATE("Country/Region Code",Job."Bill-to Country/Region Code");
                                                               END;
 
                                                    CaptionML=[DAN=Sagsnr.;
@@ -544,7 +544,7 @@ OBJECT Table 210 Job Journal Line
                                                                     "Unit Cost" := ROUND(
                                                                         CurrExchRate.ExchangeAmtLCYToFCY(
                                                                           "Posting Date","Currency Code",
-                                                                          CalcUnitCostFrom(ItemLedgEntry."Entry No."),"Currency Factor"),
+                                                                          CalcUnitCostFrom(ItemLedgEntry),"Currency Factor"),
                                                                         UnitAmountRoundingPrecisionFCY);
                                                                     UpdateAllAmounts;
                                                                   END;
@@ -1131,24 +1131,17 @@ OBJECT Table 210 Job Journal Line
       EXIT(ABS(UnitCost * "Qty. per Unit of Measure"));
     END;
 
-    LOCAL PROCEDURE CalcUnitCostFrom@5804(ItemLedgEntryNo@1000 : Integer) : Decimal;
+    LOCAL PROCEDURE CalcUnitCostFrom@5804(ItemLedgEntry@1000 : Record 32) : Decimal;
     VAR
       ValueEntry@1001 : Record 5802;
-      InvoicedQty@1002 : Decimal;
-      CostAmount@1003 : Decimal;
     BEGIN
-      InvoicedQty := 0;
-      CostAmount := 0;
       ValueEntry.RESET;
       ValueEntry.SETCURRENTKEY("Item Ledger Entry No.");
-      ValueEntry.SETRANGE("Item Ledger Entry No.",ItemLedgEntryNo);
-      ValueEntry.SETRANGE("Expected Cost",FALSE);
-      IF ValueEntry.FIND('-') THEN
-        REPEAT
-          InvoicedQty += ValueEntry."Invoiced Quantity";
-          CostAmount += ValueEntry."Cost Amount (Actual)";
-        UNTIL ValueEntry.NEXT = 0;
-      EXIT(CostAmount / InvoicedQty * "Qty. per Unit of Measure");
+      ValueEntry.SETRANGE("Item Ledger Entry No.",ItemLedgEntry."Entry No.");
+      ValueEntry.CALCSUMS("Cost Amount (Actual)","Cost Amount (Expected)");
+      EXIT(
+        (ValueEntry."Cost Amount (Actual)" + ValueEntry."Cost Amount (Expected)") /
+        ItemLedgEntry.Quantity * "Qty. per Unit of Measure");
     END;
 
     LOCAL PROCEDURE SelectItemEntry@1(CurrentFieldNo@1000 : Integer);
@@ -1414,15 +1407,10 @@ OBJECT Table 210 Job Journal Line
 
     LOCAL PROCEDURE UpdateTotalPrice@6();
     BEGIN
-      "Total Price" := Quantity * "Unit Price";
-
+      "Total Price" := ROUND(Quantity * "Unit Price",AmountRoundingPrecisionFCY);
       "Total Price (LCY)" := ROUND(
-          CurrExchRate.ExchangeAmtFCYToLCY(
-            "Posting Date","Currency Code",
-            "Total Price","Currency Factor"),
+          CurrExchRate.ExchangeAmtFCYToLCY("Posting Date","Currency Code","Total Price","Currency Factor"),
           AmountRoundingPrecision);
-
-      "Total Price" := ROUND("Total Price",AmountRoundingPrecisionFCY);
     END;
 
     LOCAL PROCEDURE UpdateAmountsAndDiscounts@31();
@@ -1546,6 +1534,15 @@ OBJECT Table 210 Job Journal Line
         EXIT(FALSE);
       GetItem;
       EXIT(Item.Type = Item.Type::Service);
+    END;
+
+    PROCEDURE RowID1@44() : Text[250];
+    VAR
+      ItemTrackingMgt@1000 : Codeunit 6500;
+    BEGIN
+      EXIT(
+        ItemTrackingMgt.ComposeRowID(DATABASE::"Job Journal Line","Entry Type",
+          "Journal Template Name","Journal Batch Name",0,"Line No."));
     END;
 
     BEGIN

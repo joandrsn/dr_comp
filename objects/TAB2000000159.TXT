@@ -1,0 +1,74 @@
+OBJECT Table 2000000159 Data Sensitivity
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30-05-19;
+    Time=12:00:00;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[DAN=Datafølsomhed;
+               ENU=Data Sensitivity];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Company Name        ;Text30        ;TableRelation=Company.Name;
+                                                   CaptionML=[DAN=Regnskab;
+                                                              ENU=Company Name] }
+    { 2   ;   ;Table No            ;Integer       ;CaptionML=[DAN=Tabelnr.;
+                                                              ENU=Table No] }
+    { 3   ;   ;Field No            ;Integer       ;CaptionML=[DAN=Feltnr.;
+                                                              ENU=Field No] }
+    { 4   ;   ;Table Caption       ;Text80        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Table),
+                                                                                                                Object ID=FIELD(Table No)));
+                                                   CaptionML=[DAN=Tabeltitel;
+                                                              ENU=Table Caption] }
+    { 5   ;   ;Field Caption       ;Text80        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(Field."Field Caption" WHERE (TableNo=FIELD(Table No),
+                                                                                                   No.=FIELD(Field No)));
+                                                   CaptionML=[DAN=Felttitel;
+                                                              ENU=Field Caption] }
+    { 6   ;   ;Field Type          ;Option        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(Field.Type WHERE (TableNo=FIELD(Table No),
+                                                                                        No.=FIELD(Field No)));
+                                                   CaptionML=[DAN=Felttype;
+                                                              ENU=Field Type];
+                                                   OptionCaptionML=[DAN=TableFilter,RecordId,OemTekst,Dato,Klokkeslæt,DateFormula,Decimal,Tekst,Kode,Binær,BLOB,Boolesk,Heltal,OemCode,Indstilling,BigInteger,Varighed,GUID,DatoKlokkeslæt;
+                                                                    ENU=TableFilter,RecordID,OemText,Date,Time,DateFormula,Decimal,Text,Code,Binary,BLOB,Boolean,Integer,OemCode,Option,BigInteger,Duration,GUID,DateTime];
+                                                   OptionString=TableFilter,RecordID,OemText,Date,Time,DateFormula,Decimal,Text,Code,Binary,BLOB,Boolean,Integer,OemCode,Option,BigInteger,Duration,GUID,DateTime }
+    { 7   ;   ;Data Sensitivity    ;Option        ;CaptionML=[DAN=Datafølsomhed;
+                                                              ENU=Data Sensitivity];
+                                                   OptionCaptionML=[DAN=Ikke-fortrolige,Følsomme,Personlige,Virksomhedens fortrolige,Normal;
+                                                                    ENU=Unclassified,Sensitive,Personal,Company Confidential,Normal];
+                                                   OptionString=Unclassified,Sensitive,Personal,Company Confidential,Normal }
+    { 8   ;   ;Last Modified By    ;GUID          ;CaptionML=[DAN=Sidst ændret af;
+                                                              ENU=Last Modified By] }
+    { 9   ;   ;Last Modified       ;DateTime      ;CaptionML=[DAN=Sidst ændret;
+                                                              ENU=Last Modified] }
+    { 10  ;   ;Data Classification ;Option        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(Field.DataClassification WHERE (TableNo=FIELD(Table No),
+                                                                                                      No.=FIELD(Field No)));
+                                                   CaptionML=[DAN=Klassificering af data;
+                                                              ENU=Data Classification];
+                                                   OptionCaptionML=[DAN=CustomerContent,ToBeClassified,EndUserIdentifiableInformation,AccountData,EndUserPseudonymousIdentifiers,OrganizationIdentifiableInformation,SystemMetadata;
+                                                                    ENU=CustomerContent,ToBeClassified,EndUserIdentifiableInformation,AccountData,EndUserPseudonymousIdentifiers,OrganizationIdentifiableInformation,SystemMetadata];
+                                                   OptionString=CustomerContent,ToBeClassified,EndUserIdentifiableInformation,AccountData,EndUserPseudonymousIdentifiers,OrganizationIdentifiableInformation,SystemMetadata }
+  }
+  KEYS
+  {
+    {    ;Company Name,Table No,Field No          ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

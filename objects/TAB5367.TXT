@@ -2,16 +2,16 @@ OBJECT Table 5367 CRM Account Statistics
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=27-10-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47256;
   }
   PROPERTIES
   {
     TableType=CRM;
     ExternalName=nav_accountstatistics;
-    CaptionML=[DAN=Account Statistics;
-               ENU=Account Statistics];
+    CaptionML=[DAN=CRM Account Statistics;
+               ENU=CRM Account Statistics];
     Description=An entity to store aggregate statistics from Dynamics NAV about an account.;
   }
   FIELDS

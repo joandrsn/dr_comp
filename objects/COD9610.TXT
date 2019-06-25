@@ -2,9 +2,9 @@ OBJECT Codeunit 9610 XSD Parser
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=29-09-16;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.47042;
   }
   PROPERTIES
   {
@@ -74,8 +74,7 @@ OBJECT Codeunit 9610 XSD Parser
       XMLSchema.TESTFIELD(XSD);
       XMLSchema.XSD.CREATEINSTREAM(InStr);
 
-      Schema := Schema.XmlDocument;
-      Schema.Load(InStr);
+      XMLDOMManagement.LoadXMLDocumentFromInStream(InStr,Schema);
 
       NamespaceMgr := NamespaceMgr.XmlNamespaceManager(Schema.XmlDocument.NameTable);
       PopulateNamespaceManager(NamespaceMgr,Schema.DocumentElement,XMLSchema."Target Namespace",SchemaPrefix);

@@ -2,9 +2,9 @@ OBJECT Report 322 Aged Accounts Payable
 {
   OBJECT-PROPERTIES
   {
-    Date=15-09-15;
+    Date=23-02-17;
     Time=12:00:00;
-    Version List=NAVW19.00;
+    Version List=NAVW19.00.00.48067;
   }
   PROPERTIES
   {
@@ -631,7 +631,7 @@ OBJECT Report 322 Aged Accounts Payable
       Text009@1031 : TextConst 'DAN=Forfaldsdato,Bogføringsdato,Bilagsdato;ENU=Due Date,Posting Date,Document Date';
       Text010@1032 : TextConst 'DAN=Datoformlen %1 er ugyldig. Prøv at omformulere den ved f.eks. at skrive 1M+LM i stedet for LM+1M.;ENU=The Date Formula %1 cannot be used. Try to restate it, for example, by using 1M+CM instead of CM+1M.';
       PageGroupNo@1033 : Integer;
-      Text011@1026 : TextConst 'DAN=Angiv en datoformel i feltet Periodelængde.;ENU=Enter a date formula in the Period Length field.';
+      EnterDateFormulaErr@1026 : TextConst 'DAN=Angiv en datoformel i feltet Periodelængde.;ENU=Enter a date formula in the Period Length field.';
       Text027@1049 : TextConst '@@@=Negating the period length: %1 is the period length;DAN=-%1;ENU=-%1';
       AgedAcctPayableCaptionLbl@4917 : TextConst 'DAN=Aldersfordelt gæld;ENU=Aged Accounts Payable';
       CurrReportPageNoCaptionLbl@2595 : TextConst 'DAN=Side;ENU=Page';
@@ -653,7 +653,7 @@ OBJECT Report 322 Aged Accounts Payable
       PeriodLength2@1001 : DateFormula;
     BEGIN
       IF NOT EVALUATE(PeriodLength2,STRSUBSTNO(Text027,PeriodLength)) THEN
-        ERROR(Text011);
+        ERROR(EnterDateFormulaErr);
       IF AgingBy = AgingBy::"Due Date" THEN BEGIN
         PeriodEndDate[1] := 31129999D;
         PeriodStartDate[1] := EndingDate + 1;
@@ -10508,6 +10508,7 @@ and(not Fields!VendorNo.Value=""),False,True)</Hidden>
               </Style>
             </Textbox>
             <Textbox Name="UserIdTextBox">
+              <CanGrow>true</CanGrow>
               <KeepTogether>true</KeepTogether>
               <Paragraphs>
                 <Paragraph>
